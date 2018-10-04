@@ -5,7 +5,7 @@
 namespace ron {
 
 
-    Uuid::Uuid (const std::string& buf) {
+    Uuid::Uuid (const char* buf, size_t len) {
         
 #line 8 "ragel/uuid-parser.rl"
         
@@ -19,8 +19,8 @@ static const int UUID_en_main = 1;
 
 #line 9 "ragel/uuid-parser.rl"
         int atm=0, dgt=0, hlf=0;
-        auto pe = buf.end();
-        auto p = buf.begin();
+        auto pe = buf+len;
+        auto p = buf;
         auto eof = pe;
         int cs = 0;
 
@@ -61,8 +61,9 @@ cs = 0;
 tr0:
 #line 5 "ragel/./uuid-grammar.rl"
 	{
+        hlf = 0;
     }
-#line 40 "ragel/./uuid-grammar.rl"
+#line 41 "ragel/./uuid-grammar.rl"
 	{
         hlf = 1;
         word(atm, 1).zero_flags();
@@ -70,10 +71,10 @@ tr0:
     }
 	goto st2;
 tr5:
-#line 28 "ragel/./uuid-grammar.rl"
+#line 29 "ragel/./uuid-grammar.rl"
 	{
     }
-#line 40 "ragel/./uuid-grammar.rl"
+#line 41 "ragel/./uuid-grammar.rl"
 	{
         hlf = 1;
         word(atm, 1).zero_flags();
@@ -84,7 +85,7 @@ st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 88 "ron/uuid-parser.cc"
+#line 89 "ron/uuid-parser.cc"
 	switch( (*p) ) {
 		case 95: goto tr3;
 		case 126: goto tr3;
@@ -99,16 +100,16 @@ case 2:
 		goto tr3;
 	goto st0;
 tr3:
-#line 23 "ragel/./uuid-grammar.rl"
+#line 24 "ragel/./uuid-grammar.rl"
 	{
         dgt = 0;
         hlf = 1;
     }
-#line 16 "ragel/./uuid-grammar.rl"
+#line 17 "ragel/./uuid-grammar.rl"
 	{
         //word(atm, hlf).zero_payload();
     }
-#line 8 "ragel/./uuid-grammar.rl"
+#line 9 "ragel/./uuid-grammar.rl"
 	{
         if (dgt>9) {
             {p++; cs = 3; goto _out;}
@@ -118,7 +119,7 @@ tr3:
     }
 	goto st3;
 tr4:
-#line 8 "ragel/./uuid-grammar.rl"
+#line 9 "ragel/./uuid-grammar.rl"
 	{
         if (dgt>9) {
             {p++; cs = 3; goto _out;}
@@ -131,7 +132,7 @@ st3:
 	if ( ++p == pe )
 		goto _test_eof3;
 case 3:
-#line 135 "ron/uuid-parser.cc"
+#line 136 "ron/uuid-parser.cc"
 	switch( (*p) ) {
 		case 95: goto tr4;
 		case 126: goto tr4;
@@ -148,11 +149,12 @@ case 3:
 tr2:
 #line 5 "ragel/./uuid-grammar.rl"
 	{
+        hlf = 0;
     }
-#line 20 "ragel/./uuid-grammar.rl"
+#line 21 "ragel/./uuid-grammar.rl"
 	{
     }
-#line 8 "ragel/./uuid-grammar.rl"
+#line 9 "ragel/./uuid-grammar.rl"
 	{
         if (dgt>9) {
             {p++; cs = 4; goto _out;}
@@ -165,7 +167,7 @@ st4:
 	if ( ++p == pe )
 		goto _test_eof4;
 case 4:
-#line 169 "ron/uuid-parser.cc"
+#line 171 "ron/uuid-parser.cc"
 	switch( (*p) ) {
 		case 43: goto tr5;
 		case 45: goto tr5;
@@ -186,7 +188,7 @@ case 4:
 		goto tr7;
 	goto st0;
 tr7:
-#line 8 "ragel/./uuid-grammar.rl"
+#line 9 "ragel/./uuid-grammar.rl"
 	{
         if (dgt>9) {
             {p++; cs = 5; goto _out;}
@@ -196,7 +198,7 @@ tr7:
     }
 	goto st5;
 tr6:
-#line 34 "ragel/./uuid-grammar.rl"
+#line 35 "ragel/./uuid-grammar.rl"
 	{
         word(atm, 0).set_flags(word(atm, 0).get6(9));
         word(atm, hlf).zero_payload();
@@ -207,7 +209,7 @@ st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-#line 211 "ron/uuid-parser.cc"
+#line 213 "ron/uuid-parser.cc"
 	switch( (*p) ) {
 		case 43: goto tr5;
 		case 45: goto tr5;
@@ -238,30 +240,30 @@ case 5:
 	switch ( cs ) {
 	case 4: 
 	case 5: 
-#line 28 "ragel/./uuid-grammar.rl"
+#line 29 "ragel/./uuid-grammar.rl"
 	{
     }
 	break;
 	case 3: 
-#line 31 "ragel/./uuid-grammar.rl"
+#line 32 "ragel/./uuid-grammar.rl"
 	{
     }
 	break;
 	case 2: 
-#line 23 "ragel/./uuid-grammar.rl"
+#line 24 "ragel/./uuid-grammar.rl"
 	{
         dgt = 0;
         hlf = 1;
     }
-#line 16 "ragel/./uuid-grammar.rl"
+#line 17 "ragel/./uuid-grammar.rl"
 	{
         //word(atm, hlf).zero_payload();
     }
-#line 31 "ragel/./uuid-grammar.rl"
+#line 32 "ragel/./uuid-grammar.rl"
 	{
     }
 	break;
-#line 265 "ron/uuid-parser.cc"
+#line 267 "ron/uuid-parser.cc"
 	}
 	}
 

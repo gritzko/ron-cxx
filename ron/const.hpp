@@ -21,6 +21,13 @@ enum SPEC : uint8_t {
 	REF = 3
 };
 
+enum VARIANT {
+    RON_UUID = 0,
+    RON_ATOM = 1,
+    RFC4122_UUID = 2,
+    RESERVED = 3
+};
+
 static const char* UUID_PUNCT = "$%+-";
 enum UUID : uint8_t {
 	NAME = 0,

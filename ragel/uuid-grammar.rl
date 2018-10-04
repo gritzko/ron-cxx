@@ -3,6 +3,7 @@
     machine UUID;
 
     action start_uuid {
+        hlf = 0;
     }
 
     action int60_dgt {

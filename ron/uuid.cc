@@ -4,8 +4,10 @@ namespace ron {
 
     constexpr int8_t Word::OFFSET6[10] ;
     constexpr uint64_t Word::LOWER6[11];
+    //const Word Word::ZERO{};
+    //const Uuid Uuid::ZERO{};
 
-    std::string Atom::str(const char *buf) const {
+    std::string Value::str(const char *buf) const {
         char pad[32];
         int l;
         fsize_t i0, i1;
@@ -20,7 +22,7 @@ namespace ron {
                 if (!buf) return std::string();
                 i0 = origin().get30(0);
                 i1 = origin().get30(1);
-                return unescape(buf + i0, i1);
+                return std::string(buf + i0, i1);
             case ATOM::BUF:
                 if (!buf) return std::string();
                 i0 = origin().get30(0);
@@ -30,9 +32,9 @@ namespace ron {
     }
 
 
-    Word::Word (const std::string& word) {
+    Word::Word (const char* word, fsize_t size) {
         _64[0] = 0;
-        for(int i=0; i<word.size(); i++) {
+        for(int i=0; i<size; i++) {
             put6(9-i, ABC[word[i]]); // TODO check
         }
     }

@@ -4,15 +4,21 @@
 
 namespace ron {
 
-/// tweak abc2cpp
-/// re /(\w+)\s+(\S+)\s+(.*)/_PUNCT $1 $2\n_ENUM $1 $3\n/
-  /// fn /_PUNCT (\w+) (.*)/ (s,enm,seps) => { return "static const char* "+enm+"_PUNCT = \""+seps.replace(/\\/,"\\\\")+'";' }
-/// fn /(_ENUM BASE )(.*)/ (s,pre,dgt) => { return pre+dgt.split(/\s+/).map(d=>"DIGIT"+d).join(" ") }
-/// fn /_ENUM (\w+) (.*)/ (s,enm,vals)=>{ var i=0; return "enum "+enm+" : uint8_t {\n" + vals.split(/\s+/).map(name=>'\t'+name+" = "+(i++)).join(',\n') + "\n};" }
-/// end
+enum RON : uint8_t {
+	OPEN = 0,
+	CLOSED = 1,
+	TEXT = 2,
+	BINARY = 4,
+	JSON = 6,
+	CBOR = 8,
+	NOMINAL = 10,
+	TEXT_OPEN = TEXT|OPEN,
+	TEXT_CLOSED = TEXT|CLOSED,
+	NOMINAL_OPEN = NOMINAL|OPEN,
+	// and so on
+};
 
-/// paste ABC [5a1abc01]
-/// use abc2cpp [8859384c]
+
 static const char* SPEC_PUNCT = "*#@:";
 enum SPEC : uint8_t {
 	TYPE = 0,
@@ -140,9 +146,6 @@ static const char* FRAME_PUNCT = ".";
 enum FRAME : uint8_t {
 	END = 0
 };
-
-
-/// end
 
   
 void init();

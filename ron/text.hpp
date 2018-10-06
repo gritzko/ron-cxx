@@ -20,15 +20,19 @@ struct TextFrame {
         int position;
 
         int cs;
-        int atm, dgt, hlf, off;
+        int atm, dgt, off;
+        half_t hlf;
 
         static constexpr int RON_FULL_STOP = 255;
         static constexpr int SPEC_SIZE = 2; // open RON
 
-        Word& word(int atm, int hlf) { return op_.atoms_[atm].word(hlf); }
     public:
         explicit Cursor(const TextFrame& host) :
-            frame_{host}, op_{}, cs{0}, atm{0}, dgt{0}, hlf{0}, off{0}, position{-1} {}
+            frame_{host}, op_{RON::TEXT_OPEN, TERM::RAW}, 
+            cs{0}, atm{0}, dgt{0}, hlf{VALUE}, off{0}, position{-1} 
+            {
+                Next();
+            }
         const Op& op() const { return op_; }
         bool Next();
         const std::string& data() const { return frame_.data(); }
@@ -45,7 +49,7 @@ struct TextFrame {
 
     public:
 
-        Builder() : data_{}, op_{} {}
+        Builder() : data_{}, op_{RON::TEXT_OPEN, TERM::RAW} {}
 
         void AddOp(const Op& op, const std::string& back_buf);
 

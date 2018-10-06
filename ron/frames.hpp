@@ -63,7 +63,7 @@ inline void AddOp(Builder &builder, const char *id, const char *ref, const char 
     AddOp(builder, Uuid{id}, Uuid{ref}, val0, val1);
 }
 
-template<typename Cursor>
+/*template<typename Cursor>
 inline std::string GetString (const Cursor& cur, fsize_t idx) {
     const Atom& cell = cur.op().value(idx);
     if (cell.variant()!=VARIANT::RON_ATOM) {
@@ -74,7 +74,7 @@ inline std::string GetString (const Cursor& cur, fsize_t idx) {
         return "";
     }
     return atom.string_value(cur.data());
-}
+}*/
 
 }
 #endif

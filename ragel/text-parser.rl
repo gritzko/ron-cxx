@@ -34,7 +34,7 @@ bool TextFrame::Cursor::Next () {
         case RON_start:
             atoms.resize(SPEC_SIZE);
             atm = 0;
-            hlf = 0;
+            hlf = VALUE;
             dgt = 0;
             break;
     }
@@ -46,15 +46,19 @@ bool TextFrame::Cursor::Next () {
 
     auto p = data.begin() + off;
     auto pb = p;
+    auto be = data.begin();
     auto pe = data.end();
     auto eof = pe;
-    int n = 0;
+    int n = 0; // tmp atm value holder
+    int aso = 0; // atom start offset
 
     %%{
     include FRAME "./text-grammar.rl";
     main := FRAME ;
     write exec;
     }%%
+
+    off = p - data.begin();
 
     if (cs==RON_error) {
 	    return false;

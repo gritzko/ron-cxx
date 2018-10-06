@@ -3,19 +3,19 @@
     machine UUID;
 
     action start_uuid {
-        hlf = 0;
+        hlf = VALUE;
     }
 
-    action int60_dgt {
+    action int60_dgt { // std::cerr << "digit " << fc << '\n';
         if (dgt>9) {
             fbreak;
         }
-        word(atm,hlf).put6(9-dgt, ABC[fc]);
+        atoms[atm][hlf].put6(9-dgt, ABC[fc]);
         dgt++;
     }
 
     action start_full_int {
-        //word(atm, hlf).zero_payload();
+        atoms[atm][hlf].zero_payload();
     }
 
     action start_value {
@@ -23,7 +23,7 @@
 
     action start_origin {
         dgt = 0;
-        hlf = 1;
+        hlf = ORIGIN;
     }
 
     action end_value {
@@ -33,20 +33,20 @@
     }
 
     action variety {
-        word(atm, 0).set_flags(word(atm, 0).get6(9));
-        word(atm, hlf).zero_payload();
+        atoms[atm][VALUE].set_flags(atoms[atm][VALUE].get6(9));
+        atoms[atm][VALUE].zero_payload();
         dgt--;
     }
 
     action uuid_sep {
-        hlf = 1;
-        word(atm, 1).zero_flags();
-        word(atm, 1).set_flags(ABC[fc]);
+        hlf = ORIGIN;
+        atoms[atm][ORIGIN].zero_flags();
+        atoms[atm][ORIGIN].set_flags(ABC[fc]);
     }
 
     action end_name {
-        word(atm, 1).zero();
-        word(atm, 1).set_flags(UUID::NAME);
+        atoms[atm][ORIGIN].zero();
+        atoms[atm][ORIGIN].set_flags(UUID::NAME);
     }
 
     # Base64 value
@@ -57,7 +57,7 @@
     INT = DGT* >start_full_int;
 
     # first half of an UUID 
-    VALUE = (DGT >start_value ([\/] @variety)? DGT*) %end_value;
+    VALUE = (DGT >start_value ([\/] @variety)? DGT*) %end_value >start_full_int;
     #VALUE = INT >start_value %end_value ;
     # second half of an UUID 
     ORIGIN = INT >start_origin %end_origin ;

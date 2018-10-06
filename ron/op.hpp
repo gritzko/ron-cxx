@@ -14,11 +14,14 @@ typedef std::vector<Atom> Atoms;
 struct Op {
     Atoms atoms_;
     TERM term_;
+    RON coding_;
     Op(const Op& op) : atoms_{op.atoms_}, term_{op.term_} {}
-    explicit Op(TERM term) : atoms_{}, term_{term} {}
-    explicit Op(fsize_t capacity) : atoms_{capacity}, term_{TERM::RAW} {}
-    Op() : Op{4} {}
-    Op(const Uuid& id, const Uuid& ref) : atoms_{}, term_{TERM::HEADER} {
+    explicit Op(RON coding, TERM term) : 
+    atoms_{}, coding_{coding}, term_{term} {
+        atoms_.reserve((coding&RON::CLOSED)?4:6);
+    }
+    explicit Op(RON coding) : Op{coding, TERM::RAW} {}
+    Op(const Uuid& id, const Uuid& ref) : Op{RON::NOMINAL_OPEN, TERM::HEADER} {
         atoms_.push_back(id);
         atoms_.push_back(ref);
     }
@@ -36,14 +39,29 @@ struct Op {
         return (Uuid&)atoms_[1];
     }
     const Value& value(fsize_t idx) const {
-        assert(idx+1<atoms_.size());
-        return (Value&)atoms_[idx+2];
+        assert(idx<atoms_.size());
+        return (Value&)atoms_[idx];
+    }
+    inline double value_float(fsize_t idx) const {
+        return value(idx).float_value();
+    } 
+    inline int64_t value_int(fsize_t idx) const {
+        return value(idx).int_value();
+    }
+    inline Uuid value_uuid(fsize_t idx) const {
+        return reinterpret_cast<const Uuid&>(atoms_[idx]);
+    }
+    inline std::string value_string(fsize_t idx, const std::string& data) const {
+        frange_t rng = ((Value&)atoms_[idx]).range();
+        std::string ret = data.substr(rng.first, rng.second);
+        return ret;
     }
     fsize_t size() const {
         return (fsize_t) atoms_.size();
     }
     void resize (fsize_t new_size = 2) { atoms_.resize(new_size); }
     Atoms& data() { return atoms_; }
+    inline RON coding() const { return coding_; }
     // a nominal RON (closed) op, with a descriptor
     // mostly for outer interfaces / bindings
     Atom* closed(Uuid rdt, Uuid object) const;
@@ -53,11 +71,6 @@ struct Op {
     void AddFloat(double value);
     void AddString(fsize_t from, fsize_t till);
 
-    const Op& Fill(const Uuid& ev, const Uuid& ref);
-    const Op& Fill(const Uuid& ev, const Uuid& ref, const frange_t range);
-    const Op& Fill(const Uuid& ev, const Uuid& ref, const Uuid& value);
-    const Op& Fill(const Uuid& ev, const Uuid& ref, double value);
-    const Op& Fill(const Uuid& ev, const Uuid& ref, int64_t value);
 };
 
 typedef int Status; // FIXME

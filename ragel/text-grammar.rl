@@ -3,18 +3,25 @@
     machine FRAME;
     include UUID "./uuid-grammar.rl";
 
-    action spec_start {  //std::cerr<<"spec_start"<<std::endl;
+    action spec_start {  // std::cerr<<"spec_start"<<std::endl;
         atoms.resize(SPEC_SIZE);
     }
 
-    action redef_uuid {  //std::cerr<<"redef_uuid"<<std::endl;
+    action redef_uuid {  // std::cerr<<"redef_uuid"<<std::endl;
         if (atm>0) {
             atoms[atm] = atoms[atm-1];
         }
     }
 
-    action spec_uuid_start {  //std::cerr<<"spec_uuid_start"<<std::endl;
+    action spec_uuid_start {  // std::cerr<<"spec_uuid_start"<<std::endl;
         n = (int)(ABC[fc]);
+        if (!(op_.coding()&RON::CLOSED)) {
+            n-=2;
+            if (n<0) {
+                fnext *RON_error;
+                fbreak;
+            }
+        }
 	    dgt = 0;
         if (n < atm) { 
             // parse #op1#op2#op3 without Ragel state explosion
@@ -28,62 +35,58 @@
         }
     }
 
-    action spec_uuid_end {  //std::cerr<<"spec_uuid_end"<<std::endl;
+    action spec_uuid_end {  // std::cerr<<"spec_uuid_end "<<std::endl;
         atm++;
     }
 
-    action atom_start {  //std::cerr<<"atom_start"<<std::endl;
+    action atom_start {  // std::cerr<<"atom_start"<<std::endl;
 	    dgt = 0;
-        atoms.push_back(Atom{}); 
+        atoms.push_back(Atom{});
+        aso = p-be+1;
+        atoms[atm][ORIGIN].put2(31, VARIANT::RON_ATOM);
+        atoms[atm][ORIGIN].put30(1, aso);
     }
-    action atom_end {  //std::cerr<<"atom_end"<<std::endl;
+    action atom_end {  // std::cerr<<"atom_end"<<std::endl;
+        if (atoms[atm].variant()==VARIANT::RON_ATOM) {
+            atoms[atm][ORIGIN].put30(0, (p-be)-aso-1);
+        }
         atm++;
     }
 
-    action int_atom_start {  //std::cerr<<"int_atom_start "<<(p-pb)<<std::endl;
-        atoms[atm][ORIGIN].put2(31, ATOM::INT);
-        atoms[atm][VALUE].set32(1, p-pb);
+    action int_atom_start {  // std::cerr<<"int_atom_start "<<(p-pb)<<std::endl;
+        atoms[atm][ORIGIN].put2(30, ATOM::INT);
     }
-    action int_atom_end {  //std::cerr<<"int_atom_end "<<(p-pb)<<std::endl;
-        atoms[atm][VALUE].set32(0, p-pb);
+    action int_atom_end {  // std::cerr<<"int_atom_end "<<(p-pb)<<std::endl;
     }
 
-    action float_atom_start {  //std::cerr<<"float_atom_start"<<std::endl;
-        atoms[atm][ORIGIN].put2(31, ATOM::FLOAT);
-        atoms[atm][VALUE].set32(1, p-pb);
+    action float_atom_start {  // std::cerr<<"float_atom_start"<<std::endl;
+        atoms[atm][ORIGIN].put2(30, ATOM::FLOAT);
     }
-    action float_atom_end {  //std::cerr<<"float_atom_end"<<std::endl;
-        atoms[atm][VALUE].put30(0, p-pb);
+    action float_atom_end {  // std::cerr<<"float_atom_end"<<std::endl;
     }
 
-    action string_atom_start {  //std::cerr<<"string_atom_start"<<std::endl;
-	    atoms[atm][ORIGIN].put2(31, ATOM::STRING);
-        atoms[atm][VALUE].set32(1, p-pb);
+    action string_atom_start {  // std::cerr<<"string_atom_start"<<std::endl;
+	    atoms[atm][ORIGIN].put2(30, ATOM::STRING);
     }
-    action string_atom_end {  //std::cerr<<"string_atom_end"<<std::endl;
-        atoms[atm][VALUE].set32(0, p-pb);
+    action string_atom_end {  // std::cerr<<"string_atom_end"<<std::endl;
     }
 
-    action uuid_atom_start {  //std::cerr<<"uuid_atom_start"<<std::endl;
-        if (atm==4) {
-            atoms[atm] = atoms[SPEC::OBJECT];
-        } else if (atoms[atm-1].variant()==VARIANT::RON_UUID) {
-            atoms[atm] = atoms[atm-1];
-        }
+    action uuid_atom_start {  // std::cerr<<"uuid_atom_start"<<std::endl;
+        atoms[atm] = atoms[atm-1];
     }
 
-    action atoms_start {  //std::cerr<<"atoms_start"<<std::endl;
-        atm = 4;
+    action atoms_start {  // std::cerr<<"atoms_start"<<std::endl;
+        atm = SPEC_SIZE;
         dgt = 0;
     }
-    action atoms {  //std::cerr<<"atoms"<<std::endl;
+    action atoms {  // std::cerr<<"atoms"<<std::endl;
     }
 
-    action opterm {  //std::cerr<<"opterm"<<std::endl;
+    action opterm {  // std::cerr<<"opterm"<<std::endl;
         term = (enum TERM) (ABC[fc]);
     }
 
-    action op_start {  //std::cerr<<"op_start"<<std::endl;
+    action op_start {  // std::cerr<<"op_start"<<std::endl;
         if (p>pb && position!=-1) {
             // one op is done, so stop parsing for now
             // make sure the parser restarts with the next op
@@ -98,14 +101,14 @@
         }
     }
 
-    action op_end {  //std::cerr<<"op_end"<<std::endl;
+    action op_end {  // std::cerr<<"op_end"<<std::endl;
         position++;
     }
 
-    action spec_end {  //std::cerr<<"spec_end"<<std::endl;
+    action spec_end {  // std::cerr<<"spec_end"<<std::endl;
     }
 
-    action frame_end {  //std::cerr<<"frame_end"<<std::endl;
+    action frame_end {  // std::cerr<<"frame_end"<<std::endl;
         fnext *RON_FULL_STOP;
         fbreak;
     }

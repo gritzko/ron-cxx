@@ -151,6 +151,9 @@ struct Atom {
     inline Word& operator[] (half_t half) {
         return half ? words_.second : words_.first;
     }
+    inline const Word& operator[] (half_t half) const {
+        return half ? words_.second : words_.first;
+    }
     inline VARIANT variant () const {
         return VARIANT(ofb()>>2);
     }
@@ -207,7 +210,9 @@ struct Uuid : public Atom {
 
 struct Value : public Atom {
     inline static Word range_word(ATOM type, frange_t range) {
-        return (uint64_t(type)<<60) | (range.first<<30) | range.second;
+        uint64_t rw = (uint64_t(type)<<60) | (uint64_t(range.first)<<30) | range.second;
+        Word w = Word{rw};
+        return w;
     }
     Value (Word value, ATOM type, frange_t range) : Atom{value, range_word(type, range)} {
     }

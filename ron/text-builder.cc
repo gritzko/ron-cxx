@@ -11,7 +11,7 @@ namespace ron {
         data_.push_back(SPEC_PUNCT[SPEC::REF]);
         WriteUuid(op.ref());
         for(int i=2; i<op.size(); i++) {
-            const Value& a = op.value(i-2);
+            const Value& a = op.value(i);
             switch (a.type()) { // FIXME UUID is different
                 case ATOM::INT:
                     data_.push_back(ATOM_PUNCT[ATOM::INT]);

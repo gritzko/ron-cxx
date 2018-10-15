@@ -40,7 +40,7 @@ namespace ron {
     }
 
 
-    int Word::writeBase64(std::string& str) const {
+    int Word::write_base64(std::string &str) const {
         uint64_t val = _64[0];
         int len = 0;
         uint64_t mask = Word::MAX_VALUE;
@@ -58,11 +58,11 @@ namespace ron {
             ret.push_back(BASE_PUNCT[vrt]);
             ret.push_back('/');
         }
-        words_.first.writeBase64(ret);
+        words_.first.write_base64(ret);
         int schm = version();
         if (schm!=0 || !origin().is_zero()) {
             ret.push_back(UUID_PUNCT[schm]);
-            words_.second.writeBase64(ret);
+            words_.second.write_base64(ret);
         }
         return ret;
     }

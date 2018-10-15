@@ -56,6 +56,9 @@ struct Op {
         std::string ret = data.substr(rng.first, rng.second);
         return ret;
     }
+    inline frange_t value_range(fsize_t idx) const {
+        return ((Value&)atoms_[idx]).range();
+    }
     fsize_t size() const {
         return (fsize_t) atoms_.size();
     }
@@ -72,8 +75,6 @@ struct Op {
     void AddString(fsize_t from, fsize_t till);
 
 };
-
-typedef int Status; // FIXME
 
 
 } // namespace ron

@@ -4,9 +4,11 @@
 
 namespace ron {
 
-struct TextFrame {
+class TextFrame {
 
     const std::string data_;
+
+public:
 
     TextFrame() : data_{} {}
     explicit TextFrame(const std::string& data) : data_{data} {}
@@ -34,6 +36,7 @@ struct TextFrame {
                 Next();
             }
         const Op& op() const { return op_; }
+        const TextFrame& frame() const { return frame_; }
         bool Next();
         const std::string& data() const { return frame_.data(); }
     };
@@ -52,6 +55,8 @@ struct TextFrame {
         Builder() : data_{}, op_{RON::TEXT_OPEN, TERM::RAW} {}
 
         void AddOp(const Op& op, const std::string& back_buf);
+
+        void AddAll(Cursor& cur, const std::string& back_buf);
 
         const TextFrame frame() const { return TextFrame{data_}; }
     };

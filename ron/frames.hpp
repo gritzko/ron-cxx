@@ -2,7 +2,9 @@
 #define ron_frames_hpp
 
 #include <cstring>
+#include <vector>
 #include "uuid.hpp"
+#include "op.hpp"
 
 namespace ron {
 

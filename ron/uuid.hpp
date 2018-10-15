@@ -2,17 +2,12 @@
 #define ron_uuid_hpp
 #include <cstdint>
 #include <string>
-#include <utility>
-#include <cstdint>
 #include "const.hpp"
 #include <iostream>
-#include <cstring>
-
+#include "slice.hpp"
 
 namespace ron {
 
-typedef uint32_t fsize_t;
-typedef std::pair<fsize_t, fsize_t> frange_t;
 
 union Word {
 
@@ -112,7 +107,7 @@ union Word {
     inline void zero_payload() {
         _64[0]&=FLAG_BITS;
     }
-    int writeBase64(std::string& str) const;
+    int write_base64(std::string &str) const;
     inline bool is_zero() const { return _64[0]==0; }
     inline Word inc() const { return Word{_64[0]+1}; }
     inline bool operator < (const Word& b) const {
@@ -126,6 +121,10 @@ union Word {
     }
     inline bool operator != (const Word& b) const {
         return _64[0] != b._64[0];
+    }
+    inline size_t hash () const {
+        static constexpr auto _64_hash_fn = std::hash<uint64_t>{};
+        return _64_hash_fn(_64[0]);
     }
 };
 
@@ -203,7 +202,6 @@ struct Uuid : public Atom {
     inline bool operator != (const Uuid& b) const {
         return words_ != b.words_;
     }
-
     //static const Uuid ZERO;
 };
 
@@ -243,9 +241,17 @@ struct Value : public Atom {
     }
 };
 
-
-
 } // namespace ron
 
+namespace std {
+
+    template <>
+    struct hash<ron::Uuid> {
+        size_t operator()(ron::Uuid const& uuid) const noexcept {
+            return uuid.value().hash() ^ (uuid.origin().hash()<<1);
+        }
+    };
+
+}
 
 #endif

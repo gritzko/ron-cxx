@@ -10,7 +10,7 @@ namespace ron {
 
 template<class Frame>
 class LastWriteWins : public ReplicatedDataType<Frame> {
-    static int less_than (const Op& a, const Op& b) {
+    static bool less_than (const Op& a, const Op& b) {
         return a.id() < b.id();
     }
     typedef MergeCursor<Frame, less_than> merger;

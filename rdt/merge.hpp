@@ -6,7 +6,7 @@
 
 namespace ron {
 
-typedef int (*less_t)(const Op& a, const Op& b);
+typedef bool (*less_t)(const Op& a, const Op& b);
 
 // asc-sorting iterator heap
 template<typename Frame, less_t less_fn>
@@ -52,7 +52,7 @@ private:
     inline int size () const {
         return (int)cursors_.size();
     }
-    inline int less_than(int a, int b) const {
+    inline bool less_than(int a, int b) const {
         return less_fn(op(a), op(b));
     }
 

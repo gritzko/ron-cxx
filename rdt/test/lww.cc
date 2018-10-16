@@ -50,13 +50,13 @@ int main (int argn, char** args) {
     TextFrame abbc = abbc_builder.frame();
     assert(scan(abbc)=="_,a,b,c,b");
 
-    /*lww.GC(ab2c_builder, abbc);
+    lww.GC(ab2c_builder, abbc);
     TextFrame ab2c = ab2c_builder.frame();
-    assert(scan(ab2c)=="A,B2,C");
+    assert(scan(ab2c)=="_,a,c,b");
 
     lww.MergeGC(ab2c_builder2, inputs);
     TextFrame ab2c2 = ab2c_builder2.frame();
-    assert(scan(ab2c2)=="A,B2,C");
-    assert(ab2c.data()==ab2c2.data());*/
+    assert(scan(ab2c2)=="_,a,c,b");
+    assert(ab2c.data()==ab2c2.data());
 
 }

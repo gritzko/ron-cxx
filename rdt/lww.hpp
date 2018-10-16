@@ -1,7 +1,7 @@
 #ifndef rdt_lww_hpp
 #define rdt_lww_hpp
 
-#include <unordered_set>
+#include <unordered_map>
 #include "rdt/merge.hpp"
 #include "rdt/rdt.hpp"
 #include "ron/status.hpp"
@@ -28,15 +28,26 @@ public:
     // Either way, the latest/winning value will go first.
     // May use Frame::unescape() and/or Op unesc flag.
     Status GC(Builder& output, const Frame& input) {
-        std::unordered_set<slice_t> seen;
-        auto cur = input.cursor();
+        std::unordered_map<slice_t, Uuid> last;
+        auto scan = input.cursor();
         do {
-            slice_t key{input.data(), cur.op().value_range(2)};
-            if (seen.find(key)==seen.end()) {
-                seen.insert(key);
-                output.AddOp(cur.op(), input.data());
+            if (scan.op().size()<3) continue;
+            slice_t key{input.data(), scan.op().value_range(2)};
+            last[key] = scan.op().id();
+        } while (scan.Next());
+
+        auto filter = input.cursor();
+        if (filter.op().size()==2) { // header
+            output.AddOp(filter.op(), input.data());
+        }
+        do { // TODO maybe check op pattern here
+            if (filter.op().size()<3) continue;
+            slice_t key{input.data(), filter.op().value_range(2)};
+            if (last[key]==filter.op().id()) {
+                output.AddOp(filter.op(), input.data());
             }
-        } while (cur.Next());
+        } while (filter.Next());
+
         return Status::OK;
     }
 };

@@ -1,4 +1,5 @@
 #include "uuid.hpp"
+#include <inttypes.h>
 
 namespace ron {
 
@@ -13,7 +14,7 @@ namespace ron {
         fsize_t i0, i1;
         switch (type()) {
             case ATOM::INT:
-                l = sprintf(pad, "%lld", int_value());
+                l = sprintf(pad, "%" PRId64, int_value());
                 return std::string(pad, l);
             case ATOM::FLOAT:
                 l = sprintf(pad, "%lf", float_value());

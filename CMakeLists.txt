@@ -29,12 +29,8 @@ add_executable(test-text ron/test/text.cc)
 target_link_libraries(test-uuid ron)
 target_link_libraries(test-text ron)
 
-add_library(rdt STATIC
-    rdt/rdt.hpp
-    rdt/merge.hpp
-    rdt/lww.hpp
-    )
-target_link_libraries(rdt ron)
+add_library(rdt INTERFACE)
+target_include_directories(rdt INTERFACE rdt/)
 
 add_executable(test-lww rdt/test/lww.cc)
 target_link_libraries(test-lww ron rdt)

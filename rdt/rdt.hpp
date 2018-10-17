@@ -11,10 +11,11 @@ class ReplicatedDataType {
 
 public:
 
-    typedef typename Frame::Builder Builder;
     typedef std::vector<Frame> Frames;
+    typedef typename Frame::Builder Builder;
+    typedef typename Frame::Cursor Cursor;
 
-    virtual Status Merge(typename Frame::Builder& output, const Frames& inputs) = 0;
+    virtual Status Merge(Builder& output, const Frames& inputs) = 0;
 
     virtual Status GC(Builder& output, const Frame& input) = 0;
 

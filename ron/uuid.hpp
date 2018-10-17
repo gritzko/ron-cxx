@@ -22,6 +22,7 @@ union Word {
     explicit Word (const char* word) : Word{word, (fsize_t)strlen(word)} {}
 
     explicit operator unsigned long () const { return _64[0]; }
+    explicit operator uint64_t () const { return _64[0]; }
 
     // payload bit size
     static constexpr int PBS = 60;

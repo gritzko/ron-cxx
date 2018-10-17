@@ -13,7 +13,7 @@ namespace ron {
         fsize_t i0, i1;
         switch (type()) {
             case ATOM::INT:
-                l = sprintf(pad, "%ld", int_value());
+                l = sprintf(pad, "%lld", int_value());
                 return std::string(pad, l);
             case ATOM::FLOAT:
                 l = sprintf(pad, "%lf", float_value());

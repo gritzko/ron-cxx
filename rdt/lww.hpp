@@ -52,6 +52,10 @@ public:
     }
 };
 
+static constexpr uint64_t LWW_ID{881557636825219072UL};
+static constexpr int LWW_INT{881557636825219072UL>>30};
+static const Uuid LWW_TYPE_ID{LWW_ID,0};
+
 }
 
 #endif

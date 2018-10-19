@@ -32,6 +32,12 @@ struct Op {
     Op(const Uuid& id, const Uuid& ref, const Value& v0, const Value& v1) : Op{id, ref, v0} {
         atoms_.push_back(v1);
     }
+    const Uuid& type() const {
+        return (Uuid&)atoms_[0];
+    }
+    const Uuid& object() const {
+        return (Uuid&)atoms_[1]; //FIXME
+    }
     const Uuid& id() const {
         return (Uuid&)atoms_[0];
     }

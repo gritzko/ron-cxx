@@ -10,6 +10,8 @@ class TextFrame {
 
 public:
 
+    typedef std::vector<TextFrame> Batch;
+
     TextFrame() : data_{} {}
     explicit TextFrame(const std::string& data) : data_{data} {}
     explicit TextFrame(const std::string&& data) : data_{data} {}
@@ -59,6 +61,9 @@ public:
         void AddAll(Cursor& cur, const std::string& back_buf);
 
         const TextFrame frame() const { return TextFrame{data_}; }
+
+        bool empty() const { return data_.empty(); }
+
     };
 
     Cursor cursor() const {

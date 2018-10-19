@@ -11,15 +11,14 @@ struct Status {
     Status(uint64_t err_code) : code_{err_code, Word::MAX_VALUE} {}
 
     operator bool () const  {
-        return code_[VALUE]==0;
+        return code_[ORIGIN]!=Word::PAYLOAD_BITS; // not an error
     }
 
     static const Status OK;
     static const Status NOT_FOUND;
+    static const Status BAD_STATE;
+    static const Status DB_FAIL;
 };
-
-const Status Status::OK{};
-const Status Status::NOT_FOUND{428933766657507328UL};
 
 }
 

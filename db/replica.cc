@@ -96,14 +96,22 @@ namespace ron {
 
     template<typename Frame>
     Status Replica<Frame>::Close () {
-        delete data_cf_;
-        data_cf_ = nullptr;
-        delete history_cf_;
-        history_cf_ = nullptr;
-        delete log_cf_;
-        log_cf_ = nullptr;
-        delete db_;
-        db_ = nullptr;
+        if (data_cf_) {
+            delete data_cf_;
+            data_cf_ = nullptr;
+        }
+        if (history_cf_) {
+            delete history_cf_;
+            history_cf_ = nullptr;
+        }
+        if (log_cf_) {
+            delete log_cf_;
+            log_cf_ = nullptr;
+        }
+        if (db_) {
+            delete db_;
+            db_ = nullptr;
+        }
     }
 
     template<typename Frame>

@@ -8,6 +8,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(LLVM_ENABLE_RTTI ON)
 set(CMAKE_CXX_FLAGS "-frtti")
 set(ROCKSDB_PREFIX ${CMAKE_SOURCE_DIR}/deps/rocksdb)
+set(CXXOPTS_PREFIX ${CMAKE_SOURCE_DIR}/deps/cxxopts)
 
 ExternalProject_Add(rocksdblib
     GIT_REPOSITORY https://github.com/facebook/rocksdb.git
@@ -20,6 +21,16 @@ ExternalProject_Add(rocksdblib
 )
 include_directories(${ROCKSDB_PREFIX}/src/rocksdblib/include/)
 link_directories(${ROCKSDB_PREFIX}/src/rocksdblib-build/)
+
+ExternalProject_Add(cxxopts
+    GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
+    GIT_TAG 00e8ecc482b79c04942fc2c08773618348bd0a6a
+    PREFIX ${CXXOPTS_PREFIX}
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${CXXOPTS_PREFIX}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build .
+    INSTALL_COMMAND ""
+    )
+include_directories(${CXXOPTS_PREFIX}/src/cxxopts/include)
 
 include_directories(".")
 
@@ -56,5 +67,5 @@ add_executable(swarmdb
     db/replica.cc
     db/main.cc
     )
-add_dependencies(swarmdb rocksdblib)
+add_dependencies(swarmdb rocksdblib cxxopts)
 target_link_libraries(swarmdb ron rocksdb pthread z bz2 snappy)

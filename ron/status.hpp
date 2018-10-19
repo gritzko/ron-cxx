@@ -14,6 +14,8 @@ struct Status {
         return code_[ORIGIN]!=Word::PAYLOAD_BITS; // not an error
     }
 
+    std::string str() const { return code_.str(); }
+
     static const Status OK;
     static const Status NOT_FOUND;
     static const Status BAD_STATE;

@@ -173,6 +173,7 @@ struct Uuid : public Atom {
     }
     inline Word& word(int a, int i) { return Atom::word(i); }
     std::string str() const;
+    inline bool zero() const { return value()==0; }
     static Uuid Time(Word value, Word origin) {
         return Uuid{value, (uint64_t(origin)&Word::PAYLOAD_BITS) |
                 (uint64_t(UUID::TIME)<<Word::PBS)};

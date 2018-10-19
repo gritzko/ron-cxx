@@ -24,7 +24,7 @@ public:
 
     rocksdb::ColumnFamilyHandle *data_cf_, *history_cf_, *log_cf_;
 
-    Replica(): db_{nullptr} {}
+    Replica(): db_{0}, data_cf_{0}, history_cf_{0}, log_cf_{0} {}
 
     //  L I F E C Y C L E
 

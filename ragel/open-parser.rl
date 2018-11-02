@@ -1,4 +1,5 @@
 #include "open-text-ron.hpp"
+#include <iostream>
 
 namespace ron {
 
@@ -6,22 +7,32 @@ namespace ron {
 %% write data;
 
 bool OpenTextFrame::Cursor::_parse_int (iter from, iter till) {
+    std::cerr<<"I see int '"<<std::string{from, till}<<"'\n"; 
 }
 
 bool OpenTextFrame::Cursor::_parse_float (iter from, iter till) {
+    std::cerr<<"I see float '"<<std::string{from, till}<<"'\n"; 
 }
 
 bool OpenTextFrame::Cursor::_parse_uuid (iter from, iter varsion, iter till) {
+    std::cerr<<"I see UUID '"<<std::string{from, till}<<"'\n"; 
 }
 
 bool OpenTextFrame::Cursor::_parse_string (iter from, iter till) {
+    std::cerr<<"I see string '"<<std::string{from, till}<<"'\n"; 
 }
 
 bool OpenTextFrame::Cursor::_set_term (char term) {
     op_.term_ = (enum TERM) (ABC[term]);
+    std::cerr<<"I see term "<<term<<"\n"; 
 }
 
-bool OpenTextFrame::Cursor::_default_spec () {
+bool OpenTextFrame::Cursor::_parse_spec () {
+    std::cerr<<"I saw spec\n"; 
+}
+
+bool OpenTextFrame::Cursor::_parse_op () {
+    std::cerr<<"I saw op\n\n"; 
 }
 
 bool OpenTextFrame::Cursor::Next () {
@@ -59,11 +70,13 @@ bool OpenTextFrame::Cursor::Next () {
     iter pe = data().end();
     iter eof = pe;
 
-    iter int_start{pb};
-    iter uuid_start{pb};
-    iter float_start{pb};
-    iter string_start{pb};
-    iter version_at{pb};
+    iter int_start{p};
+    iter uuid_start{p};
+    iter float_start{p};
+    iter string_start{p};
+    iter version_at{p};
+
+    std::cerr<<"starting with '"<<*p<<"'\n";
 
     %%{
     include OPEN_TEXT_FRAME "./open-grammar.rl";
@@ -87,6 +100,8 @@ bool OpenTextFrame::Cursor::Next () {
     } else if (p>=eof) {
         cs = RON_error;
 	    return false;
+    } else {
+        return true;
     }
 }
 

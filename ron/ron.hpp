@@ -6,5 +6,6 @@
 #include "status.hpp"
 #include "frames.hpp"
 #include "text.hpp"
+#include "open-text-ron.hpp"
 
 #endif

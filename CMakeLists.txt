@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.9.4)
 project(cpp)
 include(ExternalProject)
 
+#  S E T T I N G S
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -9,6 +11,10 @@ set(LLVM_ENABLE_RTTI ON)
 set(CMAKE_CXX_FLAGS "-frtti")
 set(ROCKSDB_PREFIX ${CMAKE_SOURCE_DIR}/deps/rocksdb)
 set(CXXOPTS_PREFIX ${CMAKE_SOURCE_DIR}/deps/cxxopts)
+
+include_directories(".")
+
+#  D E P E N D E N C I E S
 
 ExternalProject_Add(rocksdblib
     GIT_REPOSITORY https://github.com/facebook/rocksdb.git
@@ -30,9 +36,10 @@ ExternalProject_Add(cxxopts
     BUILD_COMMAND ${CMAKE_COMMAND} --build .
     INSTALL_COMMAND ""
     )
+
 include_directories(${CXXOPTS_PREFIX}/src/cxxopts/include)
 
-include_directories(".")
+#  L I B R O N
 
 add_library(ron STATIC
     ron/const.hpp
@@ -51,19 +58,33 @@ add_library(ron STATIC
     ron/text.cc
     ron/text-parser.cc
     ron/text-builder.cc
+    ron/open-text-ron.cc
     ron/open-text-ron-builder.cc
     ron/open-text-ron-parser.cc
     )
+
+#  L I B R O N  U N I T  T E S T S
+
 add_executable(test-uuid ron/test/uuid.cc)
-add_executable(test-text ron/test/text.cc)
 target_link_libraries(test-uuid ron)
+
+add_executable(test-text ron/test/text.cc)
 target_link_libraries(test-text ron)
+
+add_executable(test-open-text ron/test/open.cc)
+target_link_libraries(test-open-text ron)
+
+#  L I B R D T  ( H E A D E R  O N L Y )
 
 add_library(rdt INTERFACE)
 target_include_directories(rdt INTERFACE rdt/)
 
+#  R D T  U N I T  T E S T S
+
 add_executable(test-lww rdt/test/lww.cc)
 target_link_libraries(test-lww ron rdt)
+
+#  S W A R M D B  C L I
 
 add_executable(swarmdb 
     db/replica.hpp

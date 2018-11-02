@@ -1,5 +1,5 @@
-#ifndef ron_text_hpp
-#define ron_text_hpp
+#ifndef ron_open_text_hpp
+#define ron_open_text_hpp
 #include "op.hpp"
 
 namespace ron {
@@ -35,7 +35,8 @@ public:
         bool _parse_uuid (iter from, iter version_at, iter till) ;
         bool _parse_string (iter from, iter till) ;
         bool _set_term (char term) ; 
-        bool _default_spec () ;
+        bool _parse_spec () ;
+        bool _parse_op () ;
 
     public:
         explicit Cursor(const OpenTextFrame& host) :
@@ -48,6 +49,11 @@ public:
         const OpenTextFrame& frame() const { return frame_; }
         bool Next();
         const std::string& data() const { return frame_.data(); }
+
+        int64_t integer(fsize_t idx);
+        double number(fsize_t idx);
+        std::string string(fsize_t idx);
+        Uuid uuid(fsize_t idx);
     };
 
     class Builder {

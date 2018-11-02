@@ -32,6 +32,8 @@ struct Op {
     Op(const Uuid& id, const Uuid& ref, const Value& v0, const Value& v1) : Op{id, ref, v0} {
         atoms_.push_back(v1);
     }
+    inline TERM term() const { return term_; }
+    inline bool valid() const { return !atoms_.empty(); }
     const Uuid& type() const {
         return (Uuid&)atoms_[0];
     }

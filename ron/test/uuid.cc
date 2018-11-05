@@ -27,6 +27,7 @@ int main (int argn, char** args) {
 
     Uuid zeros{"abc000$0"};
     assert(zeros.str()=="abc");
+    assert(Uuid{"0/100+200"}.str()=="1+2");
 
     Uuid one = Uuid::Time(1,Word{"origin"});
     assert(one.version()==UUID::TIME);
@@ -47,4 +48,8 @@ int main (int argn, char** args) {
     assert(led.version()==UUID::NAME);
     assert(led.variety()==10);
     assert(led.str()=="A/LED");
+
+    // TODO a little benchmark
+    // TODO Uuid:Sha2()
+
 }

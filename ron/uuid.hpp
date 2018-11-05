@@ -11,12 +11,27 @@ namespace ron {
 
 union Word {
 
-    uint64_t _64[1];
+    uint64_t _64[1]; // FIXME no array
     uint32_t _32[2];
     uint16_t _16[4];
     uint8_t _8[8];
 
     Word (uint64_t value=0) : _64{value} {}
+    Word (uint8_t flags, slice_t data) { 
+        uint64_t &res = *_64;
+        res = 0;
+        int i=0;
+        while(i<data.size()) {
+            res <<= Word::BASE64_BITS;
+            res |= ABC[data[i]]; // TODO inapprop chars
+            i++;
+        }
+        while (i<Word::MAX_BASE64_SIZE) {
+            res <<= Word::BASE64_BITS;
+            i++;
+        }
+        put4(0xf, flags);
+    }
     Word (const char* word, fsize_t size);
     Word (const std::string& word) : Word{word.data(), (fsize_t)word.size()} {}
     explicit Word (const char* word) : Word{word, (fsize_t)strlen(word)} {}
@@ -25,6 +40,9 @@ union Word {
 
     // payload bit size
     static constexpr int PBS = 60;
+    static constexpr int BASE64_BITS = 6;
+    // max base64 char size
+    static constexpr int MAX_BASE64_SIZE = PBS/BASE64_BITS;
     //static const Word ZERO;
     // flag bit size
     static constexpr int FBS = 64-PBS;
@@ -62,6 +80,9 @@ union Word {
     }
     inline void put2 (int pos, uint8_t value) {
         _64[0] |= uint64_t(value&3) << (pos<<1);
+    }
+    inline void put4 (int pos, uint8_t value) {
+        _64[0] |= uint64_t(value&0xf) << (pos<<2);
     }
     inline void put30 (int pos, uint32_t value) {
         _64[0] |= uint64_t(value) << (pos?30:0);
@@ -126,6 +147,7 @@ union Word {
         static constexpr auto _64_hash_fn = std::hash<uint64_t>{};
         return _64_hash_fn(_64[0]);
     }
+
 };
 
 enum half_t { VALUE=0, ORIGIN=1 } ;
@@ -162,9 +184,10 @@ struct Atom {
 struct Uuid : public Atom {
     Uuid () : Atom{0,0} {}
     Uuid (Word value, Word origin) : Atom{value,origin} {}
-    Uuid (const char* buf, size_t size);
-    Uuid (const std::string& buf) : Uuid{buf.data(), buf.size()} {}
-    Uuid (const char* buf) : Uuid{buf, strlen(buf)} {}
+    Uuid (slice_t data);
+    Uuid (const std::string& buf) : Uuid{slice_t{buf}} {}
+    Uuid (const char* buf) : 
+        Uuid{slice_t{buf, static_cast<fsize_t>(strlen(buf))}} {}
     inline enum UUID version () const {
         return (enum UUID)(ofb() & 3);
     }
@@ -203,7 +226,10 @@ struct Uuid : public Atom {
     inline bool operator != (const Uuid& b) const {
         return words_ != b.words_;
     }
-    //static const Uuid ZERO;
+    
+    static const Uuid ZERO;
+    static const Uuid FATAL;
+
 };
 
 

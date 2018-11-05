@@ -3,16 +3,17 @@
 namespace ron {
 
 
-    Uuid::Uuid (const char* buf, size_t len) {
+    Uuid::Uuid (slice_t data) {
         %% machine UUID;
         %% write data;
-        int atm=0, dgt=0;
-        half_t hlf=VALUE;
-        auto pe = buf+len;
-        auto p = buf;
-        auto eof = pe;
+
+        const char* pe = data.buf_+data.size_;
+        const char* p = data.buf_;
+        const char* eof = pe;
         int cs = 0;
-        Atom* atoms = this;
+
+        slice_t value{}, origin{}, uuid{};
+        char variety{'0'}, version{'$'};
 
         %%{ 
 
@@ -22,6 +23,13 @@ namespace ron {
             write init;
             write exec;
         }%%
+
+        if (cs) {
+            words_.first = Word{ABC[variety], value};
+            words_.second = Word{ABC[version], origin};
+        } else {
+            *this = FATAL;
+        }
 
     }
 

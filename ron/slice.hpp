@@ -15,9 +15,10 @@ struct slice_t {
     const char *buf_;
     fsize_t size_;
 
-    slice_t (const char* buf, fsize_t size) : buf_{buf}, size_{size} {}
+    slice_t (const char* buf, fsize_t size=0) : buf_{buf}, size_{size} {}
     slice_t () : buf_{nullptr}, size_{0} {}
     slice_t (const slice_t& orig) : buf_{orig.buf_}, size_{orig.size_} {}
+    slice_t (const std::string& data) : slice_t{data.data(), static_cast<fsize_t>(data.size())} {}
     slice_t (const std::string& str, const frange_t& range) :
         buf_{str.data()+range.first}, size_{range.second} {}
 
@@ -48,6 +49,10 @@ struct slice_t {
             ret ^= char_hash_fn(buf_[i]);
         }
         return ret;
+    }
+
+    void ExtendUntil (const char* to) {
+        size_ = to - buf_;
     }
 };
 

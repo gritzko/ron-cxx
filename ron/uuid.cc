@@ -5,8 +5,9 @@ namespace ron {
 
     constexpr int8_t Word::OFFSET6[10] ;
     constexpr uint64_t Word::LOWER6[11];
-    //const Word Word::ZERO{};
-    //const Uuid Uuid::ZERO{};
+    const Uuid Uuid::ZERO{};
+    const Uuid Uuid::FATAL{Word::MAX_VALUE, Word::MAX_VALUE};
+
 
     std::string Value::str(const char *buf) const {
         char pad[32];

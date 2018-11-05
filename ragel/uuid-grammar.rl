@@ -2,73 +2,36 @@
 
     machine UUID;
 
-    action start_uuid {
-        hlf = VALUE;
-    }
+    action begin_uuid { uuid = p; }
+    action variety { variety = *(p-1); }
+    action begin_value { value = p; }
+    action end_value { value.ExtendUntil(p); }
+    action version { version = fc; }
+    action begin_origin { origin = p; }
+    action end_origin { origin.ExtendUntil(p); }
+    action end_uuid { uuid.ExtendUntil(p); }
 
-    action int60_dgt { // std::cerr << "digit " << fc << '\n';
-        if (dgt>9) {
-            fbreak;
-        }
-        atoms[atm][hlf].put6(9-dgt, ABC[fc]);
-        dgt++;
-    }
+    # digits (base64, hex)
+    DGT = [0-9a-zA-Z~_];
+    HEX = [0-9A-F];
 
-    action start_full_int {
-        atoms[atm][hlf].zero_payload();
-    }
+    # RON UUID variety (1st word flag bits)
+    VARIETY = HEX "/" @variety;
 
-    action start_value {
-    }
+    # RON UUID version char (2nd word flag bits)
+    VERSION = [\$\%\+\-] @version;
 
-    action start_origin {
-        dgt = 0;
-        hlf = ORIGIN;
-    }
+    # 60+4 bit word (the most significant 4 bits are flags, the rest is payload)
+    WORD = DGT*;
 
-    action end_value {
-    }
+    # UUID value (the 1st word) 
+    VALUE = WORD >begin_value %end_value;
 
-    action end_origin {
-    }
+    # UUID origin (the 2nd word)
+    ORIGIN = WORD >begin_origin %end_origin;
 
-    action variety {
-        atoms[atm][VALUE].set_flags(atoms[atm][VALUE].get6(9));
-        atoms[atm][VALUE].zero_payload();
-        dgt--;
-    }
-
-    action uuid_sep {
-        hlf = ORIGIN;
-        atoms[atm][ORIGIN].zero_flags();
-        atoms[atm][ORIGIN].set_flags(ABC[fc]);
-    }
-
-    action end_name {
-        atoms[atm][ORIGIN].zero();
-        atoms[atm][ORIGIN].set_flags(UUID::NAME);
-    }
-
-    # Base64 value
-    DGT = [0-9a-zA-Z~_] @int60_dgt;
-    # UUID type: name, hash, event or derived event 
-    VERSION = [\$\%\+\-] @uuid_sep;
-    # full int 
-    INT = DGT* >start_full_int;
-
-    # first half of an UUID 
-    VALUE = (DGT >start_value ([\/] @variety)? DGT*) %end_value >start_full_int;
-    #VALUE = INT >start_value %end_value ;
-    # second half of an UUID 
-    ORIGIN = INT >start_origin %end_origin ;
-    # global name UUID, e.g. "lww" (aka transcendent constant) 
-    NAME = VALUE >start_value %end_value %end_name;
-
-    # RON 128 bit UUID 
-    UUID =  ( VALUE ( VERSION ORIGIN? )? | VERSION ORIGIN? )
-            >start_uuid
-           ;
-
-    # main := UUID;
+    # RON UUID (128 bits, two 60+4 bit words) 
+    UUID = VARIETY? VALUE ( VERSION ORIGIN )?  >begin_uuid %end_uuid;
+    # examples: lww, A/LED, 12345+origin, 1/0000000001+origin, some_hash%12345375868
 
 }%%

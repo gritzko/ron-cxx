@@ -19,7 +19,7 @@ union Word {
     Word (uint64_t value=0) : _64{value} {}
     Word (uint8_t flags, slice_t data) { 
         uint64_t &res = *_64;
-        res = 0;
+        res = flags & 0xf;
         int i=0;
         while(i<data.size()) {
             res <<= Word::BASE64_BITS;
@@ -30,11 +30,17 @@ union Word {
             res <<= Word::BASE64_BITS;
             i++;
         }
-        put4(0xf, flags);
     }
     Word (const char* word, fsize_t size);
     Word (const std::string& word) : Word{word.data(), (fsize_t)word.size()} {}
     explicit Word (const char* word) : Word{word, (fsize_t)strlen(word)} {}
+    Word (ATOM atype, fsize_t offset, fsize_t length) {
+        _64[0] = atype;
+        _64[0] <<= 30;
+        _64[0] |= offset;
+        _64[0] <<= 30;
+        _64[0] |= length;
+    }
 
     explicit operator uint64_t () const { return _64[0]; }
 
@@ -47,6 +53,7 @@ union Word {
     // flag bit size
     static constexpr int FBS = 64-PBS;
     static constexpr uint64_t MAX_VALUE = (1L<<PBS)-1;
+    static constexpr uint64_t MAX_VALUE_30 = (1L<<30)-1;
     static constexpr int8_t OFFSET6[10] = {
         PBS-(6*1),
         PBS-(6*2),
@@ -129,6 +136,7 @@ union Word {
         _64[0]&=FLAG_BITS;
     }
     int write_base64(std::string &str) const;
+    inline uint64_t payload() const { return _64[0]&MAX_VALUE; }
     inline bool is_zero() const { return _64[0]==0; }
     inline Word inc() const { return Word{_64[0]+1}; }
     inline bool operator < (const Word& b) const {
@@ -146,6 +154,9 @@ union Word {
     inline size_t hash () const {
         static constexpr auto _64_hash_fn = std::hash<uint64_t>{};
         return _64_hash_fn(_64[0]);
+    }
+    inline frange_t range() const {
+        return frange_t{(_64[0]>>30)&MAX_VALUE_30, _64[0]&MAX_VALUE_30};
     }
 
 };
@@ -177,6 +188,16 @@ struct Atom {
     }
     inline VARIANT variant () const {
         return VARIANT(ofb()>>2);
+    }
+    static Atom String (fsize_t offset, fsize_t length) {
+        return Atom{0, Word{ATOM::STRING, offset, length}};
+    }
+    static Atom Float (fsize_t offset, fsize_t length) {
+        return Atom{0, Word{ATOM::FLOAT, offset, length}};
+    }
+    static Atom Integer (fsize_t offset, fsize_t length) {
+        std::cerr<<"Integer"<<offset<<" "<<length<<"\n";
+        return Atom{0, Word{ATOM::INT, offset, length}};
     }
 };
 
@@ -230,6 +251,10 @@ struct Uuid : public Atom {
     static const Uuid ZERO;
     static const Uuid FATAL;
 
+    static Uuid Parse(char variety, slice_t value, char version, slice_t origin) {
+        return Uuid{ Word{ABC[variety], value}, Word{ABC[version], origin} };
+    }
+
 };
 
 
@@ -267,6 +292,9 @@ struct Value : public Atom {
         return Value{0, ATOM::STRING, range};
     }
 };
+
+// parser debugging 
+void report(const char* pb, const char* p, const char* event);
 
 } // namespace ron
 

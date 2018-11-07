@@ -1,161 +1,76 @@
 %%{
 
-    machine FRAME;
+    machine TEXT_FRAME;
     include UUID "./uuid-grammar.rl";
 
-    action spec_start {  // std::cerr<<"spec_start"<<std::endl;
-        atoms.resize(SPEC_SIZE);
+    action end_id {
+        std::cerr<<op_.size()<<"id "<<uuid.str()<<'\n';
+        op_.SetId(Uuid::Parse(variety, value, version, origin));
+    }
+    action end_ref {
+        std::cerr<<op_.size()<<"ref "<<uuid.str()<<'\n';
+        op_.SetRef(Uuid::Parse(variety, value, version, origin));
+    }
+    action begin_int { intb = p; }
+    action end_int { 
+        std::cerr<<"I"<<intb<<"\n"; 
+        op_.AddAtom(Atom::Integer(intb-pb, p-intb)); 
+        uuid.buf_ = 0; // bust the uuid
+    }
+    action begin_string { strb = p; }
+    action end_string { std::cerr<<"S\n"; op_.AddAtom(Atom::String(strb-pb, p-strb)); }
+    action op_term { term = fc; }
+    action begin_float { floatb = p; }
+    action end_float { std::cerr<<"F\n"; op_.AddAtom(Atom::Float(floatb-pb, p-floatb)); }
+    action end_op { if (p<pe-1) { fhold; fbreak; } }
+    action end_arrow_uuid {
+        op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+    }
+    action end_bare_uuid { 
+        if (uuid.buf_)
+            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
     }
 
-    action redef_uuid {  // std::cerr<<"redef_uuid"<<std::endl;
-        if (atm>0) {
-            atoms[atm] = atoms[atm-1];
-        }
-    }
+    # int64_t 
+    SGN = [\-+];
+    DIGITS = digit digit**;
+    INT = (SGN? DIGITS ) >begin_int %end_int;
+    
+    # 64-bit (double) float TODO ISO syntax
+    FRAC = "." DIGITS;
+    EXP = [eE] SGN? DIGITS;
+    FLOAT = ( SGN? DIGITS FRAC EXP? | INT EXP ) >begin_float %end_float;
 
-    action spec_uuid_start {  // std::cerr<<"spec_uuid_start"<<std::endl;
-        n = (int)(ABC[fc]);
-        if (!(op_.coding()&RON::CLOSED)) {
-            n-=2;
-            if (n<0) {
-                fnext *RON_error;
-                fbreak;
-            }
-        }
-	    dgt = 0;
-        if (n < atm) { 
-            // parse #op1#op2#op3 without Ragel state explosion
-            fnext *RON_start;
-            position++;
-            p--;
-            fbreak;
-        } else { 
-            // next UUID
-            atm = n;
-        }
-    }
+    # a char TODO UTF8, escapes, \u escapes
+    UTF8 = [^'\n\r\\];
 
-    action spec_uuid_end {  // std::cerr<<"spec_uuid_end "<<std::endl;
-        atm++;
-    }
+    # JSON-ey string
+    STRING = ( UTF8* ) >begin_string %end_string;
 
-    action atom_start {  // std::cerr<<"atom_start"<<std::endl;
-	    dgt = 0;
-        atoms.push_back(Atom{});
-        aso = p-be+1;
-        atoms[atm][ORIGIN].put2(31, VARIANT::RON_ATOM);
-        atoms[atm][ORIGIN].put30(1, aso);
-    }
-    action atom_end {  // std::cerr<<"atom_end"<<std::endl;
-        if (atoms[atm].variant()==VARIANT::RON_ATOM) {
-            atoms[atm][ORIGIN].put30(0, (p-be)-aso-1);
-        }
-        atm++;
-    }
+    # op term (header op, raw/reduced op, query op)
+    OPTERM = [,;!?] @op_term;
+    
+    # value atom (payload) - int, float, string, UUID
+    BARE_ATOM = INT | FLOAT | UUID %end_bare_uuid;
+    QUOTED_ATOM =        
+            "=" space* INT  |
+            "^" space* FLOAT |
+            ['] STRING ['] |
+            ">" space* UUID %end_arrow_uuid ;    
+    ATOM = QUOTED_ATOM | space BARE_ATOM ;
+    FIRST_ATOM = (BARE_ATOM|QUOTED_ATOM) ;
 
-    action int_atom_start {  // std::cerr<<"int_atom_start "<<(p-pb)<<std::endl;
-        atoms[atm][ORIGIN].put2(30, ATOM::INT);
-    }
-    action int_atom_end {  // std::cerr<<"int_atom_end "<<(p-pb)<<std::endl;
-    }
+    # op's specifier, @id :ref
+    SPEC = '@' UUID %end_id space* ( ':' UUID %end_ref )? ;
+    ATOMS = ATOM (space* ATOM)** ;
 
-    action float_atom_start {  // std::cerr<<"float_atom_start"<<std::endl;
-        atoms[atm][ORIGIN].put2(30, ATOM::FLOAT);
-    }
-    action float_atom_end {  // std::cerr<<"float_atom_end"<<std::endl;
-    }
-
-    action string_atom_start {  // std::cerr<<"string_atom_start"<<std::endl;
-	    atoms[atm][ORIGIN].put2(30, ATOM::STRING);
-    }
-    action string_atom_end {  // std::cerr<<"string_atom_end"<<std::endl;
-    }
-
-    action uuid_atom_start {  // std::cerr<<"uuid_atom_start"<<std::endl;
-        atoms[atm] = atoms[atm-1];
-    }
-
-    action atoms_start {  // std::cerr<<"atoms_start"<<std::endl;
-        atm = SPEC_SIZE;
-        dgt = 0;
-    }
-    action atoms {  // std::cerr<<"atoms"<<std::endl;
-    }
-
-    action opterm {  // std::cerr<<"opterm"<<std::endl;
-        term = (enum TERM) (ABC[fc]);
-    }
-
-    action op_start {  // std::cerr<<"op_start"<<std::endl;
-        if (p>pb && position!=-1) {
-            // one op is done, so stop parsing for now
-            // make sure the parser restarts with the next op
-            p--;
-            fnext *RON_start;
-            fbreak;
-        } else {
-            //op_idx++;
-            if (term!=TERM::RAW) {
-                term = TERM::REDUCED;
-            }
-        }
-    }
-
-    action op_end {  // std::cerr<<"op_end"<<std::endl;
-        position++;
-    }
-
-    action spec_end {  // std::cerr<<"spec_end"<<std::endl;
-    }
-
-    action frame_end {  // std::cerr<<"frame_end"<<std::endl;
-        fnext *RON_FULL_STOP;
-        fbreak;
-    }
-
-    # one of op spec UUIDs: type, object, event id or a reference 
-    REDEF = "`" @redef_uuid;
-    QUANT = [*#@:] @spec_uuid_start ;
-    SPEC_UUID = QUANT space* REDEF? (UUID space*)? %spec_uuid_end ;
-
-    # 64-bit signed integer 
-    INT_ATOM = ([\-+]? digit+ ) >int_atom_start %int_atom_end;
-
-    # 64-bit (double) float 
-    FLOAT_ATOM = ( [\-+]? [0-9]+ "." [0-9]+ ([eE] [\-+]? digit+ )? ) >float_atom_start %float_atom_end;
-
-    UUID_ATOM = UUID >uuid_atom_start ;
-
-    # JSON-escaped string 
-    UNIESC = "\\u" [0-9a-fA-F]{4};
-    ESC = "\\" [^\n\r];
-    CHAR = [^"'\n\r\\];
-    STRING_ATOM = ( (UNIESC|ESC|CHAR)* ) >string_atom_start %string_atom_end;
-
-    # an atom (int, float, string or UUID) 
-    ATOM = (
-            "=" space* INT_ATOM  |
-            "^" space* FLOAT_ATOM |
-            ['] STRING_ATOM ['] |
-            ">" space* UUID_ATOM
-            ) >atom_start %atom_end space*;
-    # op value - an atom, an atom tuple, or empty 
-    ATOMS = ATOM+ %atoms >atoms_start;
-
-    # an optional op terminator (reduced, raw, header, query)
-    OPTERM = [,;!?] @opterm space*;
-
-    # a RON op "specifier" (four UUIDs for its type, object, event, and ref)
-    SPEC = SPEC_UUID+ >spec_start %spec_end ;
-
-    # a RON op
-    # op types: (0) raw op (1) reduced op (2) frame header (3) query header 
-    OP = space* ( SPEC ATOMS? OPTERM? | ATOMS OPTERM? | OPTERM) $2 %1 >op_start %op_end;
+    # RON op: an immutable unit of change
+    OP = (SPEC|FIRST_ATOM) space* ATOMS? space* OPTERM %end_op ;
 
     # optional frame terminator; mandatory in the streaming mode 
-    DOT = "." @frame_end;
+    DOT = "." ;
 
-    # RON frame, including multiframes (those have more headers inside) 
-    FRAME = OP* DOT? ;
+    # RON frame (open text coding)
+    TEXT_FRAME = (space* OP)* space* DOT? ;
 
 }%%

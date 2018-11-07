@@ -46,7 +46,6 @@ add_library(ron STATIC
     ron/uuid.hpp
     ron/op.hpp
     ron/text.hpp
-    ron/open-text-ron.hpp
     ron/frames.hpp
     ron/status.hpp
     ron/ron.hpp
@@ -58,9 +57,6 @@ add_library(ron STATIC
     ron/text.cc
     ron/text-parser.cc
     ron/text-builder.cc
-    ron/open-text-ron.cc
-    ron/open-text-ron-builder.cc
-    ron/open-text-ron-parser.cc
     )
 
 #  L I B R O N  U N I T  T E S T S
@@ -70,9 +66,6 @@ target_link_libraries(test-uuid ron)
 
 add_executable(test-text ron/test/text.cc)
 target_link_libraries(test-text ron)
-
-add_executable(test-open-text ron/test/open.cc)
-target_link_libraries(test-open-text ron)
 
 #  L I B R D T  ( H E A D E R  O N L Y )
 

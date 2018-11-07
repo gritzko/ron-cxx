@@ -22,6 +22,14 @@ struct slice_t {
     slice_t (const std::string& str, const frange_t& range) :
         buf_{str.data()+range.first}, size_{range.second} {}
 
+    inline const char* begin() const {
+        return buf_;
+    }
+
+    inline const char* end() const {
+        return buf_+size_;
+    }
+
     inline char operator[](fsize_t idx) const {
         assert(idx < size_);
         return buf_[idx];
@@ -33,6 +41,10 @@ struct slice_t {
 
     bool operator == (const slice_t b) const {
         return size()==b.size() && strncmp(buf_, b.buf_, size())==0;
+    }
+
+    bool same (const slice_t b) const {
+        return buf_==b.buf_ && size_==b.size_;
     }
 
     size_t hash () const {
@@ -51,8 +63,21 @@ struct slice_t {
         return ret;
     }
 
-    void ExtendUntil (const char* to) {
+    inline void SetTo (const char* to) {
+        buf_ = to;
+        size_ = 0;
+    }
+
+    inline void ExtendUntil (const char* to) {
         size_ = to - buf_;
+    }
+
+    inline std::string str() const {
+        return std::string{buf_, size_};
+    }
+
+    inline slice_t range (frange_t rng) const {
+        return slice_t{buf_+rng.first, rng.second};
     }
 };
 

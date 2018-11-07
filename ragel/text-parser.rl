@@ -1,80 +1,87 @@
 #include "text.hpp"
+#include <iostream>
 
 namespace ron {
 
 %% machine RON;
 %% write data;
-//%% variable data body;
-//%% variable p body;
-//%% variable cs ps.state;
 
 
-// Parse consumes one op from data[], unless the buffer ends earlier.
-// Fills atoms[]
 bool TextFrame::Cursor::Next () {
 
-    Cursor& cur = *this;
     Atoms& atoms = op_.atoms_;
-    TERM& term = op_.term_;
-    const std::string& data = this->data();
+
+    // hint: the machine must start parsing in the "space" state
+    // to allow for frames like `1, 2, 3 or 'string'`
 
     switch (cs) {
         case RON_error:
-            if (off!=0) {
+            if (off_!=0) {
                 return false;
             }
             %% write init;
-            atoms.resize(SPEC_SIZE);
             break;
 
         case RON_FULL_STOP:
             cs = RON_error;
             return false;
 
-        case RON_start:
-            atoms.resize(SPEC_SIZE);
-            atm = 0;
-            hlf = VALUE;
-            dgt = 0;
+        default:
             break;
     }
 
-    if (data.size()<=off) {
+    if (data().size()<=off_) {
         cs = RON_error;
         return false;
     }
 
-    auto p = data.begin() + off;
-    auto pb = p;
-    auto be = data.begin();
-    auto pe = data.end();
-    auto eof = pe;
-    int n = 0; // tmp atm value holder
-    int aso = 0; // atom start offset
+    iter pb = data().data();
+    iter p = pb + off_;
+    iter pe = pb + data().size();
+    iter eof = pe;
+
+    const char* intb{p};
+    const char* floatb{p};
+    const char* strb{p};
+    char term;
+    slice_t uuid, value, origin;
+    char variety, version;
+
+    atoms.resize(0);
+    op_.AddAtom(prev_id_.inc());
+    op_.AddAtom(prev_id_);
+
+    std::cerr<<"starting with ["<<p<<"]\n";
 
     %%{
-    include FRAME "./text-grammar.rl";
-    main := FRAME ;
+    include TEXT_FRAME "./text-grammar.rl";
+    main := TEXT_FRAME ;
     write exec;
     }%%
 
-    off = p - data.begin();
+    off_ = p-pb;
+    pos_++;
+
+    if (op_.size()) prev_id_ = op_.id();
+
+    std::cerr << "ending with [" <<p<<"] state "<<cs<<" "<<op_.size()<<" atoms "<<(pe-p)<<" bytes left, prev_id_ "<<prev_id_.str()<<'\n';
 
     if (cs==RON_error) {
 	    return false;
-    } else if (cs>=RON_first_final) { // one of end states
+    } else if (cs>=%%{ write first_final; }%%) { // one of end states
         if (p>=eof) {
             // in the block mode, the final dot is optional/implied
             cs = RON_FULL_STOP;
         }
+        return true;
     } else if (cs==RON_FULL_STOP) {
         return true; // explicit dot
-    } else if (cs==RON_start) {
-    } else {
+    } else if (p>=eof) {
         cs = RON_error;
 	    return false;
+    } else {
+        return true;
     }
-    return true;
 }
 
 }

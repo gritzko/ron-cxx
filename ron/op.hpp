@@ -15,6 +15,7 @@ struct Op {
     Atoms atoms_;
     TERM term_;
     RON coding_;
+    
     Op(const Op& op) : atoms_{op.atoms_}, term_{op.term_} {}
     explicit Op(RON coding, TERM term) : 
     atoms_{}, coding_{coding}, term_{term} {
@@ -33,7 +34,6 @@ struct Op {
         atoms_.push_back(v1);
     }
     inline TERM term() const { return term_; }
-    inline bool valid() const { return !atoms_.empty(); }
     const Uuid& type() const {
         return (Uuid&)atoms_[0];
     }
@@ -46,6 +46,9 @@ struct Op {
     const Uuid& ref() const {
         return (Uuid&)atoms_[1];
     }
+    const Atom& atom (fsize_t idx) const {
+        return atoms_[idx];
+    }
     const Value& value(fsize_t idx) const {
         assert(idx<atoms_.size());
         return (Value&)atoms_[idx];
@@ -57,6 +60,9 @@ struct Op {
         return value(idx).int_value();
     }
     inline Uuid value_uuid(fsize_t idx) const {
+        return reinterpret_cast<const Uuid&>(atoms_[idx]);
+    }
+    inline Uuid uuid(fsize_t idx) const {
         return reinterpret_cast<const Uuid&>(atoms_[idx]);
     }
     inline std::string value_string(fsize_t idx, const std::string& data) const {
@@ -73,12 +79,18 @@ struct Op {
     void resize (fsize_t new_size = 2) { atoms_.resize(new_size); }
     Atoms& data() { return atoms_; }
     inline RON coding() const { return coding_; }
-    // a nominal RON (closed) op, with a descriptor
-    // mostly for outer interfaces / bindings
-    Atom* closed(Uuid rdt, Uuid object) const;
-    void SetEv(const Uuid& ev);
-    void SetRef(const Uuid& ref);
-    void AddValue(const Atom& value);
+    void SetId(const Uuid& ev) { 
+        atoms_.reserve(1); 
+        atoms_[0] = ev;
+    }
+    void SetRef(const Uuid& ref) {
+        atoms_.reserve(2); 
+        atoms_[1] = ref;
+    }
+    inline void AddAtom(const Atom& value) {
+        std::cerr<<"AddAtom "<<value.origin()._64[0]<<'\n';
+        atoms_.push_back(value); 
+    }
     void AddFloat(double value);
     void AddString(fsize_t from, fsize_t till);
 

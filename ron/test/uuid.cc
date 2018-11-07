@@ -51,5 +51,8 @@ int main (int argn, char** args) {
 
     // TODO a little benchmark
     // TODO Uuid:Sha2()
+    // TODO calendar -> timestamp
+    // TODO clock
+    // TODO coarsened timestamp
 
 }

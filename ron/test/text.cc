@@ -64,6 +64,7 @@ void test_optional_chars () {
     std::cerr<<copt.op().id().str()<<'\n';
     assert(copt.op().id()=="1A00000001");
     assert(copt.op().ref()=="1A");
+    std::cerr<<copt.integer(2)<<'\n';
     assert(copt.integer(2)==28);
     std::cerr<<copt.string(3)<<'\n';
     assert(copt.string(3)=="abc");
@@ -77,7 +78,7 @@ void test_optional_chars () {
 }
 
 void test_signs () {
-    Frame signs{"@2:1 -1, -1.2, +1.23, -1.0e+2, -2.0e+1,"}; // FIXME 1e+1
+    Frame signs{"@2:1 -1 ,-1.2, +1.23, -1.0e+2, -2.0e+1,"}; // FIXME 1e+1
     Cursor cur = signs.cursor();
     assert(cur.integer(2)==-1);
     assert(cur.Next());
@@ -85,7 +86,6 @@ void test_signs () {
     assert(cur.Next());
     assert(cur.number(2)==1.23);
     assert(cur.Next());
-    std::cerr<<cur.number(2)<<'\n';
     assert(cur.number(2)==-100.0);
     assert(cur.Next());
     assert(cur.number(2)==-20);

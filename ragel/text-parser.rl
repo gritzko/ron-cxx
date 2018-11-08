@@ -43,7 +43,7 @@ bool TextFrame::Cursor::Next () {
     const char* intb{p};
     const char* floatb{p};
     const char* strb{p};
-    char term;
+    char term{0};
     slice_t uuid, value, origin;
     char variety, version;
 
@@ -51,7 +51,7 @@ bool TextFrame::Cursor::Next () {
     op_.AddAtom(prev_id_.inc());
     op_.AddAtom(prev_id_);
 
-    std::cerr<<"starting with ["<<p<<"]\n";
+    std::cerr<<"starting with "<<cs<<" ["<<p<<"]\n";
 
     %%{
     include TEXT_FRAME "./text-grammar.rl";
@@ -60,28 +60,18 @@ bool TextFrame::Cursor::Next () {
     }%%
 
     off_ = p-pb;
-    pos_++;
 
     if (op_.size()) prev_id_ = op_.id();
 
     std::cerr << "ending with [" <<p<<"] state "<<cs<<" "<<op_.size()<<" atoms "<<(pe-p)<<" bytes left, prev_id_ "<<prev_id_.str()<<'\n';
 
-    if (cs==RON_error) {
-	    return false;
-    } else if (cs>=%%{ write first_final; }%%) { // one of end states
-        if (p>=eof) {
-            // in the block mode, the final dot is optional/implied
-            cs = RON_FULL_STOP;
-        }
+    if (term && cs!=RON_error) {
         return true;
-    } else if (cs==RON_FULL_STOP) {
-        return true; // explicit dot
-    } else if (p>=eof) {
-        cs = RON_error;
-	    return false;
     } else {
-        return true;
+        cs = RON_error;
+        return false;
     }
+
 }
 
 }

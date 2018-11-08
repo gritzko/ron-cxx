@@ -19,10 +19,10 @@
     }
     action begin_string { strb = p; }
     action end_string { std::cerr<<"S\n"; op_.AddAtom(Atom::String(strb-pb, p-strb)); }
-    action op_term { term = fc; }
+    action op_term { term = fc; pos_++; if (p<pe-1) { fbreak; } }
     action begin_float { floatb = p; }
     action end_float { std::cerr<<"F\n"; op_.AddAtom(Atom::Float(floatb-pb, p-floatb)); }
-    action end_op { if (p<pe-1) { fhold; fbreak; } }
+    action end_op {  }
     action end_arrow_uuid {
         op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
     }
@@ -39,7 +39,7 @@
     # 64-bit (double) float TODO ISO syntax
     FRAC = "." DIGITS;
     EXP = [eE] SGN? DIGITS;
-    FLOAT = ( SGN? DIGITS FRAC EXP? | INT EXP ) >begin_float %end_float;
+    FLOAT = ( SGN? DIGITS ( FRAC EXP? | EXP ) ) >begin_float %end_float;
 
     # a char TODO UTF8, escapes, \u escapes
     UTF8 = [^'\n\r\\];
@@ -58,14 +58,13 @@
             ['] STRING ['] |
             ">" space* UUID %end_arrow_uuid ;    
     ATOM = QUOTED_ATOM | space BARE_ATOM ;
-    FIRST_ATOM = (BARE_ATOM|QUOTED_ATOM) ;
 
     # op's specifier, @id :ref
     SPEC = '@' UUID %end_id space* ( ':' UUID %end_ref )? ;
-    ATOMS = ATOM (space* ATOM)** ;
+    ATOMS = ATOM (space* ATOM)* ;
 
     # RON op: an immutable unit of change
-    OP = (SPEC|FIRST_ATOM) space* ATOMS? space* OPTERM %end_op ;
+    OP = (SPEC|BARE_ATOM)? space* ATOMS? space* OPTERM %end_op ;
 
     # optional frame terminator; mandatory in the streaming mode 
     DOT = "." ;

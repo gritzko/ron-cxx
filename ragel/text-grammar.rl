@@ -28,11 +28,11 @@
         op_.AddAtom(Atom::Float(body.range_of(floatb))); 
     }
     action end_arrow_uuid {
-        op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
     action end_bare_uuid { 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
     action op_term { 
         term = fc; 

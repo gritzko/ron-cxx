@@ -131,7 +131,7 @@ tr37:
     }
 #line 30 "ragel/./text-grammar.rl"
 	{
-        op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 #line 37 "ragel/./text-grammar.rl"
 	{ 
@@ -153,7 +153,7 @@ tr47:
     }
 #line 30 "ragel/./text-grammar.rl"
 	{
-        op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 #line 37 "ragel/./text-grammar.rl"
 	{ 
@@ -183,7 +183,7 @@ tr60:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 #line 37 "ragel/./text-grammar.rl"
 	{ 
@@ -206,7 +206,7 @@ tr72:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 #line 37 "ragel/./text-grammar.rl"
 	{ 
@@ -229,7 +229,7 @@ tr80:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 #line 37 "ragel/./text-grammar.rl"
 	{ 
@@ -258,7 +258,7 @@ tr89:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 #line 37 "ragel/./text-grammar.rl"
 	{ 
@@ -287,7 +287,7 @@ tr96:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 #line 37 "ragel/./text-grammar.rl"
 	{ 
@@ -455,7 +455,7 @@ tr39:
     }
 #line 30 "ragel/./text-grammar.rl"
 	{
-        op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st1;
 tr48:
@@ -471,7 +471,7 @@ tr48:
     }
 #line 30 "ragel/./text-grammar.rl"
 	{
-        op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st1;
 tr62:
@@ -495,7 +495,7 @@ tr62:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st1;
 tr73:
@@ -512,7 +512,7 @@ tr73:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st1;
 tr81:
@@ -529,7 +529,7 @@ tr81:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st1;
 tr90:
@@ -552,7 +552,7 @@ tr90:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st1;
 tr97:
@@ -575,7 +575,7 @@ tr97:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st1;
 tr107:
@@ -735,7 +735,7 @@ tr36:
     }
 #line 30 "ragel/./text-grammar.rl"
 	{
-        op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st4;
 tr46:
@@ -751,7 +751,7 @@ tr46:
     }
 #line 30 "ragel/./text-grammar.rl"
 	{
-        op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st4;
 tr59:
@@ -775,7 +775,7 @@ tr59:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st4;
 tr71:
@@ -792,7 +792,7 @@ tr71:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st4;
 tr79:
@@ -809,7 +809,7 @@ tr79:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st4;
 tr88:
@@ -832,7 +832,7 @@ tr88:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st4;
 tr95:
@@ -855,7 +855,7 @@ tr95:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st4;
 tr118:
@@ -1024,7 +1024,7 @@ tr42:
     }
 #line 30 "ragel/./text-grammar.rl"
 	{
-        op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st9;
 tr50:
@@ -1040,7 +1040,7 @@ tr50:
     }
 #line 30 "ragel/./text-grammar.rl"
 	{
-        op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st9;
 tr65:
@@ -1064,7 +1064,7 @@ tr65:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st9;
 tr75:
@@ -1081,7 +1081,7 @@ tr75:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st9;
 tr82:
@@ -1098,7 +1098,7 @@ tr82:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st9;
 tr92:
@@ -1121,7 +1121,7 @@ tr92:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st9;
 tr98:
@@ -1144,7 +1144,7 @@ tr98:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st9;
 tr111:
@@ -1295,7 +1295,7 @@ tr43:
     }
 #line 30 "ragel/./text-grammar.rl"
 	{
-        op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st12;
 tr51:
@@ -1311,7 +1311,7 @@ tr51:
     }
 #line 30 "ragel/./text-grammar.rl"
 	{
-        op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st12;
 tr66:
@@ -1335,7 +1335,7 @@ tr66:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st12;
 tr76:
@@ -1352,7 +1352,7 @@ tr76:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st12;
 tr83:
@@ -1369,7 +1369,7 @@ tr83:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st12;
 tr93:
@@ -1392,7 +1392,7 @@ tr93:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st12;
 tr99:
@@ -1415,7 +1415,7 @@ tr99:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st12;
 tr112:
@@ -1643,7 +1643,7 @@ tr44:
     }
 #line 30 "ragel/./text-grammar.rl"
 	{
-        op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st16;
 tr52:
@@ -1659,7 +1659,7 @@ tr52:
     }
 #line 30 "ragel/./text-grammar.rl"
 	{
-        op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st16;
 tr69:
@@ -1683,7 +1683,7 @@ tr69:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st16;
 tr77:
@@ -1700,7 +1700,7 @@ tr77:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st16;
 tr84:
@@ -1717,7 +1717,7 @@ tr84:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st16;
 tr94:
@@ -1740,7 +1740,7 @@ tr94:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st16;
 tr100:
@@ -1763,7 +1763,7 @@ tr100:
 #line 33 "ragel/./text-grammar.rl"
 	{ 
         if (!intb.same(uuidb))
-            op_.AddAtom(Uuid::Parse(variety, value, version, origin)); 
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st16;
 tr113:

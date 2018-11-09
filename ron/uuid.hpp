@@ -156,9 +156,6 @@ union Word {
         static constexpr auto _64_hash_fn = std::hash<uint64_t>{};
         return _64_hash_fn(_64);
     }
-    inline frange_t range() const {
-        return frange_t{(_64>>30)&MAX_VALUE_30, _64&MAX_VALUE_30};
-    }
 
 };
 
@@ -198,6 +195,10 @@ struct Atom {
     }
     static Atom Integer (frange_t range) {
         return Atom{0, Word{ATOM::INT, range}};
+    }
+    inline frange_t range() const {
+        const uint64_t& w = words_.second._64;
+        return frange_t{(w>>30)&Word::MAX_VALUE_30, w&Word::MAX_VALUE_30};
     }
 };
 

@@ -21,6 +21,8 @@ struct slice_t {
     slice_t (const std::string& data) : slice_t{data.data(), static_cast<fsize_t>(data.size())} {}
     slice_t (const std::string& str, const frange_t& range) :
         buf_{str.data()+range.first}, size_{range.second} {}
+    slice_t (slice_t host, frange_t range) : slice_t{buf_+range.first, range.second} {}
+
 
     inline const char* begin() const {
         return buf_;
@@ -63,12 +65,12 @@ struct slice_t {
         return ret;
     }
 
-    inline void SetTo (const char* to) {
+    inline void begin (const char* to) {
         buf_ = to;
         size_ = 0;
     }
 
-    inline void ExtendUntil (const char* to) {
+    inline void end (const char* to) {
         size_ = to - buf_;
     }
 
@@ -76,8 +78,8 @@ struct slice_t {
         return std::string{buf_, size_};
     }
 
-    inline slice_t range (frange_t rng) const {
-        return slice_t{buf_+rng.first, rng.second};
+    inline frange_t range_of (slice_t sub) const {
+        return frange_t{sub.buf_-buf_, sub.size_};
     }
 };
 

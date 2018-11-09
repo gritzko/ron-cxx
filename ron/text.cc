@@ -5,7 +5,7 @@ using namespace std;
 namespace ron {
 
     int64_t TextFrame::Cursor::integer(fsize_t idx) {
-        slice_t range = slice_t{frame_.data()}.range(op_.atom(idx).origin().range());
+        slice_t range{frame_.data(), op_.atom(idx).range()};
         const char* i = range.begin();
         bool neg = false;
         if (*i=='-') {
@@ -24,7 +24,7 @@ namespace ron {
     }
 
     double TextFrame::Cursor::number(fsize_t idx) {
-        slice_t range = slice_t{frame_.data()}.range(op_.atom(idx).origin().range());
+        slice_t range{frame_.data(), op_.atom(idx).range()};
         char fs[32]; // FIXME size limits
         strncpy(fs, range.buf_, range.size_);
         fs[range.size_] = 0;
@@ -34,7 +34,7 @@ namespace ron {
     }
 
     std::string TextFrame::Cursor::string(fsize_t idx) {
-        slice_t range = slice_t{frame_.data()}.range(op_.atom(idx).origin().range());
+        slice_t range{frame_.data(), op_.atom(idx).range()};
         return range.str();
     }
 

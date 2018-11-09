@@ -17,7 +17,7 @@ struct slice_t {
     const char *buf_;
     fsize_t size_;
 
-    slice_t (const char* buf, fsize_t size=0) : buf_{buf}, size_{size} {}
+    explicit slice_t (const char* buf, fsize_t size=0) : buf_{buf}, size_{size} {}
     slice_t () : buf_{nullptr}, size_{0} {}
     slice_t (const slice_t& orig) : buf_{orig.buf_}, size_{orig.size_} {}
     slice_t (const std::string& data) : slice_t{data.data(), static_cast<fsize_t>(data.size())} {}
@@ -77,7 +77,9 @@ struct slice_t {
     }
 
     inline void end (const char* to) {
-        size_ = to - buf_;
+        assert(to>=buf_);
+        assert(to-buf_ < (1<<30));
+        size_ = fsize_t(to - buf_);
     }
 
     inline std::string str() const {

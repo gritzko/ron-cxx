@@ -44,7 +44,6 @@ void test_basic_cycle () {
     assert(cursor.Next());
     assert(op.ref()=="1+src");
     assert(op.id()=="2+orig");
-    cerr<<cursor.string(2)<<'\n';
     assert(cursor.string(2)=="key");
     assert(cursor.string(3)=="value");
     assert(!cursor.Next());
@@ -62,12 +61,9 @@ void test_optional_chars () {
     assert(copt.op().ref().zero());
 
     assert(copt.Next()); // start state: space :)
-    std::cerr<<copt.op().id().str()<<'\n';
     assert(copt.op().id()=="1A00000001");
     assert(copt.op().ref()=="1A");
-    std::cerr<<copt.integer(2)<<'\n';
     assert(copt.integer(2)==28);
-    std::cerr<<copt.string(3)<<'\n';
     assert(copt.string(3)=="abc");
     assert(copt.integer(4)==3);
 
@@ -108,11 +104,10 @@ void test_string_escapes () {
     Frame cycle = builder.frame();
     Cursor cc = cycle.cursor();
     assert(cc.valid());
-    std::cerr<<cc.string(2)<<'\n';
-    std::cerr<<cc.string(3)<<'\n';
     assert(cc.string(2)==STR1);
     assert(cc.string(3)==STR2);
 
+    // FIXME \u
     //Frame good{" 'esc \\'', '\\u0020', '\\r\\n\\t\\\\', "};
     //Cursor cur = good.cursor();
 

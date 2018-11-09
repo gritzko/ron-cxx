@@ -34,14 +34,6 @@ namespace ron {
     }
 
 
-    Word::Word (const char* word, fsize_t size) {
-        _64 = 0;
-        for(int i=0; i<size; i++) {
-            put6(9-i, ABC[word[i]]); // TODO check
-        }
-    }
-
-
     int Word::write_base64(std::string &str) const {
         uint64_t val = _64;
         int len = 0;

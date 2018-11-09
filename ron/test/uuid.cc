@@ -8,9 +8,6 @@ using namespace std;
 
 
 int main (int argn, char** args) {
-    Word value, origin;
-    value.set8(7, 1);
-    origin.set16(3, 2);
 
     Uuid u1{"0000000001"};
     assert(u1.value()==1);

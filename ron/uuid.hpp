@@ -30,9 +30,8 @@ union Word {
             i++;
         }
     }
-    Word (const char* word, fsize_t size);
-    Word (const std::string& word) : Word{word.data(), (fsize_t)word.size()} {}
-    explicit Word (const char* word) : Word{word, (fsize_t)strlen(word)} {}
+    Word (const std::string& word) : Word{0, slice_t{word}} {}
+    explicit Word (const char* word) : Word{0, slice_t{word, (fsize_t)strlen(word)}} {}
     Word (ATOM atype, fsize_t offset, fsize_t length) {
         _64 = atype;
         _64 <<= 30;
@@ -83,59 +82,13 @@ union Word {
         0
     };
 
-    inline void put6 (int pos, uint8_t value) {
-        _64 |= uint64_t(value) << (pos*6);
-    }
-    inline void put2 (int pos, uint8_t value) {
-        _64 |= uint64_t(value&3) << (pos<<1);
-    }
-    inline void put4 (int pos, uint8_t value) {
-        _64 |= uint64_t(value&0xf) << (pos<<2);
-    }
-    inline void put30 (int pos, uint32_t value) {
-        _64 |= uint64_t(value) << (pos?30:0);
-    }
-    inline void set8 (int pos, uint8_t value) {
-        _8[0x7-pos] = value;
-    }
-    inline void set16 (int pos, uint16_t value) {
-        _16[0x3-pos] = value;
-    }
-    inline void set32 (int pos, uint32_t value) {
-        _32[0x1-pos] = value;
-    }
-    inline void set64 (uint64_t value) {
-        _64 = value;
-    }
-    inline void set_flags (uint8_t value) {
-        _64 |= uint64_t(value) << PBS;
-    }
-    inline uint8_t get8 (int pos) const {
-        return _8[0x7-pos];
-    }
-    inline uint16_t get16 (int pos) const {
-        return _16[0x3-pos];
-    }
-    inline uint32_t get32 (int pos) const {
-        return _32[0x1-pos];
-    }
     inline fsize_t get30 (int pos) const {
         return fsize_t(_64>>(pos?30:0)) & ((1<<30)-1);
     }
-    inline uint64_t get64 () const {
-        return _64;
-    }
     inline uint8_t flags () const {
-        return get8(0)>>4;
-    }
-    inline uint8_t get6(int pos) const {
-        return uint8_t(0x3f & (_64>>(pos*6)));
+        return _8[7]>>4;
     }
     inline void zero() { _64=0; }
-    inline void zero_flags() { _64&=PAYLOAD_BITS; }
-    inline void zero_payload() {
-        _64&=FLAG_BITS;
-    }
     int write_base64(std::string &str) const;
     inline uint64_t payload() const { return _64&MAX_VALUE; }
     inline bool is_zero() const { return _64==0; }

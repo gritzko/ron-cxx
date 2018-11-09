@@ -40,6 +40,8 @@ union Word {
         _64 <<= 30;
         _64 |= length;
     }
+    Word (ATOM atype, frange_t range) : 
+        _64{(uint64_t(atype)<<60)|(uint64_t(range.first)<<30)|range.second} {}
 
     explicit operator uint64_t () const { return _64; }
 
@@ -188,15 +190,14 @@ struct Atom {
     inline VARIANT variant () const {
         return VARIANT(ofb()>>2);
     }
-    static Atom String (fsize_t offset, fsize_t length) {
-        return Atom{0, Word{ATOM::STRING, offset, length}};
+    static Atom String (frange_t range) {
+        return Atom{0, Word{ATOM::STRING, range}};
     }
-    static Atom Float (fsize_t offset, fsize_t length) {
-        return Atom{0, Word{ATOM::FLOAT, offset, length}};
+    static Atom Float (frange_t range) {
+        return Atom{0, Word{ATOM::FLOAT, range}};
     }
-    static Atom Integer (fsize_t offset, fsize_t length) {
-        std::cerr<<"Integer"<<offset<<" "<<length<<"\n";
-        return Atom{0, Word{ATOM::INT, offset, length}};
+    static Atom Integer (frange_t range) {
+        return Atom{0, Word{ATOM::INT, range}};
     }
 };
 
@@ -205,6 +206,12 @@ struct Uuid : public Atom {
     Uuid () : Atom{0,0} {}
     Uuid (Word value, Word origin) : Atom{value,origin} {}
     Uuid (slice_t data);
+    // pre-parsed Uuid, got hints and correctness guarantee
+    Uuid (char variety, slice_t value, char version, slice_t origin) :
+        Uuid{
+            Word{ABC[variety], value},
+            Word{ABC[version], origin}
+        } {}
     Uuid (const std::string& buf) : Uuid{slice_t{buf}} {}
     Uuid (const char* buf) : 
         Uuid{slice_t{buf, static_cast<fsize_t>(strlen(buf))}} {}

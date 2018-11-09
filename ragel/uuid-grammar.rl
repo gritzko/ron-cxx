@@ -2,14 +2,25 @@
 
     machine UUID;
 
-    action begin_uuid { uuid.SetTo(p); variety='0'; version='$'; origin=slice_t{}; }
+    action begin_uuid { 
+        variety='0'; 
+        version='$'; 
+        origin=slice_t{}; 
+        uuidb.begin(p);
+    }
     action variety { variety = *(p-1); }
-    action begin_value { value.SetTo(p); }
-    action end_value { value.ExtendUntil(p); }
+    action begin_value { value.begin(p); }
+    action end_value { value.end(p); }
     action version { version = fc; }
-    action begin_origin { origin.SetTo(p); }
-    action end_origin { origin.ExtendUntil(p); }
-    action end_uuid { uuid.ExtendUntil(p); }
+    action begin_origin { origin.begin(p); }
+    action end_origin { origin.end(p); }
+    action end_uuid { 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            fbreak;
+        }
+        uuidb.end(p);
+    }
 
     # digits (base64, hex)
     DGT = [0-9a-zA-Z~_];

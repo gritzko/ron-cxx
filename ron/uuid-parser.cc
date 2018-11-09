@@ -28,7 +28,7 @@ static const int UUID_en_main = 1;
         const char* eof = pe;
         int cs = 0;
 
-        slice_t value{}, origin{}, uuid{};
+        slice_t value{}, origin{}, uuidb;
         char variety{'0'}, version{'$'};
 
         
@@ -65,15 +65,20 @@ cs = 0;
 	goto _out;
 tr0:
 #line 5 "ragel/./uuid-grammar.rl"
-	{ uuid.SetTo(p); variety='0'; version='$'; origin=slice_t{}; }
-#line 7 "ragel/./uuid-grammar.rl"
-	{ value.SetTo(p); }
+	{ 
+        variety='0'; 
+        version='$'; 
+        origin=slice_t{}; 
+        uuidb.begin(p);
+    }
+#line 12 "ragel/./uuid-grammar.rl"
+	{ value.begin(p); }
 	goto st4;
 st4:
 	if ( ++p == pe )
 		goto _test_eof4;
 case 4:
-#line 77 "ron/uuid-parser.cc"
+#line 82 "ron/uuid-parser.cc"
 	switch( (*p) ) {
 		case 43: goto tr5;
 		case 45: goto tr5;
@@ -94,16 +99,16 @@ case 4:
 		goto st6;
 	goto st0;
 tr5:
-#line 8 "ragel/./uuid-grammar.rl"
-	{ value.ExtendUntil(p); }
-#line 9 "ragel/./uuid-grammar.rl"
+#line 13 "ragel/./uuid-grammar.rl"
+	{ value.end(p); }
+#line 14 "ragel/./uuid-grammar.rl"
 	{ version = (*p); }
 	goto st2;
 st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 107 "ron/uuid-parser.cc"
+#line 112 "ron/uuid-parser.cc"
 	switch( (*p) ) {
 		case 95: goto tr3;
 		case 126: goto tr3;
@@ -118,14 +123,14 @@ case 2:
 		goto tr3;
 	goto st0;
 tr3:
-#line 10 "ragel/./uuid-grammar.rl"
-	{ origin.SetTo(p); }
+#line 15 "ragel/./uuid-grammar.rl"
+	{ origin.begin(p); }
 	goto st5;
 st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-#line 129 "ron/uuid-parser.cc"
+#line 134 "ron/uuid-parser.cc"
 	switch( (*p) ) {
 		case 95: goto st5;
 		case 126: goto st5;
@@ -140,14 +145,14 @@ case 5:
 		goto st5;
 	goto st0;
 tr6:
-#line 6 "ragel/./uuid-grammar.rl"
+#line 11 "ragel/./uuid-grammar.rl"
 	{ variety = *(p-1); }
 	goto st3;
 st3:
 	if ( ++p == pe )
 		goto _test_eof3;
 case 3:
-#line 151 "ron/uuid-parser.cc"
+#line 156 "ron/uuid-parser.cc"
 	switch( (*p) ) {
 		case 95: goto tr4;
 		case 126: goto tr4;
@@ -163,19 +168,24 @@ case 3:
 	goto st0;
 tr2:
 #line 5 "ragel/./uuid-grammar.rl"
-	{ uuid.SetTo(p); variety='0'; version='$'; origin=slice_t{}; }
-#line 7 "ragel/./uuid-grammar.rl"
-	{ value.SetTo(p); }
+	{ 
+        variety='0'; 
+        version='$'; 
+        origin=slice_t{}; 
+        uuidb.begin(p);
+    }
+#line 12 "ragel/./uuid-grammar.rl"
+	{ value.begin(p); }
 	goto st6;
 tr4:
-#line 7 "ragel/./uuid-grammar.rl"
-	{ value.SetTo(p); }
+#line 12 "ragel/./uuid-grammar.rl"
+	{ value.begin(p); }
 	goto st6;
 st6:
 	if ( ++p == pe )
 		goto _test_eof6;
 case 6:
-#line 179 "ron/uuid-parser.cc"
+#line 189 "ron/uuid-parser.cc"
 	switch( (*p) ) {
 		case 43: goto tr5;
 		case 45: goto tr5;
@@ -207,18 +217,30 @@ case 6:
 	switch ( cs ) {
 	case 4: 
 	case 6: 
-#line 8 "ragel/./uuid-grammar.rl"
-	{ value.ExtendUntil(p); }
-#line 12 "ragel/./uuid-grammar.rl"
-	{ uuid.ExtendUntil(p); }
+#line 13 "ragel/./uuid-grammar.rl"
+	{ value.end(p); }
+#line 17 "ragel/./uuid-grammar.rl"
+	{ 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            {p++; cs = 0; goto _out;}
+        }
+        uuidb.end(p);
+    }
 	break;
 	case 5: 
-#line 11 "ragel/./uuid-grammar.rl"
-	{ origin.ExtendUntil(p); }
-#line 12 "ragel/./uuid-grammar.rl"
-	{ uuid.ExtendUntil(p); }
+#line 16 "ragel/./uuid-grammar.rl"
+	{ origin.end(p); }
+#line 17 "ragel/./uuid-grammar.rl"
+	{ 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            {p++; cs = 0; goto _out;}
+        }
+        uuidb.end(p);
+    }
 	break;
-#line 222 "ron/uuid-parser.cc"
+#line 244 "ron/uuid-parser.cc"
 	}
 	}
 

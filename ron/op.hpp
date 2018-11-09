@@ -88,7 +88,6 @@ struct Op {
         atoms_[1] = ref;
     }
     inline void AddAtom(const Atom& value) {
-        std::cerr<<"AddAtom "<<value.origin()._64[0]<<'\n';
         atoms_.push_back(value); 
     }
     void AddFloat(double value);

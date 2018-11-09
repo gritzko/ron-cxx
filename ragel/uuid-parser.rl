@@ -16,7 +16,7 @@ namespace ron {
         const char* eof = pe;
         int cs = 0;
 
-        slice_t value{}, origin{}, uuid{};
+        slice_t value{}, origin{}, uuidb;
         char variety{'0'}, version{'$'};
 
         %%{ 

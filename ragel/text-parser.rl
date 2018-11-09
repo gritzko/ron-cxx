@@ -11,8 +11,8 @@ bool TextFrame::Cursor::Next () {
 
     Atoms& atoms = op_.atoms_;
 
-    // hint: the machine must start parsing in the "space" state
-    // to allow for frames like `1, 2, 3 or 'string'`
+
+
 
     switch (cs) {
         case RON_error:
@@ -35,16 +35,19 @@ bool TextFrame::Cursor::Next () {
         return false;
     }
 
+    slice_t body{frame_.data()};
     iter pb = data().data();
     iter p = pb + off_;
     iter pe = pb + data().size();
     iter eof = pe;
 
-    const char* intb{p};
-    const char* floatb{p};
-    const char* strb{p};
+    slice_t intb{p,0};
+    slice_t floatb{p,0};
+    slice_t strb{p,0};
+    slice_t uuidb{p,0};
+    const char* lastintb{0};
     char term{0};
-    slice_t uuid, value, origin;
+    slice_t value, origin;
     char variety, version;
 
     atoms.resize(0);

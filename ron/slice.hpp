@@ -8,10 +8,12 @@
 
 namespace ron {
 
+// max RON frame size is 1<<30
 typedef uint32_t fsize_t;
 typedef std::pair<fsize_t, fsize_t> frange_t;
 
 struct slice_t {
+
     const char *buf_;
     fsize_t size_;
 
@@ -20,8 +22,12 @@ struct slice_t {
     slice_t (const slice_t& orig) : buf_{orig.buf_}, size_{orig.size_} {}
     slice_t (const std::string& data) : slice_t{data.data(), static_cast<fsize_t>(data.size())} {}
     slice_t (const std::string& str, const frange_t& range) :
-        buf_{str.data()+range.first}, size_{range.second} {}
-    slice_t (slice_t host, frange_t range) : slice_t{buf_+range.first, range.second} {}
+        buf_{str.data()+range.first}, size_{range.second} {
+            assert(str.size()>=range.first+range.second);
+        }
+    slice_t (slice_t host, frange_t range) : slice_t{host.buf_+range.first, range.second} {
+        assert(host.size_>=range.first+range.second);
+    }
 
 
     inline const char* begin() const {
@@ -79,6 +85,8 @@ struct slice_t {
     }
 
     inline frange_t range_of (slice_t sub) const {
+        assert(sub.begin()>=begin());
+        assert(end()>=sub.end());
         return frange_t{sub.buf_-buf_, sub.size_};
     }
 };

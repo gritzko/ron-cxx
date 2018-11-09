@@ -9,8 +9,8 @@ typedef TextFrame Frame;
 typedef Frame::Cursor Cursor;
 typedef Frame::Builder Builder;
 
-string pattern (Frame frame) {
-    string ret = "";
+string pattern (const Frame& frame) {
+    string ret;
     auto c = frame.cursor();
     do {
         if (c.op().size()) ret.push_back('@');
@@ -75,7 +75,7 @@ void test_optional_chars () {
 }
 
 void test_signs () {
-    Frame signs{"@2:1 -1 ,-1.2, +1.23, -1.0e+2, -2.0e+1,"}; // FIXME 1e+1
+    Frame signs{"@2:1 -1 ,-1.2, +1.23,-1e+2, -2.0e+1,"};
     Cursor cur = signs.cursor();
     assert(cur.integer(2)==-1);
     assert(cur.Next());
@@ -113,11 +113,20 @@ void test_string_escapes () {
 
 }
 
+void test_terms() {
+    Frame commas{"@1+A:2+B 1,2 ,\n,\t4   ,,"};
+    auto c = commas.cursor();
+    int i = 1;
+    while (c.Next()) i++;
+    assert(i==5);
+}
+
 int main (int argn, char** args) {
     test_basic_cycle();
     test_optional_chars();
     test_signs();
     test_size_limits();
     test_string_escapes();
+    test_terms();
     return 0;
 }

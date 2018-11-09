@@ -24,7 +24,7 @@ public:
 
     rocksdb::ColumnFamilyHandle *data_cf_, *history_cf_, *log_cf_;
 
-    Replica(): db_{0}, data_cf_{0}, history_cf_{0}, log_cf_{0} {}
+    Replica(): db_{nullptr}, data_cf_{nullptr}, history_cf_{nullptr}, log_cf_{nullptr} {}
 
     //  L I F E C Y C L E
 
@@ -97,10 +97,11 @@ public:
 //            case SHA3_FUNC_INT:
 //                return sha3_.RecvQuery(response, cur);
 //        }
+        return Status::OK;
     }
 
     Status RecvData(Builder& response, const Frame& query) {
-
+        return Status::OK;
     }
 
 private:

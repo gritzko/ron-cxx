@@ -91,7 +91,7 @@ namespace ron {
 
     template<typename Frame>
     Status Replica<Frame>::GC() {
-
+        return Status::OK;
     }
 
     template<typename Frame>
@@ -112,6 +112,7 @@ namespace ron {
             delete db_;
             db_ = nullptr;
         }
+        return Status::OK;
     }
 
     template<typename Frame>
@@ -149,6 +150,7 @@ Status Replica<Frame>::Recv (Builder& response, const Batch& input) {
     store.Rollback();
     ok = store.Commit();
     return ok;*/
+    return Status::OK;
 }
 
 template<typename Frame>

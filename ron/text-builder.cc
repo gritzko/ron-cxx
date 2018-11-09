@@ -64,35 +64,35 @@ namespace ron {
         while (size) {
             switch (*buf) {
                 case '\"':
-                    to.push_back(TextFrame::ESC);
+                    to.push_back(ESC);
                     to.push_back('"');
                     break;
                 case '\'':
-                    to.push_back(TextFrame::ESC);
+                    to.push_back(ESC);
                     to.push_back('\'');
                     break;
                 case '\\':
-                    to.push_back(TextFrame::ESC);
+                    to.push_back(ESC);
                     to.push_back('\\');
                     break;
                 case '\b':
-                    to.push_back(TextFrame::ESC);
+                    to.push_back(ESC);
                     to.push_back('b');
                     break;
                 case '\f':
-                    to.push_back(TextFrame::ESC);
+                    to.push_back(ESC);
                     to.push_back('f');
                     break;
                 case '\n':
-                    to.push_back(TextFrame::ESC);
+                    to.push_back(ESC);
                     to.push_back('n');
                     break;
                 case '\r':
-                    to.push_back(TextFrame::ESC);
+                    to.push_back(ESC);
                     to.push_back('r');
                     break;
                 case '\t':
-                    to.push_back(TextFrame::ESC);
+                    to.push_back(ESC);
                     to.push_back('t');
                     break;
                 default:

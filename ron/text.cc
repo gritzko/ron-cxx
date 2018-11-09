@@ -5,7 +5,7 @@ using namespace std;
 namespace ron {
 
     int64_t TextFrame::Cursor::integer(fsize_t idx) {
-        slice_t range{frame_.data(), op_.atom(idx).range()};
+        const slice_t range{frame_.data(), op_.atom(idx).range()};
         const char* i = range.begin();
         bool neg = false;
         if (*i=='-') {
@@ -35,7 +35,24 @@ namespace ron {
 
     std::string TextFrame::Cursor::string(fsize_t idx) {
         slice_t range{frame_.data(), op_.atom(idx).range()};
-        return range.str();
+        std::string ret{};
+        for (auto c=range.begin(); c<range.end(); c++) {
+            if (*c != ESC) {
+                ret.push_back(*c);
+                continue;
+            }
+            char escape = *(c+1), unesc = escape;
+            switch (escape) {
+            case 'b': unesc = '\b';  break;
+            case 'f': unesc = '\f';  break;
+            case 'n': unesc = '\n';  break;
+            case 'r': unesc = '\r';  break;
+            case 't': unesc = '\t';  break;
+            }
+            ret.push_back(unesc);
+            c++;
+        }
+        return ret;
     }
 
 

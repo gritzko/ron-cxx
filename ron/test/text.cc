@@ -44,8 +44,9 @@ void test_basic_cycle () {
     assert(cursor.Next());
     assert(op.ref()=="1+src");
     assert(op.id()=="2+orig");
-    assert(op.value_string(2, frame.data())=="key");
-    assert(op.value_string(3, frame.data())=="value");
+    cerr<<cursor.string(2)<<'\n';
+    assert(cursor.string(2)=="key");
+    assert(cursor.string(3)=="value");
     assert(!cursor.Next());
 }
 
@@ -93,10 +94,27 @@ void test_signs () {
 }
 
 void test_size_limits () {
-
+    Frame toolong{"=1,=1000000000000000000001,"};
+    Cursor cur = toolong.cursor();
+    assert(cur.valid());
+    assert(!cur.Next());
 }
 
 void test_string_escapes () {
+    Builder builder;
+    auto STR1 = "'esc'";
+    auto STR2 = "=\r\n\t\\=";
+    AddOp(builder, "1+a", "2+b", STR1, STR2);
+    Frame cycle = builder.frame();
+    Cursor cc = cycle.cursor();
+    assert(cc.valid());
+    std::cerr<<cc.string(2)<<'\n';
+    std::cerr<<cc.string(3)<<'\n';
+    assert(cc.string(2)==STR1);
+    assert(cc.string(3)==STR2);
+
+    //Frame good{" 'esc \\'', '\\u0020', '\\r\\n\\t\\\\', "};
+    //Cursor cur = good.cursor();
 
 }
 

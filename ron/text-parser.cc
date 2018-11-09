@@ -9,11 +9,11 @@ namespace ron {
 #line 7 "ragel/text-parser.rl"
 
 #line 12 "ron/text-parser.cc"
-static const int RON_start = 49;
-static const int RON_first_final = 49;
+static const int RON_start = 54;
+static const int RON_first_final = 54;
 static const int RON_error = 0;
 
-static const int RON_en_main = 49;
+static const int RON_en_main = 54;
 
 
 #line 8 "ragel/text-parser.rl"
@@ -81,19 +81,19 @@ bool TextFrame::Cursor::Next () {
 		goto _test_eof;
 	switch ( cs )
 	{
-tr6:
+tr8:
 #line 37 "ragel/./text-grammar.rl"
 	{ 
         term = (*p); 
         pos_++; 
-        if (p<pe-1) {p++; cs = 49; goto _out;}
+        if (p<pe-1) {p++; cs = 54; goto _out;}
     }
-	goto st49;
-tr17:
+	goto st54;
+tr19:
 #line 13 "ragel/./text-grammar.rl"
 	{
         intb.end(p);
-        if (intb.size() > 21) { cs = 0; {p++; cs = 49; goto _out;} }
+        if (intb.size() > 21) { cs = 0; {p++; cs = 54; goto _out;} }
         op_.AddAtom(Atom::Integer(body.range_of(intb))); 
         lastintb = intb.buf_;
     }
@@ -101,347 +101,23 @@ tr17:
 	{ 
         term = (*p); 
         pos_++; 
-        if (p<pe-1) {p++; cs = 49; goto _out;}
+        if (p<pe-1) {p++; cs = 54; goto _out;}
     }
-	goto st49;
-tr26:
+	goto st54;
+tr28:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
-        if (floatb.size() > 24) { cs = 0; {p++; cs = 49; goto _out;} }
+        if (floatb.size() > 24) { cs = 0; {p++; cs = 54; goto _out;} }
         op_.AddAtom(Atom::Float(body.range_of(floatb))); 
     }
 #line 37 "ragel/./text-grammar.rl"
 	{ 
         term = (*p); 
         pos_++; 
-        if (p<pe-1) {p++; cs = 49; goto _out;}
+        if (p<pe-1) {p++; cs = 54; goto _out;}
     }
-	goto st49;
-tr37:
-#line 13 "ragel/././uuid-grammar.rl"
-	{ value.end(p); }
-#line 17 "ragel/././uuid-grammar.rl"
-	{ 
-        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
-            cs = 0;
-            {p++; cs = 49; goto _out;}
-        }
-        uuidb.end(p);
-    }
-#line 30 "ragel/./text-grammar.rl"
-	{
-        op_.AddAtom(Uuid{variety, value, version, origin}); 
-    }
-#line 37 "ragel/./text-grammar.rl"
-	{ 
-        term = (*p); 
-        pos_++; 
-        if (p<pe-1) {p++; cs = 49; goto _out;}
-    }
-	goto st49;
-tr47:
-#line 16 "ragel/././uuid-grammar.rl"
-	{ origin.end(p); }
-#line 17 "ragel/././uuid-grammar.rl"
-	{ 
-        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
-            cs = 0;
-            {p++; cs = 49; goto _out;}
-        }
-        uuidb.end(p);
-    }
-#line 30 "ragel/./text-grammar.rl"
-	{
-        op_.AddAtom(Uuid{variety, value, version, origin}); 
-    }
-#line 37 "ragel/./text-grammar.rl"
-	{ 
-        term = (*p); 
-        pos_++; 
-        if (p<pe-1) {p++; cs = 49; goto _out;}
-    }
-	goto st49;
-tr60:
-#line 13 "ragel/./text-grammar.rl"
-	{
-        intb.end(p);
-        if (intb.size() > 21) { cs = 0; {p++; cs = 49; goto _out;} }
-        op_.AddAtom(Atom::Integer(body.range_of(intb))); 
-        lastintb = intb.buf_;
-    }
-#line 13 "ragel/././uuid-grammar.rl"
-	{ value.end(p); }
-#line 17 "ragel/././uuid-grammar.rl"
-	{ 
-        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
-            cs = 0;
-            {p++; cs = 49; goto _out;}
-        }
-        uuidb.end(p);
-    }
-#line 33 "ragel/./text-grammar.rl"
-	{ 
-        if (!intb.same(uuidb))
-            op_.AddAtom(Uuid{variety, value, version, origin}); 
-    }
-#line 37 "ragel/./text-grammar.rl"
-	{ 
-        term = (*p); 
-        pos_++; 
-        if (p<pe-1) {p++; cs = 49; goto _out;}
-    }
-	goto st49;
-tr72:
-#line 16 "ragel/././uuid-grammar.rl"
-	{ origin.end(p); }
-#line 17 "ragel/././uuid-grammar.rl"
-	{ 
-        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
-            cs = 0;
-            {p++; cs = 49; goto _out;}
-        }
-        uuidb.end(p);
-    }
-#line 33 "ragel/./text-grammar.rl"
-	{ 
-        if (!intb.same(uuidb))
-            op_.AddAtom(Uuid{variety, value, version, origin}); 
-    }
-#line 37 "ragel/./text-grammar.rl"
-	{ 
-        term = (*p); 
-        pos_++; 
-        if (p<pe-1) {p++; cs = 49; goto _out;}
-    }
-	goto st49;
-tr80:
-#line 13 "ragel/././uuid-grammar.rl"
-	{ value.end(p); }
-#line 17 "ragel/././uuid-grammar.rl"
-	{ 
-        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
-            cs = 0;
-            {p++; cs = 49; goto _out;}
-        }
-        uuidb.end(p);
-    }
-#line 33 "ragel/./text-grammar.rl"
-	{ 
-        if (!intb.same(uuidb))
-            op_.AddAtom(Uuid{variety, value, version, origin}); 
-    }
-#line 37 "ragel/./text-grammar.rl"
-	{ 
-        term = (*p); 
-        pos_++; 
-        if (p<pe-1) {p++; cs = 49; goto _out;}
-    }
-	goto st49;
-tr89:
-#line 25 "ragel/./text-grammar.rl"
-	{ 
-        floatb.end(p);
-        if (floatb.size() > 24) { cs = 0; {p++; cs = 49; goto _out;} }
-        op_.AddAtom(Atom::Float(body.range_of(floatb))); 
-    }
-#line 16 "ragel/././uuid-grammar.rl"
-	{ origin.end(p); }
-#line 17 "ragel/././uuid-grammar.rl"
-	{ 
-        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
-            cs = 0;
-            {p++; cs = 49; goto _out;}
-        }
-        uuidb.end(p);
-    }
-#line 33 "ragel/./text-grammar.rl"
-	{ 
-        if (!intb.same(uuidb))
-            op_.AddAtom(Uuid{variety, value, version, origin}); 
-    }
-#line 37 "ragel/./text-grammar.rl"
-	{ 
-        term = (*p); 
-        pos_++; 
-        if (p<pe-1) {p++; cs = 49; goto _out;}
-    }
-	goto st49;
-tr96:
-#line 25 "ragel/./text-grammar.rl"
-	{ 
-        floatb.end(p);
-        if (floatb.size() > 24) { cs = 0; {p++; cs = 49; goto _out;} }
-        op_.AddAtom(Atom::Float(body.range_of(floatb))); 
-    }
-#line 13 "ragel/././uuid-grammar.rl"
-	{ value.end(p); }
-#line 17 "ragel/././uuid-grammar.rl"
-	{ 
-        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
-            cs = 0;
-            {p++; cs = 49; goto _out;}
-        }
-        uuidb.end(p);
-    }
-#line 33 "ragel/./text-grammar.rl"
-	{ 
-        if (!intb.same(uuidb))
-            op_.AddAtom(Uuid{variety, value, version, origin}); 
-    }
-#line 37 "ragel/./text-grammar.rl"
-	{ 
-        term = (*p); 
-        pos_++; 
-        if (p<pe-1) {p++; cs = 49; goto _out;}
-    }
-	goto st49;
-tr105:
-#line 13 "ragel/././uuid-grammar.rl"
-	{ value.end(p); }
-#line 17 "ragel/././uuid-grammar.rl"
-	{ 
-        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
-            cs = 0;
-            {p++; cs = 49; goto _out;}
-        }
-        uuidb.end(p);
-    }
-#line 6 "ragel/./text-grammar.rl"
-	{
-        op_.SetId(Uuid{variety, value, version, origin});
-    }
-#line 37 "ragel/./text-grammar.rl"
-	{ 
-        term = (*p); 
-        pos_++; 
-        if (p<pe-1) {p++; cs = 49; goto _out;}
-    }
-	goto st49;
-tr119:
-#line 13 "ragel/././uuid-grammar.rl"
-	{ value.end(p); }
-#line 17 "ragel/././uuid-grammar.rl"
-	{ 
-        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
-            cs = 0;
-            {p++; cs = 49; goto _out;}
-        }
-        uuidb.end(p);
-    }
-#line 9 "ragel/./text-grammar.rl"
-	{
-        op_.SetRef(Uuid{variety, value, version, origin});
-    }
-#line 37 "ragel/./text-grammar.rl"
-	{ 
-        term = (*p); 
-        pos_++; 
-        if (p<pe-1) {p++; cs = 49; goto _out;}
-    }
-	goto st49;
-tr129:
-#line 16 "ragel/././uuid-grammar.rl"
-	{ origin.end(p); }
-#line 17 "ragel/././uuid-grammar.rl"
-	{ 
-        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
-            cs = 0;
-            {p++; cs = 49; goto _out;}
-        }
-        uuidb.end(p);
-    }
-#line 9 "ragel/./text-grammar.rl"
-	{
-        op_.SetRef(Uuid{variety, value, version, origin});
-    }
-#line 37 "ragel/./text-grammar.rl"
-	{ 
-        term = (*p); 
-        pos_++; 
-        if (p<pe-1) {p++; cs = 49; goto _out;}
-    }
-	goto st49;
-tr138:
-#line 16 "ragel/././uuid-grammar.rl"
-	{ origin.end(p); }
-#line 17 "ragel/././uuid-grammar.rl"
-	{ 
-        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
-            cs = 0;
-            {p++; cs = 49; goto _out;}
-        }
-        uuidb.end(p);
-    }
-#line 6 "ragel/./text-grammar.rl"
-	{
-        op_.SetId(Uuid{variety, value, version, origin});
-    }
-#line 37 "ragel/./text-grammar.rl"
-	{ 
-        term = (*p); 
-        pos_++; 
-        if (p<pe-1) {p++; cs = 49; goto _out;}
-    }
-	goto st49;
-st49:
-	if ( ++p == pe )
-		goto _test_eof49;
-case 49:
-#line 392 "ron/text-parser.cc"
-	switch( (*p) ) {
-		case 32: goto st49;
-		case 33: goto tr6;
-		case 39: goto st1;
-		case 44: goto tr6;
-		case 46: goto st35;
-		case 59: goto tr6;
-		case 61: goto st9;
-		case 62: goto st12;
-		case 63: goto tr6;
-		case 64: goto st36;
-		case 94: goto st16;
-		case 95: goto tr14;
-		case 126: goto tr14;
-	}
-	if ( (*p) < 48 ) {
-		if ( (*p) > 13 ) {
-			if ( 43 <= (*p) && (*p) <= 45 )
-				goto tr11;
-		} else if ( (*p) >= 9 )
-			goto st49;
-	} else if ( (*p) > 57 ) {
-		if ( (*p) < 71 ) {
-			if ( 65 <= (*p) && (*p) <= 70 )
-				goto tr13;
-		} else if ( (*p) > 90 ) {
-			if ( 97 <= (*p) && (*p) <= 122 )
-				goto tr14;
-		} else
-			goto tr14;
-	} else
-		goto tr12;
-	goto st0;
-st0:
-cs = 0;
-	goto _out;
-tr18:
-#line 13 "ragel/./text-grammar.rl"
-	{
-        intb.end(p);
-        if (intb.size() > 21) { cs = 0; {p++; cs = 1; goto _out;} }
-        op_.AddAtom(Atom::Integer(body.range_of(intb))); 
-        lastintb = intb.buf_;
-    }
-	goto st1;
-tr27:
-#line 25 "ragel/./text-grammar.rl"
-	{ 
-        floatb.end(p);
-        if (floatb.size() > 24) { cs = 0; {p++; cs = 1; goto _out;} }
-        op_.AddAtom(Atom::Float(body.range_of(floatb))); 
-    }
-	goto st1;
+	goto st54;
 tr39:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
@@ -449,6 +125,330 @@ tr39:
 	{ 
         if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
             cs = 0;
+            {p++; cs = 54; goto _out;}
+        }
+        uuidb.end(p);
+    }
+#line 30 "ragel/./text-grammar.rl"
+	{
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
+    }
+#line 37 "ragel/./text-grammar.rl"
+	{ 
+        term = (*p); 
+        pos_++; 
+        if (p<pe-1) {p++; cs = 54; goto _out;}
+    }
+	goto st54;
+tr49:
+#line 16 "ragel/././uuid-grammar.rl"
+	{ origin.end(p); }
+#line 17 "ragel/././uuid-grammar.rl"
+	{ 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            {p++; cs = 54; goto _out;}
+        }
+        uuidb.end(p);
+    }
+#line 30 "ragel/./text-grammar.rl"
+	{
+        op_.AddAtom(Uuid{variety, value, version, origin}); 
+    }
+#line 37 "ragel/./text-grammar.rl"
+	{ 
+        term = (*p); 
+        pos_++; 
+        if (p<pe-1) {p++; cs = 54; goto _out;}
+    }
+	goto st54;
+tr62:
+#line 13 "ragel/./text-grammar.rl"
+	{
+        intb.end(p);
+        if (intb.size() > 21) { cs = 0; {p++; cs = 54; goto _out;} }
+        op_.AddAtom(Atom::Integer(body.range_of(intb))); 
+        lastintb = intb.buf_;
+    }
+#line 13 "ragel/././uuid-grammar.rl"
+	{ value.end(p); }
+#line 17 "ragel/././uuid-grammar.rl"
+	{ 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            {p++; cs = 54; goto _out;}
+        }
+        uuidb.end(p);
+    }
+#line 33 "ragel/./text-grammar.rl"
+	{ 
+        if (!intb.same(uuidb))
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
+    }
+#line 37 "ragel/./text-grammar.rl"
+	{ 
+        term = (*p); 
+        pos_++; 
+        if (p<pe-1) {p++; cs = 54; goto _out;}
+    }
+	goto st54;
+tr74:
+#line 16 "ragel/././uuid-grammar.rl"
+	{ origin.end(p); }
+#line 17 "ragel/././uuid-grammar.rl"
+	{ 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            {p++; cs = 54; goto _out;}
+        }
+        uuidb.end(p);
+    }
+#line 33 "ragel/./text-grammar.rl"
+	{ 
+        if (!intb.same(uuidb))
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
+    }
+#line 37 "ragel/./text-grammar.rl"
+	{ 
+        term = (*p); 
+        pos_++; 
+        if (p<pe-1) {p++; cs = 54; goto _out;}
+    }
+	goto st54;
+tr82:
+#line 13 "ragel/././uuid-grammar.rl"
+	{ value.end(p); }
+#line 17 "ragel/././uuid-grammar.rl"
+	{ 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            {p++; cs = 54; goto _out;}
+        }
+        uuidb.end(p);
+    }
+#line 33 "ragel/./text-grammar.rl"
+	{ 
+        if (!intb.same(uuidb))
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
+    }
+#line 37 "ragel/./text-grammar.rl"
+	{ 
+        term = (*p); 
+        pos_++; 
+        if (p<pe-1) {p++; cs = 54; goto _out;}
+    }
+	goto st54;
+tr91:
+#line 25 "ragel/./text-grammar.rl"
+	{ 
+        floatb.end(p);
+        if (floatb.size() > 24) { cs = 0; {p++; cs = 54; goto _out;} }
+        op_.AddAtom(Atom::Float(body.range_of(floatb))); 
+    }
+#line 16 "ragel/././uuid-grammar.rl"
+	{ origin.end(p); }
+#line 17 "ragel/././uuid-grammar.rl"
+	{ 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            {p++; cs = 54; goto _out;}
+        }
+        uuidb.end(p);
+    }
+#line 33 "ragel/./text-grammar.rl"
+	{ 
+        if (!intb.same(uuidb))
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
+    }
+#line 37 "ragel/./text-grammar.rl"
+	{ 
+        term = (*p); 
+        pos_++; 
+        if (p<pe-1) {p++; cs = 54; goto _out;}
+    }
+	goto st54;
+tr98:
+#line 25 "ragel/./text-grammar.rl"
+	{ 
+        floatb.end(p);
+        if (floatb.size() > 24) { cs = 0; {p++; cs = 54; goto _out;} }
+        op_.AddAtom(Atom::Float(body.range_of(floatb))); 
+    }
+#line 13 "ragel/././uuid-grammar.rl"
+	{ value.end(p); }
+#line 17 "ragel/././uuid-grammar.rl"
+	{ 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            {p++; cs = 54; goto _out;}
+        }
+        uuidb.end(p);
+    }
+#line 33 "ragel/./text-grammar.rl"
+	{ 
+        if (!intb.same(uuidb))
+            op_.AddAtom(Uuid{variety, value, version, origin}); 
+    }
+#line 37 "ragel/./text-grammar.rl"
+	{ 
+        term = (*p); 
+        pos_++; 
+        if (p<pe-1) {p++; cs = 54; goto _out;}
+    }
+	goto st54;
+tr111:
+#line 13 "ragel/././uuid-grammar.rl"
+	{ value.end(p); }
+#line 17 "ragel/././uuid-grammar.rl"
+	{ 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            {p++; cs = 54; goto _out;}
+        }
+        uuidb.end(p);
+    }
+#line 6 "ragel/./text-grammar.rl"
+	{
+        op_.SetId(Uuid{variety, value, version, origin});
+    }
+#line 37 "ragel/./text-grammar.rl"
+	{ 
+        term = (*p); 
+        pos_++; 
+        if (p<pe-1) {p++; cs = 54; goto _out;}
+    }
+	goto st54;
+tr125:
+#line 13 "ragel/././uuid-grammar.rl"
+	{ value.end(p); }
+#line 17 "ragel/././uuid-grammar.rl"
+	{ 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            {p++; cs = 54; goto _out;}
+        }
+        uuidb.end(p);
+    }
+#line 9 "ragel/./text-grammar.rl"
+	{
+        op_.SetRef(Uuid{variety, value, version, origin});
+    }
+#line 37 "ragel/./text-grammar.rl"
+	{ 
+        term = (*p); 
+        pos_++; 
+        if (p<pe-1) {p++; cs = 54; goto _out;}
+    }
+	goto st54;
+tr135:
+#line 16 "ragel/././uuid-grammar.rl"
+	{ origin.end(p); }
+#line 17 "ragel/././uuid-grammar.rl"
+	{ 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            {p++; cs = 54; goto _out;}
+        }
+        uuidb.end(p);
+    }
+#line 9 "ragel/./text-grammar.rl"
+	{
+        op_.SetRef(Uuid{variety, value, version, origin});
+    }
+#line 37 "ragel/./text-grammar.rl"
+	{ 
+        term = (*p); 
+        pos_++; 
+        if (p<pe-1) {p++; cs = 54; goto _out;}
+    }
+	goto st54;
+tr144:
+#line 16 "ragel/././uuid-grammar.rl"
+	{ origin.end(p); }
+#line 17 "ragel/././uuid-grammar.rl"
+	{ 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            {p++; cs = 54; goto _out;}
+        }
+        uuidb.end(p);
+    }
+#line 6 "ragel/./text-grammar.rl"
+	{
+        op_.SetId(Uuid{variety, value, version, origin});
+    }
+#line 37 "ragel/./text-grammar.rl"
+	{ 
+        term = (*p); 
+        pos_++; 
+        if (p<pe-1) {p++; cs = 54; goto _out;}
+    }
+	goto st54;
+st54:
+	if ( ++p == pe )
+		goto _test_eof54;
+case 54:
+#line 392 "ron/text-parser.cc"
+	switch( (*p) ) {
+		case 32: goto st54;
+		case 33: goto tr8;
+		case 39: goto st1;
+		case 44: goto tr8;
+		case 46: goto st40;
+		case 59: goto tr8;
+		case 61: goto st9;
+		case 62: goto st12;
+		case 63: goto tr8;
+		case 64: goto st41;
+		case 94: goto st16;
+		case 95: goto tr16;
+		case 126: goto tr16;
+	}
+	if ( (*p) < 48 ) {
+		if ( (*p) > 13 ) {
+			if ( 43 <= (*p) && (*p) <= 45 )
+				goto tr13;
+		} else if ( (*p) >= 9 )
+			goto st54;
+	} else if ( (*p) > 57 ) {
+		if ( (*p) < 71 ) {
+			if ( 65 <= (*p) && (*p) <= 70 )
+				goto tr15;
+		} else if ( (*p) > 90 ) {
+			if ( 97 <= (*p) && (*p) <= 122 )
+				goto tr16;
+		} else
+			goto tr16;
+	} else
+		goto tr14;
+	goto st0;
+st0:
+cs = 0;
+	goto _out;
+tr20:
+#line 13 "ragel/./text-grammar.rl"
+	{
+        intb.end(p);
+        if (intb.size() > 21) { cs = 0; {p++; cs = 1; goto _out;} }
+        op_.AddAtom(Atom::Integer(body.range_of(intb))); 
+        lastintb = intb.buf_;
+    }
+	goto st1;
+tr29:
+#line 25 "ragel/./text-grammar.rl"
+	{ 
+        floatb.end(p);
+        if (floatb.size() > 24) { cs = 0; {p++; cs = 1; goto _out;} }
+        op_.AddAtom(Atom::Float(body.range_of(floatb))); 
+    }
+	goto st1;
+tr41:
+#line 13 "ragel/././uuid-grammar.rl"
+	{ value.end(p); }
+#line 17 "ragel/././uuid-grammar.rl"
+	{ 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
             {p++; cs = 1; goto _out;}
         }
         uuidb.end(p);
@@ -458,7 +458,7 @@ tr39:
         op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st1;
-tr48:
+tr50:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -474,7 +474,7 @@ tr48:
         op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st1;
-tr62:
+tr64:
 #line 13 "ragel/./text-grammar.rl"
 	{
         intb.end(p);
@@ -498,7 +498,7 @@ tr62:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st1;
-tr73:
+tr75:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -515,7 +515,7 @@ tr73:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st1;
-tr81:
+tr83:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -532,7 +532,7 @@ tr81:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st1;
-tr90:
+tr92:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
@@ -555,7 +555,7 @@ tr90:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st1;
-tr97:
+tr99:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
@@ -578,7 +578,7 @@ tr97:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st1;
-tr107:
+tr113:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -594,7 +594,7 @@ tr107:
         op_.SetId(Uuid{variety, value, version, origin});
     }
 	goto st1;
-tr121:
+tr127:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -610,7 +610,7 @@ tr121:
         op_.SetRef(Uuid{variety, value, version, origin});
     }
 	goto st1;
-tr130:
+tr136:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -626,7 +626,7 @@ tr130:
         op_.SetRef(Uuid{variety, value, version, origin});
     }
 	goto st1;
-tr139:
+tr145:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -651,7 +651,7 @@ case 1:
 		case 10: goto st0;
 		case 13: goto st0;
 		case 39: goto tr2;
-		case 92: goto st0;
+		case 92: goto tr3;
 	}
 	goto tr0;
 tr0:
@@ -666,8 +666,8 @@ case 2:
 	switch( (*p) ) {
 		case 10: goto st0;
 		case 13: goto st0;
-		case 39: goto tr4;
-		case 92: goto st0;
+		case 39: goto tr5;
+		case 92: goto st35;
 	}
 	goto st2;
 tr2:
@@ -679,7 +679,7 @@ tr2:
         op_.AddAtom(Atom::String(body.range_of(strb))); 
     }
 	goto st3;
-tr4:
+tr5:
 #line 20 "ragel/./text-grammar.rl"
 	{ 
         strb.end(p);
@@ -693,19 +693,19 @@ case 3:
 #line 694 "ron/text-parser.cc"
 	switch( (*p) ) {
 		case 32: goto st4;
-		case 33: goto tr6;
+		case 33: goto tr8;
 		case 39: goto st1;
-		case 44: goto tr6;
-		case 59: goto tr6;
+		case 44: goto tr8;
+		case 59: goto tr8;
 		case 61: goto st9;
 		case 62: goto st12;
-		case 63: goto tr6;
+		case 63: goto tr8;
 		case 94: goto st16;
 	}
 	if ( 9 <= (*p) && (*p) <= 13 )
 		goto st4;
 	goto st0;
-tr16:
+tr18:
 #line 13 "ragel/./text-grammar.rl"
 	{
         intb.end(p);
@@ -714,7 +714,7 @@ tr16:
         lastintb = intb.buf_;
     }
 	goto st4;
-tr25:
+tr27:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
@@ -722,7 +722,7 @@ tr25:
         op_.AddAtom(Atom::Float(body.range_of(floatb))); 
     }
 	goto st4;
-tr36:
+tr38:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -738,7 +738,7 @@ tr36:
         op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st4;
-tr46:
+tr48:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -754,7 +754,7 @@ tr46:
         op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st4;
-tr59:
+tr61:
 #line 13 "ragel/./text-grammar.rl"
 	{
         intb.end(p);
@@ -778,7 +778,7 @@ tr59:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st4;
-tr71:
+tr73:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -795,7 +795,7 @@ tr71:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st4;
-tr79:
+tr81:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -812,7 +812,7 @@ tr79:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st4;
-tr88:
+tr90:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
@@ -835,7 +835,7 @@ tr88:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st4;
-tr95:
+tr97:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
@@ -858,7 +858,7 @@ tr95:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st4;
-tr118:
+tr124:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -874,7 +874,7 @@ tr118:
         op_.SetRef(Uuid{variety, value, version, origin});
     }
 	goto st4;
-tr128:
+tr134:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -897,36 +897,36 @@ case 4:
 #line 898 "ron/text-parser.cc"
 	switch( (*p) ) {
 		case 32: goto st4;
-		case 33: goto tr6;
+		case 33: goto tr8;
 		case 39: goto st1;
-		case 44: goto tr6;
-		case 59: goto tr6;
+		case 44: goto tr8;
+		case 59: goto tr8;
 		case 61: goto st9;
 		case 62: goto st12;
-		case 63: goto tr6;
+		case 63: goto tr8;
 		case 94: goto st16;
-		case 95: goto tr14;
-		case 126: goto tr14;
+		case 95: goto tr16;
+		case 126: goto tr16;
 	}
 	if ( (*p) < 48 ) {
 		if ( (*p) > 13 ) {
 			if ( 43 <= (*p) && (*p) <= 45 )
-				goto tr11;
+				goto tr13;
 		} else if ( (*p) >= 9 )
 			goto st4;
 	} else if ( (*p) > 57 ) {
 		if ( (*p) < 71 ) {
 			if ( 65 <= (*p) && (*p) <= 70 )
-				goto tr13;
+				goto tr15;
 		} else if ( (*p) > 90 ) {
 			if ( 97 <= (*p) && (*p) <= 122 )
-				goto tr14;
+				goto tr16;
 		} else
-			goto tr14;
+			goto tr16;
 	} else
-		goto tr12;
+		goto tr14;
 	goto st0;
-tr11:
+tr13:
 #line 12 "ragel/./text-grammar.rl"
 	{ intb.begin(p); }
 #line 24 "ragel/./text-grammar.rl"
@@ -945,24 +945,24 @@ st6:
 		goto _test_eof6;
 case 6:
 	switch( (*p) ) {
-		case 32: goto tr16;
-		case 33: goto tr17;
-		case 39: goto tr18;
-		case 44: goto tr17;
+		case 32: goto tr18;
+		case 33: goto tr19;
+		case 39: goto tr20;
+		case 44: goto tr19;
 		case 46: goto st7;
-		case 59: goto tr17;
-		case 61: goto tr20;
-		case 62: goto tr21;
-		case 63: goto tr17;
+		case 59: goto tr19;
+		case 61: goto tr22;
+		case 62: goto tr23;
+		case 63: goto tr19;
 		case 69: goto st19;
-		case 94: goto tr23;
+		case 94: goto tr25;
 		case 101: goto st19;
 	}
 	if ( (*p) > 13 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto st6;
 	} else if ( (*p) >= 9 )
-		goto tr16;
+		goto tr18;
 	goto st0;
 st7:
 	if ( ++p == pe )
@@ -976,25 +976,25 @@ st8:
 		goto _test_eof8;
 case 8:
 	switch( (*p) ) {
-		case 32: goto tr25;
-		case 33: goto tr26;
-		case 39: goto tr27;
-		case 44: goto tr26;
-		case 59: goto tr26;
-		case 61: goto tr28;
-		case 62: goto tr29;
-		case 63: goto tr26;
+		case 32: goto tr27;
+		case 33: goto tr28;
+		case 39: goto tr29;
+		case 44: goto tr28;
+		case 59: goto tr28;
+		case 61: goto tr30;
+		case 62: goto tr31;
+		case 63: goto tr28;
 		case 69: goto st19;
-		case 94: goto tr30;
+		case 94: goto tr32;
 		case 101: goto st19;
 	}
 	if ( (*p) > 13 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto st8;
 	} else if ( (*p) >= 9 )
-		goto tr25;
+		goto tr27;
 	goto st0;
-tr20:
+tr22:
 #line 13 "ragel/./text-grammar.rl"
 	{
         intb.end(p);
@@ -1003,7 +1003,7 @@ tr20:
         lastintb = intb.buf_;
     }
 	goto st9;
-tr28:
+tr30:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
@@ -1011,7 +1011,7 @@ tr28:
         op_.AddAtom(Atom::Float(body.range_of(floatb))); 
     }
 	goto st9;
-tr42:
+tr44:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1027,7 +1027,7 @@ tr42:
         op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st9;
-tr50:
+tr52:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1043,7 +1043,7 @@ tr50:
         op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st9;
-tr65:
+tr67:
 #line 13 "ragel/./text-grammar.rl"
 	{
         intb.end(p);
@@ -1067,7 +1067,7 @@ tr65:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st9;
-tr75:
+tr77:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1084,7 +1084,7 @@ tr75:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st9;
-tr82:
+tr84:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1101,7 +1101,7 @@ tr82:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st9;
-tr92:
+tr94:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
@@ -1124,7 +1124,7 @@ tr92:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st9;
-tr98:
+tr100:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
@@ -1147,7 +1147,7 @@ tr98:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st9;
-tr111:
+tr117:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1163,7 +1163,7 @@ tr111:
         op_.SetId(Uuid{variety, value, version, origin});
     }
 	goto st9;
-tr124:
+tr130:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1179,7 +1179,7 @@ tr124:
         op_.SetRef(Uuid{variety, value, version, origin});
     }
 	goto st9;
-tr132:
+tr138:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1195,7 +1195,7 @@ tr132:
         op_.SetRef(Uuid{variety, value, version, origin});
     }
 	goto st9;
-tr142:
+tr148:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1218,16 +1218,16 @@ case 9:
 #line 1219 "ron/text-parser.cc"
 	switch( (*p) ) {
 		case 32: goto st9;
-		case 43: goto tr31;
-		case 45: goto tr31;
+		case 43: goto tr33;
+		case 45: goto tr33;
 	}
 	if ( (*p) > 13 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
-			goto tr32;
+			goto tr34;
 	} else if ( (*p) >= 9 )
 		goto st9;
 	goto st0;
-tr31:
+tr33:
 #line 12 "ragel/./text-grammar.rl"
 	{ intb.begin(p); }
 	goto st10;
@@ -1239,7 +1239,7 @@ case 10:
 	if ( 48 <= (*p) && (*p) <= 57 )
 		goto st11;
 	goto st0;
-tr32:
+tr34:
 #line 12 "ragel/./text-grammar.rl"
 	{ intb.begin(p); }
 	goto st11;
@@ -1249,23 +1249,23 @@ st11:
 case 11:
 #line 1251 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 32: goto tr16;
-		case 33: goto tr17;
-		case 39: goto tr18;
-		case 44: goto tr17;
-		case 59: goto tr17;
-		case 61: goto tr20;
-		case 62: goto tr21;
-		case 63: goto tr17;
-		case 94: goto tr23;
+		case 32: goto tr18;
+		case 33: goto tr19;
+		case 39: goto tr20;
+		case 44: goto tr19;
+		case 59: goto tr19;
+		case 61: goto tr22;
+		case 62: goto tr23;
+		case 63: goto tr19;
+		case 94: goto tr25;
 	}
 	if ( (*p) > 13 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto st11;
 	} else if ( (*p) >= 9 )
-		goto tr16;
+		goto tr18;
 	goto st0;
-tr21:
+tr23:
 #line 13 "ragel/./text-grammar.rl"
 	{
         intb.end(p);
@@ -1274,7 +1274,7 @@ tr21:
         lastintb = intb.buf_;
     }
 	goto st12;
-tr29:
+tr31:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
@@ -1282,7 +1282,7 @@ tr29:
         op_.AddAtom(Atom::Float(body.range_of(floatb))); 
     }
 	goto st12;
-tr43:
+tr45:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1298,7 +1298,7 @@ tr43:
         op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st12;
-tr51:
+tr53:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1314,7 +1314,7 @@ tr51:
         op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st12;
-tr66:
+tr68:
 #line 13 "ragel/./text-grammar.rl"
 	{
         intb.end(p);
@@ -1338,7 +1338,7 @@ tr66:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st12;
-tr76:
+tr78:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1355,7 +1355,7 @@ tr76:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st12;
-tr83:
+tr85:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1372,7 +1372,7 @@ tr83:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st12;
-tr93:
+tr95:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
@@ -1395,7 +1395,7 @@ tr93:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st12;
-tr99:
+tr101:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
@@ -1418,7 +1418,7 @@ tr99:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st12;
-tr112:
+tr118:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1434,7 +1434,7 @@ tr112:
         op_.SetId(Uuid{variety, value, version, origin});
     }
 	goto st12;
-tr125:
+tr131:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1450,7 +1450,7 @@ tr125:
         op_.SetRef(Uuid{variety, value, version, origin});
     }
 	goto st12;
-tr133:
+tr139:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1466,7 +1466,7 @@ tr133:
         op_.SetRef(Uuid{variety, value, version, origin});
     }
 	goto st12;
-tr143:
+tr149:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1489,25 +1489,25 @@ case 12:
 #line 1490 "ron/text-parser.cc"
 	switch( (*p) ) {
 		case 32: goto st12;
-		case 95: goto tr35;
-		case 126: goto tr35;
+		case 95: goto tr37;
+		case 126: goto tr37;
 	}
 	if ( (*p) < 65 ) {
 		if ( (*p) > 13 ) {
 			if ( 48 <= (*p) && (*p) <= 57 )
-				goto tr34;
+				goto tr36;
 		} else if ( (*p) >= 9 )
 			goto st12;
 	} else if ( (*p) > 70 ) {
 		if ( (*p) > 90 ) {
 			if ( 97 <= (*p) && (*p) <= 122 )
-				goto tr35;
+				goto tr37;
 		} else if ( (*p) >= 71 )
-			goto tr35;
+			goto tr37;
 	} else
-		goto tr34;
+		goto tr36;
 	goto st0;
-tr34:
+tr36:
 #line 5 "ragel/././uuid-grammar.rl"
 	{ 
         variety='0'; 
@@ -1524,25 +1524,25 @@ st13:
 case 13:
 #line 1526 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 32: goto tr36;
-		case 33: goto tr37;
-		case 39: goto tr39;
-		case 44: goto tr37;
-		case 47: goto tr40;
-		case 59: goto tr37;
-		case 61: goto tr42;
-		case 62: goto tr43;
-		case 63: goto tr37;
-		case 94: goto tr44;
+		case 32: goto tr38;
+		case 33: goto tr39;
+		case 39: goto tr41;
+		case 44: goto tr39;
+		case 47: goto tr42;
+		case 59: goto tr39;
+		case 61: goto tr44;
+		case 62: goto tr45;
+		case 63: goto tr39;
+		case 94: goto tr46;
 		case 95: goto st23;
 		case 126: goto st23;
 	}
 	if ( (*p) < 43 ) {
 		if ( (*p) > 13 ) {
 			if ( 36 <= (*p) && (*p) <= 37 )
-				goto tr38;
+				goto tr40;
 		} else if ( (*p) >= 9 )
-			goto tr36;
+			goto tr38;
 	} else if ( (*p) > 45 ) {
 		if ( (*p) < 65 ) {
 			if ( 48 <= (*p) && (*p) <= 57 )
@@ -1553,9 +1553,9 @@ case 13:
 		} else
 			goto st23;
 	} else
-		goto tr38;
+		goto tr40;
 	goto st0;
-tr38:
+tr40:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 14 "ragel/././uuid-grammar.rl"
@@ -1567,19 +1567,19 @@ st14:
 case 14:
 #line 1569 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 95: goto tr45;
-		case 126: goto tr45;
+		case 95: goto tr47;
+		case 126: goto tr47;
 	}
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
-			goto tr45;
+			goto tr47;
 	} else if ( (*p) > 90 ) {
 		if ( 97 <= (*p) && (*p) <= 122 )
-			goto tr45;
+			goto tr47;
 	} else
-		goto tr45;
+		goto tr47;
 	goto st0;
-tr45:
+tr47:
 #line 15 "ragel/././uuid-grammar.rl"
 	{ origin.begin(p); }
 	goto st15;
@@ -1589,21 +1589,21 @@ st15:
 case 15:
 #line 1591 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 32: goto tr46;
-		case 33: goto tr47;
-		case 39: goto tr48;
-		case 44: goto tr47;
-		case 59: goto tr47;
-		case 61: goto tr50;
-		case 62: goto tr51;
-		case 63: goto tr47;
-		case 94: goto tr52;
+		case 32: goto tr48;
+		case 33: goto tr49;
+		case 39: goto tr50;
+		case 44: goto tr49;
+		case 59: goto tr49;
+		case 61: goto tr52;
+		case 62: goto tr53;
+		case 63: goto tr49;
+		case 94: goto tr54;
 		case 95: goto st15;
 		case 126: goto st15;
 	}
 	if ( (*p) < 48 ) {
 		if ( 9 <= (*p) && (*p) <= 13 )
-			goto tr46;
+			goto tr48;
 	} else if ( (*p) > 57 ) {
 		if ( (*p) > 90 ) {
 			if ( 97 <= (*p) && (*p) <= 122 )
@@ -1613,7 +1613,7 @@ case 15:
 	} else
 		goto st15;
 	goto st0;
-tr23:
+tr25:
 #line 13 "ragel/./text-grammar.rl"
 	{
         intb.end(p);
@@ -1622,7 +1622,7 @@ tr23:
         lastintb = intb.buf_;
     }
 	goto st16;
-tr30:
+tr32:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
@@ -1630,7 +1630,7 @@ tr30:
         op_.AddAtom(Atom::Float(body.range_of(floatb))); 
     }
 	goto st16;
-tr44:
+tr46:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1646,7 +1646,7 @@ tr44:
         op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st16;
-tr52:
+tr54:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1662,7 +1662,7 @@ tr52:
         op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st16;
-tr69:
+tr71:
 #line 13 "ragel/./text-grammar.rl"
 	{
         intb.end(p);
@@ -1686,7 +1686,7 @@ tr69:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st16;
-tr77:
+tr79:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1703,7 +1703,7 @@ tr77:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st16;
-tr84:
+tr86:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1720,7 +1720,7 @@ tr84:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st16;
-tr94:
+tr96:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
@@ -1743,7 +1743,7 @@ tr94:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st16;
-tr100:
+tr102:
 #line 25 "ragel/./text-grammar.rl"
 	{ 
         floatb.end(p);
@@ -1766,7 +1766,7 @@ tr100:
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
 	goto st16;
-tr113:
+tr119:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1782,7 +1782,7 @@ tr113:
         op_.SetId(Uuid{variety, value, version, origin});
     }
 	goto st16;
-tr126:
+tr132:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1798,7 +1798,7 @@ tr126:
         op_.SetRef(Uuid{variety, value, version, origin});
     }
 	goto st16;
-tr134:
+tr140:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1814,7 +1814,7 @@ tr134:
         op_.SetRef(Uuid{variety, value, version, origin});
     }
 	goto st16;
-tr144:
+tr150:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1837,16 +1837,16 @@ case 16:
 #line 1838 "ron/text-parser.cc"
 	switch( (*p) ) {
 		case 32: goto st16;
-		case 43: goto tr53;
-		case 45: goto tr53;
+		case 43: goto tr55;
+		case 45: goto tr55;
 	}
 	if ( (*p) > 13 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
-			goto tr54;
+			goto tr56;
 	} else if ( (*p) >= 9 )
 		goto st16;
 	goto st0;
-tr53:
+tr55:
 #line 24 "ragel/./text-grammar.rl"
 	{ floatb.begin(p); }
 	goto st17;
@@ -1858,7 +1858,7 @@ case 17:
 	if ( 48 <= (*p) && (*p) <= 57 )
 		goto st18;
 	goto st0;
-tr54:
+tr56:
 #line 24 "ragel/./text-grammar.rl"
 	{ floatb.begin(p); }
 	goto st18;
@@ -1898,23 +1898,23 @@ st21:
 		goto _test_eof21;
 case 21:
 	switch( (*p) ) {
-		case 32: goto tr25;
-		case 33: goto tr26;
-		case 39: goto tr27;
-		case 44: goto tr26;
-		case 59: goto tr26;
-		case 61: goto tr28;
-		case 62: goto tr29;
-		case 63: goto tr26;
-		case 94: goto tr30;
+		case 32: goto tr27;
+		case 33: goto tr28;
+		case 39: goto tr29;
+		case 44: goto tr28;
+		case 59: goto tr28;
+		case 61: goto tr30;
+		case 62: goto tr31;
+		case 63: goto tr28;
+		case 94: goto tr32;
 	}
 	if ( (*p) > 13 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto st21;
 	} else if ( (*p) >= 9 )
-		goto tr25;
+		goto tr27;
 	goto st0;
-tr40:
+tr42:
 #line 11 "ragel/././uuid-grammar.rl"
 	{ variety = *(p-1); }
 	goto st22;
@@ -1924,19 +1924,19 @@ st22:
 case 22:
 #line 1926 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 95: goto tr58;
-		case 126: goto tr58;
+		case 95: goto tr60;
+		case 126: goto tr60;
 	}
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
-			goto tr58;
+			goto tr60;
 	} else if ( (*p) > 90 ) {
 		if ( 97 <= (*p) && (*p) <= 122 )
-			goto tr58;
+			goto tr60;
 	} else
-		goto tr58;
+		goto tr60;
 	goto st0;
-tr35:
+tr37:
 #line 5 "ragel/././uuid-grammar.rl"
 	{ 
         variety='0'; 
@@ -1947,7 +1947,7 @@ tr35:
 #line 12 "ragel/././uuid-grammar.rl"
 	{ value.begin(p); }
 	goto st23;
-tr58:
+tr60:
 #line 12 "ragel/././uuid-grammar.rl"
 	{ value.begin(p); }
 	goto st23;
@@ -1957,24 +1957,24 @@ st23:
 case 23:
 #line 1959 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 32: goto tr36;
-		case 33: goto tr37;
-		case 39: goto tr39;
-		case 44: goto tr37;
-		case 59: goto tr37;
-		case 61: goto tr42;
-		case 62: goto tr43;
-		case 63: goto tr37;
-		case 94: goto tr44;
+		case 32: goto tr38;
+		case 33: goto tr39;
+		case 39: goto tr41;
+		case 44: goto tr39;
+		case 59: goto tr39;
+		case 61: goto tr44;
+		case 62: goto tr45;
+		case 63: goto tr39;
+		case 94: goto tr46;
 		case 95: goto st23;
 		case 126: goto st23;
 	}
 	if ( (*p) < 43 ) {
 		if ( (*p) > 13 ) {
 			if ( 36 <= (*p) && (*p) <= 37 )
-				goto tr38;
+				goto tr40;
 		} else if ( (*p) >= 9 )
-			goto tr36;
+			goto tr38;
 	} else if ( (*p) > 45 ) {
 		if ( (*p) < 65 ) {
 			if ( 48 <= (*p) && (*p) <= 57 )
@@ -1985,9 +1985,9 @@ case 23:
 		} else
 			goto st23;
 	} else
-		goto tr38;
+		goto tr40;
 	goto st0;
-tr12:
+tr14:
 #line 12 "ragel/./text-grammar.rl"
 	{ intb.begin(p); }
 #line 24 "ragel/./text-grammar.rl"
@@ -2008,18 +2008,18 @@ st24:
 case 24:
 #line 2010 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 32: goto tr59;
-		case 33: goto tr60;
-		case 39: goto tr62;
-		case 44: goto tr60;
+		case 32: goto tr61;
+		case 33: goto tr62;
+		case 39: goto tr64;
+		case 44: goto tr62;
 		case 46: goto st7;
-		case 47: goto tr63;
-		case 59: goto tr60;
-		case 61: goto tr65;
-		case 62: goto tr66;
-		case 63: goto tr60;
+		case 47: goto tr65;
+		case 59: goto tr62;
+		case 61: goto tr67;
+		case 62: goto tr68;
+		case 63: goto tr62;
 		case 69: goto st30;
-		case 94: goto tr69;
+		case 94: goto tr71;
 		case 95: goto st28;
 		case 101: goto st30;
 		case 126: goto st28;
@@ -2027,9 +2027,9 @@ case 24:
 	if ( (*p) < 43 ) {
 		if ( (*p) > 13 ) {
 			if ( 36 <= (*p) && (*p) <= 37 )
-				goto tr61;
+				goto tr63;
 		} else if ( (*p) >= 9 )
-			goto tr59;
+			goto tr61;
 	} else if ( (*p) > 45 ) {
 		if ( (*p) < 65 ) {
 			if ( 48 <= (*p) && (*p) <= 57 )
@@ -2040,9 +2040,9 @@ case 24:
 		} else
 			goto st28;
 	} else
-		goto tr61;
+		goto tr63;
 	goto st0;
-tr61:
+tr63:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 14 "ragel/././uuid-grammar.rl"
@@ -2054,19 +2054,19 @@ st25:
 case 25:
 #line 2056 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 95: goto tr70;
-		case 126: goto tr70;
+		case 95: goto tr72;
+		case 126: goto tr72;
 	}
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
-			goto tr70;
+			goto tr72;
 	} else if ( (*p) > 90 ) {
 		if ( 97 <= (*p) && (*p) <= 122 )
-			goto tr70;
+			goto tr72;
 	} else
-		goto tr70;
+		goto tr72;
 	goto st0;
-tr70:
+tr72:
 #line 15 "ragel/././uuid-grammar.rl"
 	{ origin.begin(p); }
 	goto st26;
@@ -2076,21 +2076,21 @@ st26:
 case 26:
 #line 2078 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 32: goto tr71;
-		case 33: goto tr72;
-		case 39: goto tr73;
-		case 44: goto tr72;
-		case 59: goto tr72;
-		case 61: goto tr75;
-		case 62: goto tr76;
-		case 63: goto tr72;
-		case 94: goto tr77;
+		case 32: goto tr73;
+		case 33: goto tr74;
+		case 39: goto tr75;
+		case 44: goto tr74;
+		case 59: goto tr74;
+		case 61: goto tr77;
+		case 62: goto tr78;
+		case 63: goto tr74;
+		case 94: goto tr79;
 		case 95: goto st26;
 		case 126: goto st26;
 	}
 	if ( (*p) < 48 ) {
 		if ( 9 <= (*p) && (*p) <= 13 )
-			goto tr71;
+			goto tr73;
 	} else if ( (*p) > 57 ) {
 		if ( (*p) > 90 ) {
 			if ( 97 <= (*p) && (*p) <= 122 )
@@ -2100,7 +2100,7 @@ case 26:
 	} else
 		goto st26;
 	goto st0;
-tr63:
+tr65:
 #line 11 "ragel/././uuid-grammar.rl"
 	{ variety = *(p-1); }
 	goto st27;
@@ -2110,19 +2110,19 @@ st27:
 case 27:
 #line 2112 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 95: goto tr78;
-		case 126: goto tr78;
+		case 95: goto tr80;
+		case 126: goto tr80;
 	}
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
-			goto tr78;
+			goto tr80;
 	} else if ( (*p) > 90 ) {
 		if ( 97 <= (*p) && (*p) <= 122 )
-			goto tr78;
+			goto tr80;
 	} else
-		goto tr78;
+		goto tr80;
 	goto st0;
-tr14:
+tr16:
 #line 5 "ragel/././uuid-grammar.rl"
 	{ 
         variety='0'; 
@@ -2133,7 +2133,7 @@ tr14:
 #line 12 "ragel/././uuid-grammar.rl"
 	{ value.begin(p); }
 	goto st28;
-tr78:
+tr80:
 #line 12 "ragel/././uuid-grammar.rl"
 	{ value.begin(p); }
 	goto st28;
@@ -2143,24 +2143,24 @@ st28:
 case 28:
 #line 2145 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 32: goto tr79;
-		case 33: goto tr80;
-		case 39: goto tr81;
-		case 44: goto tr80;
-		case 59: goto tr80;
-		case 61: goto tr82;
-		case 62: goto tr83;
-		case 63: goto tr80;
-		case 94: goto tr84;
+		case 32: goto tr81;
+		case 33: goto tr82;
+		case 39: goto tr83;
+		case 44: goto tr82;
+		case 59: goto tr82;
+		case 61: goto tr84;
+		case 62: goto tr85;
+		case 63: goto tr82;
+		case 94: goto tr86;
 		case 95: goto st28;
 		case 126: goto st28;
 	}
 	if ( (*p) < 43 ) {
 		if ( (*p) > 13 ) {
 			if ( 36 <= (*p) && (*p) <= 37 )
-				goto tr61;
+				goto tr63;
 		} else if ( (*p) >= 9 )
-			goto tr79;
+			goto tr81;
 	} else if ( (*p) > 45 ) {
 		if ( (*p) < 65 ) {
 			if ( 48 <= (*p) && (*p) <= 57 )
@@ -2171,24 +2171,24 @@ case 28:
 		} else
 			goto st28;
 	} else
-		goto tr61;
+		goto tr63;
 	goto st0;
 st29:
 	if ( ++p == pe )
 		goto _test_eof29;
 case 29:
 	switch( (*p) ) {
-		case 32: goto tr59;
-		case 33: goto tr60;
-		case 39: goto tr62;
-		case 44: goto tr60;
+		case 32: goto tr61;
+		case 33: goto tr62;
+		case 39: goto tr64;
+		case 44: goto tr62;
 		case 46: goto st7;
-		case 59: goto tr60;
-		case 61: goto tr65;
-		case 62: goto tr66;
-		case 63: goto tr60;
+		case 59: goto tr62;
+		case 61: goto tr67;
+		case 62: goto tr68;
+		case 63: goto tr62;
 		case 69: goto st30;
-		case 94: goto tr69;
+		case 94: goto tr71;
 		case 95: goto st28;
 		case 101: goto st30;
 		case 126: goto st28;
@@ -2196,9 +2196,9 @@ case 29:
 	if ( (*p) < 43 ) {
 		if ( (*p) > 13 ) {
 			if ( 36 <= (*p) && (*p) <= 37 )
-				goto tr61;
+				goto tr63;
 		} else if ( (*p) >= 9 )
-			goto tr59;
+			goto tr61;
 	} else if ( (*p) > 45 ) {
 		if ( (*p) < 65 ) {
 			if ( 48 <= (*p) && (*p) <= 57 )
@@ -2209,31 +2209,31 @@ case 29:
 		} else
 			goto st28;
 	} else
-		goto tr61;
+		goto tr63;
 	goto st0;
 st30:
 	if ( ++p == pe )
 		goto _test_eof30;
 case 30:
 	switch( (*p) ) {
-		case 32: goto tr79;
-		case 33: goto tr80;
-		case 39: goto tr81;
-		case 44: goto tr80;
-		case 59: goto tr80;
-		case 61: goto tr82;
-		case 62: goto tr83;
-		case 63: goto tr80;
-		case 94: goto tr84;
+		case 32: goto tr81;
+		case 33: goto tr82;
+		case 39: goto tr83;
+		case 44: goto tr82;
+		case 59: goto tr82;
+		case 61: goto tr84;
+		case 62: goto tr85;
+		case 63: goto tr82;
+		case 94: goto tr86;
 		case 95: goto st28;
 		case 126: goto st28;
 	}
 	if ( (*p) < 43 ) {
 		if ( (*p) > 13 ) {
 			if ( 36 <= (*p) && (*p) <= 37 )
-				goto tr61;
+				goto tr63;
 		} else if ( (*p) >= 9 )
-			goto tr79;
+			goto tr81;
 	} else if ( (*p) > 45 ) {
 		if ( (*p) < 65 ) {
 			if ( 48 <= (*p) && (*p) <= 57 )
@@ -2244,9 +2244,9 @@ case 30:
 		} else
 			goto st28;
 	} else
-		goto tr85;
+		goto tr87;
 	goto st0;
-tr85:
+tr87:
 #line 13 "ragel/././uuid-grammar.rl"
 	{ value.end(p); }
 #line 14 "ragel/././uuid-grammar.rl"
@@ -2258,19 +2258,19 @@ st31:
 case 31:
 #line 2260 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 95: goto tr70;
-		case 126: goto tr70;
+		case 95: goto tr72;
+		case 126: goto tr72;
 	}
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
-			goto tr87;
+			goto tr89;
 	} else if ( (*p) > 90 ) {
 		if ( 97 <= (*p) && (*p) <= 122 )
-			goto tr70;
+			goto tr72;
 	} else
-		goto tr70;
+		goto tr72;
 	goto st0;
-tr87:
+tr89:
 #line 15 "ragel/././uuid-grammar.rl"
 	{ origin.begin(p); }
 	goto st32;
@@ -2280,21 +2280,21 @@ st32:
 case 32:
 #line 2282 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 32: goto tr88;
-		case 33: goto tr89;
-		case 39: goto tr90;
-		case 44: goto tr89;
-		case 59: goto tr89;
-		case 61: goto tr92;
-		case 62: goto tr93;
-		case 63: goto tr89;
-		case 94: goto tr94;
+		case 32: goto tr90;
+		case 33: goto tr91;
+		case 39: goto tr92;
+		case 44: goto tr91;
+		case 59: goto tr91;
+		case 61: goto tr94;
+		case 62: goto tr95;
+		case 63: goto tr91;
+		case 94: goto tr96;
 		case 95: goto st26;
 		case 126: goto st26;
 	}
 	if ( (*p) < 48 ) {
 		if ( 9 <= (*p) && (*p) <= 13 )
-			goto tr88;
+			goto tr90;
 	} else if ( (*p) > 57 ) {
 		if ( (*p) > 90 ) {
 			if ( 97 <= (*p) && (*p) <= 122 )
@@ -2309,24 +2309,24 @@ st33:
 		goto _test_eof33;
 case 33:
 	switch( (*p) ) {
-		case 32: goto tr95;
-		case 33: goto tr96;
-		case 39: goto tr97;
-		case 44: goto tr96;
-		case 59: goto tr96;
-		case 61: goto tr98;
-		case 62: goto tr99;
-		case 63: goto tr96;
-		case 94: goto tr100;
+		case 32: goto tr97;
+		case 33: goto tr98;
+		case 39: goto tr99;
+		case 44: goto tr98;
+		case 59: goto tr98;
+		case 61: goto tr100;
+		case 62: goto tr101;
+		case 63: goto tr98;
+		case 94: goto tr102;
 		case 95: goto st28;
 		case 126: goto st28;
 	}
 	if ( (*p) < 43 ) {
 		if ( (*p) > 13 ) {
 			if ( 36 <= (*p) && (*p) <= 37 )
-				goto tr61;
+				goto tr63;
 		} else if ( (*p) >= 9 )
-			goto tr95;
+			goto tr97;
 	} else if ( (*p) > 45 ) {
 		if ( (*p) < 65 ) {
 			if ( 48 <= (*p) && (*p) <= 57 )
@@ -2337,9 +2337,9 @@ case 33:
 		} else
 			goto st28;
 	} else
-		goto tr61;
+		goto tr63;
 	goto st0;
-tr13:
+tr15:
 #line 5 "ragel/././uuid-grammar.rl"
 	{ 
         variety='0'; 
@@ -2356,25 +2356,25 @@ st34:
 case 34:
 #line 2358 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 32: goto tr79;
-		case 33: goto tr80;
-		case 39: goto tr81;
-		case 44: goto tr80;
-		case 47: goto tr63;
-		case 59: goto tr80;
-		case 61: goto tr82;
-		case 62: goto tr83;
-		case 63: goto tr80;
-		case 94: goto tr84;
+		case 32: goto tr81;
+		case 33: goto tr82;
+		case 39: goto tr83;
+		case 44: goto tr82;
+		case 47: goto tr65;
+		case 59: goto tr82;
+		case 61: goto tr84;
+		case 62: goto tr85;
+		case 63: goto tr82;
+		case 94: goto tr86;
 		case 95: goto st28;
 		case 126: goto st28;
 	}
 	if ( (*p) < 43 ) {
 		if ( (*p) > 13 ) {
 			if ( 36 <= (*p) && (*p) <= 37 )
-				goto tr61;
+				goto tr63;
 		} else if ( (*p) >= 9 )
-			goto tr79;
+			goto tr81;
 	} else if ( (*p) > 45 ) {
 		if ( (*p) < 65 ) {
 			if ( 48 <= (*p) && (*p) <= 57 )
@@ -2385,41 +2385,114 @@ case 34:
 		} else
 			goto st28;
 	} else
-		goto tr61;
+		goto tr63;
 	goto st0;
+tr3:
+#line 19 "ragel/./text-grammar.rl"
+	{ strb.begin(p); }
+	goto st35;
 st35:
 	if ( ++p == pe )
 		goto _test_eof35;
 case 35:
-	if ( (*p) == 10 )
-		goto st50;
-	goto st0;
-st50:
-	if ( ++p == pe )
-		goto _test_eof50;
-case 50:
+#line 2399 "ron/text-parser.cc"
+	switch( (*p) ) {
+		case 34: goto st2;
+		case 39: goto st2;
+		case 47: goto st2;
+		case 92: goto st2;
+		case 98: goto st2;
+		case 110: goto st2;
+		case 114: goto st2;
+		case 116: goto st2;
+		case 117: goto st36;
+	}
 	goto st0;
 st36:
 	if ( ++p == pe )
 		goto _test_eof36;
 case 36:
+	if ( (*p) < 65 ) {
+		if ( 48 <= (*p) && (*p) <= 57 )
+			goto st37;
+	} else if ( (*p) > 70 ) {
+		if ( 97 <= (*p) && (*p) <= 102 )
+			goto st37;
+	} else
+		goto st37;
+	goto st0;
+st37:
+	if ( ++p == pe )
+		goto _test_eof37;
+case 37:
+	if ( (*p) < 65 ) {
+		if ( 48 <= (*p) && (*p) <= 57 )
+			goto st38;
+	} else if ( (*p) > 70 ) {
+		if ( 97 <= (*p) && (*p) <= 102 )
+			goto st38;
+	} else
+		goto st38;
+	goto st0;
+st38:
+	if ( ++p == pe )
+		goto _test_eof38;
+case 38:
+	if ( (*p) < 65 ) {
+		if ( 48 <= (*p) && (*p) <= 57 )
+			goto st39;
+	} else if ( (*p) > 70 ) {
+		if ( 97 <= (*p) && (*p) <= 102 )
+			goto st39;
+	} else
+		goto st39;
+	goto st0;
+st39:
+	if ( ++p == pe )
+		goto _test_eof39;
+case 39:
+	if ( (*p) < 65 ) {
+		if ( 48 <= (*p) && (*p) <= 57 )
+			goto st2;
+	} else if ( (*p) > 70 ) {
+		if ( 97 <= (*p) && (*p) <= 102 )
+			goto st2;
+	} else
+		goto st2;
+	goto st0;
+st40:
+	if ( ++p == pe )
+		goto _test_eof40;
+case 40:
+	if ( (*p) == 10 )
+		goto st55;
+	goto st0;
+st55:
+	if ( ++p == pe )
+		goto _test_eof55;
+case 55:
+	goto st0;
+st41:
+	if ( ++p == pe )
+		goto _test_eof41;
+case 41:
 	switch( (*p) ) {
-		case 95: goto tr103;
-		case 126: goto tr103;
+		case 95: goto tr109;
+		case 126: goto tr109;
 	}
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
-			goto tr102;
+			goto tr108;
 	} else if ( (*p) > 70 ) {
 		if ( (*p) > 90 ) {
 			if ( 97 <= (*p) && (*p) <= 122 )
-				goto tr103;
+				goto tr109;
 		} else if ( (*p) >= 71 )
-			goto tr103;
+			goto tr109;
 	} else
-		goto tr102;
+		goto tr108;
 	goto st0;
-tr102:
+tr108:
 #line 5 "ragel/././uuid-grammar.rl"
 	{ 
         variety='0'; 
@@ -2429,113 +2502,44 @@ tr102:
     }
 #line 12 "ragel/././uuid-grammar.rl"
 	{ value.begin(p); }
-	goto st37;
-st37:
+	goto st42;
+st42:
 	if ( ++p == pe )
-		goto _test_eof37;
-case 37:
-#line 2438 "ron/text-parser.cc"
+		goto _test_eof42;
+case 42:
+#line 2511 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 32: goto tr104;
-		case 33: goto tr105;
-		case 39: goto tr107;
-		case 44: goto tr105;
-		case 47: goto tr108;
-		case 58: goto tr110;
-		case 59: goto tr105;
-		case 61: goto tr111;
-		case 62: goto tr112;
-		case 63: goto tr105;
-		case 94: goto tr113;
-		case 95: goto st48;
-		case 126: goto st48;
+		case 32: goto tr110;
+		case 33: goto tr111;
+		case 39: goto tr113;
+		case 44: goto tr111;
+		case 47: goto tr114;
+		case 58: goto tr116;
+		case 59: goto tr111;
+		case 61: goto tr117;
+		case 62: goto tr118;
+		case 63: goto tr111;
+		case 94: goto tr119;
+		case 95: goto st53;
+		case 126: goto st53;
 	}
 	if ( (*p) < 43 ) {
 		if ( (*p) > 13 ) {
 			if ( 36 <= (*p) && (*p) <= 37 )
-				goto tr106;
+				goto tr112;
 		} else if ( (*p) >= 9 )
-			goto tr104;
+			goto tr110;
 	} else if ( (*p) > 45 ) {
 		if ( (*p) < 65 ) {
 			if ( 48 <= (*p) && (*p) <= 57 )
-				goto st48;
+				goto st53;
 		} else if ( (*p) > 90 ) {
 			if ( 97 <= (*p) && (*p) <= 122 )
-				goto st48;
+				goto st53;
 		} else
-			goto st48;
+			goto st53;
 	} else
-		goto tr106;
-	goto st0;
-tr104:
-#line 13 "ragel/././uuid-grammar.rl"
-	{ value.end(p); }
-#line 17 "ragel/././uuid-grammar.rl"
-	{ 
-        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
-            cs = 0;
-            {p++; cs = 38; goto _out;}
-        }
-        uuidb.end(p);
-    }
-#line 6 "ragel/./text-grammar.rl"
-	{
-        op_.SetId(Uuid{variety, value, version, origin});
-    }
-	goto st38;
-tr137:
-#line 16 "ragel/././uuid-grammar.rl"
-	{ origin.end(p); }
-#line 17 "ragel/././uuid-grammar.rl"
-	{ 
-        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
-            cs = 0;
-            {p++; cs = 38; goto _out;}
-        }
-        uuidb.end(p);
-    }
-#line 6 "ragel/./text-grammar.rl"
-	{
-        op_.SetId(Uuid{variety, value, version, origin});
-    }
-	goto st38;
-st38:
-	if ( ++p == pe )
-		goto _test_eof38;
-case 38:
-#line 2508 "ron/text-parser.cc"
-	switch( (*p) ) {
-		case 32: goto st38;
-		case 33: goto tr6;
-		case 39: goto st1;
-		case 44: goto tr6;
-		case 58: goto st39;
-		case 59: goto tr6;
-		case 61: goto st9;
-		case 62: goto st12;
-		case 63: goto tr6;
-		case 94: goto st16;
-		case 95: goto tr14;
-		case 126: goto tr14;
-	}
-	if ( (*p) < 48 ) {
-		if ( (*p) > 13 ) {
-			if ( 43 <= (*p) && (*p) <= 45 )
-				goto tr11;
-		} else if ( (*p) >= 9 )
-			goto st38;
-	} else if ( (*p) > 57 ) {
-		if ( (*p) < 71 ) {
-			if ( 65 <= (*p) && (*p) <= 70 )
-				goto tr13;
-		} else if ( (*p) > 90 ) {
-			if ( 97 <= (*p) && (*p) <= 122 )
-				goto tr14;
-		} else
-			goto tr14;
-	} else
-		goto tr12;
+		goto tr112;
 	goto st0;
 tr110:
 #line 13 "ragel/././uuid-grammar.rl"
@@ -2544,7 +2548,7 @@ tr110:
 	{ 
         if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
             cs = 0;
-            {p++; cs = 39; goto _out;}
+            {p++; cs = 43; goto _out;}
         }
         uuidb.end(p);
     }
@@ -2552,15 +2556,15 @@ tr110:
 	{
         op_.SetId(Uuid{variety, value, version, origin});
     }
-	goto st39;
-tr141:
+	goto st43;
+tr143:
 #line 16 "ragel/././uuid-grammar.rl"
 	{ origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
 	{ 
         if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
             cs = 0;
-            {p++; cs = 39; goto _out;}
+            {p++; cs = 43; goto _out;}
         }
         uuidb.end(p);
     }
@@ -2568,289 +2572,98 @@ tr141:
 	{
         op_.SetId(Uuid{variety, value, version, origin});
     }
-	goto st39;
-st39:
-	if ( ++p == pe )
-		goto _test_eof39;
-case 39:
-#line 2577 "ron/text-parser.cc"
-	switch( (*p) ) {
-		case 95: goto tr117;
-		case 126: goto tr117;
-	}
-	if ( (*p) < 65 ) {
-		if ( 48 <= (*p) && (*p) <= 57 )
-			goto tr116;
-	} else if ( (*p) > 70 ) {
-		if ( (*p) > 90 ) {
-			if ( 97 <= (*p) && (*p) <= 122 )
-				goto tr117;
-		} else if ( (*p) >= 71 )
-			goto tr117;
-	} else
-		goto tr116;
-	goto st0;
-tr116:
-#line 5 "ragel/././uuid-grammar.rl"
-	{ 
-        variety='0'; 
-        version='$'; 
-        origin=slice_t{}; 
-        uuidb.begin(p);
-    }
-#line 12 "ragel/././uuid-grammar.rl"
-	{ value.begin(p); }
-	goto st40;
-st40:
-	if ( ++p == pe )
-		goto _test_eof40;
-case 40:
-#line 2609 "ron/text-parser.cc"
-	switch( (*p) ) {
-		case 32: goto tr118;
-		case 33: goto tr119;
-		case 39: goto tr121;
-		case 44: goto tr119;
-		case 47: goto tr122;
-		case 59: goto tr119;
-		case 61: goto tr124;
-		case 62: goto tr125;
-		case 63: goto tr119;
-		case 94: goto tr126;
-		case 95: goto st44;
-		case 126: goto st44;
-	}
-	if ( (*p) < 43 ) {
-		if ( (*p) > 13 ) {
-			if ( 36 <= (*p) && (*p) <= 37 )
-				goto tr120;
-		} else if ( (*p) >= 9 )
-			goto tr118;
-	} else if ( (*p) > 45 ) {
-		if ( (*p) < 65 ) {
-			if ( 48 <= (*p) && (*p) <= 57 )
-				goto st44;
-		} else if ( (*p) > 90 ) {
-			if ( 97 <= (*p) && (*p) <= 122 )
-				goto st44;
-		} else
-			goto st44;
-	} else
-		goto tr120;
-	goto st0;
-tr120:
-#line 13 "ragel/././uuid-grammar.rl"
-	{ value.end(p); }
-#line 14 "ragel/././uuid-grammar.rl"
-	{ version = (*p); }
-	goto st41;
-st41:
-	if ( ++p == pe )
-		goto _test_eof41;
-case 41:
-#line 2652 "ron/text-parser.cc"
-	switch( (*p) ) {
-		case 95: goto tr127;
-		case 126: goto tr127;
-	}
-	if ( (*p) < 65 ) {
-		if ( 48 <= (*p) && (*p) <= 57 )
-			goto tr127;
-	} else if ( (*p) > 90 ) {
-		if ( 97 <= (*p) && (*p) <= 122 )
-			goto tr127;
-	} else
-		goto tr127;
-	goto st0;
-tr127:
-#line 15 "ragel/././uuid-grammar.rl"
-	{ origin.begin(p); }
-	goto st42;
-st42:
-	if ( ++p == pe )
-		goto _test_eof42;
-case 42:
-#line 2674 "ron/text-parser.cc"
-	switch( (*p) ) {
-		case 32: goto tr128;
-		case 33: goto tr129;
-		case 39: goto tr130;
-		case 44: goto tr129;
-		case 59: goto tr129;
-		case 61: goto tr132;
-		case 62: goto tr133;
-		case 63: goto tr129;
-		case 94: goto tr134;
-		case 95: goto st42;
-		case 126: goto st42;
-	}
-	if ( (*p) < 48 ) {
-		if ( 9 <= (*p) && (*p) <= 13 )
-			goto tr128;
-	} else if ( (*p) > 57 ) {
-		if ( (*p) > 90 ) {
-			if ( 97 <= (*p) && (*p) <= 122 )
-				goto st42;
-		} else if ( (*p) >= 65 )
-			goto st42;
-	} else
-		goto st42;
-	goto st0;
-tr122:
-#line 11 "ragel/././uuid-grammar.rl"
-	{ variety = *(p-1); }
 	goto st43;
 st43:
 	if ( ++p == pe )
 		goto _test_eof43;
 case 43:
-#line 2708 "ron/text-parser.cc"
+#line 2581 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 95: goto tr135;
-		case 126: goto tr135;
+		case 32: goto st43;
+		case 33: goto tr8;
+		case 39: goto st1;
+		case 44: goto tr8;
+		case 58: goto st44;
+		case 59: goto tr8;
+		case 61: goto st9;
+		case 62: goto st12;
+		case 63: goto tr8;
+		case 94: goto st16;
+		case 95: goto tr16;
+		case 126: goto tr16;
 	}
-	if ( (*p) < 65 ) {
-		if ( 48 <= (*p) && (*p) <= 57 )
-			goto tr135;
-	} else if ( (*p) > 90 ) {
-		if ( 97 <= (*p) && (*p) <= 122 )
-			goto tr135;
+	if ( (*p) < 48 ) {
+		if ( (*p) > 13 ) {
+			if ( 43 <= (*p) && (*p) <= 45 )
+				goto tr13;
+		} else if ( (*p) >= 9 )
+			goto st43;
+	} else if ( (*p) > 57 ) {
+		if ( (*p) < 71 ) {
+			if ( 65 <= (*p) && (*p) <= 70 )
+				goto tr15;
+		} else if ( (*p) > 90 ) {
+			if ( 97 <= (*p) && (*p) <= 122 )
+				goto tr16;
+		} else
+			goto tr16;
 	} else
-		goto tr135;
+		goto tr14;
 	goto st0;
-tr117:
-#line 5 "ragel/././uuid-grammar.rl"
+tr116:
+#line 13 "ragel/././uuid-grammar.rl"
+	{ value.end(p); }
+#line 17 "ragel/././uuid-grammar.rl"
 	{ 
-        variety='0'; 
-        version='$'; 
-        origin=slice_t{}; 
-        uuidb.begin(p);
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            {p++; cs = 44; goto _out;}
+        }
+        uuidb.end(p);
     }
-#line 12 "ragel/././uuid-grammar.rl"
-	{ value.begin(p); }
+#line 6 "ragel/./text-grammar.rl"
+	{
+        op_.SetId(Uuid{variety, value, version, origin});
+    }
 	goto st44;
-tr135:
-#line 12 "ragel/././uuid-grammar.rl"
-	{ value.begin(p); }
+tr147:
+#line 16 "ragel/././uuid-grammar.rl"
+	{ origin.end(p); }
+#line 17 "ragel/././uuid-grammar.rl"
+	{ 
+        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
+            cs = 0;
+            {p++; cs = 44; goto _out;}
+        }
+        uuidb.end(p);
+    }
+#line 6 "ragel/./text-grammar.rl"
+	{
+        op_.SetId(Uuid{variety, value, version, origin});
+    }
 	goto st44;
 st44:
 	if ( ++p == pe )
 		goto _test_eof44;
 case 44:
-#line 2741 "ron/text-parser.cc"
+#line 2650 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 32: goto tr118;
-		case 33: goto tr119;
-		case 39: goto tr121;
-		case 44: goto tr119;
-		case 59: goto tr119;
-		case 61: goto tr124;
-		case 62: goto tr125;
-		case 63: goto tr119;
-		case 94: goto tr126;
-		case 95: goto st44;
-		case 126: goto st44;
-	}
-	if ( (*p) < 43 ) {
-		if ( (*p) > 13 ) {
-			if ( 36 <= (*p) && (*p) <= 37 )
-				goto tr120;
-		} else if ( (*p) >= 9 )
-			goto tr118;
-	} else if ( (*p) > 45 ) {
-		if ( (*p) < 65 ) {
-			if ( 48 <= (*p) && (*p) <= 57 )
-				goto st44;
-		} else if ( (*p) > 90 ) {
-			if ( 97 <= (*p) && (*p) <= 122 )
-				goto st44;
-		} else
-			goto st44;
-	} else
-		goto tr120;
-	goto st0;
-tr106:
-#line 13 "ragel/././uuid-grammar.rl"
-	{ value.end(p); }
-#line 14 "ragel/././uuid-grammar.rl"
-	{ version = (*p); }
-	goto st45;
-st45:
-	if ( ++p == pe )
-		goto _test_eof45;
-case 45:
-#line 2783 "ron/text-parser.cc"
-	switch( (*p) ) {
-		case 95: goto tr136;
-		case 126: goto tr136;
+		case 95: goto tr123;
+		case 126: goto tr123;
 	}
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
-			goto tr136;
-	} else if ( (*p) > 90 ) {
-		if ( 97 <= (*p) && (*p) <= 122 )
-			goto tr136;
-	} else
-		goto tr136;
-	goto st0;
-tr136:
-#line 15 "ragel/././uuid-grammar.rl"
-	{ origin.begin(p); }
-	goto st46;
-st46:
-	if ( ++p == pe )
-		goto _test_eof46;
-case 46:
-#line 2805 "ron/text-parser.cc"
-	switch( (*p) ) {
-		case 32: goto tr137;
-		case 33: goto tr138;
-		case 39: goto tr139;
-		case 44: goto tr138;
-		case 58: goto tr141;
-		case 59: goto tr138;
-		case 61: goto tr142;
-		case 62: goto tr143;
-		case 63: goto tr138;
-		case 94: goto tr144;
-		case 95: goto st46;
-		case 126: goto st46;
-	}
-	if ( (*p) < 48 ) {
-		if ( 9 <= (*p) && (*p) <= 13 )
-			goto tr137;
-	} else if ( (*p) > 57 ) {
+			goto tr122;
+	} else if ( (*p) > 70 ) {
 		if ( (*p) > 90 ) {
 			if ( 97 <= (*p) && (*p) <= 122 )
-				goto st46;
-		} else if ( (*p) >= 65 )
-			goto st46;
+				goto tr123;
+		} else if ( (*p) >= 71 )
+			goto tr123;
 	} else
-		goto st46;
+		goto tr122;
 	goto st0;
-tr108:
-#line 11 "ragel/././uuid-grammar.rl"
-	{ variety = *(p-1); }
-	goto st47;
-st47:
-	if ( ++p == pe )
-		goto _test_eof47;
-case 47:
-#line 2840 "ron/text-parser.cc"
-	switch( (*p) ) {
-		case 95: goto tr145;
-		case 126: goto tr145;
-	}
-	if ( (*p) < 65 ) {
-		if ( 48 <= (*p) && (*p) <= 57 )
-			goto tr145;
-	} else if ( (*p) > 90 ) {
-		if ( 97 <= (*p) && (*p) <= 122 )
-			goto tr145;
-	} else
-		goto tr145;
-	goto st0;
-tr103:
+tr122:
 #line 5 "ragel/././uuid-grammar.rl"
 	{ 
         variety='0'; 
@@ -2860,50 +2673,310 @@ tr103:
     }
 #line 12 "ragel/././uuid-grammar.rl"
 	{ value.begin(p); }
-	goto st48;
-tr145:
-#line 12 "ragel/././uuid-grammar.rl"
-	{ value.begin(p); }
+	goto st45;
+st45:
+	if ( ++p == pe )
+		goto _test_eof45;
+case 45:
+#line 2682 "ron/text-parser.cc"
+	switch( (*p) ) {
+		case 32: goto tr124;
+		case 33: goto tr125;
+		case 39: goto tr127;
+		case 44: goto tr125;
+		case 47: goto tr128;
+		case 59: goto tr125;
+		case 61: goto tr130;
+		case 62: goto tr131;
+		case 63: goto tr125;
+		case 94: goto tr132;
+		case 95: goto st49;
+		case 126: goto st49;
+	}
+	if ( (*p) < 43 ) {
+		if ( (*p) > 13 ) {
+			if ( 36 <= (*p) && (*p) <= 37 )
+				goto tr126;
+		} else if ( (*p) >= 9 )
+			goto tr124;
+	} else if ( (*p) > 45 ) {
+		if ( (*p) < 65 ) {
+			if ( 48 <= (*p) && (*p) <= 57 )
+				goto st49;
+		} else if ( (*p) > 90 ) {
+			if ( 97 <= (*p) && (*p) <= 122 )
+				goto st49;
+		} else
+			goto st49;
+	} else
+		goto tr126;
+	goto st0;
+tr126:
+#line 13 "ragel/././uuid-grammar.rl"
+	{ value.end(p); }
+#line 14 "ragel/././uuid-grammar.rl"
+	{ version = (*p); }
+	goto st46;
+st46:
+	if ( ++p == pe )
+		goto _test_eof46;
+case 46:
+#line 2725 "ron/text-parser.cc"
+	switch( (*p) ) {
+		case 95: goto tr133;
+		case 126: goto tr133;
+	}
+	if ( (*p) < 65 ) {
+		if ( 48 <= (*p) && (*p) <= 57 )
+			goto tr133;
+	} else if ( (*p) > 90 ) {
+		if ( 97 <= (*p) && (*p) <= 122 )
+			goto tr133;
+	} else
+		goto tr133;
+	goto st0;
+tr133:
+#line 15 "ragel/././uuid-grammar.rl"
+	{ origin.begin(p); }
+	goto st47;
+st47:
+	if ( ++p == pe )
+		goto _test_eof47;
+case 47:
+#line 2747 "ron/text-parser.cc"
+	switch( (*p) ) {
+		case 32: goto tr134;
+		case 33: goto tr135;
+		case 39: goto tr136;
+		case 44: goto tr135;
+		case 59: goto tr135;
+		case 61: goto tr138;
+		case 62: goto tr139;
+		case 63: goto tr135;
+		case 94: goto tr140;
+		case 95: goto st47;
+		case 126: goto st47;
+	}
+	if ( (*p) < 48 ) {
+		if ( 9 <= (*p) && (*p) <= 13 )
+			goto tr134;
+	} else if ( (*p) > 57 ) {
+		if ( (*p) > 90 ) {
+			if ( 97 <= (*p) && (*p) <= 122 )
+				goto st47;
+		} else if ( (*p) >= 65 )
+			goto st47;
+	} else
+		goto st47;
+	goto st0;
+tr128:
+#line 11 "ragel/././uuid-grammar.rl"
+	{ variety = *(p-1); }
 	goto st48;
 st48:
 	if ( ++p == pe )
 		goto _test_eof48;
 case 48:
-#line 2873 "ron/text-parser.cc"
+#line 2781 "ron/text-parser.cc"
 	switch( (*p) ) {
-		case 32: goto tr104;
-		case 33: goto tr105;
-		case 39: goto tr107;
-		case 44: goto tr105;
-		case 58: goto tr110;
-		case 59: goto tr105;
-		case 61: goto tr111;
-		case 62: goto tr112;
-		case 63: goto tr105;
-		case 94: goto tr113;
-		case 95: goto st48;
-		case 126: goto st48;
+		case 95: goto tr141;
+		case 126: goto tr141;
+	}
+	if ( (*p) < 65 ) {
+		if ( 48 <= (*p) && (*p) <= 57 )
+			goto tr141;
+	} else if ( (*p) > 90 ) {
+		if ( 97 <= (*p) && (*p) <= 122 )
+			goto tr141;
+	} else
+		goto tr141;
+	goto st0;
+tr123:
+#line 5 "ragel/././uuid-grammar.rl"
+	{ 
+        variety='0'; 
+        version='$'; 
+        origin=slice_t{}; 
+        uuidb.begin(p);
+    }
+#line 12 "ragel/././uuid-grammar.rl"
+	{ value.begin(p); }
+	goto st49;
+tr141:
+#line 12 "ragel/././uuid-grammar.rl"
+	{ value.begin(p); }
+	goto st49;
+st49:
+	if ( ++p == pe )
+		goto _test_eof49;
+case 49:
+#line 2814 "ron/text-parser.cc"
+	switch( (*p) ) {
+		case 32: goto tr124;
+		case 33: goto tr125;
+		case 39: goto tr127;
+		case 44: goto tr125;
+		case 59: goto tr125;
+		case 61: goto tr130;
+		case 62: goto tr131;
+		case 63: goto tr125;
+		case 94: goto tr132;
+		case 95: goto st49;
+		case 126: goto st49;
 	}
 	if ( (*p) < 43 ) {
 		if ( (*p) > 13 ) {
 			if ( 36 <= (*p) && (*p) <= 37 )
-				goto tr106;
+				goto tr126;
 		} else if ( (*p) >= 9 )
-			goto tr104;
+			goto tr124;
 	} else if ( (*p) > 45 ) {
 		if ( (*p) < 65 ) {
 			if ( 48 <= (*p) && (*p) <= 57 )
-				goto st48;
+				goto st49;
 		} else if ( (*p) > 90 ) {
 			if ( 97 <= (*p) && (*p) <= 122 )
-				goto st48;
+				goto st49;
 		} else
-			goto st48;
+			goto st49;
 	} else
-		goto tr106;
+		goto tr126;
+	goto st0;
+tr112:
+#line 13 "ragel/././uuid-grammar.rl"
+	{ value.end(p); }
+#line 14 "ragel/././uuid-grammar.rl"
+	{ version = (*p); }
+	goto st50;
+st50:
+	if ( ++p == pe )
+		goto _test_eof50;
+case 50:
+#line 2856 "ron/text-parser.cc"
+	switch( (*p) ) {
+		case 95: goto tr142;
+		case 126: goto tr142;
+	}
+	if ( (*p) < 65 ) {
+		if ( 48 <= (*p) && (*p) <= 57 )
+			goto tr142;
+	} else if ( (*p) > 90 ) {
+		if ( 97 <= (*p) && (*p) <= 122 )
+			goto tr142;
+	} else
+		goto tr142;
+	goto st0;
+tr142:
+#line 15 "ragel/././uuid-grammar.rl"
+	{ origin.begin(p); }
+	goto st51;
+st51:
+	if ( ++p == pe )
+		goto _test_eof51;
+case 51:
+#line 2878 "ron/text-parser.cc"
+	switch( (*p) ) {
+		case 32: goto tr143;
+		case 33: goto tr144;
+		case 39: goto tr145;
+		case 44: goto tr144;
+		case 58: goto tr147;
+		case 59: goto tr144;
+		case 61: goto tr148;
+		case 62: goto tr149;
+		case 63: goto tr144;
+		case 94: goto tr150;
+		case 95: goto st51;
+		case 126: goto st51;
+	}
+	if ( (*p) < 48 ) {
+		if ( 9 <= (*p) && (*p) <= 13 )
+			goto tr143;
+	} else if ( (*p) > 57 ) {
+		if ( (*p) > 90 ) {
+			if ( 97 <= (*p) && (*p) <= 122 )
+				goto st51;
+		} else if ( (*p) >= 65 )
+			goto st51;
+	} else
+		goto st51;
+	goto st0;
+tr114:
+#line 11 "ragel/././uuid-grammar.rl"
+	{ variety = *(p-1); }
+	goto st52;
+st52:
+	if ( ++p == pe )
+		goto _test_eof52;
+case 52:
+#line 2913 "ron/text-parser.cc"
+	switch( (*p) ) {
+		case 95: goto tr151;
+		case 126: goto tr151;
+	}
+	if ( (*p) < 65 ) {
+		if ( 48 <= (*p) && (*p) <= 57 )
+			goto tr151;
+	} else if ( (*p) > 90 ) {
+		if ( 97 <= (*p) && (*p) <= 122 )
+			goto tr151;
+	} else
+		goto tr151;
+	goto st0;
+tr109:
+#line 5 "ragel/././uuid-grammar.rl"
+	{ 
+        variety='0'; 
+        version='$'; 
+        origin=slice_t{}; 
+        uuidb.begin(p);
+    }
+#line 12 "ragel/././uuid-grammar.rl"
+	{ value.begin(p); }
+	goto st53;
+tr151:
+#line 12 "ragel/././uuid-grammar.rl"
+	{ value.begin(p); }
+	goto st53;
+st53:
+	if ( ++p == pe )
+		goto _test_eof53;
+case 53:
+#line 2946 "ron/text-parser.cc"
+	switch( (*p) ) {
+		case 32: goto tr110;
+		case 33: goto tr111;
+		case 39: goto tr113;
+		case 44: goto tr111;
+		case 58: goto tr116;
+		case 59: goto tr111;
+		case 61: goto tr117;
+		case 62: goto tr118;
+		case 63: goto tr111;
+		case 94: goto tr119;
+		case 95: goto st53;
+		case 126: goto st53;
+	}
+	if ( (*p) < 43 ) {
+		if ( (*p) > 13 ) {
+			if ( 36 <= (*p) && (*p) <= 37 )
+				goto tr112;
+		} else if ( (*p) >= 9 )
+			goto tr110;
+	} else if ( (*p) > 45 ) {
+		if ( (*p) < 65 ) {
+			if ( 48 <= (*p) && (*p) <= 57 )
+				goto st53;
+		} else if ( (*p) > 90 ) {
+			if ( 97 <= (*p) && (*p) <= 122 )
+				goto st53;
+		} else
+			goto st53;
+	} else
+		goto tr112;
 	goto st0;
 	}
-	_test_eof49: cs = 49; goto _test_eof; 
+	_test_eof54: cs = 54; goto _test_eof; 
 	_test_eof1: cs = 1; goto _test_eof; 
 	_test_eof2: cs = 2; goto _test_eof; 
 	_test_eof3: cs = 3; goto _test_eof; 
@@ -2939,12 +3012,12 @@ case 48:
 	_test_eof33: cs = 33; goto _test_eof; 
 	_test_eof34: cs = 34; goto _test_eof; 
 	_test_eof35: cs = 35; goto _test_eof; 
-	_test_eof50: cs = 50; goto _test_eof; 
 	_test_eof36: cs = 36; goto _test_eof; 
 	_test_eof37: cs = 37; goto _test_eof; 
 	_test_eof38: cs = 38; goto _test_eof; 
 	_test_eof39: cs = 39; goto _test_eof; 
 	_test_eof40: cs = 40; goto _test_eof; 
+	_test_eof55: cs = 55; goto _test_eof; 
 	_test_eof41: cs = 41; goto _test_eof; 
 	_test_eof42: cs = 42; goto _test_eof; 
 	_test_eof43: cs = 43; goto _test_eof; 
@@ -2953,6 +3026,11 @@ case 48:
 	_test_eof46: cs = 46; goto _test_eof; 
 	_test_eof47: cs = 47; goto _test_eof; 
 	_test_eof48: cs = 48; goto _test_eof; 
+	_test_eof49: cs = 49; goto _test_eof; 
+	_test_eof50: cs = 50; goto _test_eof; 
+	_test_eof51: cs = 51; goto _test_eof; 
+	_test_eof52: cs = 52; goto _test_eof; 
+	_test_eof53: cs = 53; goto _test_eof; 
 
 	_test_eof: {}
 	_out: {}

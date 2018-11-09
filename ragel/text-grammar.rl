@@ -51,10 +51,13 @@
     FLOAT = ( SGN? DIGITS ( FRAC EXP? | EXP ) ) >begin_float %end_float;
 
     # a char TODO UTF8, escapes, \u escapes
-    UTF8 = [^'\n\r\\];
+    # UTF8 = TODO;
 
     # JSON-ey string
-    STRING = ( UTF8* ) >begin_string %end_string;
+    UNIESC = "\\u" [0-9a-fA-F]{4};
+    ESC = "\\" [nrt\\b'/"];
+    CHAR = [^'\n\r\\];
+    STRING = ( (UNIESC|ESC|CHAR)* ) >begin_string %end_string;
 
     # op term (header op, raw/reduced op, query op)
     OPTERM = [,;!?] @op_term;

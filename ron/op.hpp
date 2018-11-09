@@ -53,22 +53,11 @@ struct Op {
         assert(idx<atoms_.size());
         return (Value&)atoms_[idx];
     }
-    inline double value_float(fsize_t idx) const {
-        return value(idx).float_value();
-    } 
-    inline int64_t value_int(fsize_t idx) const {
-        return value(idx).int_value();
-    }
     inline Uuid value_uuid(fsize_t idx) const {
         return reinterpret_cast<const Uuid&>(atoms_[idx]);
     }
     inline Uuid uuid(fsize_t idx) const {
         return reinterpret_cast<const Uuid&>(atoms_[idx]);
-    }
-    inline std::string value_string(fsize_t idx, const std::string& data) const {
-        frange_t rng = ((Value&)atoms_[idx]).range();
-        std::string ret = data.substr(rng.first, rng.second);
-        return ret;
     }
     inline frange_t value_range(fsize_t idx) const {
         return ((Value&)atoms_[idx]).range();

@@ -11,23 +11,22 @@ namespace ron {
 
 union Word {
 
-    uint64_t _64[1]; // FIXME no array
+    uint64_t _64;
     uint32_t _32[2];
     uint16_t _16[4];
     uint8_t _8[8];
 
     Word (uint64_t value=0) : _64{value} {}
     Word (uint8_t flags, slice_t data) { 
-        uint64_t &res = *_64;
-        res = flags & 0xf;
+        _64 = flags & 0xf;
         int i=0;
         while(i<data.size()) {
-            res <<= Word::BASE64_BITS;
-            res |= ABC[data[i]]; // TODO inapprop chars
+            _64 <<= Word::BASE64_BITS;
+            _64 |= ABC[data[i]]; // TODO inapprop chars
             i++;
         }
         while (i<Word::MAX_BASE64_SIZE) {
-            res <<= Word::BASE64_BITS;
+            _64 <<= Word::BASE64_BITS;
             i++;
         }
     }
@@ -35,14 +34,14 @@ union Word {
     Word (const std::string& word) : Word{word.data(), (fsize_t)word.size()} {}
     explicit Word (const char* word) : Word{word, (fsize_t)strlen(word)} {}
     Word (ATOM atype, fsize_t offset, fsize_t length) {
-        _64[0] = atype;
-        _64[0] <<= 30;
-        _64[0] |= offset;
-        _64[0] <<= 30;
-        _64[0] |= length;
+        _64 = atype;
+        _64 <<= 30;
+        _64 |= offset;
+        _64 <<= 30;
+        _64 |= length;
     }
 
-    explicit operator uint64_t () const { return _64[0]; }
+    explicit operator uint64_t () const { return _64; }
 
     // payload bit size
     static constexpr int PBS = 60;
@@ -83,16 +82,16 @@ union Word {
     };
 
     inline void put6 (int pos, uint8_t value) {
-        _64[0] |= uint64_t(value) << (pos*6);
+        _64 |= uint64_t(value) << (pos*6);
     }
     inline void put2 (int pos, uint8_t value) {
-        _64[0] |= uint64_t(value&3) << (pos<<1);
+        _64 |= uint64_t(value&3) << (pos<<1);
     }
     inline void put4 (int pos, uint8_t value) {
-        _64[0] |= uint64_t(value&0xf) << (pos<<2);
+        _64 |= uint64_t(value&0xf) << (pos<<2);
     }
     inline void put30 (int pos, uint32_t value) {
-        _64[0] |= uint64_t(value) << (pos?30:0);
+        _64 |= uint64_t(value) << (pos?30:0);
     }
     inline void set8 (int pos, uint8_t value) {
         _8[0x7-pos] = value;
@@ -104,10 +103,10 @@ union Word {
         _32[0x1-pos] = value;
     }
     inline void set64 (uint64_t value) {
-        _64[0] = value;
+        _64 = value;
     }
     inline void set_flags (uint8_t value) {
-        _64[0] |= uint64_t(value) << PBS;
+        _64 |= uint64_t(value) << PBS;
     }
     inline uint8_t get8 (int pos) const {
         return _8[0x7-pos];
@@ -119,44 +118,44 @@ union Word {
         return _32[0x1-pos];
     }
     inline fsize_t get30 (int pos) const {
-        return fsize_t(_64[0]>>(pos?30:0)) & ((1<<30)-1);
+        return fsize_t(_64>>(pos?30:0)) & ((1<<30)-1);
     }
     inline uint64_t get64 () const {
-        return _64[0];
+        return _64;
     }
     inline uint8_t flags () const {
         return get8(0)>>4;
     }
     inline uint8_t get6(int pos) const {
-        return uint8_t(0x3f & (_64[0]>>(pos*6)));
+        return uint8_t(0x3f & (_64>>(pos*6)));
     }
-    inline void zero() { _64[0]=0; }
-    inline void zero_flags() { _64[0]&=PAYLOAD_BITS; }
+    inline void zero() { _64=0; }
+    inline void zero_flags() { _64&=PAYLOAD_BITS; }
     inline void zero_payload() {
-        _64[0]&=FLAG_BITS;
+        _64&=FLAG_BITS;
     }
     int write_base64(std::string &str) const;
-    inline uint64_t payload() const { return _64[0]&MAX_VALUE; }
-    inline bool is_zero() const { return _64[0]==0; }
-    inline Word inc() const { return Word{_64[0]+1}; }
+    inline uint64_t payload() const { return _64&MAX_VALUE; }
+    inline bool is_zero() const { return _64==0; }
+    inline Word inc() const { return Word{_64+1}; }
     inline bool operator < (const Word& b) const {
-        return _64[0] < b._64[0];
+        return _64 < b._64;
     }
     inline bool operator > (const Word& b) const {
-        return _64[0] > b._64[0];
+        return _64 > b._64;
     }
     inline bool operator == (const Word& b) const {
-        return _64[0] == b._64[0];
+        return _64 == b._64;
     }
     inline bool operator != (const Word& b) const {
-        return _64[0] != b._64[0];
+        return _64 != b._64;
     }
     inline size_t hash () const {
         static constexpr auto _64_hash_fn = std::hash<uint64_t>{};
-        return _64_hash_fn(_64[0]);
+        return _64_hash_fn(_64);
     }
     inline frange_t range() const {
-        return frange_t{(_64[0]>>30)&MAX_VALUE_30, _64[0]&MAX_VALUE_30};
+        return frange_t{(_64>>30)&MAX_VALUE_30, _64&MAX_VALUE_30};
     }
 
 };

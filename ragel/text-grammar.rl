@@ -27,7 +27,7 @@
         if (floatb.size() > 24) { cs = 0; fbreak; }
         op_.AddAtom(Atom::Float(body.range_of(floatb))); 
     }
-    action end_arrow_uuid {
+    action end_quoted_uuid {
         op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
     action end_bare_uuid { 
@@ -42,7 +42,7 @@
 
     # int64_t 
     SGN = [\-+];
-    DIGITS = digit digit**;
+    DIGITS = digit+;
     INT = (SGN? DIGITS ) >begin_int %end_int;
     
     # 64-bit (double) float TODO ISO syntax
@@ -68,7 +68,7 @@
             "=" space* INT  |
             "^" space* FLOAT |
             ['] STRING ['] |
-            ">" space* UUID %end_arrow_uuid ;    
+            ">" space* UUID %end_quoted_uuid ;    
     ATOM = QUOTED_ATOM | space BARE_ATOM ;
 
     # op's specifier, @id :ref

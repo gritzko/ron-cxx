@@ -52,8 +52,9 @@ union Word {
     //static const Word ZERO;
     // flag bit size
     static constexpr int FBS = 64-PBS;
-    static constexpr uint64_t MAX_VALUE = (1L<<PBS)-1;
-    static constexpr uint64_t MAX_VALUE_30 = (1L<<30)-1;
+    static constexpr uint64_t ONE = 1;
+    static constexpr uint64_t MAX_VALUE = (ONE<<PBS)-1;
+    static constexpr uint64_t MAX_VALUE_30 = (1<<30)-1;
     static constexpr int8_t OFFSET6[10] = {
         PBS-(6*1),
         PBS-(6*2),
@@ -66,19 +67,19 @@ union Word {
         PBS-(6*9),
         PBS-(6*10)
     };
-    static constexpr uint64_t PAYLOAD_BITS = (1L<<PBS)-1;
+    static constexpr uint64_t PAYLOAD_BITS = (ONE<<PBS)-1;
     static constexpr uint64_t FLAG_BITS = UINT64_MAX - PAYLOAD_BITS;
     static constexpr uint64_t LOWER6[11] = {
-        (1L<<(PBS-0*6))-1,
-        (1L<<(PBS-1*6))-1,
-        (1L<<(PBS-2*6))-1,
-        (1L<<(PBS-3*6))-1,
-        (1L<<(PBS-4*6))-1,
-        (1L<<(PBS-5*6))-1,
-        (1L<<(PBS-6*6))-1,
-        (1L<<(PBS-7*6))-1,
-        (1L<<(PBS-8*6))-1,
-        (1L<<(PBS-9*6))-1,
+        (ONE<<(PBS-0*6))-1,
+        (ONE<<(PBS-1*6))-1,
+        (ONE<<(PBS-2*6))-1,
+        (ONE<<(PBS-3*6))-1,
+        (ONE<<(PBS-4*6))-1,
+        (ONE<<(PBS-5*6))-1,
+        (ONE<<(PBS-6*6))-1,
+        (ONE<<(PBS-7*6))-1,
+        (ONE<<(PBS-8*6))-1,
+        (ONE<<(PBS-9*6))-1,
         0
     };
 
@@ -231,13 +232,13 @@ struct Value : public Atom {
         return frange_t{origin().get30(1), origin().get30(0)};
     }
     int64_t int_value() const {
-        return (int64_t) (unsigned long) value();
+        return uint64_t(value());
     }
     const Uuid& uuid_value() const {
         return (const Uuid&)(*this);
     }
     double float_value() const {
-        return (double) (unsigned long) value();
+        return (double) (uint64_t) value(); // FIXME
     }
     std::string string_value(const std::string& back_buf) const {
         frange_t rng = range();

@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <vector>
+#include "status.hpp"
 #include "uuid.hpp"
 #include "op.hpp"
 

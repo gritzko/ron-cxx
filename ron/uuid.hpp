@@ -54,6 +54,7 @@ union Word {
     static constexpr int FBS = 64-PBS;
     static constexpr uint64_t ONE = 1;
     static constexpr uint64_t MAX_VALUE = (ONE<<PBS)-1;
+    static const Word NEVER;
     static constexpr uint64_t MAX_VALUE_30 = (1<<30)-1;
     static constexpr int8_t OFFSET6[10] = {
         PBS-(6*1),
@@ -215,6 +216,8 @@ struct Uuid : public Atom {
     static Uuid Parse(char variety, slice_t value, char version, slice_t origin) {
         return Uuid{ Word{ABC[variety], value}, Word{ABC[version], origin} };
     }
+
+    static Word HybridTime(time_t seconds, long int nanos=0);
 
 };
 

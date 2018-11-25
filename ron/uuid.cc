@@ -5,6 +5,7 @@ namespace ron {
 
     constexpr int8_t Word::OFFSET6[10] ;
     constexpr uint64_t Word::LOWER6[11];
+    const Word Word::NEVER{Word::MAX_VALUE};
     const Uuid Uuid::ZERO{};
     const Uuid Uuid::FATAL{Word::MAX_VALUE, Word::MAX_VALUE};
 
@@ -59,6 +60,24 @@ namespace ron {
             words_.second.write_base64(ret);
         }
         return ret;
+    }
+
+    Word Uuid::HybridTime(time_t seconds, long int nanos) {
+      tm* t = gmtime(&seconds);
+      uint64_t ret = (1900 + t->tm_year - 2010);
+      ret *= 12;
+      ret += t->tm_mon;
+      ret <<= 6;
+      ret |= t->tm_mday - 1;
+      ret <<= 6;
+      ret |= t->tm_hour;
+      ret <<= 6;
+      ret |= t->tm_min;
+      ret <<= 6;
+      ret |= t->tm_sec;
+      ret <<= 24;
+      ret |= nanos / 100;
+      return ret;
     }
 
     std::string unescape (const char* buf, fsize_t size) {

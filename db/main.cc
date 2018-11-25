@@ -1,4 +1,5 @@
 #include "cxxopts.hpp"
+#include <time.h>
 #include "ron/ron.hpp"
 #include "rdt/rdt.hpp"
 #include "rocksdb/db.h"
@@ -26,6 +27,7 @@ int main (int argn, char** args) {
     options.add_options()
             ("c,create", "create a new replica")
             ("f,feed", "feed a RON frame")
+            ("now", "print the current time(stamp)")
             ;
 
     TextReplica replica{};
@@ -34,6 +36,9 @@ int main (int argn, char** args) {
     auto result = options.parse(argn, args);
     if (result["create"].as<bool>()) {
         ok = replica.Create(".swarmdb");
+    } else if (result["now"].as<bool>()) {
+        // TODO load replica clocks
+        cout << Uuid{Uuid::HybridTime(time(nullptr)), Word::NEVER}.str() << endl;
     } else {
         ok = replica.Open(".swarmdb");
     }

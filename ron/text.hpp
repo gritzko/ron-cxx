@@ -46,7 +46,7 @@ public:
 
         int64_t integer(fsize_t idx);
         double number(fsize_t idx);
-        std::string string(fsize_t idx);
+        std::string string(fsize_t idx) const;
         Uuid uuid(fsize_t idx);
     };
 

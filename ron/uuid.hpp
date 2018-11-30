@@ -2,9 +2,10 @@
 #define ron_uuid_hpp
 #include <cstdint>
 #include <string>
-#include "const.hpp"
 #include <iostream>
+#include "const.hpp"
 #include "slice.hpp"
+#include "portable_endian.hpp"
 
 namespace ron {
 
@@ -111,6 +112,7 @@ union Word {
         static constexpr auto _64_hash_fn = std::hash<uint64_t>{};
         return _64_hash_fn(_64);
     }
+    inline uint64_t be () const { return htobe64(_64); }
 
 };
 
@@ -154,6 +156,11 @@ struct Atom {
     inline frange_t range() const {
         const uint64_t& w = words_.second._64;
         return frange_t{(w>>30)&Word::MAX_VALUE_30, w&Word::MAX_VALUE_30};
+    }
+    inline ATOM type () const {
+        uint8_t fb = ofb();
+        if ( (fb>>2) == 0 ) return ATOM::UUID;
+        return (ATOM) (fb&3);
     }
 };
 

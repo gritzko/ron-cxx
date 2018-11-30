@@ -33,7 +33,7 @@ namespace ron {
         return ret;
     }
 
-    std::string TextFrame::Cursor::string(fsize_t idx) {
+    std::string TextFrame::Cursor::string(fsize_t idx) const {
         slice_t range{frame_.data(), op_.atom(idx).range()};
         std::string ret{};
         for (auto c=range.begin(); c<range.end(); c++) {

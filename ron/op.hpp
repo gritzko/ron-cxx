@@ -81,7 +81,6 @@ struct Op {
     }
     void AddFloat(double value);
     void AddString(fsize_t from, fsize_t till);
-
 };
 
 

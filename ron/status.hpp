@@ -17,6 +17,7 @@ struct Status {
     std::string str() const { return code_.str(); }
 
     static const Status OK;
+    static const Status NOT_IMPLEMENTED;
     static const Status NOT_FOUND;
     static const Status BAD_STATE;
     static const Status DB_FAIL;

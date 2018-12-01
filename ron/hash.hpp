@@ -8,84 +8,93 @@
 
 namespace ron {
 
-    typedef uint8_t SHA3_256[32];
+    // Let's use SHA512/256 here because it is reasonably fast
+    // https://www.cryptopp.com/benchmarks.html
+    // and reasonably secure, apparently.
+    typedef uint8_t SHA2[32];
 
-    struct sha3stream {
-        Botan::SHA_512_256 hash;
-        sha3stream() {
+    std::string hex(const SHA2& hash) {
+        std::string ret;
+        ret.reserve(sizeof(SHA2)<<1);
+        for(int j = 0; j < 32; j++) {
+            ret.push_back(HEX_PUNCT[hash[j]>>4]);
+            ret.push_back(HEX_PUNCT[hash[j]&0xf]);
         }
-        inline sha3stream& operator << (uint64_t word) {
-            hash.update((uint8_t*)&word, sizeof(word));
-            return *this;
+        return ret;
+    }
+
+    // a binary stream of RON primitives
+    template<typename sink_t>
+    struct Stream {
+        sink_t sink_;
+        Stream() : sink_{} {}
+        Stream(sink_t sink) : sink_{sink} {}
+        Status Write(slice_t data) {
+            sink_.update((uint8_t*)data.buf_, data.size_);
+            return Status::OK;
         }
-        inline sha3stream& operator << (slice_t data) {
-            hash.update((uint8_t*)data.buf_, data.size_);
-            return *this;
+        inline Status WriteAtom(const Atom& atom) {
+            uint64pair tmp{atom.value().be(), atom.origin().be()};
+            return Write(slice_t{(char*)&tmp, sizeof(uint64pair)});
         }
-        inline sha3stream& operator << (const SHA3_256& data) {
-            hash.update((uint8_t*)&data, sizeof(data));
-            return *this;
+        inline Status WriteHash(const SHA2& data) {
+            return Write(slice_t{(char*)&data, sizeof(data)});
         }
-        inline void close (SHA3_256& result) {
-            hash.final((uint8_t*)&result);
+        inline Status WriteUuid(const Uuid& uuid) {
+            return WriteAtom(uuid);
+        }
+        inline Status WriteAtomRangeless(const Atom& atom) {
+            uint64pair tmp{atom.value().be(), htobe64(atom.origin()._64&Word::FLAG_BITS)};
+            return Write(slice_t{(char*)&tmp, sizeof(uint64pair)});
+        }
+        inline void close (void* result) {
+            sink_.final((uint8_t*)result);
         }
     };
 
+    typedef Stream<Botan::SHA_512_256> SHA2Stream;
 
-    // TODO move to const.hpp
-    const uint64_t INT_ATOM_FLAGS = uint64_t(ATOM::INT | (VARIANT::RON_ATOM<<2))<<60;
-    const uint64_t FLOAT_ATOM_FLAGS = uint64_t(ATOM::FLOAT | (VARIANT::RON_ATOM<<2))<<60;
-    const uint64_t STRING_ATOM_FLAGS = uint64_t(ATOM::STRING | (VARIANT::RON_ATOM<<2))<<60;
 
     /* TODO HASHING MEGACOMMIT
      * [x] lww - roots - method
-     * [ ] write to a file, check (test)
-     * [ ] compare rhash --sha3-256
-     * [ ] string conversions (base64)
+     * [x] write to a file, check (test)
+     * [x] compare rhash --sha3-256
+     * [x] string conversions (base64)
      * [ ] utf-8 parsing, tests
      * */
-    template <typename Frame, typename Stream>
-    void hash_feed(
+    template <typename Frame, typename SomeStream>
+    void WriteOpHashable(
             const typename Frame::Cursor& cursor,
-            Stream& stream,
-            const SHA3_256& prev_hash,
-            const SHA3_256& ref_hash) {
+            SomeStream& stream,
+            const SHA2& prev_hash,
+            const SHA2& ref_hash) {
         const Op& op = cursor.op();
-        stream
-            << op.id().value().be()
-            << op.id().origin().be()
-            << prev_hash
-            << op.ref().value().be()
-            << op.ref().origin().be()
-            << ref_hash;
+        stream.WriteUuid(op.id());
+        stream.WriteHash(prev_hash);
+        stream.WriteUuid(op.ref());
+        stream.WriteHash(ref_hash);
         for(fsize_t i=2; i<op.size(); i++) {
             const Atom& atom = op.atom(i);
             switch (atom.type()) {
                 case UUID:
-                    stream << atom.value().be();
-                    stream << atom.origin().be();
+                    stream.WriteAtom(atom);
                     break;
                 case INT:
-                    stream << atom.value().be();
-                    stream << htobe64(INT_ATOM_FLAGS);
-                    break;
                 case FLOAT:
-                    stream << atom.value().be();
-                    stream << htobe64(FLOAT_ATOM_FLAGS);
+                    stream.WriteAtomRangeless(atom);
                     break;
                 case STRING:
-                    stream << atom.value().be();
-                    stream << htobe64(STRING_ATOM_FLAGS);
+                    stream.WriteAtomRangeless(atom);
                     // TODO: slice_t, no alloc
-                    stream << cursor.string(i);
+                    stream.Write(cursor.string(i));
                     break;
             }
         }
     }
 
-    void hash_uuid(const Uuid& uuid, SHA3_256& hash) {
-        sha3stream stream;
-        stream << uuid.value().be() << uuid.origin().be();
+    void hash_uuid(const Uuid& uuid, SHA2& hash) {
+        SHA2Stream stream;
+        stream.WriteUuid(uuid);
         stream.close(hash);
     }
 

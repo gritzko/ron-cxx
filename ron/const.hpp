@@ -51,6 +51,18 @@ enum ATOM : uint8_t {
 	FLOAT = 3
 };
 
+enum FLAGS : uint8_t {
+	INT_ATOM = (RON_ATOM<<2) | ATOM::INT,
+	STRING_ATOM = (RON_ATOM<<2) | ATOM::STRING,
+	FLOAT_ATOM = (RON_ATOM<<2) | ATOM::FLOAT,
+	NAME_UUID = (RON_UUID<<2) | NAME,
+	HASH_UUID = (RON_UUID<<2) | HASH,
+	TIME_UUID = (RON_UUID<<2) | TIME,
+	DERIVED_UUID = (RON_UUID<<2) | DERIVED
+};
+
+static const char* HEX_PUNCT = "0123456789abcdef";
+
 static const char* TERM_PUNCT = ";,!?";
 enum TERM : uint8_t {
 	RAW = 0,

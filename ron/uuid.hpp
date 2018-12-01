@@ -228,6 +228,8 @@ struct Uuid : public Atom {
 
 };
 
+typedef std::pair<uint64_t,uint64_t> uint64pair;
+
 
 struct Value : public Atom {
     inline static Word range_word(ATOM type, frange_t range) {

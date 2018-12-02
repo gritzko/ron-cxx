@@ -36,8 +36,16 @@ void test_serialization () {
     SHA2Stream ophash;
     WriteOpHashable<Frame, SHA2Stream>(cur, ophash, SRC_HASH, LWW_HASH);
     SHA2 OP_HASH;
-    ophash.close(OP_HASH);
-    assert(hex(OP_HASH)=="97fa0525e009867adffe5e2c71f93057dfb8293c25c27292cd4caf230a0e39ec");
+    ophash.close(OP_HASH.bits_);
+    string okhex =  "97fa0525e009867adffe5e2c71f93057dfb8293c25c27292cd4caf230a0e39ec";
+    string okbase = "a~d59U09XcgV~athSV_lLyztAJlalcAIoKnk8ldEEUl";
+    assert(OP_HASH.hex()==okhex);
+    assert(OP_HASH.base64()==okbase);
+    assert(SHA2{okbase}==OP_HASH);
+    assert(SHA2::valid(okbase));
+    string not_a_hash = okbase;
+    not_a_hash[SHA2::BASE64_SIZE-1] = '1';
+    assert(!SHA2::valid(not_a_hash));
 }
 
 int main (int argn, char** args) {

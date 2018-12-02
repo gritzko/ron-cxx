@@ -4,24 +4,42 @@
 #include "uuid.hpp"
 #include "status.hpp"
 #include "op.hpp"
-
+#include "encdec.hpp"
 
 namespace ron {
 
     // Let's use SHA512/256 here because it is reasonably fast
     // https://www.cryptopp.com/benchmarks.html
     // and reasonably secure, apparently.
-    typedef uint8_t SHA2[32];
-
-    std::string hex(const SHA2& hash) {
-        std::string ret;
-        ret.reserve(sizeof(SHA2)<<1);
-        for(int j = 0; j < 32; j++) {
-            ret.push_back(HEX_PUNCT[hash[j]>>4]);
-            ret.push_back(HEX_PUNCT[hash[j]&0xf]);
+    struct SHA2{
+        uint8_t bits_[32];
+        static constexpr size_t HEX_SIZE = sizeof(bits_)*8/4;
+        static constexpr size_t BASE64_SIZE = sizeof(bits_)*8/6 +1;
+        SHA2(){ memset(bits_, 0, sizeof(bits_)); }
+        SHA2(slice_t base64) {
+            assert(base64.size_==BASE64_SIZE);
+            decode<6,ABC64>(base64.buf_, base64.size_, bits_);
         }
-        return ret;
-    }
+        static bool valid (slice_t base64) {
+            if (base64.size_!=BASE64_SIZE) return false;
+            for(int i=0; i<BASE64_SIZE; i++)
+                if (ABC64[base64[i]]<0) return false;
+            return (ABC64[base64[BASE64_SIZE - 1]] & 3) == 0;
+        }
+        bool operator == (const SHA2& b) const {
+            return memcmp(bits_, b.bits_, sizeof(bits_)) == 0;
+        }
+        std::string hex() const {
+            char data[HEX_SIZE];
+            encode<4,HEX_PUNCT>(bits_, sizeof(bits_), data);
+            return std::string{data,HEX_SIZE};
+        }
+        std::string base64() const {
+            char data[BASE64_SIZE];
+            encode<6,BASE_PUNCT>(bits_, sizeof(bits_), data);
+            return std::string{data,BASE64_SIZE};
+        }
+    };
 
     // a binary stream of RON primitives
     template<typename sink_t>
@@ -92,10 +110,10 @@ namespace ron {
         }
     }
 
-    void hash_uuid(const Uuid& uuid, SHA2& hash) {
+    inline void hash_uuid(const Uuid& uuid, SHA2& hash) {
         SHA2Stream stream;
         stream.WriteUuid(uuid);
-        stream.close(hash);
+        stream.close(hash.bits_);
     }
 
 };

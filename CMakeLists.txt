@@ -60,6 +60,7 @@ include_directories(${CRYPTO_PREFIX}/include/botan-2)
 
 add_library(ron STATIC
     ron/const.hpp
+    ron/encdec.hpp
     ron/uuid.hpp
     ron/op.hpp
     ron/text.hpp

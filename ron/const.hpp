@@ -19,7 +19,7 @@ enum RON : uint8_t {
 };
 
 
-static const char* SPEC_PUNCT = "*#@:";
+constexpr char SPEC_PUNCT[] = "*#@:";
 enum SPEC : uint8_t {
 	TYPE = 0,
 	OBJECT = 1,
@@ -34,7 +34,7 @@ enum VARIANT {
     RESERVED = 3
 };
 
-static const char* UUID_PUNCT = "$%+-";
+constexpr char UUID_PUNCT[] = "$%+-";
 enum UUID : uint8_t {
 	NAME = 0,
 	HASH = 1,
@@ -42,7 +42,7 @@ enum UUID : uint8_t {
 	DERIVED = 3
 };
 
-static const char* ATOM_PUNCT = ">='^";
+constexpr char ATOM_PUNCT[] = ">='^";
 enum ATOM : uint8_t {
 	UUID = 0,
 	BUF = 0,
@@ -61,9 +61,9 @@ enum FLAGS : uint8_t {
 	DERIVED_UUID = (RON_UUID<<2) | DERIVED
 };
 
-static const char* HEX_PUNCT = "0123456789abcdef";
+constexpr char HEX_PUNCT[] = "0123456789abcdef";
 
-static const char* TERM_PUNCT = ";,!?";
+constexpr char TERM_PUNCT[] = ";,!?";
 enum TERM : uint8_t {
 	RAW = 0,
 	REDUCED = 1,
@@ -71,90 +71,9 @@ enum TERM : uint8_t {
 	QUERY = 3
 };
 
-static const char* REDEF_PUNCT = "`";
-enum REDEF : uint8_t {
-	PREV = 0
-};
+constexpr char BASE_PUNCT[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~";
 
-static const char* PREFIX_PUNCT = "([{}])";
-enum PREFIX : uint8_t {
-	PRE4 = 0,
-	PRE5 = 1,
-	PRE6 = 2,
-	PRE7 = 3,
-	PRE8 = 4,
-	PRE9 = 5
-};
-
-static const char* BASE_PUNCT = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~";
-enum BASE : uint8_t {
-	DIGIT0 = 0,
-	DIGIT1 = 1,
-	DIGIT2 = 2,
-	DIGIT3 = 3,
-	DIGIT4 = 4,
-	DIGIT5 = 5,
-	DIGIT6 = 6,
-	DIGIT7 = 7,
-	DIGIT8 = 8,
-	DIGIT9 = 9,
-	DIGIT10 = 10,
-	DIGIT11 = 11,
-	DIGIT12 = 12,
-	DIGIT13 = 13,
-	DIGIT14 = 14,
-	DIGIT15 = 15,
-	DIGIT16 = 16,
-	DIGIT17 = 17,
-	DIGIT18 = 18,
-	DIGIT19 = 19,
-	DIGIT20 = 20,
-	DIGIT21 = 21,
-	DIGIT22 = 22,
-	DIGIT23 = 23,
-	DIGIT24 = 24,
-	DIGIT25 = 25,
-	DIGIT26 = 26,
-	DIGIT27 = 27,
-	DIGIT28 = 28,
-	DIGIT29 = 29,
-	DIGIT30 = 30,
-	DIGIT31 = 31,
-	DIGIT32 = 32,
-	DIGIT33 = 33,
-	DIGIT34 = 34,
-	DIGIT35 = 35,
-	DIGIT36 = 36,
-	DIGIT37 = 37,
-	DIGIT38 = 38,
-	DIGIT39 = 39,
-	DIGIT40 = 40,
-	DIGIT41 = 41,
-	DIGIT42 = 42,
-	DIGIT43 = 43,
-	DIGIT44 = 44,
-	DIGIT45 = 45,
-	DIGIT46 = 46,
-	DIGIT47 = 47,
-	DIGIT48 = 48,
-	DIGIT49 = 49,
-	DIGIT50 = 50,
-	DIGIT51 = 51,
-	DIGIT52 = 52,
-	DIGIT53 = 53,
-	DIGIT54 = 54,
-	DIGIT55 = 55,
-	DIGIT56 = 56,
-	DIGIT57 = 57,
-	DIGIT58 = 58,
-	DIGIT59 = 59,
-	DIGIT60 = 60,
-	DIGIT61 = 61,
-	DIGIT62 = 62,
-	DIGIT63 = 63
-};
-
-static const char* FRAME_PUNCT = ".";
+constexpr char FRAME_PUNCT[] = ".";
 enum FRAME : uint8_t {
 	END = 0
 };
@@ -162,8 +81,9 @@ enum FRAME : uint8_t {
   
 void init();
 
-extern uint8_t ABC[128];
-extern uint64_t IS_BASE[2];
+extern const uint8_t ABC[128];
+extern const uint64_t IS_BASE[2];
+extern const int8_t ABC64[256];
 
 enum ACID : uint8_t {
    NONE = 0, // single-writer, strictly "state + linear op log", like MySQL

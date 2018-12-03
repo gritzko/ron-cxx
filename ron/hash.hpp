@@ -16,6 +16,8 @@ namespace ron {
         static constexpr size_t HEX_SIZE = sizeof(bits_)*8/4;
         static constexpr size_t BASE64_SIZE = sizeof(bits_)*8/6 +1;
         SHA2(){ memset(bits_, 0, sizeof(bits_)); }
+        // my motivation for using Base64: Base64 is less clutter.
+        // noone is going to spell hashes on the phone anyway.
         SHA2(slice_t base64) {
             assert(base64.size_==BASE64_SIZE);
             decode<6,ABC64>(base64.buf_, base64.size_, bits_);

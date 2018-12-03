@@ -50,7 +50,6 @@ union Word {
     static constexpr int BASE64_BITS = 6;
     // max base64 char size
     static constexpr int MAX_BASE64_SIZE = PBS/BASE64_BITS;
-    //static const Word ZERO;
     // flag bit size
     static constexpr int FBS = 64-PBS;
     static constexpr uint64_t ONE = 1;
@@ -101,6 +100,9 @@ union Word {
     }
     inline bool operator > (const Word& b) const {
         return _64 > b._64;
+    }
+    inline bool operator >= (const Word& b) const {
+        return _64 >= b._64;
     }
     inline bool operator == (const Word& b) const {
         return _64 == b._64;
@@ -230,7 +232,6 @@ struct Uuid : public Atom {
 
 typedef std::pair<uint64_t,uint64_t> uint64pair;
 
-
 struct Value : public Atom {
     inline static Word range_word(ATOM type, frange_t range) {
         uint64_t rw = (uint64_t(type)<<60) | (uint64_t(range.first)<<30) | range.second;
@@ -272,6 +273,13 @@ void report(const char* pb, const char* p, const char* event);
 } // namespace ron
 
 namespace std {
+
+    template <>
+    struct hash<ron::Word> {
+        size_t operator()(ron::Word const& word) const noexcept {
+            return word.hash();
+        }
+    };
 
     template <>
     struct hash<ron::Uuid> {

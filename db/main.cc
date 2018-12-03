@@ -1,5 +1,5 @@
-#include "cxxopts.hpp"
 #include <time.h>
+#include <gflags/gflags.h>
 #include "ron/ron.hpp"
 #include "rdt/rdt.hpp"
 #include "rocksdb/db.h"
@@ -21,22 +21,29 @@ typedef Replica<TextFrame> TextReplica;
 // 1AbC2+gritzko
 // db ":tag >test >1AbC2+gritzko"
 
+DEFINE_bool(create, false, "create a new replica");
+DEFINE_string(feed, "-", "feed a RON frame");
+DEFINE_bool(now, false, "print the current time(stamp)");
+DEFINE_bool(h, false, "Show help");
+DECLARE_bool(help);
+DECLARE_string(helpmatch);
 
 int main (int argn, char** args) {
-    cxxopts::Options options("swarmdb", "a syncable embedded RON database");
-    options.add_options()
-            ("c,create", "create a new replica")
-            ("f,feed", "feed a RON frame")
-            ("now", "print the current time(stamp)")
-            ;
+
+    gflags::SetUsageMessage("swarmdb -- a syncable embedded RON database");
+    gflags::ParseCommandLineNonHelpFlags(&argn, &args, true);
+    if (FLAGS_help || FLAGS_h) {
+        FLAGS_help = false;
+        FLAGS_helpmatch = "db";
+    }
+    gflags::HandleCommandLineHelpFlags();
 
     TextReplica replica{};
     Status ok;
 
-    auto result = options.parse(argn, args);
-    if (result["create"].as<bool>()) {
+    if (FLAGS_create) {
         ok = replica.Create(".swarmdb");
-    } else if (result["now"].as<bool>()) {
+    } else if (FLAGS_now) {
         // TODO load replica clocks
         cout << Uuid{Uuid::HybridTime(time(nullptr)), Word::NEVER}.str() << endl;
     } else {

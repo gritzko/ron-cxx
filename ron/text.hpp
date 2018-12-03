@@ -65,7 +65,13 @@ public:
 
         void AddOp(const Op& op, const std::string& back_buf);
 
-        void AddAll(Cursor& cur, const std::string& back_buf);
+        void AddAll(Cursor& cur) {
+            // TODO
+        }
+        void AddAll(const TextFrame& frame) {
+            Cursor cur = frame.cursor();
+            AddAll(cur);
+        }
 
         const TextFrame frame() const { return TextFrame{data_}; }
 

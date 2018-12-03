@@ -7,6 +7,7 @@
 #include <rdt/lww.hpp>
 #include "ron/ron.hpp"
 #include "rdt/rdt.hpp"
+#include "ron/hash.hpp"
 
 namespace ron {
 
@@ -16,18 +17,57 @@ class Replica {
 
     rocksdb::DB* db_;
 
+    rocksdb::WriteOptions wo_;
+    rocksdb::ReadOptions ro_;
+
+    struct ChainMeta {
+        Word at_;
+        SHA2 hash_;
+        Uuid object_;
+    };
+    // chain cache - skip db reads for ongoing op chains
+    std::unordered_map<Word, ChainMeta> cache_;
+
 public:
 
     typedef typename Frame::Batch Batch;
     typedef typename Frame::Builder Builder;
     typedef typename Frame::Cursor Cursor;
 
-    rocksdb::ColumnFamilyHandle *data_cf_, *history_cf_, *log_cf_;
+    typedef rocksdb::ColumnFamilyHandle CFHandle;
 
-    Replica(): db_{nullptr}, data_cf_{nullptr}, history_cf_{nullptr}, log_cf_{nullptr} {}
+    CFHandle* chains_;
+    std::unordered_map<Uuid,CFHandle*> objects_;
+
+    Replica(): db_{nullptr}, chains_{nullptr}, objects_{} {}
+
+    struct Key {
+        uint64_t bits_[2];
+
+        Key(const Uuid &id) : bits_{
+                htobe64((id.origin()._64 << 4) | (id.value()._64 >> 60)),
+                htobe64((id.value()._64 << 4) | (id.origin()._64 >> 60)),
+        } {}
+
+        Key(rocksdb::Slice data) : bits_{
+                *(uint64_t *) data.data_,
+                *(uint64_t *) (data.data_ + sizeof(uint64_t))} {
+            assert(data.size() == sizeof(Key));
+        }
+
+        operator Uuid() const {
+            uint64_t v = be64toh(bits_[1]);
+            uint64_t o = be64toh(bits_[0]);
+            return Uuid{(v >> 4) | (o << 60), (o >> 4) | (v << 60)};
+        }
+
+        operator rocksdb::Slice() const {
+            return rocksdb::Slice{(char *) this, sizeof(Key)};
+        }
+    };
 
     //  L I F E C Y C L E
-
+    
     Status Create (std::string home);
 
     Status Open (std::string home);
@@ -38,15 +78,30 @@ public:
 
     ~Replica();
 
-    //  R E C E I V E S
+    rocksdb::DB& db() { return *db_; }
+    const rocksdb::ReadOptions& ro() const {return ro_;}
+    const rocksdb::WriteOptions& wo() const {return wo_;}
 
-    Status LogRecv (const Op& op);
+    //  C H A I N  S T O R E
 
-    Status DataRecv (const Op& op);
 
-    Status HistoryRecv (const Op& op);
+    Status FindChain (Uuid op_id, std::string& chain);
 
-    Status TrustedDataRecv (Cursor& cursor);
+    Status WalkChain (const Frame& chain, const Frame& meta, const Uuid& to, std::string& hash);
+
+    rocksdb::Iterator* FindYarn (Word replica);
+
+    //  O B J E C T  S T O R E
+
+    Status CreateObjectStore (Uuid store);
+
+    Status FillObjectStore (Uuid store, VV version);
+
+    Status SplitObjectStore (Uuid store, Uuid new_store, VV version);
+
+    Status DropObjectStore (Uuid store);
+
+    Status GetObject (const Uuid& store, const Uuid& key, Frame& frame);
 
     // Q U E R I E S
 
@@ -75,20 +130,22 @@ public:
     //  @queried-id :sha3 'sha3hash' !
     Status SHA3Query (Builder& response, Uuid id);
 
-    //  E N T R Y  P O I N T S
+    //  R E C E I V E S
 
-    // This is THE entry method for received frames. Here those frames
-    // are scanned, checked, converted, split... all the other Recv
-    // methods are called from here. The original (or converted) frame's
-    // scope is this method.
+    // the entry point: recoder, normalizer, access control
+    // converts any-coded incoming frame into internal-coded chains, queries, hash checks
     template<class FrameB>
-    Status Recv (Builder& response, const FrameB& input);
+    Status Receive(Uuid conn_id, const FrameB& frame);
 
-    Status Recv (Builder& response, const Batch& input);
+    // feed a causally ordered log - checks causality, updates the chain cache
+    Status ReceiveChain(rocksdb::WriteBatch& batch, Uuid object_store, const Frame& frame);
 
-    Status RecvQuery(Builder& response, const Frame& query) {
+    // a hash check MUST follow its op in the frame => the hash must be cached
+    Status ReceiveSHA2Check(const Uuid& id, const SHA2& check);
+
+    Status ReceiveQuery(Builder& response, Uuid object_store, const Frame& query) {
         Cursor cur = query.cursor();
-//        switch (cur.op().type().value().get30(1)) {
+//        switch (cur.op().type().value().get30(1)) { // assuming these names <= 5 chars
 //            case LWW_INT:
 //            //case RGA_DATA_ID[VALUE]:
 //                return data_.RecvQuery(response, cur);
@@ -104,6 +161,7 @@ public:
         return Status::OK;
     }
 
+
 private:
 
     //  U T I L
@@ -118,6 +176,8 @@ extern const Uuid HISTORY_CF_UUID;
 extern const Uuid LOG_CF_UUID;
 extern const std::string HISTORY_CF_NAME;
 extern const std::string LOG_CF_NAME;
+extern const Uuid CHAIN_STORE;
+extern const Uuid TRUNK_STORE;
 
 
 }

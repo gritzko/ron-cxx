@@ -1,5 +1,5 @@
 #include "uuid.hpp"
-#include <inttypes.h>
+#include <cinttypes>
 
 namespace ron {
 
@@ -31,6 +31,8 @@ namespace ron {
                 i0 = origin().get30(0);
                 i1 = origin().get30(1);
                 return std::string(buf + i0, buf + i0 + i1);
+            default:
+                return "";
         }
     }
 

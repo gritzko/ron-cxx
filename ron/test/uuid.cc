@@ -9,6 +9,9 @@ using namespace std;
 
 int main (int argn, char** args) {
 
+    static_assert(sizeof(Word)==8);
+    static_assert(sizeof(Uuid)==16);
+
     Uuid u1{"0000000001"};
     assert(u1.value()==1);
     assert(u1.str()=="0000000001");

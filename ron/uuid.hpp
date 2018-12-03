@@ -13,13 +13,11 @@ namespace ron {
 union Word {
 
     uint64_t _64;
-    uint32_t _32[2];
-    uint16_t _16[4];
     uint8_t _8[8];
 
     Word (uint64_t value=0) : _64{value} {}
-    Word (uint8_t flags, slice_t data) { 
-        _64 = flags & 0xf;
+    Word (uint8_t flags, const slice_t& data) {
+        _64 = flags & 0xfU;
         int i=0;
         while(i<data.size()) {
             _64 <<= Word::BASE64_BITS;
@@ -35,27 +33,27 @@ union Word {
     explicit Word (const char* word) : Word{0, slice_t{word, (fsize_t)strlen(word)}} {}
     Word (ATOM atype, fsize_t offset, fsize_t length) {
         _64 = atype;
-        _64 <<= 30;
+        _64 <<= 30U;
         _64 |= offset;
-        _64 <<= 30;
+        _64 <<= 30U;
         _64 |= length;
     }
     Word (ATOM atype, frange_t range) : 
-        _64{(uint64_t(atype)<<60)|(uint64_t(range.first)<<30)|range.second} {}
+        _64{(uint64_t(atype)<<60U)|(uint64_t(range.first)<<30U)|range.second} {}
 
     explicit operator uint64_t () const { return _64; }
 
     // payload bit size
-    static constexpr int PBS = 60;
+    static constexpr uint PBS = 60;
     static constexpr int BASE64_BITS = 6;
     // max base64 char size
     static constexpr int MAX_BASE64_SIZE = PBS/BASE64_BITS;
     // flag bit size
-    static constexpr int FBS = 64-PBS;
+    static constexpr uint FBS = 64U-PBS;
     static constexpr uint64_t ONE = 1;
-    static constexpr uint64_t MAX_VALUE = (ONE<<PBS)-1;
+    static constexpr uint64_t MAX_VALUE = (ONE<<PBS)-1U;
     static const Word NEVER;
-    static constexpr uint64_t MAX_VALUE_30 = (1<<30)-1;
+    static constexpr uint64_t MAX_VALUE_30 = (1U<<30U)-1U;
     static constexpr int8_t OFFSET6[10] = {
         PBS-(6*1),
         PBS-(6*2),
@@ -85,16 +83,16 @@ union Word {
     };
 
     inline fsize_t get30 (int pos) const {
-        return fsize_t(_64>>(pos?30:0)) & ((1<<30)-1);
+        return fsize_t(_64>>(pos?30U:0U)) & ((1U<<30U)-1U);
     }
     inline uint8_t flags () const {
-        return _8[7]>>4;
+        return _8[7]>>4U;
     }
-    inline void zero() { _64=0; }
+    inline void zero() { _64=0U; }
     int write_base64(std::string &str) const;
     inline uint64_t payload() const { return _64&MAX_VALUE; }
-    inline bool is_zero() const { return _64==0; }
-    inline Word inc() const { return Word{_64+1}; }
+    inline bool is_zero() const { return _64==0U; }
+    inline Word inc() const { return Word{_64+1U}; }
     inline bool operator < (const Word& b) const {
         return _64 < b._64;
     }
@@ -144,7 +142,7 @@ struct Atom {
         return half ? words_.second : words_.first;
     }
     inline VARIANT variant () const {
-        return VARIANT(ofb()>>2);
+        return VARIANT(ofb()>>2U);
     }
     static Atom String (frange_t range) {
         return Atom{0, Word{ATOM::STRING, range}};
@@ -157,12 +155,12 @@ struct Atom {
     }
     inline frange_t range() const {
         const uint64_t& w = words_.second._64;
-        return frange_t{(w>>30)&Word::MAX_VALUE_30, w&Word::MAX_VALUE_30};
+        return frange_t{(w>>30U)&Word::MAX_VALUE_30, w&Word::MAX_VALUE_30};
     }
     inline ATOM type () const {
         uint8_t fb = ofb();
-        if ( (fb>>2) == 0 ) return ATOM::UUID;
-        return (ATOM) (fb&3);
+        if ( (fb>>2U) == 0 ) return ATOM::UUID;
+        return (ATOM) (fb&3U);
     }
 };
 
@@ -172,7 +170,7 @@ struct Uuid : public Atom {
     Uuid (Word value, Word origin) : Atom{value,origin} {}
     Uuid (slice_t data);
     // pre-parsed Uuid, got hints and correctness guarantee
-    Uuid (char variety, slice_t value, char version, slice_t origin) :
+    Uuid (char variety, const slice_t& value, char version, const slice_t& origin) :
         Uuid{
             Word{ABC[variety], value},
             Word{ABC[version], origin}
@@ -181,7 +179,7 @@ struct Uuid : public Atom {
     Uuid (const char* buf) : 
         Uuid{slice_t{buf, static_cast<fsize_t>(strlen(buf))}} {}
     inline enum UUID version () const {
-        return (enum UUID)(ofb() & 3);
+        return (enum UUID)(ofb() & 3U);
     }
     inline uint8_t variety () const {
         return vfb();
@@ -222,7 +220,7 @@ struct Uuid : public Atom {
     static const Uuid ZERO;
     static const Uuid FATAL;
 
-    static Uuid Parse(char variety, slice_t value, char version, slice_t origin) {
+    inline static Uuid Parse(char variety, const slice_t& value, char version, const slice_t& origin) {
         return Uuid{ Word{ABC[variety], value}, Word{ABC[version], origin} };
     }
 
@@ -234,16 +232,13 @@ typedef std::pair<uint64_t,uint64_t> uint64pair;
 
 struct Value : public Atom {
     inline static Word range_word(ATOM type, frange_t range) {
-        uint64_t rw = (uint64_t(type)<<60) | (uint64_t(range.first)<<30) | range.second;
+        uint64_t rw = (uint64_t(type)<<60U) | (uint64_t(range.first)<<30U) | range.second;
         Word w = Word{rw};
         return w;
     }
     Value (Word value, ATOM type, frange_t range) : Atom{value, range_word(type, range)} {
     }
     Value () : Atom{} {}
-    frange_t range() const {
-        return frange_t{origin().get30(1), origin().get30(0)};
-    }
     int64_t int_value() const {
         return uint64_t(value());
     }
@@ -257,18 +252,12 @@ struct Value : public Atom {
         frange_t rng = range();
         return back_buf.substr(rng.first, rng.second);
     }
-    ATOM type() const {
-        return ATOM(origin().flags()&3);
-    }
-    std::string str(const char* buf=0) const;
+    std::string str(const char* buf= nullptr) const;
 
     static Value String (frange_t range) {
         return Value{0, ATOM::STRING, range};
     }
 };
-
-// parser debugging 
-void report(const char* pb, const char* p, const char* event);
 
 } // namespace ron
 
@@ -284,7 +273,7 @@ namespace std {
     template <>
     struct hash<ron::Uuid> {
         size_t operator()(ron::Uuid const& uuid) const noexcept {
-            return uuid.value().hash() ^ (uuid.origin().hash()<<1);
+            return uuid.value().hash() ^ (uuid.origin().hash()<<1U);
         }
     };
 

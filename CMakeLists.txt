@@ -120,3 +120,14 @@ add_executable(swarmdb-bin
 add_dependencies(swarmdb-bin rocksdblib)
 target_link_libraries(swarmdb-bin ron botan rocksdb pthread z bz2 snappy gflags)
 SET_TARGET_PROPERTIES(swarmdb-bin PROPERTIES OUTPUT_NAME swarmdb)
+
+add_custom_target(
+        format
+        COMMAND clang-format
+        -style=Google
+        -i
+        ${CMAKE_SOURCE_DIR}/ron/*.cc
+        ${CMAKE_SOURCE_DIR}/ron/*.hpp
+        ${CMAKE_SOURCE_DIR}/db/*.cc
+        ${CMAKE_SOURCE_DIR}/db/*.hpp
+)

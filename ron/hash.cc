@@ -1,7 +1,3 @@
 #include "ron/hash.hpp"
 
-namespace ron {
-
-
-
-};
+namespace ron {};

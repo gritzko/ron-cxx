@@ -29,38 +29,39 @@ DECLARE_bool(help);
 DECLARE_string(helpmatch);
 
 int main(int argn, char** args) {
-  gflags::SetUsageMessage("swarmdb -- a syncable embedded RON database");
-  gflags::ParseCommandLineNonHelpFlags(&argn, &args, true);
-  if (FLAGS_help || FLAGS_h) {
-    FLAGS_help = false;
-    FLAGS_helpmatch = "db";
-  }
-  gflags::HandleCommandLineHelpFlags();
+    gflags::SetUsageMessage("swarmdb -- a syncable embedded RON database");
+    gflags::ParseCommandLineNonHelpFlags(&argn, &args, true);
+    if (FLAGS_help || FLAGS_h) {
+        FLAGS_help = false;
+        FLAGS_helpmatch = "db";
+    }
+    gflags::HandleCommandLineHelpFlags();
 
-  TextReplica replica{};
-  Status ok;
+    TextReplica replica{};
+    Status ok;
 
-  if (FLAGS_create) {
-    ok = replica.Create(".swarmdb");
-  } else if (FLAGS_now) {
-    // TODO load replica clocks
-    cout << Uuid{Uuid::HybridTime(time(nullptr)), Word::NEVER}.str() << endl;
-  } else {
-    ok = replica.Open(".swarmdb");
-  }
+    if (FLAGS_create) {
+        ok = replica.Create(".swarmdb");
+    } else if (FLAGS_now) {
+        // TODO load replica clocks
+        cout << Uuid{Uuid::HybridTime(time(nullptr)), Word::NEVER}.str()
+             << endl;
+    } else {
+        ok = replica.Open(".swarmdb");
+    }
 
-  if (ok) {
-  }
-  //    TextFrame script{args[1]};
-  //    TextFrame::Builder response;
-  //
-  //    Status ok = replica.Run(response, {script});
+    if (ok) {
+    }
+    //    TextFrame script{args[1]};
+    //    TextFrame::Builder response;
+    //
+    //    Status ok = replica.Run(response, {script});
 
-  if (!ok.code_.zero()) {
-    cerr << ok.str() << endl;
-  }
+    if (!ok.code_.zero()) {
+        cerr << ok.str() << endl;
+    }
 
-  replica.Close();
+    replica.Close();
 
-  return ok ? 0 : -1;
+    return ok ? 0 : -1;
 }

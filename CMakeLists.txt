@@ -124,7 +124,7 @@ SET_TARGET_PROPERTIES(swarmdb-bin PROPERTIES OUTPUT_NAME swarmdb)
 add_custom_target(
         format
         COMMAND clang-format
-        -style=Google
+        -style='{BasedOnStyle: Google, IndentWidth: 4}'
         -i
         ${CMAKE_SOURCE_DIR}/ron/*.cc
         ${CMAKE_SOURCE_DIR}/ron/*.hpp

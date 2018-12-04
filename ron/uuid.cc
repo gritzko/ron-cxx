@@ -10,84 +10,84 @@ const Uuid Uuid::ZERO{};
 const Uuid Uuid::FATAL{Word::MAX_VALUE, Word::MAX_VALUE};
 
 std::string Value::str(const char* buf) const {
-  char pad[32];
-  int l;
-  fsize_t i0, i1;
-  switch (type()) {
-    case ATOM::INT:
-      l = sprintf(pad, "%" PRId64, int_value());
-      return std::string(pad, l);
-    case ATOM::FLOAT:
-      l = sprintf(pad, "%lf", float_value());
-      return std::string(pad, l);
-    case ATOM::STRING:
-      if (!buf) return std::string();
-      i0 = origin().get30(0);
-      i1 = origin().get30(1);
-      return std::string(buf + i0, i1);
-    case ATOM::BUF:
-      if (!buf) return std::string();
-      i0 = origin().get30(0);
-      i1 = origin().get30(1);
-      return std::string(buf + i0, buf + i0 + i1);
-    default:
-      return "";
-  }
+    char pad[32];
+    int l;
+    fsize_t i0, i1;
+    switch (type()) {
+        case ATOM::INT:
+            l = sprintf(pad, "%" PRId64, int_value());
+            return std::string(pad, l);
+        case ATOM::FLOAT:
+            l = sprintf(pad, "%lf", float_value());
+            return std::string(pad, l);
+        case ATOM::STRING:
+            if (!buf) return std::string();
+            i0 = origin().get30(0);
+            i1 = origin().get30(1);
+            return std::string(buf + i0, i1);
+        case ATOM::BUF:
+            if (!buf) return std::string();
+            i0 = origin().get30(0);
+            i1 = origin().get30(1);
+            return std::string(buf + i0, buf + i0 + i1);
+        default:
+            return "";
+    }
 }
 
 int Word::write_base64(std::string& str) const {
-  uint64_t val = _64;
-  int len = 0;
-  uint64_t mask = Word::MAX_VALUE;
-  do {
-    str.push_back(BASE_PUNCT[0x3fU & (val >> OFFSET6[len])]);
-    len++;
-  } while (val & LOWER6[len]);
-  return len;
+    uint64_t val = _64;
+    int len = 0;
+    uint64_t mask = Word::MAX_VALUE;
+    do {
+        str.push_back(BASE_PUNCT[0x3fU & (val >> OFFSET6[len])]);
+        len++;
+    } while (val & LOWER6[len]);
+    return len;
 }
 
 std::string Uuid::str() const {
-  std::string ret;
-  int vrt = variety();
-  if (vrt) {
-    ret.push_back(BASE_PUNCT[vrt]);
-    ret.push_back('/');
-  }
-  words_.first.write_base64(ret);
-  int schm = version();
-  if (schm != 0 || !origin().is_zero()) {
-    ret.push_back(UUID_PUNCT[schm]);
-    words_.second.write_base64(ret);
-  }
-  return ret;
+    std::string ret;
+    int vrt = variety();
+    if (vrt) {
+        ret.push_back(BASE_PUNCT[vrt]);
+        ret.push_back('/');
+    }
+    words_.first.write_base64(ret);
+    int schm = version();
+    if (schm != 0 || !origin().is_zero()) {
+        ret.push_back(UUID_PUNCT[schm]);
+        words_.second.write_base64(ret);
+    }
+    return ret;
 }
 
 Word Uuid::HybridTime(time_t seconds, long int nanos) {
-  tm* t = gmtime(&seconds);
-  uint64_t ret = (1900 + t->tm_year - 2010);
-  ret *= 12;
-  ret += t->tm_mon;
-  ret <<= 6;
-  ret |= t->tm_mday - 1;
-  ret <<= 6;
-  ret |= t->tm_hour;
-  ret <<= 6;
-  ret |= t->tm_min;
-  ret <<= 6;
-  ret |= t->tm_sec;
-  ret <<= 24;
-  ret |= nanos / 100;
-  return ret;
+    tm* t = gmtime(&seconds);
+    uint64_t ret = (1900 + t->tm_year - 2010);
+    ret *= 12;
+    ret += t->tm_mon;
+    ret <<= 6;
+    ret |= t->tm_mday - 1;
+    ret <<= 6;
+    ret |= t->tm_hour;
+    ret <<= 6;
+    ret |= t->tm_min;
+    ret <<= 6;
+    ret |= t->tm_sec;
+    ret <<= 24;
+    ret |= nanos / 100;
+    return ret;
 }
 
 std::string unescape(const char* buf, fsize_t size) {
-  // TODO
-  return "";
+    // TODO
+    return "";
 }
 
 std::string escape(const char* buf, fsize_t size) {
-  // TODO
-  return "";
+    // TODO
+    return "";
 }
 
 const uint8_t ABC[128] = {

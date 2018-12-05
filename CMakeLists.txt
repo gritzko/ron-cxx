@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.9.4)
 project(cpp)
 include(ExternalProject)
+enable_testing()
 
 #  S E T T I N G S
 
@@ -77,12 +78,15 @@ add_dependencies(ron botan-project)
 
 add_executable(test-uuid ron/test/uuid.cc)
 target_link_libraries(test-uuid ron)
+add_test(UUID test-uuid)
 
 add_executable(test-text ron/test/text.cc)
 target_link_libraries(test-text ron)
+add_test(TEXT test-text)
 
 add_executable(test-hash ron/test/hash.cc)
 target_link_libraries(test-hash ron botan)
+add_test(HASH test-hash)
 
 #  L I B R D T  ( H E A D E R  O N L Y )
 
@@ -93,6 +97,7 @@ target_include_directories(rdt INTERFACE rdt/)
 
 add_executable(test-lww rdt/test/lww.cc)
 target_link_libraries(test-lww ron rdt)
+add_test(LWW test-lww)
 
 #  S W A R M D B
 
@@ -108,6 +113,7 @@ target_link_libraries(swarmdb ron botan rocksdb pthread z bz2 snappy)
 add_executable(test-chains db/test/chains.cc)
 add_dependencies(test-chains swarmdb)
 target_link_libraries(test-chains swarmdb)
+add_test(CHAINS test-chains)
 
 #  S W A R M D B  C L I
 

@@ -15,8 +15,8 @@ string scan (const TextFrame& frame) {
         if (!ret.empty())
             ret.append(",");
         const Op& op = cur.op();
-        if (op.size()>2 && op.value(2).type()==ATOM::STRING) {
-            ret.append(cur.string(2));
+        if (op.size()>2 && op.atom(2).type()==ATOM::STRING) {
+            ret.append(cur.parse_string(2));
         } else {
             ret.append("_");
         }
@@ -31,11 +31,11 @@ int main (int argn, char** args) {
     vector<TextFrame> inputs;
     LWW lww;
 
-    AddOp(ab_builder, "1+src", "lww");
-    AddOp(ab_builder, "2+src", "1+src", "a", "A");
-    AddOp(ab_builder, "3+src", "2+src", "b", "B");
-    AddOp(c_builder, "3+xyz", "2+src", "c", "C");
-    AddOp(b2_builder, "4+xyz", "3+src", "b", "B2");
+    ab_builder.AppendNewOp(HEADER, Uuid{"1+src"}, Uuid{"lww"});
+    ab_builder.AppendNewOp(REDUCED, Uuid{"2+src"}, Uuid{"1+src"}, "a", "A");
+    ab_builder.AppendNewOp(REDUCED, Uuid{"3+src"}, Uuid{"2+src"}, "b", "B");
+    c_builder.AppendNewOp(RAW, Uuid{"3+xyz"}, Uuid{"2+src"}, "c", "C");
+    b2_builder.AppendNewOp(RAW, Uuid{"4+xyz"}, Uuid{"3+src"}, "b", "B2");
 
     inputs.push_back(ab_builder.frame());
     inputs.push_back(c_builder.frame());

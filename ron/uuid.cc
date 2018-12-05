@@ -9,62 +9,44 @@ const Word Word::NEVER{Word::MAX_VALUE};
 const Uuid Uuid::ZERO{};
 const Uuid Uuid::FATAL{Word::MAX_VALUE, Word::MAX_VALUE};
 
-std::string Value::str(const char* buf) const {
-    char pad[32];
-    int l;
-    fsize_t i0, i1;
-    switch (type()) {
-        case ATOM::INT:
-            l = sprintf(pad, "%" PRId64, int_value());
-            return std::string(pad, l);
-        case ATOM::FLOAT:
-            l = sprintf(pad, "%lf", float_value());
-            return std::string(pad, l);
-        case ATOM::STRING:
-            if (!buf) return std::string();
-            i0 = origin().get30(0);
-            i1 = origin().get30(1);
-            return std::string(buf + i0, i1);
-        case ATOM::BUF:
-            if (!buf) return std::string();
-            i0 = origin().get30(0);
-            i1 = origin().get30(1);
-            return std::string(buf + i0, buf + i0 + i1);
-        default:
-            return "";
-    }
-}
-
-int Word::write_base64(std::string& str) const {
+size_t Word::write_base64(char* to) const {
     uint64_t val = _64;
-    int len = 0;
-    uint64_t mask = Word::MAX_VALUE;
+    size_t len = 0;
     do {
-        str.push_back(BASE_PUNCT[0x3fU & (val >> OFFSET6[len])]);
+        to[len] = BASE_PUNCT[0x3fU & (val >> OFFSET6[len])];
         len++;
     } while (val & LOWER6[len]);
     return len;
 }
 
+bool Word::is_all_digits() const {
+    char letters[BASE64_WORD_LEN];
+    size_t len = write_base64(letters);
+    for (int i = 0; i < len; i++)
+        if (!std::isdigit(letters[i])) return false;
+    return true;
+}
+
 std::string Uuid::str() const {
-    std::string ret;
+    char ret[Word::BASE64_WORD_LEN * 2 + 2 + 1];
+    size_t len = 0;
     int vrt = variety();
     if (vrt) {
-        ret.push_back(BASE_PUNCT[vrt]);
-        ret.push_back('/');
+        ret[len++] = BASE_PUNCT[vrt];
+        ret[len++] = '/';
     }
-    words_.first.write_base64(ret);
+    len += words_.first.write_base64(ret + len);
     int schm = version();
     if (schm != 0 || !origin().is_zero()) {
-        ret.push_back(UUID_PUNCT[schm]);
-        words_.second.write_base64(ret);
+        ret[len++] = UUID_PUNCT[schm];
+        len += words_.second.write_base64(ret + len);
     }
-    return ret;
+    return std::string(ret, len);
 }
 
 Word Uuid::HybridTime(time_t seconds, long int nanos) {
     tm* t = gmtime(&seconds);
-    uint64_t ret = (1900 + t->tm_year - 2010);
+    uint64_t ret = 1900U + t->tm_year - 2010U;
     ret *= 12;
     ret += t->tm_mon;
     ret <<= 6;
@@ -78,16 +60,6 @@ Word Uuid::HybridTime(time_t seconds, long int nanos) {
     ret <<= 24;
     ret |= nanos / 100;
     return ret;
-}
-
-std::string unescape(const char* buf, fsize_t size) {
-    // TODO
-    return "";
-}
-
-std::string escape(const char* buf, fsize_t size) {
-    // TODO
-    return "";
 }
 
 const uint8_t ABC[128] = {

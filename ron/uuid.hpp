@@ -37,8 +37,8 @@ union Word {
         _64 <<= 30U;
         _64 |= length;
     }
-    Word(ATOM atype, frange_t range)
-        : _64{(uint64_t(atype) << 60U) | (uint64_t(range.first) << 30U) |
+    Word(FLAGS flags, frange_t range)
+        : _64{(uint64_t(flags) << 60U) | (uint64_t(range.first) << 30U) |
               range.second} {}
 
     explicit operator uint64_t() const { return _64; }
@@ -46,6 +46,7 @@ union Word {
     // payload bit size
     static constexpr uint PBS = 60;
     static constexpr int BASE64_BITS = 6;
+    static constexpr uint BASE64_WORD_LEN = PBS / BASE64_BITS;
     // max base64 char size
     static constexpr int MAX_BASE64_SIZE = PBS / BASE64_BITS;
     // flag bit size
@@ -77,7 +78,7 @@ union Word {
     }
     inline uint8_t flags() const { return _8[7] >> 4U; }
     inline void zero() { _64 = 0U; }
-    int write_base64(std::string& str) const;
+    size_t write_base64(char* to) const;
     inline uint64_t payload() const { return _64 & MAX_VALUE; }
     inline bool is_zero() const { return _64 == 0U; }
     inline Word inc() const { return Word{_64 + 1U}; }
@@ -91,6 +92,17 @@ union Word {
         return _64_hash_fn(_64);
     }
     inline uint64_t be() const { return htobe64(_64); }
+    std::string str() const {
+        char letters[BASE64_WORD_LEN];
+        return std::string(letters, write_base64(letters));
+    }
+    bool is_all_digits() const;
+    inline frange_t range() const {
+        return frange_t{(_64 >> 30U) & Word::MAX_VALUE_30,
+                        _64 & Word::MAX_VALUE_30};
+    }
+    inline int64_t integer() const { return (int64_t)_64; }
+    inline double number() const { return *(double*)&_64; }
 };
 
 enum half_t { VALUE = 0, ORIGIN = 1 };
@@ -114,18 +126,13 @@ struct Atom {
     }
     inline VARIANT variant() const { return VARIANT(ofb() >> 2U); }
     static Atom String(frange_t range) {
-        return Atom{0, Word{ATOM::STRING, range}};
+        return Atom{0, Word{STRING_ATOM, range}};
     }
     static Atom Float(frange_t range) {
-        return Atom{0, Word{ATOM::FLOAT, range}};
+        return Atom{0, Word{FLOAT_ATOM, range}};
     }
     static Atom Integer(frange_t range) {
-        return Atom{0, Word{ATOM::INT, range}};
-    }
-    inline frange_t range() const {
-        const uint64_t& w = words_.second._64;
-        return frange_t{(w >> 30U) & Word::MAX_VALUE_30,
-                        w & Word::MAX_VALUE_30};
+        return Atom{0, Word{INT_ATOM, range}};
     }
     inline ATOM type() const {
         uint8_t fb = ofb();
@@ -142,14 +149,17 @@ struct Uuid : public Atom {
     Uuid(char variety, const slice_t& value, char version,
          const slice_t& origin)
         : Uuid{Word{ABC[variety], value}, Word{ABC[version], origin}} {}
-    Uuid(const std::string& buf) : Uuid{slice_t{buf}} {}
-    Uuid(const char* buf)
+    explicit Uuid(const std::string& buf) : Uuid{slice_t{buf}} {}
+    explicit Uuid(const char* buf)
         : Uuid{slice_t{buf, static_cast<fsize_t>(strlen(buf))}} {}
     inline enum UUID version() const { return (enum UUID)(ofb() & 3U); }
     inline uint8_t variety() const { return vfb(); }
     inline Word& word(int a, int i) { return Atom::word(i); }
     std::string str() const;
     inline bool zero() const { return value() == 0; }
+    inline bool is_ambiguous() const {
+        return origin().is_zero() && value().is_all_digits();
+    }
     static Uuid Time(Word value, Word origin) {
         return Uuid{value, (uint64_t(origin) & Word::PAYLOAD_BITS) |
                                (uint64_t(UUID::TIME) << Word::PBS)};
@@ -178,32 +188,6 @@ struct Uuid : public Atom {
 };
 
 typedef std::pair<uint64_t, uint64_t> uint64pair;
-
-struct Value : public Atom {
-    inline static Word range_word(ATOM type, frange_t range) {
-        uint64_t rw = (uint64_t(type) << 60U) | (uint64_t(range.first) << 30U) |
-                      range.second;
-        Word w = Word{rw};
-        return w;
-    }
-    Value(Word value, ATOM type, frange_t range)
-        : Atom{value, range_word(type, range)} {}
-    Value() : Atom{} {}
-    int64_t int_value() const { return uint64_t(value()); }
-    const Uuid& uuid_value() const { return (const Uuid&)(*this); }
-    double float_value() const {
-        return (double)(uint64_t)value();  // FIXME
-    }
-    std::string string_value(const std::string& back_buf) const {
-        frange_t rng = range();
-        return back_buf.substr(rng.first, rng.second);
-    }
-    std::string str(const char* buf = nullptr) const;
-
-    static Value String(frange_t range) {
-        return Value{0, ATOM::STRING, range};
-    }
-};
 
 }  // namespace ron
 

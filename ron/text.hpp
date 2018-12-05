@@ -32,7 +32,7 @@ class TextFrame {
        public:
         explicit Cursor(const TextFrame& host)
             : frame_{host},
-              op_{RON::TEXT_OPEN, TERM::RAW},
+              op_{TERM::RAW},
               cs{0},
               off_{0},
               pos_{-1},
@@ -44,55 +44,128 @@ class TextFrame {
         bool Next();
         inline bool valid() const { return cs != 0; }
         const std::string& data() const { return frame_.data(); }
+        inline slice_t slice(frange_t range) const {
+            return slice_t{data().data() + range.first, range.second};
+        }
 
-        int64_t integer(fsize_t idx);
-        double number(fsize_t idx);
-        std::string string(fsize_t idx) const;
-        Uuid uuid(fsize_t idx);
+        int64_t parse_int(fsize_t idx);
+        double parse_float(fsize_t idx);
+        void parse(fsize_t idx) {
+            switch (op().type(idx)) {
+                case INT:
+                    parse_int(idx);
+                    break;
+                case FLOAT:
+                    parse_float(idx);
+                    break;
+                default:
+                    break;
+            }
+        }
+        std::string unescape(const slice_t& data) const;
+        inline std::string parse_string(fsize_t idx) const {
+            const Atom& atom = op().atom(idx);
+            assert(atom.type()==STRING);
+            return unescape(slice(atom.origin().range()));
+        }
+        inline Uuid parse_uuid (fsize_t idx) {
+            assert(op_.atom(idx).type()==UUID);
+            return op_.uuid(idx);
+        }
     };
 
     class Builder {
-        Op op_;
+        TERM term_;
+        Uuid prev_;
         std::string data_;
 
+        inline void Write(char c) { data_.push_back(c); }
+        inline void Write(slice_t data) { data_.append(data.buf_, data.size_); }
         void WriteInt(int64_t value);
         void WriteFloat(double value);
         void WriteUuid(const Uuid& value);
         void WriteString(const std::string& value);
 
        public:
-        Builder() : data_{}, op_{RON::TEXT_OPEN, TERM::RAW} {}
+        Builder() : term_{RAW}, prev_{Uuid::ZERO}, data_{} {}
 
-        void AddOp(const Op& op, const std::string& back_buf);
+        // copy-as-strings
+        void AppendOp(const Cursor& cur);
 
-        void AddAll(Cursor& cur) {
-            // TODO
-        }
-        void AddAll(const TextFrame& frame) {
-            Cursor cur = frame.cursor();
-            AddAll(cur);
-        }
+        // RON coding conversion (parsing, re-serialization)
+        template <typename Cursor2>
+        void AppendOp(const Cursor2& cur);
 
         const TextFrame frame() const { return TextFrame{data_}; }
 
         bool empty() const { return data_.empty(); }
+
+        void escape(std::string& escaped, const slice_t& unescaped);
+
+        //  B E A U T I F Y I N G   T E M P L A T E S
+
+        // terminates the op
+        void AppendAtoms() { Write(TERM_PUNCT[term_]); }
+
+        template <typename... Ts>
+        void AppendAtoms(int64_t value, Ts... args) {
+            Write(' ');
+            WriteInt(value);
+            AppendAtoms(args...);
+        }
+
+        template <typename... Ts>
+        void AppendAtoms(Uuid value, Ts... args) {
+            Write(value.is_ambiguous() ? ' ' : ATOM_PUNCT[UUID]);
+            WriteUuid(value);
+            AppendAtoms(args...);
+        }
+
+        template <typename... Ts>
+        void AppendAtoms(double value, Ts... args) {
+            Write(' ');
+            WriteFloat(value);
+            AppendAtoms(args...);
+        }
+
+        template <typename... Ts>
+        void AppendAtoms(const std::string& value, Ts... args) {
+            Write(ATOM_PUNCT[STRING]);
+            WriteString(value);
+            Write(ATOM_PUNCT[STRING]);
+            AppendAtoms(args...);
+        }
+
+        template <typename... Ts>
+        void AppendNewOp(TERM term, const Uuid& id, const Uuid& ref,
+                         Ts... args) {
+            term_ = term;
+            Write(SPEC_PUNCT[EVENT]);
+            WriteUuid(id);
+            Write(' ');
+            Write(SPEC_PUNCT[REF]);
+            WriteUuid(ref);
+            AppendAtoms(args...);
+        }
+
+        template <typename Cur>
+        void AppendAll(Cur& cur) {
+            if (!cur.valid()) return;
+            do {
+                AppendOp(cur);
+            } while (cur.Next());
+        }
+
+        template <typename Frame2>
+        void AppendFrame(const Frame2& frame) {
+            auto cur = frame.cursor();
+            AppendAll(cur);
+        }
     };
 
     Cursor cursor() const { return Cursor{*this}; }
 
     static constexpr char ESC = '\\';
-
-    static void unescape(std::string& to, const char* buf, fsize_t size);
-
-    static void escape(std::string& to, const char* buf, fsize_t size);
-
-    static inline void escape(std::string& to, const std::string& str) {
-        escape(to, str.data(), (fsize_t)str.size());
-    }
-
-    static inline void unescape(std::string& to, const std::string& str) {
-        unescape(to, str.data(), (fsize_t)str.size());
-    }
 };
 
 }  // namespace ron

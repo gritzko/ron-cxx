@@ -116,7 +116,7 @@ public:
     Status Merge(typename Frame::Builder& output) {
         if (empty()) return 0;
         do {
-            output.AddOp(op(), frame().data());
+            output.AppendOp(*cursors_[0]);
         } while (Next());
         return 0;
     }

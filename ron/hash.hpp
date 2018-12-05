@@ -101,7 +101,7 @@ void WriteOpHashable(const typename Frame::Cursor& cursor, SomeStream& stream,
             case STRING:
                 stream.WriteAtomRangeless(atom);
                 // TODO: slice_t, no alloc
-                stream.Write(cursor.string(i));
+                stream.Write(cursor.parse_string(i));
                 break;
         }
     }

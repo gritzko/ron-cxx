@@ -4,8 +4,10 @@ using namespace std;
 
 namespace ron {
 
-int64_t TextFrame::Cursor::integer(fsize_t idx) {
-    const slice_t range{frame_.data(), op_.atom(idx).range()};
+int64_t TextFrame::Cursor::parse_int(fsize_t idx) {
+    Atom& atom = op_.data()[idx];
+    assert(atom.type()==INT);
+    const slice_t range{frame_.data(), atom.origin().range()};
     const char* i = range.begin();
     bool neg = false;
     if (*i == '-') {
@@ -20,23 +22,27 @@ int64_t TextFrame::Cursor::integer(fsize_t idx) {
         ret += *i - '0';
         i++;
     }
-    return neg ? -ret : ret;
+    if (neg) ret = -ret;
+    atom[VALUE] = *(Word*)&ret;
+    return ret;
 }
 
-double TextFrame::Cursor::number(fsize_t idx) {
-    slice_t range{frame_.data(), op_.atom(idx).range()};
+double TextFrame::Cursor::parse_float(fsize_t idx) {
+    Atom& atom = op_.data()[idx];
+    assert(atom.type()==FLOAT);
+    slice_t range{frame_.data(), atom.origin().range()};
     char fs[32];  // FIXME size limits
     strncpy(fs, range.buf_, range.size_);
     fs[range.size_] = 0;
     double ret;
     sscanf(fs, "%lf", &ret);
+    atom[VALUE] = *(Word*)&ret;
     return ret;
 }
 
-std::string TextFrame::Cursor::string(fsize_t idx) const {
-    slice_t range{frame_.data(), op_.atom(idx).range()};
+std::string TextFrame::Cursor::unescape(const slice_t& data) const {
     std::string ret{};
-    for (auto c = range.begin(); c < range.end(); c++) {
+    for (auto c = data.begin(); c < data.end(); c++) {
         if (*c != ESC) {
             ret.push_back(*c);
             continue;
@@ -58,6 +64,8 @@ std::string TextFrame::Cursor::string(fsize_t idx) const {
             case 't':
                 unesc = '\t';
                 break;
+            default:
+                unesc = escape;
         }
         ret.push_back(unesc);
         c++;

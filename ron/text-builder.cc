@@ -3,38 +3,69 @@
 
 namespace ron {
 
-void TextFrame::Builder::AddOp(const Op& op, const std::string& back_buf) {
-    // TODO how do I know that the source frame is text, to avoid
-    // re-serialization?
-    data_.push_back(SPEC_PUNCT[SPEC::EVENT]);
+void TextFrame::Builder::AppendOp(const Cursor& cur) {
+    const Op& op = cur.op();
+    Write(SPEC_PUNCT[EVENT]);
     WriteUuid(op.id());
-    data_.push_back(SPEC_PUNCT[SPEC::REF]);
+    Write(' ');
+    Write(SPEC_PUNCT[REF]);
     WriteUuid(op.ref());
-    for (int i = 2; i < op.size(); i++) {
-        const Value& a = op.value(i);
-        switch (a.type()) {  // FIXME UUID is different
-            case ATOM::INT:
-                data_.push_back(ATOM_PUNCT[ATOM::INT]);
-                WriteInt(a.int_value());
+    for (fsize_t i = 2; i < op.size(); i++) {
+        const Atom& atom = op.atom(i);
+        Write(' ');
+        switch (atom.type()) {
+            case INT:
+                Write(cur.slice(atom.origin().range()));
                 break;
-            case ATOM::UUID:
-                data_.push_back(ATOM_PUNCT[ATOM::UUID]);
-                WriteUuid(a.uuid_value());
+            case UUID:
+                if (op.uuid(i).is_ambiguous()) Write(ATOM_PUNCT[UUID]);
+                WriteUuid(op.uuid(i));
                 break;
-            case ATOM::STRING:
-                data_.push_back(ATOM_PUNCT[ATOM::STRING]);
-                WriteString(a.string_value(back_buf));
-                data_.push_back(ATOM_PUNCT[ATOM::STRING]);
+            case STRING:
+                Write(ATOM_PUNCT[STRING]);
+                Write(cur.slice(atom.origin().range()));
+                Write(ATOM_PUNCT[STRING]);
                 break;
-            case ATOM::FLOAT:
-                data_.push_back(ATOM_PUNCT[ATOM::FLOAT]);
-                WriteFloat(a.float_value());
+            case FLOAT:
+                Write(cur.slice(atom.origin().range()));
                 break;
         }
     }
-    data_.push_back(' ');
-    data_.push_back(TERM_PUNCT[op.term_]);
-    data_.push_back('\n');
+    Write(' ');
+    Write(TERM_PUNCT[op.term_]);
+    Write('\n');
+}
+
+template <typename Cursor2>
+void TextFrame::Builder::AppendOp(const Cursor2& cur) {
+    const Op& op = cur.op();
+    Write(SPEC_PUNCT[EVENT]);
+    WriteUuid(op.id());
+    Write(SPEC_PUNCT[REF]);
+    WriteUuid(op.ref());
+    for (fsize_t i = 2; i < op.size(); i++) {
+        Write(' ');
+        switch (op.type(i)) {
+            case INT:
+                WriteInt(op.atom(i).value().integer());
+                break;
+            case UUID:
+                if (op.uuid(i).is_ambiguous()) Write(ATOM_PUNCT[UUID]);
+                WriteUuid(op.uuid(i));
+                break;
+            case STRING:
+                Write(ATOM_PUNCT[STRING]);
+                WriteString(cur.unescape(op.atom(i).origin().range()));
+                Write(ATOM_PUNCT[STRING]);
+                break;
+            case FLOAT:
+                WriteFloat(op.atom(i).value().number());
+                break;
+        }
+    }
+    Write(' ');
+    Write(TERM_PUNCT[op.term()]);
+    Write('\n');
 }
 
 void TextFrame::Builder::WriteInt(int64_t value) {
@@ -56,13 +87,13 @@ void TextFrame::Builder::WriteFloat(double value) {
 
 void TextFrame::Builder::WriteString(const std::string& value) {
     std::string esc;
-    TextFrame::escape(esc, value);
+    escape(esc, value);
     data_.append(esc);
 }
 
-void TextFrame::escape(std::string& to, const char* buf, fsize_t size) {
-    while (size) {
-        switch (*buf) {
+void TextFrame::Builder::escape(std::string& to, const slice_t& buf) {
+    for (char i : buf) {
+        switch (i) {
             case '\"':
                 to.push_back(ESC);
                 to.push_back('"');
@@ -96,11 +127,9 @@ void TextFrame::escape(std::string& to, const char* buf, fsize_t size) {
                 to.push_back('t');
                 break;
             default:
-                to.push_back(*buf);
+                to.push_back(i);
                 break;
         }
-        buf++;
-        size--;
     }
 }
 

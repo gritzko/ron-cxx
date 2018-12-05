@@ -32,19 +32,19 @@ public:
         auto scan = input.cursor();
         do {
             if (scan.op().size()<3) continue;
-            slice_t key{input.data(), scan.op().value_range(2)};
+            slice_t key{input.data(), scan.op().atom(2).origin().range()};
             last[key] = scan.op().id();
         } while (scan.Next());
 
         auto filter = input.cursor();
         if (filter.op().size()==2) { // header
-            output.AddOp(filter.op(), input.data());
+            output.AppendOp(filter);
         }
         do { // TODO maybe check op pattern here
             if (filter.op().size()<3) continue;
-            slice_t key{input.data(), filter.op().value_range(2)};
+            slice_t key{input.data(), filter.op().atom(2).origin().range()};
             if (last[key]==filter.op().id()) {
-                output.AddOp(filter.op(), input.data());
+                output.AppendOp(filter);
             }
         } while (filter.Next());
 

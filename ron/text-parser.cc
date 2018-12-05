@@ -44,10 +44,10 @@ bool TextFrame::Cursor::Next() {
         return false;
     }
 
-    slice_t body{frame_.data()};
-    const char* pb = data().data();
+    slice_t body{data()};
+    const char* pb = body.buf_;
     const char* p = pb + off_;
-    const char* pe = pb + data().size();
+    const char* pe = pb + body.size();
     const char* eof = pe;
 
     slice_t intb{p, 0};

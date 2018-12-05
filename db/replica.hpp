@@ -36,7 +36,7 @@ class Replica {
     CFHandle* chains_;
     std::unordered_map<Uuid, CFHandle*> objects_;
 
-    Replica() : db_{nullptr}, chains_{nullptr}, objects_{} {}
+    Replica() : db_{nullptr}, chains_{nullptr}, objects_{}, wo_{}, ro_{} {}
 
     struct Key {
         uint64_t bits_[2];
@@ -167,9 +167,14 @@ class Replica {
     //  U T I L
 
     rocksdb::ColumnFamilyOptions DataCFOptions() const;
-    rocksdb::ColumnFamilyOptions HistoryCFOptions() const;
+    rocksdb::ColumnFamilyOptions ChainCFOptions() const;
     rocksdb::ColumnFamilyOptions LogCFOptions() const;
 };
+
+inline slice_t slice(rocksdb::Slice s) {
+    return slice_t{s.data_, (fsize_t)s.size_};
+}
+inline slice_t slice(const rocksdb::Slice* s) { return slice(*s); }
 
 extern const Uuid HISTORY_CF_UUID;
 extern const Uuid LOG_CF_UUID;

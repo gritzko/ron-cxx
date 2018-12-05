@@ -1,4 +1,5 @@
 #include "db/replica.hpp"
+#include "db/merge_ops.hpp"
 
 using namespace rocksdb;
 using namespace std;
@@ -17,9 +18,10 @@ ColumnFamilyOptions Replica<Frame>::DataCFOptions() const {
     return cfo;
 }
 template <typename Frame>
-ColumnFamilyOptions Replica<Frame>::HistoryCFOptions() const {
+ColumnFamilyOptions Replica<Frame>::ChainCFOptions() const {
     ColumnFamilyOptions cfo{};
-    // cfo.merge_operator;
+    cfo.merge_operator =
+        shared_ptr<MergeOperator>{new ChainMergeOperator<Frame>()};
     return cfo;
 }
 template <typename Frame>
@@ -50,9 +52,10 @@ Status Replica<Frame>::Create(std::string home) {
     auto status = DB::Open(options, home, &db_);
     if (!status.ok()) return Status::DB_FAIL;
 
+    status =
+        db_->CreateColumnFamily(ChainCFOptions(), CHAIN_STORE.str(), &chains_);
+    if (!status.ok()) return Status::DB_FAIL;
     /*
-    status = db_->CreateColumnFamily(HistoryCFOptions(), HISTORY_CF_NAME,
-    &history_cf_); if (!status.ok()) return Status::DB_FAIL;
 
     status = db_->CreateColumnFamily(LogCFOptions(), LOG_CF_NAME, &log_cf_);
     if (!status.ok()) return Status::DB_FAIL;
@@ -75,9 +78,9 @@ Status Replica<Frame>::Open(std::string home) {
     typedef ColumnFamilyDescriptor CFD;
     vector<ColumnFamilyDescriptor> families;
     vector<ColumnFamilyHandle*> handles;
-    families.push_back(CFD{kDefaultColumnFamilyName, DataCFOptions()});
-    families.push_back(CFD{HISTORY_CF_NAME, HistoryCFOptions()});
-    families.push_back(CFD{LOG_CF_NAME, LogCFOptions()});
+    families.push_back(CFD{kDefaultColumnFamilyName, ChainCFOptions()});
+    //    families.push_back(CFD{HISTORY_CF_NAME, HistoryCFOptions()});
+    //    families.push_back(CFD{LOG_CF_NAME, LogCFOptions()});
 
     auto status = DB::Open(options, home, families, &handles, &db_);
     if (!status.ok()) {
@@ -99,11 +102,11 @@ Status Replica<Frame>::GC() {
 
 template <typename Frame>
 Status Replica<Frame>::Close() {
-    /*if (data_cf_) {
-        delete data_cf_;
-        data_cf_ = nullptr;
+    if (chains_) {
+        delete chains_;
+        chains_ = nullptr;
     }
-    if (history_cf_) {
+    /*if (history_cf_) {
         delete history_cf_;
         history_cf_ = nullptr;
     }

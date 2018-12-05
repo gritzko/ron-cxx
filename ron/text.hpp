@@ -17,7 +17,8 @@ class TextFrame {
     const std::string& data() const { return data_; }
 
     class Cursor {
-        const TextFrame& frame_;
+        // the cursor does not own the memory
+        slice_t data_;
         Op op_;
         int pos_;
         int off_;
@@ -28,8 +29,8 @@ class TextFrame {
         static constexpr int SPEC_SIZE = 2;  // open RON
 
        public:
-        explicit Cursor(const TextFrame& host)
-            : frame_{host},
+        explicit Cursor(const slice_t& data)
+            : data_{data},
               op_{TERM::RAW},
               cs{0},
               off_{0},
@@ -37,13 +38,13 @@ class TextFrame {
               prev_id_{} {
             Next();
         }
+        explicit Cursor(const TextFrame& host) : Cursor{host.data_} {}
         const Op& op() const { return op_; }
-        const TextFrame& frame() const { return frame_; }
         bool Next();
         inline bool valid() const { return cs != 0; }
-        const std::string& data() const { return frame_.data(); }
+        const slice_t data() const { return data_; }
         inline slice_t slice(frange_t range) const {
-            return slice_t{data().data() + range.first, range.second};
+            return data().slice(range);
         }
 
         int64_t parse_int(fsize_t idx);
@@ -72,7 +73,7 @@ class TextFrame {
         }
     };
 
-    class Builder {
+    struct Builder {
         TERM term_;
         Uuid prev_;
         std::string data_;
@@ -134,13 +135,13 @@ class TextFrame {
             AppendAtoms(args...);
         }
 
-        void AppendSpec (const Uuid& id, const Uuid& ref) {
-            bool seq_id = id==prev_.inc();
+        void AppendSpec(const Uuid& id, const Uuid& ref) {
+            bool seq_id = id == prev_.inc();
             if (!seq_id) {
                 Write(SPEC_PUNCT[EVENT]);
                 WriteUuid(id);
             }
-            if (ref!=prev_) {
+            if (ref != prev_) {
                 if (!seq_id) Write(' ');
                 Write(SPEC_PUNCT[REF]);
                 WriteUuid(ref);
@@ -177,5 +178,13 @@ class TextFrame {
 };
 
 }  // namespace ron
+
+namespace std {
+
+inline void swap(ron::TextFrame::Builder& builder, std::string& str) {
+    swap(builder.data_, str);
+}
+
+}  // namespace std
 
 #endif

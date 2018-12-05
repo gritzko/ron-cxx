@@ -84,6 +84,11 @@ struct slice_t {
         assert(end() >= sub.end());
         return frange_t{sub.buf_ - buf_, sub.size_};
     }
+
+    inline slice_t slice(frange_t range) const {
+        assert(size_ >= range.second + range.first);
+        return slice_t{buf_ + range.first, range.second};
+    }
 };
 
 }  // namespace ron

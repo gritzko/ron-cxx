@@ -7,7 +7,7 @@ namespace ron {
 int64_t TextFrame::Cursor::parse_int(fsize_t idx) {
     Atom& atom = op_.data()[idx];
     assert(atom.type() == INT);
-    const slice_t range{frame_.data(), atom.origin().range()};
+    const slice_t range = data().slice(atom.origin().range());
     const char* i = range.begin();
     bool neg = false;
     if (*i == '-') {
@@ -30,7 +30,7 @@ int64_t TextFrame::Cursor::parse_int(fsize_t idx) {
 double TextFrame::Cursor::parse_float(fsize_t idx) {
     Atom& atom = op_.data()[idx];
     assert(atom.type() == FLOAT);
-    slice_t range{frame_.data(), atom.origin().range()};
+    const slice_t range = data().slice(atom.origin().range());
     char fs[32];  // FIXME size limits
     strncpy(fs, range.buf_, range.size_);
     fs[range.size_] = 0;

@@ -1,6 +1,8 @@
-#ifndef CPP_MERGE_OPS_HPP
-#define CPP_MERGE_OPS_HPP
-#import <rocksdb/merge_operator.h>
+#ifndef RON_MERGE_OPS_HPP
+#define RON_MERGE_OPS_HPP
+
+#include <rocksdb/merge_operator.h>
+#include "db/replica.hpp"
 
 namespace ron {
 
@@ -12,32 +14,37 @@ class ChainMergeOperator : public rocksdb::MergeOperator {
     typedef typename Frame::Builder Builder;
     typedef typename Frame::Cursor Cursor;
 
-    virtual bool FullMergeV2(const MergeOperationInput& merge_in,
-                             MergeOperationOutput* merge_out) const {
+    bool FullMergeV2(const MergeOperationInput& merge_in,
+                     MergeOperationOutput* merge_out) const override {
         Builder out;
         if (merge_in.existing_value) {
-            out.addAll(Cursor{merge_in.existing_value});
+            Cursor ex{slice(merge_in.existing_value)};
+            out.AppendAll(ex);
         }
         for (auto s : merge_in.operand_list) {
-            out.addAll(Cursor{s});
+            Cursor nxt{slice(s)};
+            out.AppendAll(nxt);
         }
-        swap(out.data_, merge_out->new_value);
+        swap(out, merge_out->new_value);
         return true;
     }
 
-    virtual bool PartialMergeMulti(
-        const rocksdb::Slice& key,
-        const std::deque<rocksdb::Slice>& operand_list, std::string* new_value,
-        rocksdb::Logger* logger) const {
+    bool PartialMergeMulti(const rocksdb::Slice& key,
+                           const std::deque<rocksdb::Slice>& operand_list,
+                           std::string* new_value,
+                           rocksdb::Logger* logger) const override {
         Builder out;
         for (auto s : operand_list) {
-            out.addAll(Cursor{s});
+            Cursor nxt{slice(s)};
+            out.AppendAll(nxt);
         }
         swap(out, *new_value);
         return true;
     }
+
+    const char* Name() const override { return "chain"; }
 };
 
 };  // namespace ron
 
-#endif  // CPP_MERGE_OPS_HPP
+#endif  // RON_MERGE_OPS_HPP

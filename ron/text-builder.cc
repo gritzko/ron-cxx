@@ -5,11 +5,7 @@ namespace ron {
 
 void TextFrame::Builder::AppendOp(const Cursor& cur) {
     const Op& op = cur.op();
-    Write(SPEC_PUNCT[EVENT]);
-    WriteUuid(op.id());
-    Write(' ');
-    Write(SPEC_PUNCT[REF]);
-    WriteUuid(op.ref());
+    AppendSpec(op.id(), op.ref());
     for (fsize_t i = 2; i < op.size(); i++) {
         const Atom& atom = op.atom(i);
         Write(' ');
@@ -31,7 +27,6 @@ void TextFrame::Builder::AppendOp(const Cursor& cur) {
                 break;
         }
     }
-    Write(' ');
     Write(TERM_PUNCT[op.term_]);
     Write('\n');
 }
@@ -39,10 +34,7 @@ void TextFrame::Builder::AppendOp(const Cursor& cur) {
 template <typename Cursor2>
 void TextFrame::Builder::AppendOp(const Cursor2& cur) {
     const Op& op = cur.op();
-    Write(SPEC_PUNCT[EVENT]);
-    WriteUuid(op.id());
-    Write(SPEC_PUNCT[REF]);
-    WriteUuid(op.ref());
+    AppendSpec(op.id(), op.ref());
     for (fsize_t i = 2; i < op.size(); i++) {
         Write(' ');
         switch (op.type(i)) {
@@ -63,7 +55,6 @@ void TextFrame::Builder::AppendOp(const Cursor2& cur) {
                 break;
         }
     }
-    Write(' ');
     Write(TERM_PUNCT[op.term()]);
     Write('\n');
 }

@@ -121,6 +121,20 @@ void test_terms() {
     assert(i==5);
 }
 
+void test_defaults () {
+    Frame::Builder b;
+    Frame raw{"@12345+test :lww ;@1234500001+test :12345+test 'key' 'value' ;"};
+    b.AppendFrame(raw);
+    Frame nice = b.frame();
+    assert(nice.data()=="@12345+test :lww;\n 'key' 'value';\n");
+    Cursor nc = nice.cursor();
+    assert(nc.op().id()==Uuid{"12345+test"});
+    assert(nc.op().ref()==Uuid{"lww"});
+    nc.Next();
+    assert(nc.op().id()==Uuid{"1234500001+test"});
+    assert(nc.op().ref()==Uuid{"12345+test"});
+}
+
 int main (int argn, char** args) {
     test_basic_cycle();
     test_optional_chars();
@@ -128,5 +142,6 @@ int main (int argn, char** args) {
     test_size_limits();
     test_string_escapes();
     test_terms();
+    test_defaults();
     return 0;
 }

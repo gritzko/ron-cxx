@@ -6,14 +6,6 @@ using namespace std;
 typedef TextFrame Frame;
 typedef Replica<Frame> TFR;
 
-void test_defaults () {
-    Frame::Builder b;
-    Frame raw{"@12345+test :lww ;@123456+test :12345+test 'key' 'value' ;"};
-    b.AppendFrame(raw);
-    Frame nice = b.frame();
-    assert(nice.data()=="@12345+test :lww;\n'key' 'value';\n");
-}
-
 void test_db_chain_merge () {
     TFR db{};
     assert(db.Create("tmp_path"));
@@ -32,6 +24,5 @@ void test_db_chain_merge () {
 }
 
 int main (int argc, const char** args) {
-    test_defaults();
     test_db_chain_merge();
 }

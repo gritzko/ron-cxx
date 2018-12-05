@@ -134,15 +134,25 @@ class TextFrame {
             AppendAtoms(args...);
         }
 
+        void AppendSpec (const Uuid& id, const Uuid& ref) {
+            bool seq_id = id==prev_.inc();
+            if (!seq_id) {
+                Write(SPEC_PUNCT[EVENT]);
+                WriteUuid(id);
+            }
+            if (ref!=prev_) {
+                if (!seq_id) Write(' ');
+                Write(SPEC_PUNCT[REF]);
+                WriteUuid(ref);
+            }
+            prev_ = id;
+        }
+
         template <typename... Ts>
         void AppendNewOp(TERM term, const Uuid& id, const Uuid& ref,
                          Ts... args) {
             term_ = term;
-            Write(SPEC_PUNCT[EVENT]);
-            WriteUuid(id);
-            Write(' ');
-            Write(SPEC_PUNCT[REF]);
-            WriteUuid(ref);
+            AppendSpec(id, ref);
             AppendAtoms(args...);
         }
 

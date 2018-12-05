@@ -36,10 +36,10 @@ bool TextFrame::Cursor::Next () {
     }
 
     slice_t body{frame_.data()};
-    iter pb = data().data();
-    iter p = pb + off_;
-    iter pe = pb + data().size();
-    iter eof = pe;
+    const char* pb = data().data();
+    const char* p = pb + off_;
+    const char* pe = pb + data().size();
+    const char* eof = pe;
 
     slice_t intb{p,0};
     slice_t floatb{p,0};

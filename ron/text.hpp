@@ -27,8 +27,6 @@ class TextFrame {
         static constexpr int RON_FULL_STOP = 255;
         static constexpr int SPEC_SIZE = 2;  // open RON
 
-        typedef const char* iter;
-
        public:
         explicit Cursor(const TextFrame& host)
             : frame_{host},
@@ -65,11 +63,11 @@ class TextFrame {
         std::string unescape(const slice_t& data) const;
         inline std::string parse_string(fsize_t idx) const {
             const Atom& atom = op().atom(idx);
-            assert(atom.type()==STRING);
+            assert(atom.type() == STRING);
             return unescape(slice(atom.origin().range()));
         }
-        inline Uuid parse_uuid (fsize_t idx) {
-            assert(op_.atom(idx).type()==UUID);
+        inline Uuid parse_uuid(fsize_t idx) {
+            assert(op_.atom(idx).type() == UUID);
             return op_.uuid(idx);
         }
     };

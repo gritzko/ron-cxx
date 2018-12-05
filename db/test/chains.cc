@@ -23,8 +23,8 @@ void test_db_chain_merge () {
     db.db().Get(db.ro(), db.chains_, key, &merged);
     assert(merged=="@12345+test :lww;\n 'key' 'value';\n");
     string chain;
-    /*db.FindChain(Uuid{"12345+test"}, chain);
-    assert(chain==merged);*/
+    assert(db.FindChain(Uuid{"12345+test"}, chain));
+    assert(chain==merged);
     assert(db.Close());
     rmdir(path.c_str());
 }

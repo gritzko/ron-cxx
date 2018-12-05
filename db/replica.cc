@@ -143,23 +143,14 @@ Status Replica<Frame>::FindChain(Uuid op_id, std::string& chain) {
         delete i;
         return Status::NOT_FOUND;
     }
-    Uuid at{Key{i->value()}};
-    if (at.version() != DERIVED) {
-        delete i;
-        return Status::NOT_FOUND;
-    }
-    /*meta.clear();
-    prepend_id(op_id.derived(), meta);
-    meta.append(i->value().data_, i->value().size_);
-    i->Prev();
-    if (!i->Valid() || Uuid{Key{i->value()}}!=op_id) {
+    Uuid at{Key{i->key()}};
+    if (at.version() != TIME) {
         delete i;
         return Status::NOT_FOUND;
     }
     chain.clear();
-    prepend_id(op_id.derived(), chain);
+    //prepend_id(op_id.derived(), chain);
     chain.append(i->value().data_, i->value().size_);
-    */
     delete i;
     return Status::OK;
 }

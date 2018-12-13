@@ -134,6 +134,7 @@ add_custom_target(
         -i
         ${CMAKE_SOURCE_DIR}/ron/*.cc
         ${CMAKE_SOURCE_DIR}/ron/*.hpp
+        ${CMAKE_SOURCE_DIR}/rdt/*.hpp
         ${CMAKE_SOURCE_DIR}/db/*.cc
         ${CMAKE_SOURCE_DIR}/db/*.hpp
 )

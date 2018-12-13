@@ -6,7 +6,7 @@
 using namespace ron;
 using namespace std;
 
-typedef LastWriteWins<typename ron::TextFrame> LWW;
+typedef LastWriteWinsRDT<typename ron::TextFrame> LWW;
 
 string scan (const TextFrame& frame) {
     string ret;

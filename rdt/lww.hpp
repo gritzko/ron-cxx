@@ -3,23 +3,20 @@
 
 #include <unordered_map>
 #include "rdt/merge.hpp"
-#include "rdt/rdt.hpp"
 #include "ron/status.hpp"
 
 namespace ron {
 
-template<class Frame>
-class LastWriteWins : public ReplicatedDataType<Frame> {
-    static bool less_than (const Op& a, const Op& b) {
-        return a.id() < b.id();
-    }
+    template<class Frame>
+    class LastWriteWinsRDT {
+        static bool less_than(const Op &a, const Op &b) { return a.id() < b.id(); }
     typedef MergeCursor<Frame, less_than> merger;
     typedef typename Frame::Builder Builder;
     typedef typename Frame::Cursor Cursor;
 
-public:
-
-    Status Merge(typename Frame::Builder& output, const std::vector<Cursor>& inputs) {
+    public:
+        Status Merge(typename Frame::Builder &output,
+                     const std::vector<Cursor> &inputs) {
         merger m{inputs};
         m.Merge(output);
         return Status::OK;
@@ -32,31 +29,41 @@ public:
         std::unordered_map<slice_t, Uuid> last;
         auto scan = input.cursor();
         do {
-            if (scan.op().size()<3) continue;
+            if (scan.op().size() < 3) continue;
             slice_t key{input.data(), scan.op().atom(2).origin().range()};
             last[key] = scan.op().id();
         } while (scan.Next());
 
         auto filter = input.cursor();
-        if (filter.op().size()==2) { // header
+        if (filter.op().size() == 2) {  // header
             output.AppendOp(filter);
         }
-        do { // TODO maybe check op pattern here
-            if (filter.op().size()<3) continue;
+        do {  // TODO maybe check op pattern here
+            if (filter.op().size() < 3) continue;
             slice_t key{input.data(), filter.op().atom(2).origin().range()};
-            if (last[key]==filter.op().id()) {
+            if (last[key] == filter.op().id()) {
                 output.AppendOp(filter);
             }
         } while (filter.Next());
 
         return Status::OK;
     }
+
+        virtual Status MergeGC(Builder &output,
+                               const typename Frame::Cursors &inputs) {
+            Builder unclean;
+            Status ok = Merge(unclean, inputs);
+            if (!ok) return ok;
+            Frame uc = unclean.frame();
+            ok = GC(output, uc);
+            return ok;
+        }
 };
 
 static constexpr uint64_t LWW_ID{881557636825219072UL};
-static constexpr int LWW_INT{881557636825219072UL>>30};
-static const Uuid LWW_TYPE_ID{LWW_ID,0};
+    static constexpr int LWW_INT{881557636825219072UL >> 30};
+    static const Uuid LWW_TYPE_ID{LWW_ID, 0};
 
-}
+}  // namespace ron
 
 #endif

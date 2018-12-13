@@ -176,6 +176,8 @@ class TextFrame {
     Cursor cursor() const { return Cursor{*this}; }
 
     static constexpr char ESC = '\\';
+
+    typedef std::vector<Cursor> Cursors;
 };
 
 }  // namespace ron

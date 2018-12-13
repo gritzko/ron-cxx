@@ -1,36 +1,57 @@
 #ifndef rdt_rdt_hpp
 #define rdt_rdt_hpp
 
+#include "rdt/lww.hpp"
 #include "ron/op.hpp"
 #include "ron/status.hpp"
 
 namespace ron {
 
-template<class Frame>
-class ReplicatedDataType {
+    enum RDT : uint8_t {
+        ACK = 0, CHAIN = 1, LWW = 2, RGA = 3
+    };
 
-public:
+    template<class Frame>
+    class MasterRDT {
+        LastWriteWinsRDT <Frame> lww_;
 
+    public:
     typedef typename Frame::Builder Builder;
     typedef typename Frame::Cursor Cursor;
     typedef std::vector<Frame> Frames;
     typedef std::vector<Cursor> Cursors;
 
-    virtual Status Merge(Builder& output, const std::vector<Cursor>& inputs) = 0;
+        MasterRDT() : lww_{} {}
 
-    virtual Status GC(Builder& output, const Frame& input) = 0;
+        virtual Status Merge(Builder &output, RDT reducer,
+                             const std::vector<Cursor> &inputs) {
+            switch (reducer) {
+                case LWW:
+                    return lww_.Merge(output, inputs);
+                default:
+                    return Status::NOT_IMPLEMENTED;
+            }
+        }
 
-    virtual Status MergeGC(Builder& output, const Cursors& inputs) {
-        Builder unclean;
-        Status ok = Merge(unclean, inputs);
-        if (!ok) return ok;
-        Frame uc = unclean.frame();
-        ok = GC(output, uc);
-        return ok;
+        virtual Status GC(Builder &output, RDT reducer, const Frame &input) {
+            switch (reducer) {
+                case LWW:
+                    return lww_.GC(output, input);
+                default:
+                    return Status::NOT_IMPLEMENTED;
+            }
     }
 
-};
+        virtual Status MergeGC(Builder &output, RDT reducer, const Frame &input) {
+            switch (reducer) {
+                case LWW:
+                    return lww_.MergeGC(output, input);
+                default:
+                    return Status::NOT_IMPLEMENTED;
+            }
+        }
+    };
 
-}
+}  // namespace ron
 
 #endif

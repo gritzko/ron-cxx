@@ -46,16 +46,25 @@ void test_serialization () {
     string not_a_hash = okbase;
     not_a_hash[SHA2::BASE64_SIZE-1] = '1';
     assert(!SHA2::valid(not_a_hash));
+    SHA2 op2;
+    assert(SHA2::ParseBase64(op2, okbase));
+    assert(op2 == OP_HASH);
 }
 
 void test_partial_match () {
-    SHA2 a = SHA2::hex("97fa0525e009867adffe5e2c71f93057dfb8293c25c27292cd4caf230a0e39ec");
-    SHA2 a2 = SHA2::hex("97fa");
+    SHA2 a, a2;
+    assert(SHA2::ParseHex(a, "97fa0525e009867adffe5e2c71f93057dfb8293c25c27292cd4caf230a0e39ec"));
+    assert(SHA2::ParseHex(a2, "97fa"));
     assert(a.matches(a2));
     assert(a!=a2);
-    assert(SHA2::hex("97fA0525E").matches(a));
-    assert(SHA2::hex("97fa0").matches(a));
-    assert(!SHA2::hex("97fa1").matches(a));
+    SHA2 caps, half, badhalf, nothex;
+    assert(SHA2::ParseHex(caps, "97fA0525E"));
+    assert(SHA2::ParseHex(half, "97fa0"));
+    assert(SHA2::ParseHex(badhalf, "97fa1"));
+    assert(caps.matches(a));
+    assert(half.matches(a));
+    assert(!badhalf.matches(a));
+    assert(!SHA2::ParseHex(nothex, "z"));
 }
 
 int main (int argn, char** args) {

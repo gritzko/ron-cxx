@@ -14,14 +14,14 @@ namespace ron {
 struct SHA2 {
     static constexpr size_t SIZE = 32;
     // defined length, 0 to SIZE
-    int defined_size_;
+    uint32_t known_bits_;
     uint8_t bits_[SIZE];
     static constexpr size_t HEX_SIZE = SIZE * 8 / 4;
     static constexpr size_t BASE64_SIZE = SIZE * 8 / 6 + 1;
     SHA2()
         : bits_{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-          defined_size_{0} {}
+          known_bits_{0} {}
     // my motivation for using Base64: Base64 is less clutter.
     // noone is going to spell hashes on the phone anyway.
     SHA2(slice_t base64) {  // TODO sizes!
@@ -35,14 +35,14 @@ struct SHA2 {
         return (ABC64[base64[BASE64_SIZE - 1]] & 3) == 0;
     }
 
-    inline bool defined() const { return defined_size_ > 0; }
+    inline bool defined() const { return known_bits_ > 0; }
     bool operator==(const SHA2& b) const {
         return memcmp(bits_, b.bits_, SIZE) == 0;
     }
 
     bool operator!=(const SHA2 &b) const { return !(*this == b); }
     inline bool matches(const SHA2& b) const {
-        int bits = std::min(defined_size_, b.defined_size_);
+        int bits = std::min(known_bits_, b.known_bits_);
         int bytes = bits >> 3;
         if (memcmp(bits_, b.bits_, size_t(bytes)) != 0) return false;
         int tail = bits & 7;
@@ -58,12 +58,17 @@ struct SHA2 {
         encode<4, HEX_PUNCT>(bits_, SIZE, data);
         return std::string{data, HEX_SIZE};
     }
-    static SHA2 hex(const std::string& hash) {
+
+    static bool ParseHex(SHA2 &ret, const std::string &hash) {
         assert(hash.size() <= HEX_SIZE);
-        SHA2 ret;
-        decode<4, ABC16>(hash.data(), hash.size(), ret.bits_);
-        ret.defined_size_ = hash.size() << 2;
-        return ret;
+        ret.known_bits_ = uint32_t(hash.size()) << 2;
+        return decode<4, ABC16>(hash.data(), hash.size(), ret.bits_);
+    }
+
+    static bool ParseBase64(SHA2 &ret, const std::string &hash) {
+        assert(hash.size() <= BASE64_SIZE);
+        ret.known_bits_ = uint32_t(hash.size()) * 6;
+        return decode<6, ABC64>(hash.data(), hash.size(), ret.bits_);
     }
     std::string base64() const {
         char data[BASE64_SIZE];

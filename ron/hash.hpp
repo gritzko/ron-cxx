@@ -14,14 +14,14 @@ namespace ron {
 struct SHA2 {
     static constexpr size_t SIZE = 32;
     // defined length, 0 to SIZE
-    size_t size_;
+    int defined_size_;
     uint8_t bits_[SIZE];
     static constexpr size_t HEX_SIZE = SIZE * 8 / 4;
     static constexpr size_t BASE64_SIZE = SIZE * 8 / 6 + 1;
     SHA2()
         : bits_{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-          size_{0} {}
+          defined_size_{0} {}
     // my motivation for using Base64: Base64 is less clutter.
     // noone is going to spell hashes on the phone anyway.
     SHA2(slice_t base64) {  // TODO sizes!
@@ -34,13 +34,35 @@ struct SHA2 {
             if (ABC64[base64[i]] < 0) return false;
         return (ABC64[base64[BASE64_SIZE - 1]] & 3) == 0;
     }
+    inline bool defined() const { return defined_size_>0; }
     bool operator==(const SHA2& b) const {
-        return memcmp(bits_, b.bits_, std::min(size_, b.size_)) == 0;
+        return memcmp(bits_, b.bits_, SIZE) == 0;
+    }
+    bool operator!=(const SHA2& b) const { return !(*this==b); }
+    inline bool matches(const SHA2& b) const {
+        int bits = std::min(defined_size_, b.defined_size_);
+        int bytes = bits>>3;
+        if (memcmp(bits_, b.bits_, size_t(bytes)) != 0)
+            return false;
+        int tail = bits&7;
+        if (tail) {
+            uint8_t mine = bits_[bytes] >> (8 - tail);
+            uint8_t theirs = b.bits_[bytes] >> (8 - tail);
+            return mine==theirs;
+        }
+        return true;
     }
     std::string hex() const {
         char data[HEX_SIZE];
         encode<4, HEX_PUNCT>(bits_, SIZE, data);
         return std::string{data, HEX_SIZE};
+    }
+    static SHA2 hex(const std::string& hash) {
+        assert(hash.size()<=HEX_SIZE);
+        SHA2 ret;
+        decode<4, ABC16>(hash.data(), hash.size(), ret.bits_);
+        ret.defined_size_ = hash.size()<<2;
+        return ret;
     }
     std::string base64() const {
         char data[BASE64_SIZE];
@@ -64,7 +86,7 @@ struct Stream {
         return Write(slice_t{(char*)&tmp, sizeof(uint64pair)});
     }
     inline Status WriteHash(const SHA2& data) {
-        return Write(slice_t{(char*)&data, sizeof(data)});
+        return Write(slice_t{(char*)data.bits_, SHA2::SIZE});
     }
     inline Status WriteUuid(const Uuid& uuid) { return WriteAtom(uuid); }
     inline Status WriteAtomRangeless(const Atom& atom) {

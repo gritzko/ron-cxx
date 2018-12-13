@@ -55,6 +55,7 @@ void init();
 extern const uint8_t ABC[128];
 extern const uint64_t IS_BASE[2];
 extern const int8_t ABC64[256];
+extern const int8_t ABC16[256];
 
 enum ACID : uint8_t {
     NONE = 0,  // single-writer, strictly "state + linear op log", like MySQL

@@ -41,6 +41,9 @@ bool decode(const char* coded, uint length, uint8_t* bytes) {
             bytes++;
         }
     }
+    if (bc) {
+        *bytes = uint8_t((bits << (8-bc)) & 0xff);
+    }
     return true;
 }
 

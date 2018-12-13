@@ -48,7 +48,17 @@ void test_serialization () {
     assert(!SHA2::valid(not_a_hash));
 }
 
+void test_partial_match () {
+    SHA2 a = SHA2::hex("97fa0525e009867adffe5e2c71f93057dfb8293c25c27292cd4caf230a0e39ec");
+    SHA2 a2 = SHA2::hex("97fa");
+    assert(a.matches(a2));
+    assert(a!=a2);
+    assert(SHA2::hex("97fa0").matches(a));
+    assert(!SHA2::hex("97fa1").matches(a));
+}
+
 int main (int argn, char** args) {
     test_serialization();
+    test_partial_match();
     return 0;
 }

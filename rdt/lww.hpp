@@ -15,10 +15,11 @@ class LastWriteWins : public ReplicatedDataType<Frame> {
     }
     typedef MergeCursor<Frame, less_than> merger;
     typedef typename Frame::Builder Builder;
-    typedef std::vector<Frame> Frames;
+    typedef typename Frame::Cursor Cursor;
+
 public:
 
-    Status Merge(typename Frame::Builder& output, const Frames& inputs) {
+    Status Merge(typename Frame::Builder& output, const std::vector<Cursor>& inputs) {
         merger m{inputs};
         m.Merge(output);
         return Status::OK;

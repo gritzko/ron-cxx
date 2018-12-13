@@ -9,6 +9,8 @@ using namespace std;
 
 int main (int argn, char** args) {
 
+    //cout << Uuid{"sha2"}.value()._64 << '\n';
+
     static_assert(sizeof(Word)==8, "no mishup");
     static_assert(sizeof(Uuid)==16, "...");
 

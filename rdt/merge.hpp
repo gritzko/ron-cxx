@@ -12,8 +12,9 @@ typedef bool (*less_t)(const Op& a, const Op& b);
 template<typename Frame, less_t less_fn>
 class MergeCursor {
 
-    typedef std::vector<Frame> Frames;
     typedef typename Frame::Cursor Cursor;
+    typedef std::vector<Frame> Frames;
+    typedef std::vector<Cursor> Cursors;
 
     std::vector<typename Frame::Cursor*> cursors_;
 
@@ -24,8 +25,17 @@ public:
             Add(inputs[i]);
         }
     }
+    MergeCursor (const Cursors& inputs) : MergeCursor{} {
+        for(int i=0; i<inputs.size(); i++) {
+            Add(inputs[i]);
+        }
+    }
     // add a frame to merge
     void Add (const Frame& input) {
+        cursors_.push_back(new Cursor{input});
+        pop((int)cursors_.size()-1);
+    }
+    void Add (const Cursor& input) {
         cursors_.push_back(new Cursor{input});
         pop((int)cursors_.size()-1);
     }

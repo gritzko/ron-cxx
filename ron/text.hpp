@@ -46,7 +46,8 @@ class TextFrame {
         inline slice_t slice(frange_t range) const {
             return data().slice(range);
         }
-
+        inline const Uuid& id() const { return op_.id(); }
+        inline const Uuid& ref() const { return op_.ref(); }
         int64_t parse_int(fsize_t idx);
         double parse_float(fsize_t idx);
         void parse(fsize_t idx) {
@@ -85,6 +86,8 @@ class TextFrame {
         void WriteUuid(const Uuid& value);
         void WriteString(const std::string& value);
 
+        void escape(std::string& escaped, const slice_t& unescaped);
+
        public:
         Builder() : term_{RAW}, prev_{Uuid::ZERO}, data_{} {}
 
@@ -98,8 +101,6 @@ class TextFrame {
         const TextFrame frame() const { return TextFrame{data_}; }
 
         bool empty() const { return data_.empty(); }
-
-        void escape(std::string& escaped, const slice_t& unescaped);
 
         //  B E A U T I F Y I N G   T E M P L A T E S
 

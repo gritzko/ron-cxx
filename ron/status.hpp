@@ -21,6 +21,10 @@ struct Status {
     static const Status NOT_FOUND;
     static const Status BAD_STATE;
     static const Status DB_FAIL;
+
+    static const Status CHAINBREAK;
+    static const Status HASHBREAK;
+    static const Status TREEBREAK;
 };
 
 }  // namespace ron

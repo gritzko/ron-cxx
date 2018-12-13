@@ -106,6 +106,7 @@ union Word {
 };
 
 enum half_t { VALUE = 0, ORIGIN = 1 };
+const Word NEVER{Word::MAX_VALUE};
 
 struct Atom {
     std::pair<Word, Word> words_;

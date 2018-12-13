@@ -34,21 +34,22 @@ struct SHA2 {
             if (ABC64[base64[i]] < 0) return false;
         return (ABC64[base64[BASE64_SIZE - 1]] & 3) == 0;
     }
-    inline bool defined() const { return defined_size_>0; }
+
+    inline bool defined() const { return defined_size_ > 0; }
     bool operator==(const SHA2& b) const {
         return memcmp(bits_, b.bits_, SIZE) == 0;
     }
-    bool operator!=(const SHA2& b) const { return !(*this==b); }
+
+    bool operator!=(const SHA2 &b) const { return !(*this == b); }
     inline bool matches(const SHA2& b) const {
         int bits = std::min(defined_size_, b.defined_size_);
-        int bytes = bits>>3;
-        if (memcmp(bits_, b.bits_, size_t(bytes)) != 0)
-            return false;
-        int tail = bits&7;
+        int bytes = bits >> 3;
+        if (memcmp(bits_, b.bits_, size_t(bytes)) != 0) return false;
+        int tail = bits & 7;
         if (tail) {
             uint8_t mine = bits_[bytes] >> (8 - tail);
             uint8_t theirs = b.bits_[bytes] >> (8 - tail);
-            return mine==theirs;
+            return mine == theirs;
         }
         return true;
     }
@@ -58,10 +59,10 @@ struct SHA2 {
         return std::string{data, HEX_SIZE};
     }
     static SHA2 hex(const std::string& hash) {
-        assert(hash.size()<=HEX_SIZE);
+        assert(hash.size() <= HEX_SIZE);
         SHA2 ret;
         decode<4, ABC16>(hash.data(), hash.size(), ret.bits_);
-        ret.defined_size_ = hash.size()<<2;
+        ret.defined_size_ = hash.size() << 2;
         return ret;
     }
     std::string base64() const {

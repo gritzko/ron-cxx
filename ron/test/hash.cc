@@ -53,6 +53,7 @@ void test_partial_match () {
     SHA2 a2 = SHA2::hex("97fa");
     assert(a.matches(a2));
     assert(a!=a2);
+    assert(SHA2::hex("97fA0525E").matches(a));
     assert(SHA2::hex("97fa0").matches(a));
     assert(!SHA2::hex("97fa1").matches(a));
 }

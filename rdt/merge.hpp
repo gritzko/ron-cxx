@@ -9,7 +9,7 @@ namespace ron {
 typedef bool (*less_t)(const Op& a, const Op& b);
 
 // asc-sorting iterator heap
-    template<typename Frame, less_t less_fn>
+template <typename Frame, less_t less_fn>
 class MergeCursor {
     typedef typename Frame::Cursor Cursor;
     typedef std::vector<Frame> Frames;
@@ -17,29 +17,29 @@ class MergeCursor {
 
     std::vector<typename Frame::Cursor*> cursors_;
 
-public:
+   public:
     MergeCursor() : cursors_{} {}
 
-    MergeCursor(const Frames &inputs) : MergeCursor{} {
+    MergeCursor(const Frames& inputs) : MergeCursor{} {
         for (int i = 0; i < inputs.size(); i++) {
             Add(inputs[i]);
         }
     }
 
-    MergeCursor(const Cursors &inputs) : MergeCursor{} {
+    MergeCursor(const Cursors& inputs) : MergeCursor{} {
         for (int i = 0; i < inputs.size(); i++) {
             Add(inputs[i]);
         }
     }
     // add a frame to merge
-    void Add(const Frame &input) {
+    void Add(const Frame& input) {
         cursors_.push_back(new Cursor{input});
-        pop((int) cursors_.size() - 1);
+        pop((int)cursors_.size() - 1);
     }
 
-    void Add(const Cursor &input) {
+    void Add(const Cursor& input) {
         cursors_.push_back(new Cursor{input});
-        pop((int) cursors_.size() - 1);
+        pop((int)cursors_.size() - 1);
     }
     // no more ops
     bool empty() const { return size() == 0; }
@@ -47,16 +47,16 @@ public:
     const Op& op() const { return cursors_[0]->op(); }
     const Frame& frame() const { return cursors_[0]->frame(); }
 
-private:
+   private:
     static inline int up(int idx) { return ((idx + 1) >> 1) - 1; }
 
     static inline int left(int idx) { return ((idx + 1) << 1) - 1; }
 
     static inline int right(int idx) { return (idx + 1) << 1; }
 
-    inline const Op &op(int idx) const { return cursors_[idx]->op(); }
+    inline const Op& op(int idx) const { return cursors_[idx]->op(); }
 
-    inline int size() const { return (int) cursors_.size(); }
+    inline int size() const { return (int)cursors_.size(); }
 
     inline bool less_than(int a, int b) const { return less_fn(op(a), op(b)); }
 
@@ -104,12 +104,13 @@ private:
         return size() > 0;
     }
 
-public:
+   public:
     // advances to the next op
     // @return non-empty
     bool Next() {
         Uuid id = op().id();
-        while (step() && op().id() == id);  // idempotency
+        while (step() && op().id() == id)
+            ;  // idempotency
         return size() > 0;
     }
     // returns the data buffer for the current cursor/op

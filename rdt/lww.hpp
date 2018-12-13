@@ -7,16 +7,16 @@
 
 namespace ron {
 
-    template<class Frame>
-    class LastWriteWinsRDT {
-        static bool less_than(const Op &a, const Op &b) { return a.id() < b.id(); }
+template <class Frame>
+class LastWriteWinsRDT {
+    static bool less_than(const Op &a, const Op &b) { return a.id() < b.id(); }
     typedef MergeCursor<Frame, less_than> merger;
     typedef typename Frame::Builder Builder;
     typedef typename Frame::Cursor Cursor;
 
-    public:
-        Status Merge(typename Frame::Builder &output,
-                     const std::vector<Cursor> &inputs) {
+   public:
+    Status Merge(typename Frame::Builder &output,
+                 const std::vector<Cursor> &inputs) {
         merger m{inputs};
         m.Merge(output);
         return Status::OK;
@@ -25,7 +25,7 @@ namespace ron {
     // TODO this impl will not match escaped keys, e.g. '\006bey' for 'key'.
     // Either way, the latest/winning value will go first.
     // May use Frame::unescape() and/or Op unesc flag.
-    Status GC(Builder& output, const Frame& input) {
+    Status GC(Builder &output, const Frame &input) {
         std::unordered_map<slice_t, Uuid> last;
         auto scan = input.cursor();
         do {
@@ -49,20 +49,20 @@ namespace ron {
         return Status::OK;
     }
 
-        virtual Status MergeGC(Builder &output,
-                               const typename Frame::Cursors &inputs) {
-            Builder unclean;
-            Status ok = Merge(unclean, inputs);
-            if (!ok) return ok;
-            Frame uc = unclean.frame();
-            ok = GC(output, uc);
-            return ok;
-        }
+    virtual Status MergeGC(Builder &output,
+                           const typename Frame::Cursors &inputs) {
+        Builder unclean;
+        Status ok = Merge(unclean, inputs);
+        if (!ok) return ok;
+        Frame uc = unclean.frame();
+        ok = GC(output, uc);
+        return ok;
+    }
 };
 
 static constexpr uint64_t LWW_ID{881557636825219072UL};
-    static constexpr int LWW_INT{881557636825219072UL >> 30};
-    static const Uuid LWW_TYPE_ID{LWW_ID, 0};
+static constexpr int LWW_INT{881557636825219072UL >> 30};
+static const Uuid LWW_TYPE_ID{LWW_ID, 0};
 
 }  // namespace ron
 

@@ -48,6 +48,7 @@ class TextFrame {
         }
         inline const Uuid& id() const { return op_.id(); }
         inline const Uuid& ref() const { return op_.ref(); }
+        inline ATOM type(fsize_t idx) const { return op_.type(idx); }
         int64_t parse_int(fsize_t idx);
         double parse_float(fsize_t idx);
         void parse(fsize_t idx) {

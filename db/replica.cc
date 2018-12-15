@@ -8,6 +8,10 @@ namespace ron {
 
 const Uuid CHAIN_STORE{};
 const Uuid TRUNK_STORE{1024260140364201984, Word::PAYLOAD_BITS};
+const Uuid SHA2_UUID{1003339682156642304UL, 0};
+const Uuid OBJ_UUID{929632683238096896UL, 0};
+const Uuid PREV_UUID{952132676872044544UL, 0};
+const Uuid RDT_UUID{984282809185075200UL, 0};
 
 //  U T I L
 
@@ -34,6 +38,54 @@ const Uuid HISTORY_CF_UUID = Uuid{805545704900788224UL, 0};
 const string HISTORY_CF_NAME = HISTORY_CF_UUID.str();
 const Uuid LOG_CF_UUID = Uuid{879235468267356160UL, 0};
 const string LOG_CF_NAME = LOG_CF_UUID.str();
+
+//  C H A I N S
+
+template <typename Frame>
+Status Replica<Frame>::ChainMeta::NextOp(Cursor& cur) {
+    SHA2 need_hash{};
+    // ABSORB OR COMPARE
+    while (cur.valid() && cur.id().version() == NAME) {  // eat annos
+        if (cur.id() == SHA2_UUID && cur.type(2) == ATOM::STRING) {
+            need_hash = SHA2{cur.parse_string(2)};  // FIXME check
+        } else if (cur.id() == OBJ_UUID && cur.type(2) == ATOM::UUID) {
+            const Uuid& need_object = cur.parse_uuid(2);
+            if (object_.zero()) {
+                object_ = need_object;
+            } else if (cur.parse_uuid(2) != object_) {
+                return Status::TREEBREAK;
+            }
+        } else if (cur.id() == PREV_UUID && cur.type(2) == ATOM::UUID) {
+            const Uuid& need_prev = cur.parse_uuid(2);
+            if (!at_.zero() && need_prev != at_) return Status::CHAINBREAK;
+        }
+        cur.Next();
+    }
+    if (!cur.valid()) return Status::OK;
+
+    const Uuid& ref = cur.ref();
+    const Uuid& id = cur.id();
+
+    if (ref.version() == NAME) {
+        if (!at_.zero()) return Status::CHAINBREAK;
+        object_ = id;
+    } else if (ref != at_) {
+        return Status::BAD_STATE;
+    }
+
+    if (id.origin() != at_.origin()) return Status::CHAINBREAK;
+
+    SHA2 next_hash;  // = SHA2{hash_, hash_, cur};
+    hash_op<Frame>(cur, next_hash, hash_, hash_);
+    if (need_hash != next_hash)  // length-0 hash equals anything
+        return Status::HASHBREAK;
+
+    at_ = id;
+    hash_ = next_hash;
+    cur.Next();
+
+    return Status::OK;
+}
 
 //  L I F E C Y C L E
 
@@ -136,23 +188,24 @@ Replica<Frame>::~Replica() {
 template <class Frame>
 Status Replica<Frame>::FindChain(Uuid op_id, std::string& chain) {
     rocksdb::ReadOptions ro;
-    Key key{op_id};
+    Key key{op_id, RDT::CHAIN};
     auto i = db_->NewIterator(ro, chains_);
     i->SeekForPrev(key);
     if (!i->Valid()) {
         delete i;
         return Status::NOT_FOUND;
     }
-    Uuid at{Key{i->key()}};
+    Uuid at = Key{i->key()}.id();
     if (at.version() != TIME) {
         delete i;
         return Status::NOT_FOUND;
     }
     chain.clear();
-    //prepend_id(op_id.derived(), chain);
+    // prepend_id(op_id.derived(), chain);
     chain.append(i->value().data_, i->value().size_);
     delete i;
     return Status::OK;
+    // can parallelize this if a yarn is pinned to a thread
 }
 
 template <class Frame>
@@ -166,36 +219,56 @@ Status Replica<Frame>::WalkChain(const Frame& chain, const Frame& meta,
 
 template <class Frame>
 Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch,
-                                    Uuid object_store, const Frame& frame) {
-    Cursor cur = frame.cursor();
+                                    Uuid object_store, Cursor& cur) {
+    // Cursor cur = chain.cursor();
+    ChainMeta meta, prev_meta, ref_meta;
+
     const Uuid& id = cur.op().id();
     const Uuid& ref = cur.op().ref();
 
-    // FIXME actually, we consume a chain here!
-    // (put it into our separate frame)
-    Frame new_chain;
+    // fetch the meta on the prev op (likely, chain)
+    Status ok = FindChainMeta(Uuid{NEVER, id.origin()}, prev_meta);
+    if (!ok) return ok;
+    bool new_chain = ref.version() != TIME || ref.origin() != id.origin();
 
-    // each op: find the chain
-    ChainMeta meta;
-    // chain like?
-    if (ref.origin() == id.origin()) {
-        //      ok; chain not cached?
-        //           find the chain, walk, set up the cache
-        //      ok; check the hash, update the cache
+    // fetch the meta on the referenced op (get the object)
+    if (ref.version() == NAME) {  // new object
+        ref_meta.object_ = id;
+        hash_uuid(ref, ref_meta.hash_);
+    } else if (ref != prev_meta.at_) {  // a new chain
+        ok = FindChainMeta(ref, ref_meta);
+        if (!ok) return ok;
+    } else {
+        ref_meta = prev_meta;
     }
-    if (true) {
-        // no chain? create (load the ref, walk, check the hash), write meta
-        string chain, meta;
-        // Status prevok = FindChain(id, chain, meta);
-        /*meta.walk(chain);
-        Status refok = FindChain(ref, refchain, refmeta);
-        meta = Chain{cur, prev, ref}; // need a fully parsed op here
-        batch.Write(id.derived(), meta.frame());*/
+
+    meta.object_ = prev_meta.object_;
+    // first op hash, according to our records
+    hash_op<Frame>(cur, meta.hash_, prev_meta.hash_, ref_meta.hash_);
+
+    // walk/check the chain
+    do {
+        ok = meta.NextOp(cur);  // checks hash-mentions
+        // if (meta.has_object() && ref_meta.object()!=meta.object())
+        //    return WRONG_OBJECT;
+        // also hash
+        if (!ok) return ok;
+
+        // WRITE THE CHAIN
+        // WRITE OBJ-ADD
+
+    } while (cur.Next());
+
+    Key key{meta.object_, meta.rdt_};
+    if (new_chain) {
+        Builder anno;
+        anno.AppendNewOp(HEADER, SHA2_UUID, id, meta.hash_.base64());
+        anno.AppendNewOp(HEADER, OBJ_UUID, id, meta.object_);
+        batch.Merge(chains_, key, anno.frame().data());
     }
-    // merge to the chain
-    // batch.Merge(CHAIN_STORE, id, new_chain);
-    // merge to the object
-    // batch.Merge(store, id, new_chain);
+    // batch.Merge(chains_, key, chain);
+    // batch.Merge(cf(object_store), Key{object}, chain);
+
     return Status::OK;
 }
 

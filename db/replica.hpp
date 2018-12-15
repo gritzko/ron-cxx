@@ -13,24 +13,49 @@ namespace ron {
 
 template <typename Frame>
 class Replica {
-    rocksdb::DB* db_;
-
-    rocksdb::WriteOptions wo_;
-    rocksdb::ReadOptions ro_;
-
-    struct ChainMeta {
-        Word at_;
-        SHA2 hash_;
-        Uuid object_;
-    };
-    // chain cache - skip db reads for ongoing op chains
-    std::unordered_map<Word, ChainMeta> cache_;
-
    public:
     typedef typename Frame::Batch Batch;
     typedef typename Frame::Builder Builder;
     typedef typename Frame::Cursor Cursor;
 
+   private:
+    rocksdb::DB* db_;
+
+    rocksdb::WriteOptions wo_;
+    rocksdb::ReadOptions ro_;
+
+   public:
+    // The defining feature of an op chain is that the next op references
+    // the previous (yarn-previous) one; a chain is a chunk of some yarn.
+    // The hash of the next op only depends on the previous op.
+    struct ChainMeta {
+        Uuid at_;
+        SHA2 hash_;
+        Uuid object_;
+        RDT rdt_;
+
+        //        inline const Uuid& at() const { return at_; }
+        //        inline const Uuid& object() const { return object_; }
+        //        inline const SHA2& hash() const { return hash_; }
+        // learns/verifies 3 annotations: @obj, @sha2, @prev
+        Status NextOp(Cursor& op);
+        Status Scan(Cursor& cur) {
+            Status ret;
+            do {
+                ret = NextOp(cur);
+            } while (ret && cur.Next());
+            return ret;
+        }
+        inline Status Scan(const std::string& data) {
+            Frame f{data};
+            Cursor c{f};
+            return Scan(c);
+        }
+    };
+    // chain cache - skip db reads for ongoing op chains
+    std::unordered_map<Word, ChainMeta> cache_;
+
+   public:
     typedef rocksdb::ColumnFamilyHandle CFHandle;
 
     CFHandle* chains_;
@@ -38,25 +63,37 @@ class Replica {
 
     Replica() : db_{nullptr}, chains_{nullptr}, objects_{}, wo_{}, ro_{} {}
 
+    // uuid and reducer id
+    // 128 bits, layout:
+    // origin(60) variety(4) value(60) reducer(4)
+    // * yarns, scans
+    // * unknown-type fetch
+    // * prefix compression: value tail bits, reducer bits
+    // * same cf for chains(yarns), objects
+    // * origin-locality
     struct Key {
-        uint64_t bits_[2];
+        uint64pair bits_;
 
-        Key(const Uuid& id)
+        Key(const Uuid& id, RDT rdt)
             : bits_{
-                  htobe64((id.origin()._64 << 4U) | (id.value()._64 >> 60U)),
-                  htobe64((id.value()._64 << 4U) | (id.origin()._64 >> 60U)),
+                  htobe64((id.origin()._64 << Word::FBS) | id.variety()),
+                  htobe64((id.value()._64 << Word::FBS) | rdt),
               } {}
+
+        inline RDT rdt() const { return RDT(be64toh(bits_.second) & 0xf); }
+
+        inline Uuid id() const {
+            uint64pair h{be64toh(bits_.first), be64toh(bits_.second)};
+            return Uuid{
+                (h.second >> Word::FBS) | ((h.first & 0xf) << Word::PBS),
+                (h.first >> Word::FBS) |
+                    (uint64_t(FLAGS::TIME_UUID) << Word::PBS)};
+        }
 
         Key(rocksdb::Slice data)
             : bits_{*(uint64_t*)data.data_,
                     *(uint64_t*)(data.data_ + sizeof(uint64_t))} {
             assert(data.size() == sizeof(Key));
-        }
-
-        operator Uuid() const {
-            uint64_t v = be64toh(bits_[1]);
-            uint64_t o = be64toh(bits_[0]);
-            return Uuid{(v >> 4U) | (o << 60U), (o >> 4U) | (v << 60U)};
         }
 
         operator rocksdb::Slice() const {
@@ -83,6 +120,12 @@ class Replica {
     //  C H A I N  S T O R E
 
     Status FindChain(Uuid op_id, std::string& chain);
+    Status FindChainMeta(Uuid op_id, ChainMeta& meta) {
+        std::string chain;
+        Status ok = FindChain(op_id, chain);
+        if (ok) meta.Scan(chain);
+        return ok;
+    }
 
     Status WalkChain(const Frame& chain, const Frame& meta, const Uuid& to,
                      std::string& hash);
@@ -138,7 +181,7 @@ class Replica {
 
     // feed a causally ordered log - checks causality, updates the chain cache
     Status ReceiveChain(rocksdb::WriteBatch& batch, Uuid object_store,
-                        const Frame& frame);
+                        Cursor& cur);
 
     // a hash check MUST follow its op in the frame => the hash must be cached
     Status ReceiveSHA2Check(const Uuid& id, const SHA2& check);
@@ -182,6 +225,10 @@ extern const std::string HISTORY_CF_NAME;
 extern const std::string LOG_CF_NAME;
 extern const Uuid CHAIN_STORE;
 extern const Uuid TRUNK_STORE;
+extern const Uuid SHA2_UUID;
+extern const Uuid OBJ_UUID;
+extern const Uuid PREV_UUID;
+extern const Uuid RDT_UUID;
 
 }  // namespace ron
 

@@ -40,7 +40,7 @@ struct SHA2 {
         return memcmp(bits_, b.bits_, SIZE) == 0;
     }
 
-    bool operator!=(const SHA2 &b) const { return !(*this == b); }
+    bool operator!=(const SHA2& b) const { return !(*this == b); }
     inline bool matches(const SHA2& b) const {
         int bits = std::min(known_bits_, b.known_bits_);
         int bytes = bits >> 3;
@@ -59,13 +59,13 @@ struct SHA2 {
         return std::string{data, HEX_SIZE};
     }
 
-    static bool ParseHex(SHA2 &ret, const std::string &hash) {
+    static bool ParseHex(SHA2& ret, const std::string& hash) {
         assert(hash.size() <= HEX_SIZE);
         ret.known_bits_ = uint32_t(hash.size()) << 2;
         return decode<4, ABC16>(hash.data(), hash.size(), ret.bits_);
     }
 
-    static bool ParseBase64(SHA2 &ret, const std::string &hash) {
+    static bool ParseBase64(SHA2& ret, const std::string& hash) {
         assert(hash.size() <= BASE64_SIZE);
         ret.known_bits_ = uint32_t(hash.size()) * 6;
         return decode<6, ABC64>(hash.data(), hash.size(), ret.bits_);
@@ -135,6 +135,14 @@ void WriteOpHashable(const typename Frame::Cursor& cursor, SomeStream& stream,
 inline void hash_uuid(const Uuid& uuid, SHA2& hash) {
     SHA2Stream stream;
     stream.WriteUuid(uuid);
+    stream.close(hash.bits_);
+}
+
+template <typename Frame>
+inline void hash_op(const typename Frame::Cursor& cur, SHA2& hash,
+                    const SHA2& prev_hash, const SHA2& ref_hash) {
+    SHA2Stream stream;
+    WriteOpHashable<Frame, SHA2Stream>(cur, stream, prev_hash, ref_hash);
     stream.close(hash.bits_);
 }
 

@@ -25,6 +25,12 @@ struct Status {
     static const Status CHAINBREAK;
     static const Status HASHBREAK;
     static const Status TREEBREAK;
+
+    static const Status TREEGAP;
+    static const Status YARNGAP;
+
+    static const Status REPEAT;
+    static const Status REORDER;
 };
 
 }  // namespace ron

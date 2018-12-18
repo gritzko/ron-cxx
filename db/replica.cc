@@ -50,14 +50,14 @@ Status Replica<Frame>::ChainMeta::NextOp(Cursor& cur) {
             need_hash = SHA2{cur.parse_string(2)};  // FIXME check
         } else if (cur.id() == OBJ_UUID && cur.type(2) == ATOM::UUID) {
             const Uuid& need_object = cur.parse_uuid(2);
-            if (object_.zero()) {
-                object_ = need_object;
-            } else if (cur.parse_uuid(2) != object_) {
+            if (object.zero()) {
+                object = need_object;
+            } else if (cur.parse_uuid(2) != object) {
                 return Status::TREEBREAK;
             }
         } else if (cur.id() == PREV_UUID && cur.type(2) == ATOM::UUID) {
             const Uuid& need_prev = cur.parse_uuid(2);
-            if (!at_.zero() && need_prev != at_) return Status::CHAINBREAK;
+            if (!at.zero() && need_prev != at) return Status::CHAINBREAK;
         }
         cur.Next();
     }
@@ -67,21 +67,21 @@ Status Replica<Frame>::ChainMeta::NextOp(Cursor& cur) {
     const Uuid& id = cur.id();
 
     if (ref.version() == NAME) {
-        if (!at_.zero()) return Status::CHAINBREAK;
-        object_ = id;
-    } else if (ref != at_) {
+        if (!at.zero()) return Status::CHAINBREAK;
+        object = id;
+    } else if (ref != at) {
         return Status::BAD_STATE;
     }
 
-    if (id.origin() != at_.origin()) return Status::CHAINBREAK;
+    if (id.origin() != at.origin()) return Status::CHAINBREAK;
 
     SHA2 next_hash;  // = SHA2{hash_, hash_, cur};
-    hash_op<Frame>(cur, next_hash, hash_, hash_);
+    hash_op<Frame>(cur, next_hash, hash, hash);
     if (need_hash != next_hash)  // length-0 hash equals anything
         return Status::HASHBREAK;
 
-    at_ = id;
-    hash_ = next_hash;
+    at = id;
+    hash = next_hash;
     cur.Next();
 
     return Status::OK;
@@ -233,18 +233,18 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch,
 
     // fetch the meta on the referenced op (get the object)
     if (ref.version() == NAME) {  // new object
-        ref_meta.object_ = id;
-        hash_uuid(ref, ref_meta.hash_);
-    } else if (ref != prev_meta.at_) {  // a new chain
+        ref_meta.object = id;
+        hash_uuid(ref, ref_meta.hash);
+    } else if (ref != prev_meta.at) {  // a new chain
         ok = FindChainMeta(ref, ref_meta);
         if (!ok) return ok;
     } else {
         ref_meta = prev_meta;
     }
 
-    meta.object_ = prev_meta.object_;
+    meta.object = prev_meta.object;
     // first op hash, according to our records
-    hash_op<Frame>(cur, meta.hash_, prev_meta.hash_, ref_meta.hash_);
+    hash_op<Frame>(cur, meta.hash, prev_meta.hash, ref_meta.hash);
 
     // walk/check the chain
     do {
@@ -259,11 +259,11 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch,
 
     } while (cur.Next());
 
-    Key key{meta.object_, meta.rdt_};
+    Key key{meta.object, meta.rdt};
     if (new_chain) {
         Builder anno;
-        anno.AppendNewOp(HEADER, SHA2_UUID, id, meta.hash_.base64());
-        anno.AppendNewOp(HEADER, OBJ_UUID, id, meta.object_);
+        anno.AppendNewOp(HEADER, SHA2_UUID, id, meta.hash.base64());
+        anno.AppendNewOp(HEADER, OBJ_UUID, id, meta.object);
         batch.Merge(chains_, key, anno.frame().data());
     }
     // batch.Merge(chains_, key, chain);

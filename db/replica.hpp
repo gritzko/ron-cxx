@@ -29,10 +29,10 @@ class Replica {
     // the previous (yarn-previous) one; a chain is a chunk of some yarn.
     // The hash of the next op only depends on the previous op.
     struct ChainMeta {
-        Uuid at_;
-        SHA2 hash_;
-        Uuid object_;
-        RDT rdt_;
+        Uuid at;
+        SHA2 hash;
+        Uuid object;
+        RDT rdt;
 
         //        inline const Uuid& at() const { return at_; }
         //        inline const Uuid& object() const { return object_; }
@@ -72,18 +72,18 @@ class Replica {
     // * same cf for chains(yarns), objects
     // * origin-locality
     struct Key {
-        uint64pair bits_;
+        uint64pair bits;
 
         Key(const Uuid& id, RDT rdt)
-            : bits_{
+            : bits{
                   htobe64((id.origin()._64 << Word::FBS) | id.variety()),
                   htobe64((id.value()._64 << Word::FBS) | rdt),
               } {}
 
-        inline RDT rdt() const { return RDT(be64toh(bits_.second) & 0xf); }
+        inline RDT rdt() const { return RDT(be64toh(bits.second) & 0xf); }
 
         inline Uuid id() const {
-            uint64pair h{be64toh(bits_.first), be64toh(bits_.second)};
+            uint64pair h{be64toh(bits.first), be64toh(bits.second)};
             return Uuid{
                 (h.second >> Word::FBS) | ((h.first & 0xf) << Word::PBS),
                 (h.first >> Word::FBS) |
@@ -91,8 +91,8 @@ class Replica {
         }
 
         Key(rocksdb::Slice data)
-            : bits_{*(uint64_t*)data.data_,
-                    *(uint64_t*)(data.data_ + sizeof(uint64_t))} {
+            : bits{*(uint64_t*)data.data_,
+                   *(uint64_t*)(data.data_ + sizeof(uint64_t))} {
             assert(data.size() == sizeof(Key));
         }
 

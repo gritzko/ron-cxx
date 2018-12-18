@@ -35,8 +35,8 @@ void test_chain_breaks () {
     Frame::Cursor headc = headf.cursor();
     Meta headm;
     assert(headm.Scan(headc));
-    assert(headm.object_==Uuid{"1gA9cq+gritzko"});
-    assert(headm.at_==Uuid{"1gA9cq0002+gritzko"});
+    assert(headm.object==Uuid{"1gA9cq+gritzko"});
+    assert(headm.at==Uuid{"1gA9cq0002+gritzko"});
     assert(headm.Scan("@1gA9cz+notgritzko :1gA9cq0002+gritzko;")==Status::CHAINBREAK);
     assert(headm.Scan("@1gA9cq+gritzko :1gA9cq0002+gritzko;")==Status::REPEAT);
     assert(headm.Scan("@1gA9cq0003+gritzko :1gA8k+notgritzko;")==Status::CHAINBREAK);
@@ -45,8 +45,8 @@ void test_chain_breaks () {
     assert(headm.Scan("@1gA9cq0003+gritzko :1gA8k0002+gritzko 'c' 'three';"));
     assert(headm.Scan("@prev 1gA9cq0004+gritzko! @1gA9cq0005+gritzko :1gA8k0003+gritzko 'e' 5;")==Status::YARNGAP);
     assert(headm.Scan("@1gA9cq0004+gritzko :1gA8k0003+gritzko 'd' 4;"));
-    assert(headm.object_==Uuid{"1gA9cq+gritzko"});
-    assert(headm.at_==Uuid{"1gA9cq0004+gritzko"});
+    assert(headm.object==Uuid{"1gA9cq+gritzko"});
+    assert(headm.at==Uuid{"1gA9cq0004+gritzko"});
 }
 
 void test_keys () {
@@ -54,7 +54,6 @@ void test_keys () {
     TextReplica::Key chain{id, RDT::CHAIN};
     assert(chain.rdt()==RDT::CHAIN);
     Uuid id2 = chain.id();
-    cerr<<id2.str()<<'\n';
     assert(id2==id);
     TextReplica::Key derived{id.derived(), RDT::CHAIN};
     assert(derived.id()==id);

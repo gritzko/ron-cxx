@@ -7,7 +7,7 @@
 
 namespace ron {
 
-enum RDT : uint8_t { ACK = 0, CHAIN = 1, LWW = 2, RGA = 3 };
+enum RDT : uint8_t { CHAIN = 0, ACK = 1, LWW = 2, RGA = 3 };
 
 template <class Frame>
 class MasterRDT {

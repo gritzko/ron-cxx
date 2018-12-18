@@ -42,9 +42,9 @@ void test_chain_breaks () {
     assert(headm.Scan("@1gA9cq0003+gritzko :1gA8k+notgritzko;")==Status::CHAINBREAK);
     assert(headm.Scan("@obj 12345+obj! @1gA9cq0004+gritzko :1gA9cq0003+gritzko ;")==Status::TREEBREAK);
     assert(headm.Scan("@1gA9cq0004+gritzko :1gA8k0003+gritzko 'd' 4;")==Status::TREEGAP);
-    assert(headm.Scan("@1gA9cq0003+gritzko :1gA8k0002+gritzko 'c' 'three';"));
+    assert(headm.Scan("@1gA9cq0003+gritzko :1gA9cq0002+gritzko 'c' 'three';"));
     assert(headm.Scan("@prev 1gA9cq0004+gritzko! @1gA9cq0005+gritzko :1gA8k0003+gritzko 'e' 5;")==Status::YARNGAP);
-    assert(headm.Scan("@1gA9cq0004+gritzko :1gA8k0003+gritzko 'd' 4;"));
+    assert(headm.Scan("@1gA9cq0004+gritzko :1gA9cq0003+gritzko 'd' 4;"));
     assert(headm.object==Uuid{"1gA9cq+gritzko"});
     assert(headm.at==Uuid{"1gA9cq0004+gritzko"});
 }

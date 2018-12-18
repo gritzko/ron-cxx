@@ -44,7 +44,7 @@ const string LOG_CF_NAME = LOG_CF_UUID.str();
 template <typename Frame>
 Status Replica<Frame>::ChainMeta::NextOp(Cursor& cur) {
     SHA2 need_hash{};
-    // ABSORB OR COMPARE
+    // HAVE ? COMPARE : SET
     while (cur.valid() && cur.id().version() == NAME) {  // eat annos
         if (cur.id() == SHA2_UUID && cur.type(2) == ATOM::STRING) {
             need_hash = SHA2{cur.parse_string(2)};  // FIXME check
@@ -69,20 +69,21 @@ Status Replica<Frame>::ChainMeta::NextOp(Cursor& cur) {
     if (ref.version() == NAME) {
         if (!at.zero()) return Status::CHAINBREAK;
         object = id;
-    } else if (ref != at) {
-        return Status::BAD_STATE;
+        // at = id;
+    } else {
+        if (ref != at) return Status::BAD_STATE;
+        if (id.origin() != at.origin()) return Status::CHAINBREAK;
+        if (id <= at) return Status::CAUSEBREAK;
     }
-
-    if (id.origin() != at.origin()) return Status::CHAINBREAK;
 
     SHA2 next_hash;  // = SHA2{hash_, hash_, cur};
     hash_op<Frame>(cur, next_hash, hash, hash);
-    if (need_hash != next_hash)  // length-0 hash equals anything
+    if (!need_hash.matches(next_hash))  // length-0 hash equals anything
         return Status::HASHBREAK;
 
     at = id;
     hash = next_hash;
-    cur.Next();
+    // cur.Next();
 
     return Status::OK;
 }

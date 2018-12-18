@@ -34,9 +34,7 @@ class Replica {
         Uuid object;
         RDT rdt;
 
-        //        inline const Uuid& at() const { return at_; }
-        //        inline const Uuid& object() const { return object_; }
-        //        inline const SHA2& hash() const { return hash_; }
+        ChainMeta() : at{}, hash{}, object{}, rdt{} {}
         // learns/verifies 3 annotations: @obj, @sha2, @prev
         Status NextOp(Cursor& op);
         Status Scan(Cursor& cur) {
@@ -63,9 +61,9 @@ class Replica {
 
     Replica() : db_{nullptr}, chains_{nullptr}, objects_{}, wo_{}, ro_{} {}
 
-    // uuid and reducer id
-    // 128 bits, layout:
-    // origin(60) variety(4) value(60) reducer(4)
+    // A 128-bit key has the UUID and the RDT/reducer id.
+    // UUID origin flag bits are always RON_UUID/TIME, hence reused for the RDT
+    // id. The bit layout is: origin(60) variety(4) value(60) reducer(4)
     // * yarns, scans
     // * unknown-type fetch
     // * prefix compression: value tail bits, reducer bits

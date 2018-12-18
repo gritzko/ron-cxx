@@ -25,6 +25,7 @@ struct Status {
     static const Status CHAINBREAK;
     static const Status HASHBREAK;
     static const Status TREEBREAK;
+    static const Status CAUSEBREAK;
 
     static const Status TREEGAP;
     static const Status YARNGAP;

@@ -9,8 +9,7 @@ using namespace std;
 
 int main (int argn, char** args) {
 
-    cout << Uuid{"TREEGAP"}.value()._64 << '\n';
-    cout << Uuid{"YARNGAP"}.value()._64 << '\n';
+    //cout << Uuid{"CAUSEBREAK"}.value()._64 << '\n';
 
     static_assert(sizeof(Word)==8, "no mishup");
     static_assert(sizeof(Uuid)==16, "...");

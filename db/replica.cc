@@ -16,21 +16,10 @@ const Uuid RDT_UUID{984282809185075200UL, 0};
 //  U T I L
 
 template <typename Frame>
-ColumnFamilyOptions Replica<Frame>::DataCFOptions() const {
-    ColumnFamilyOptions cfo{};
-    // cfo.merge_operator;
-    return cfo;
-}
-template <typename Frame>
-ColumnFamilyOptions Replica<Frame>::ChainCFOptions() const {
+ColumnFamilyOptions Replica<Frame>::CFOptions() const {
     ColumnFamilyOptions cfo{};
     cfo.merge_operator =
-        shared_ptr<MergeOperator>{new ChainMergeOperator<Frame>()};
-    return cfo;
-}
-template <typename Frame>
-ColumnFamilyOptions Replica<Frame>::LogCFOptions() const {
-    ColumnFamilyOptions cfo{};
+        shared_ptr<MergeOperator>{new RDTMergeOperator<Frame>()};
     return cfo;
 }
 
@@ -99,20 +88,13 @@ Status Replica<Frame>::Create(std::string home) {
     db_options.WAL_size_limit_MB = 1UL << 30U;
     db_options.WAL_ttl_seconds = UINT64_MAX;
 
-    ColumnFamilyOptions cf_options = DataCFOptions();
+    ColumnFamilyOptions cf_options = CFOptions();
     Options options{db_options, cf_options};
 
     auto status = DB::Open(options, home, &db_);
     if (!status.ok()) return Status::DB_FAIL;
 
-    status =
-        db_->CreateColumnFamily(ChainCFOptions(), CHAIN_STORE.str(), &chains_);
-    if (!status.ok()) return Status::DB_FAIL;
-    /*
-
-    status = db_->CreateColumnFamily(LogCFOptions(), LOG_CF_NAME, &log_cf_);
-    if (!status.ok()) return Status::DB_FAIL;
-    */
+    trunk_ = db_->DefaultColumnFamily();
 
     return Status::OK;
 }
@@ -131,9 +113,8 @@ Status Replica<Frame>::Open(std::string home) {
     typedef ColumnFamilyDescriptor CFD;
     vector<ColumnFamilyDescriptor> families;
     vector<ColumnFamilyHandle*> handles;
-    families.push_back(CFD{kDefaultColumnFamilyName, ChainCFOptions()});
-    //    families.push_back(CFD{HISTORY_CF_NAME, HistoryCFOptions()});
-    //    families.push_back(CFD{LOG_CF_NAME, LogCFOptions()});
+    families.push_back(CFD{kDefaultColumnFamilyName, CFOptions()});
+    // TODO branches
 
     auto status = DB::Open(options, home, families, &handles, &db_);
     if (!status.ok()) {
@@ -141,10 +122,8 @@ Status Replica<Frame>::Open(std::string home) {
     }
 
     auto i = handles.begin();
-    /*data_cf_ = *i++;
-    history_cf_ = *i++;
-    log_cf_ = *i++;
-    */
+    trunk_ = *i;
+
     return Status::OK;
 }
 
@@ -155,18 +134,10 @@ Status Replica<Frame>::GC() {
 
 template <typename Frame>
 Status Replica<Frame>::Close() {
-    if (chains_) {
-        delete chains_;
-        chains_ = nullptr;
-    }
-    /*if (history_cf_) {
-        delete history_cf_;
-        history_cf_ = nullptr;
-    }
-    if (log_cf_) {
-        delete log_cf_;
-        log_cf_ = nullptr;
-    }*/
+    //    if (trunk_) {
+    //        delete trunk_;
+    //        trunk_ = nullptr;
+    //    }
     if (db_) {
         delete db_;
         db_ = nullptr;
@@ -190,7 +161,7 @@ template <class Frame>
 Status Replica<Frame>::FindChain(Uuid op_id, std::string& chain) {
     rocksdb::ReadOptions ro;
     Key key{op_id, RDT::CHAIN};
-    auto i = db_->NewIterator(ro, chains_);
+    auto i = db_->NewIterator(ro, trunk_);
     i->SeekForPrev(key);
     if (!i->Valid()) {
         delete i;
@@ -265,7 +236,7 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch,
         Builder anno;
         anno.AppendNewOp(HEADER, SHA2_UUID, id, meta.hash.base64());
         anno.AppendNewOp(HEADER, OBJ_UUID, id, meta.object);
-        batch.Merge(chains_, key, anno.frame().data());
+        batch.Merge(trunk_, key, anno.frame().data());
     }
     // batch.Merge(chains_, key, chain);
     // batch.Merge(cf(object_store), Key{object}, chain);

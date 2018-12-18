@@ -122,7 +122,8 @@ add_executable(swarmdb-bin
     db/replica.cc
     db/main.cc
     db/merge_ops.hpp
-        )
+    db/key.hpp
+    )
 add_dependencies(swarmdb-bin rocksdblib)
 target_link_libraries(swarmdb-bin ron botan rocksdb pthread z bz2 snappy gflags)
 SET_TARGET_PROPERTIES(swarmdb-bin PROPERTIES OUTPUT_NAME swarmdb)

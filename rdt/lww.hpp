@@ -16,7 +16,7 @@ class LastWriteWinsRDT {
 
    public:
     Status Merge(typename Frame::Builder &output,
-                 const std::vector<Cursor> &inputs) {
+                 const std::vector<Cursor> &inputs) const {
         merger m{inputs};
         m.Merge(output);
         return Status::OK;
@@ -25,7 +25,7 @@ class LastWriteWinsRDT {
     // TODO this impl will not match escaped keys, e.g. '\006bey' for 'key'.
     // Either way, the latest/winning value will go first.
     // May use Frame::unescape() and/or Op unesc flag.
-    Status GC(Builder &output, const Frame &input) {
+    Status GC(Builder &output, const Frame &input) const {
         std::unordered_map<slice_t, Uuid> last;
         auto scan = input.cursor();
         do {
@@ -50,7 +50,7 @@ class LastWriteWinsRDT {
     }
 
     virtual Status MergeGC(Builder &output,
-                           const typename Frame::Cursors &inputs) {
+                           const typename Frame::Cursors &inputs) const {
         Builder unclean;
         Status ok = Merge(unclean, inputs);
         if (!ok) return ok;

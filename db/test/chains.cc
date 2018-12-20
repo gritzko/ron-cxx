@@ -5,7 +5,11 @@
 using namespace ron;
 using namespace std;
 typedef TextFrame Frame;
+typedef Frame::Cursor Cursor;
 typedef Replica<Frame> TextReplica;
+
+void test_db_yarn_root () {
+}
 
 void test_db_chain_merge () {
     TextReplica db{};
@@ -15,13 +19,18 @@ void test_db_chain_merge () {
     Key key{Uuid{"1gHHUW+test"}, RDT::CHAIN};
     string op1 = "@1gHHUW+test :lww ;";
     string op2 = "@1gHHUW0001+test :1gHHUW+test 'key' 'value' ;";
-    //db.ReceiveChain(batch, Uuid::ZERO, Frame{op1});
-    //db.ReceiveChain(batch, Uuid::ZERO, Frame{op2});
-    db.db().Merge(db.wo(), db.trunk_, key, op1);
-    db.db().Merge(db.wo(), db.trunk_, key, op2);
+    Cursor c1{op1};
+    Cursor c2{op2};
+    assert(db.ReceiveChain(batch, Uuid::ZERO, c1));
+    assert(db.ReceiveChain(batch, Uuid::ZERO, c2));
+    //db.db().Merge(db.wo(), db.trunk_, key, op1);
+    //db.db().Merge(db.wo(), db.trunk_, key, op2);
     string merged;
-    db.db().Get(db.ro(), db.trunk_, key, &merged);
+    db.db().Get(db.ro(), db.trunk_, key, &merged); // FIXME hash?
     assert(merged=="@1gHHUW+test :lww;\n 'key' 'value';\n");
+    Frame got;
+    db.Get(got, Uuid{"1gHHUW+test"}, LWW_TYPE_ID);
+    assert(got.data()==merged);
     string chain;
     assert(db.FindChain(Uuid{"1gHHUW+test"}, chain));
     assert(chain==merged);
@@ -34,17 +43,17 @@ void test_chain_breaks () {
     Frame headf{"@1gA9cq+gritzko :lww; 'a' 1; 'b' 2.0;"};
     Frame::Cursor headc = headf.cursor();
     Meta headm;
-    assert(headm.Scan(headc));
+    assert(headm.ScanAll(headc));
     assert(headm.object==Uuid{"1gA9cq+gritzko"});
     assert(headm.at==Uuid{"1gA9cq0002+gritzko"});
-    assert(headm.Scan("@1gA9cz+notgritzko :1gA9cq0002+gritzko;")==Status::CHAINBREAK);
-    assert(headm.Scan("@1gA9cq+gritzko :1gA9cq0002+gritzko;")==Status::REPEAT);
-    assert(headm.Scan("@1gA9cq0003+gritzko :1gA8k+notgritzko;")==Status::CHAINBREAK);
-    assert(headm.Scan("@obj 12345+obj! @1gA9cq0004+gritzko :1gA9cq0003+gritzko ;")==Status::TREEBREAK);
-    assert(headm.Scan("@1gA9cq0004+gritzko :1gA8k0003+gritzko 'd' 4;")==Status::TREEGAP);
-    assert(headm.Scan("@1gA9cq0003+gritzko :1gA9cq0002+gritzko 'c' 'three';"));
-    assert(headm.Scan("@prev 1gA9cq0004+gritzko! @1gA9cq0005+gritzko :1gA8k0003+gritzko 'e' 5;")==Status::YARNGAP);
-    assert(headm.Scan("@1gA9cq0004+gritzko :1gA9cq0003+gritzko 'd' 4;"));
+    assert(headm.ScanFrame("@1gA9cz+notgritzko :1gA9cq0002+gritzko;")==Status::CHAINBREAK);
+    assert(headm.ScanFrame("@1gA9cq+gritzko :1gA9cq0002+gritzko;")==Status::REPEAT);
+    assert(headm.ScanFrame("@1gA9cq0003+gritzko :1gA8k+notgritzko;")==Status::CHAINBREAK);
+    assert(headm.ScanFrame("@obj 12345+obj! @1gA9cq0004+gritzko :1gA9cq0003+gritzko ;")==Status::TREEBREAK);
+    assert(headm.ScanFrame("@1gA9cq0004+gritzko :1gA8k0003+gritzko 'd' 4;")==Status::TREEGAP);
+    assert(headm.ScanFrame("@1gA9cq0003+gritzko :1gA9cq0002+gritzko 'c' 'three';"));
+    assert(headm.ScanFrame("@prev 1gA9cq0004+gritzko! @1gA9cq0005+gritzko :1gA8k0003+gritzko 'e' 5;")==Status::YARNGAP);
+    assert(headm.ScanFrame("@1gA9cq0004+gritzko :1gA9cq0003+gritzko 'd' 4;"));
     assert(headm.object==Uuid{"1gA9cq+gritzko"});
     assert(headm.at==Uuid{"1gA9cq0004+gritzko"});
 }
@@ -59,13 +68,9 @@ void test_keys () {
     assert(derived.id()==id);
 }
 
-void test_db_object_merge () {
-
-}
-
 int main (int argc, const char** args) {
     test_keys();
     test_chain_breaks();
+    test_db_yarn_root();
     test_db_chain_merge();
-    test_db_object_merge();
 }

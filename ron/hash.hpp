@@ -138,6 +138,10 @@ inline void hash_uuid(const Uuid& uuid, SHA2& hash) {
     stream.close(hash.bits_);
 }
 
+inline void hash_root(const Word origin, SHA2& hash) {
+    return hash_uuid(Uuid{0, origin}, hash);
+}
+
 template <typename Frame>
 inline void hash_op(const typename Frame::Cursor& cur, SHA2& hash,
                     const SHA2& prev_hash, const SHA2& ref_hash) {

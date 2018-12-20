@@ -31,7 +31,7 @@ const string LOG_CF_NAME = LOG_CF_UUID.str();
 //  C H A I N S
 
 template <typename Frame>
-Status Replica<Frame>::ChainMeta::NextOp(Cursor& cur) {
+Status Replica<Frame>::ChainMeta::ScanOp(Cursor &cur) {
     SHA2 need_hash{};
     // HAVE ? COMPARE : SET
     while (cur.valid() && cur.id().version() == NAME) {  // eat annos
@@ -72,7 +72,6 @@ Status Replica<Frame>::ChainMeta::NextOp(Cursor& cur) {
 
     at = id;
     hash = next_hash;
-    // cur.Next();
 
     return Status::OK;
 }
@@ -190,59 +189,84 @@ Status Replica<Frame>::WalkChain(const Frame& chain, const Frame& meta,
 //  R E C E I V E S
 
 template <class Frame>
-Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch,
-                                    Uuid object_store, Cursor& cur) {
-    // Cursor cur = chain.cursor();
+Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
+                                    Cursor& chain) {
     ChainMeta meta, prev_meta, ref_meta;
+    Builder chainlet;
 
-    const Uuid& id = cur.op().id();
-    const Uuid& ref = cur.op().ref();
+    const Uuid& id = chain.id();
+    if (id.version()!=TIME) return Status::BAD_STATE;
 
-    // fetch the meta on the prev op (likely, chain)
+    const Uuid& ref = chain.ref();
+    if (ref.version()==TIME) {
+        if (ref >= id) return Status::CAUSEBREAK;
+    } else {
+        if (ref.version()!=NAME) return Status::BAD_STATE;
+    }
+
+    // PREV: fetch the meta on the prev op (likely, chain)
+    // TODO check the cache
     Status ok = FindChainMeta(Uuid{NEVER, id.origin()}, prev_meta);
-    if (!ok) return ok;
+    if (!ok) {  // the first known op by the origin, yarn start
+        prev_meta.at = Uuid{0, id.origin()};
+        hash_root(id.origin(), prev_meta.hash);
+    }
+
     bool new_chain = ref.version() != TIME || ref.origin() != id.origin();
 
-    // fetch the meta on the referenced op (get the object)
+    // REF: fetch the meta on the referenced op (get the object)
     if (ref.version() == NAME) {  // new object
         ref_meta.object = id;
         hash_uuid(ref, ref_meta.hash);
+    } else if (ref == prev_meta.at) {  // continue a chain
+        ref_meta = prev_meta;
+    } else if (ref <= prev_meta.at) {
+        return Status::CAUSEBREAK;
     } else if (ref != prev_meta.at) {  // a new chain
+        // TODO the cache
         ok = FindChainMeta(ref, ref_meta);
         if (!ok) return ok;
-    } else {
-        ref_meta = prev_meta;
     }
 
-    meta.object = prev_meta.object;
+    // START OUR CHAIN-LET
+    // TODO meta.Read(chain)
+    meta.object = ref_meta.object;
+    meta.rdt = ref_meta.rdt;
     // first op hash, according to our records
-    hash_op<Frame>(cur, meta.hash, prev_meta.hash, ref_meta.hash);
+    hash_op<Frame>(chain, meta.hash, prev_meta.hash, ref_meta.hash);
 
-    // walk/check the chain
+    // walk/check the chainlet
     do {
-        ok = meta.NextOp(cur);  // checks hash-mentions
-        // if (meta.has_object() && ref_meta.object()!=meta.object())
-        //    return WRONG_OBJECT;
-        // also hash
+        ok = meta.ScanOp(chain);  // checks hash-mentions FIXME hidden Next()
+        // TODO   Scan() Read()
         if (!ok) return ok;
+        if (chain.id().version()==TIME) {
+            chainlet.AppendOp(chain);
+        }
+    } while (chain.Next());
 
-        // WRITE THE CHAIN
-        // WRITE OBJ-ADD
-
-    } while (cur.Next());
-
-    Key key{meta.object, meta.rdt};
-    if (new_chain) {
-        Builder anno;
-        anno.AppendNewOp(HEADER, SHA2_UUID, id, meta.hash.base64());
-        anno.AppendNewOp(HEADER, OBJ_UUID, id, meta.object);
-        batch.Merge(trunk_, key, anno.frame().data());
+    // OK, SAVE
+    Key ckey{id, CHAIN};
+    Key okey{meta.object, meta.rdt};
+    if (new_chain) { // FIXME chain rdt to keep annos (name>time) test
+        Builder annos; // TODO default prev_id for builder/cursor
+        annos.AppendNewOp(HEADER, SHA2_UUID, id, meta.hash.base64());
+        annos.AppendNewOp(HEADER, OBJ_UUID, id, meta.object);
+        batch.Merge(trunk_, ckey, annos.frame().data()); // TODO branches
     }
-    // batch.Merge(chains_, key, chain);
-    // batch.Merge(cf(object_store), Key{object}, chain);
+    const string& data = chainlet.frame().data();
+    batch.Merge(trunk_, ckey, data); // TODO branches
+    batch.Merge(trunk_, okey, data);
 
+    // TODO update the chain cache  chains_[origin] = meta;
     return Status::OK;
 }
+
+template<typename Frame>
+Status Replica<Frame>::Get (Frame& object, const Uuid& id, const Uuid& rdt, const Uuid& branch) {
+    return Status::OK;
+}
+
 
 /*   template <class Frame>
 Status Replica<Frame>::ReceiveLog(ron::Uuid store, Frame frame){

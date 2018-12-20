@@ -37,18 +37,18 @@ class Replica {
 
         ChainMeta() : at{}, hash{}, object{}, rdt{} {}
         // learns/verifies 3 annotations: @obj, @sha2, @prev
-        Status NextOp(Cursor& op);
-        Status Scan(Cursor& cur) {
+        Status ScanOp(Cursor &op);
+        Status ScanAll(Cursor &cur) {
             Status ret;
             do {
-                ret = NextOp(cur);
+                ret = ScanOp(cur);
             } while (ret && cur.Next());
             return ret;
         }
-        inline Status Scan(const std::string& data) {
+        inline Status ScanFrame(const std::string &data) {
             Frame f{data};
             Cursor c{f};
-            return Scan(c);
+            return ScanAll(c);
         }
     };
     // chain cache - skip db reads for ongoing op chains
@@ -84,7 +84,7 @@ class Replica {
     Status FindChainMeta(Uuid op_id, ChainMeta& meta) {
         std::string chain;
         Status ok = FindChain(op_id, chain);
-        if (ok) meta.Scan(chain);
+        if (ok) meta.ScanFrame(chain);
         return ok;
     }
 
@@ -104,6 +104,8 @@ class Replica {
     Status DropObjectStore(Uuid store);
 
     Status GetObject(const Uuid& store, const Uuid& key, Frame& frame);
+
+    Status Get (Frame& object, const Uuid& id, const Uuid& rdt=Uuid::ZERO, const Uuid& branch=Uuid::ZERO);
 
     // Q U E R I E S
 
@@ -142,7 +144,7 @@ class Replica {
 
     // feed a causally ordered log - checks causality, updates the chain cache
     Status ReceiveChain(rocksdb::WriteBatch& batch, Uuid object_store,
-                        Cursor& cur);
+                        Cursor& chain);
 
     // a hash check MUST follow its op in the frame => the hash must be cached
     Status ReceiveSHA2Check(const Uuid& id, const SHA2& check);

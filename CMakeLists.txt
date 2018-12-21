@@ -139,3 +139,14 @@ add_custom_target(
         ${CMAKE_SOURCE_DIR}/db/*.cc
         ${CMAKE_SOURCE_DIR}/db/*.hpp
 )
+
+#  D O C S
+
+FIND_PACKAGE(Doxygen)
+IF(DOXYGEN_FOUND)
+    SET(DOXYGEN_INPUT ${CMAKE_SOURCE_DIR})
+    CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/doc/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+    ADD_CUSTOM_TARGET(doc COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+ELSE(DOXYGEN_FOUND)
+    MESSAGE(STATUS "WARNING: Doxygen not found - Reference manual will not be created")
+ENDIF(DOXYGEN_FOUND)

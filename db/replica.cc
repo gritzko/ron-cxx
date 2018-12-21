@@ -31,7 +31,17 @@ const string LOG_CF_NAME = LOG_CF_UUID.str();
 //  C H A I N S
 
 template <typename Frame>
-Status Replica<Frame>::ChainMeta::ScanOp(Cursor &cur) {
+Status Replica<Frame>::OpMeta::FirstChainOp(const OpMeta &prev, const OpMeta &ref, Cursor &cur) {
+    object = ref.object;
+    rdt = ref.rdt;
+    at = cur.id();
+    // first op hash, according to our records
+    hash_op<Frame>(cur, hash, prev.hash, ref.hash);
+    return Status::OK;
+}
+
+template <typename Frame>
+Status Replica<Frame>::OpMeta::NextChainOp(Cursor &cur) {
     SHA2 need_hash{};
     // HAVE ? COMPARE : SET
     while (cur.valid() && cur.id().version() == NAME) {  // eat annos
@@ -58,6 +68,7 @@ Status Replica<Frame>::ChainMeta::ScanOp(Cursor &cur) {
     if (ref.version() == NAME) {
         if (!at.zero()) return Status::CHAINBREAK;
         object = id;
+        // rdt = uuid2rdt(ref); FIXME
         // at = id;
     } else {
         if (ref != at) return Status::BAD_STATE;
@@ -191,8 +202,7 @@ Status Replica<Frame>::WalkChain(const Frame& chain, const Frame& meta,
 template <class Frame>
 Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
                                     Cursor& chain) {
-    ChainMeta meta, prev_meta, ref_meta;
-    Builder chainlet;
+    OpMeta prev_meta, ref_meta;
 
     const Uuid& id = chain.id();
     if (id.version()!=TIME) return Status::BAD_STATE;
@@ -208,18 +218,18 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
     // TODO check the cache
     Status ok = FindChainMeta(Uuid{NEVER, id.origin()}, prev_meta);
     if (!ok) {  // the first known op by the origin, yarn start
-        prev_meta.at = Uuid{0, id.origin()};
-        hash_root(id.origin(), prev_meta.hash);
+        OpMeta::YarnRoot(prev_meta, id.origin());
     }
 
-    bool new_chain = ref.version() != TIME || ref.origin() != id.origin();
+    bool new_chain = true;
+    // prev_meta.at.zero() || ref.version() != TIME || ref.origin() != id.origin();
 
     // REF: fetch the meta on the referenced op (get the object)
     if (ref.version() == NAME) {  // new object
-        ref_meta.object = id;
-        hash_uuid(ref, ref_meta.hash);
+        OpMeta::RdtRoot(ref_meta, ref);
     } else if (ref == prev_meta.at) {  // continue a chain
         ref_meta = prev_meta;
+        new_chain = false;
     } else if (ref <= prev_meta.at) {
         return Status::CAUSEBREAK;
     } else if (ref != prev_meta.at) {  // a new chain
@@ -229,21 +239,18 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
     }
 
     // START OUR CHAIN-LET
-    // TODO meta.Read(chain)
-    meta.object = ref_meta.object;
-    meta.rdt = ref_meta.rdt;
-    // first op hash, according to our records
-    hash_op<Frame>(chain, meta.hash, prev_meta.hash, ref_meta.hash);
+    Builder chainlet;
+    OpMeta meta;
+    meta.FirstChainOp(prev_meta, ref_meta, chain);
 
     // walk/check the chainlet
-    do {
-        ok = meta.ScanOp(chain);  // checks hash-mentions FIXME hidden Next()
-        // TODO   Scan() Read()
+    while (chain.Next()) {
+        ok = meta.NextChainOp(chain);  // checks hash-mentions
         if (!ok) return ok;
         if (chain.id().version()==TIME) {
             chainlet.AppendOp(chain);
         }
-    } while (chain.Next());
+    }
 
     // OK, SAVE
     Key ckey{id, CHAIN};
@@ -252,7 +259,7 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
         Builder annos; // TODO default prev_id for builder/cursor
         annos.AppendNewOp(HEADER, SHA2_UUID, id, meta.hash.base64());
         annos.AppendNewOp(HEADER, OBJ_UUID, id, meta.object);
-        batch.Merge(trunk_, ckey, annos.frame().data()); // TODO branches
+        batch.Merge(trunk_, ckey, annos.frame().data());
     }
     const string& data = chainlet.frame().data();
     batch.Merge(trunk_, ckey, data); // TODO branches

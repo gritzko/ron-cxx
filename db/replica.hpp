@@ -29,30 +29,45 @@ class Replica {
     // The defining feature of an op chain is that the next op references
     // the previous (yarn-previous) one; a chain is a chunk of some yarn.
     // The hash of the next op only depends on the previous op.
-    struct ChainMeta {
+    struct OpMeta {
         Uuid at;
         SHA2 hash;
         Uuid object;
         RDT rdt;
 
-        ChainMeta() : at{}, hash{}, object{}, rdt{} {}
+        OpMeta() : at{}, hash{}, object{}, rdt{} {}
+        Status FirstChainOp(const OpMeta &prev, const OpMeta &ref, Cursor &cur);
         // learns/verifies 3 annotations: @obj, @sha2, @prev
-        Status ScanOp(Cursor &op);
-        Status ScanAll(Cursor &cur) {
+        Status NextChainOp(Cursor &op);
+        Status ScanChain(Cursor &cur) {
             Status ret;
             do {
-                ret = ScanOp(cur);
+                ret = NextChainOp(cur);
             } while (ret && cur.Next());
             return ret;
         }
-        inline Status ScanFrame(const std::string &data) {
+        inline Status ScanChain(const std::string &data) {
             Frame f{data};
             Cursor c{f};
-            return ScanAll(c);
+            return ScanChain(c);
+        }
+        static Status YarnRoot(OpMeta& meta, Word origin) {
+            meta.at = Uuid{0, origin};
+            hash_root(origin, meta.hash);
+            meta.object = Uuid::ZERO;
+            meta.rdt = CHAIN;
+            return Status::OK;
+        }
+        static Status RdtRoot(OpMeta& meta, const Uuid& rdt) {
+            meta.at = rdt;
+            hash_uuid(rdt, meta.hash);
+            meta.object = Uuid::ZERO;
+            meta.rdt = CHAIN;
+            return Status::OK;
         }
     };
     // chain cache - skip db reads for ongoing op chains
-    std::unordered_map<Word, ChainMeta> cache_;
+    std::unordered_map<Word, OpMeta> cache_;
 
    public:
     typedef rocksdb::ColumnFamilyHandle CFHandle;
@@ -81,10 +96,10 @@ class Replica {
     //  C H A I N  S T O R E
 
     Status FindChain(Uuid op_id, std::string& chain);
-    Status FindChainMeta(Uuid op_id, ChainMeta& meta) {
+    Status FindChainMeta(Uuid op_id, OpMeta& meta) {
         std::string chain;
         Status ok = FindChain(op_id, chain);
-        if (ok) meta.ScanFrame(chain);
+        if (ok) meta.ScanChain(chain);
         return ok;
     }
 

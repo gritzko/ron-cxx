@@ -39,21 +39,21 @@ void test_db_chain_merge () {
 }
 
 void test_chain_breaks () {
-    typedef TextReplica::ChainMeta Meta;
+    typedef TextReplica::OpMeta Meta;
     Frame headf{"@1gA9cq+gritzko :lww; 'a' 1; 'b' 2.0;"};
     Frame::Cursor headc = headf.cursor();
     Meta headm;
-    assert(headm.ScanAll(headc));
+    assert(headm.ScanChain(headc));
     assert(headm.object==Uuid{"1gA9cq+gritzko"});
     assert(headm.at==Uuid{"1gA9cq0002+gritzko"});
-    assert(headm.ScanFrame("@1gA9cz+notgritzko :1gA9cq0002+gritzko;")==Status::CHAINBREAK);
-    assert(headm.ScanFrame("@1gA9cq+gritzko :1gA9cq0002+gritzko;")==Status::REPEAT);
-    assert(headm.ScanFrame("@1gA9cq0003+gritzko :1gA8k+notgritzko;")==Status::CHAINBREAK);
-    assert(headm.ScanFrame("@obj 12345+obj! @1gA9cq0004+gritzko :1gA9cq0003+gritzko ;")==Status::TREEBREAK);
-    assert(headm.ScanFrame("@1gA9cq0004+gritzko :1gA8k0003+gritzko 'd' 4;")==Status::TREEGAP);
-    assert(headm.ScanFrame("@1gA9cq0003+gritzko :1gA9cq0002+gritzko 'c' 'three';"));
-    assert(headm.ScanFrame("@prev 1gA9cq0004+gritzko! @1gA9cq0005+gritzko :1gA8k0003+gritzko 'e' 5;")==Status::YARNGAP);
-    assert(headm.ScanFrame("@1gA9cq0004+gritzko :1gA9cq0003+gritzko 'd' 4;"));
+    assert(headm.ScanChain("@1gA9cz+notgritzko :1gA9cq0002+gritzko;")==Status::CHAINBREAK);
+    assert(headm.ScanChain("@1gA9cq+gritzko :1gA9cq0002+gritzko;")==Status::REPEAT);
+    assert(headm.ScanChain("@1gA9cq0003+gritzko :1gA8k+notgritzko;")==Status::CHAINBREAK);
+    assert(headm.ScanChain("@obj 12345+obj! @1gA9cq0004+gritzko :1gA9cq0003+gritzko ;")==Status::TREEBREAK);
+    assert(headm.ScanChain("@1gA9cq0004+gritzko :1gA8k0003+gritzko 'd' 4;")==Status::TREEGAP);
+    assert(headm.ScanChain("@1gA9cq0003+gritzko :1gA9cq0002+gritzko 'c' 'three';"));
+    assert(headm.ScanChain("@prev 1gA9cq0004+gritzko! @1gA9cq0005+gritzko :1gA8k0003+gritzko 'e' 5;")==Status::YARNGAP);
+    assert(headm.ScanChain("@1gA9cq0004+gritzko :1gA9cq0003+gritzko 'd' 4;"));
     assert(headm.object==Uuid{"1gA9cq+gritzko"});
     assert(headm.at==Uuid{"1gA9cq0004+gritzko"});
 }

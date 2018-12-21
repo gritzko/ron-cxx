@@ -93,6 +93,7 @@ class Replica {
     rocksdb::DB& db() { return *db_; }
     const rocksdb::ReadOptions& ro() const { return ro_; }
     const rocksdb::WriteOptions& wo() const { return wo_; }
+    inline bool open() const { return db_ != nullptr; }
 
     //  C H A I N  S T O R E
 

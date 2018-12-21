@@ -40,7 +40,7 @@ double TextFrame::Cursor::parse_float(fsize_t idx) {
     return ret;
 }
 
-std::string TextFrame::Cursor::unescape(const slice_t& data) const {
+std::string TextFrame::Cursor::unescape(const slice_t& data) {
     std::string ret{};
     for (auto c = data.begin(); c < data.end(); c++) {
         if (*c != ESC) {

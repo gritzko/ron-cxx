@@ -5,7 +5,7 @@
 namespace ron {
 
 class TextFrame {
-    const std::string data_;
+    std::string data_;
 
    public:
     typedef std::vector<TextFrame> Batch;
@@ -13,6 +13,7 @@ class TextFrame {
     TextFrame() : data_{} {}
     explicit TextFrame(const std::string& data) : data_{data} {}
     explicit TextFrame(const std::string&& data) : data_{data} {}
+    TextFrame& operator=(const TextFrame& orig) = default;
 
     const std::string& data() const { return data_; }
 
@@ -48,6 +49,7 @@ class TextFrame {
         }
         inline const Uuid& id() const { return op_.id(); }
         inline const Uuid& ref() const { return op_.ref(); }
+        inline fsize_t size() const { return op_.size(); }
         inline ATOM type(fsize_t idx) const { return op_.type(idx); }
         int64_t parse_int(fsize_t idx);
         double parse_float(fsize_t idx);
@@ -63,7 +65,7 @@ class TextFrame {
                     break;
             }
         }
-        std::string unescape(const slice_t& data) const;
+        static std::string unescape(const slice_t& data);
         inline std::string parse_string(fsize_t idx) const {
             const Atom& atom = op().atom(idx);
             assert(atom.type() == STRING);
@@ -158,7 +160,9 @@ class TextFrame {
                          Ts... args) {
             term_ = term;
             AppendSpec(id, ref);
+            Write(' ');
             AppendAtoms(args...);
+            Write('\n');
         }
 
         template <typename Cur>

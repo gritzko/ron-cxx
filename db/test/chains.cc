@@ -23,6 +23,7 @@ void test_db_chain_merge () {
     Cursor c2{op2};
     assert(db.ReceiveChain(batch, Uuid::ZERO, c1));
     assert(db.ReceiveChain(batch, Uuid::ZERO, c2));
+    db.db().Write(db.wo(), &batch);
     //db.db().Merge(db.wo(), db.trunk_, key, op1);
     //db.db().Merge(db.wo(), db.trunk_, key, op2);
     string merged;

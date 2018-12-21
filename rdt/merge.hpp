@@ -27,9 +27,7 @@ class MergeCursor {
     }
 
     MergeCursor(const Cursors& inputs) : MergeCursor{} {
-        for (int i = 0; i < inputs.size(); i++) {
-            Add(inputs[i]);
-        }
+        for (int i = 0; i < inputs.size(); i++) Add(inputs[i]);
     }
     // add a frame to merge
     void Add(const Frame& input) {
@@ -38,6 +36,7 @@ class MergeCursor {
     }
 
     void Add(const Cursor& input) {
+        if (!input.valid()) return;
         cursors_.push_back(new Cursor{input});
         pop((int)cursors_.size() - 1);
     }

@@ -36,17 +36,17 @@ class Replica {
         RDT rdt;
 
         OpMeta() : at{}, hash{}, object{}, rdt{} {}
-        Status FirstChainOp(const OpMeta &prev, const OpMeta &ref, Cursor &cur);
+        Status FirstChainOp(const OpMeta& prev, const OpMeta& ref, Cursor& cur);
         // learns/verifies 3 annotations: @obj, @sha2, @prev
-        Status NextChainOp(Cursor &op);
-        Status ScanChain(Cursor &cur) {
+        Status NextChainOp(Cursor& op);
+        Status ScanChain(Cursor& cur) {
             Status ret;
             do {
                 ret = NextChainOp(cur);
             } while (ret && cur.Next());
             return ret;
         }
-        inline Status ScanChain(const std::string &data) {
+        inline Status ScanChain(const std::string& data) {
             Frame f{data};
             Cursor c{f};
             return ScanChain(c);
@@ -66,8 +66,9 @@ class Replica {
             return Status::OK;
         }
     };
+
     // chain cache - skip db reads for ongoing op chains
-    std::unordered_map<Word, OpMeta> cache_;
+    std::unordered_map<Word, OpMeta> tips_;
 
    public:
     typedef rocksdb::ColumnFamilyHandle CFHandle;
@@ -120,7 +121,8 @@ class Replica {
 
     Status GetObject(const Uuid& store, const Uuid& key, Frame& frame);
 
-    Status Get (Frame& object, const Uuid& id, const Uuid& rdt=Uuid::ZERO, const Uuid& branch=Uuid::ZERO);
+    Status Get(Frame& object, const Uuid& id, const Uuid& rdt = Uuid::ZERO,
+               const Uuid& branch = Uuid::ZERO);
 
     // Q U E R I E S
 

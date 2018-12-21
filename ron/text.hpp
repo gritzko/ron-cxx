@@ -101,6 +101,8 @@ class TextFrame {
 
         const TextFrame frame() const { return TextFrame{data_}; }
 
+        const std::string& data() const { return data_; }
+
         bool empty() const { return data_.empty(); }
 
         //  B E A U T I F Y I N G   T E M P L A T E S

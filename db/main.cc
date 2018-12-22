@@ -102,7 +102,7 @@ Status CommandHashFrame(const std::string& filename) {
             auto ti = tips.find(id.origin());
             if (ti == tips.end()) {
                 // hash_root(id.origin(), sha2prev);
-                hash_uuid(Uuid{0, id.origin()}, sha2prev);
+                sha2prev = SHA2{Uuid{0, id.origin()}};
             } else {
                 sha2prev = hashes[Uuid{ti->second, id.origin()}];
             }
@@ -111,7 +111,7 @@ Status CommandHashFrame(const std::string& filename) {
                 if (ri == hashes.end()) return Status::TREEGAP;
                 sha2ref = ri->second;
             } else if (ref.version() == NAME) {
-                hash_uuid(ref, sha2ref);
+                sha2ref = SHA2{ref};
             } else {
                 return Status::BAD_STATE;
             }

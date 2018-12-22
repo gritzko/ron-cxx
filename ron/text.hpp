@@ -43,6 +43,9 @@ class TextFrame {
         const Op& op() const { return op_; }
         bool Next();
         inline bool valid() const { return cs != 0; }
+        inline bool has(fsize_t idx, ATOM atype) const {
+            return size() > idx && type(idx) == atype;
+        }
         const slice_t data() const { return data_; }
         inline slice_t slice(frange_t range) const {
             return data().slice(range);

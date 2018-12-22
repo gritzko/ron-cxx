@@ -53,14 +53,14 @@ class Replica {
         }
         static Status YarnRoot(OpMeta& meta, Word origin) {
             meta.at = Uuid{0, origin};
-            hash_root(origin, meta.hash);
+            meta.hash = SHA2{SHA2{Uuid{0, origin}}, SHA2{}};
             meta.object = Uuid::ZERO;
             meta.rdt = CHAIN;
             return Status::OK;
         }
         static Status RdtRoot(OpMeta& meta, const Uuid& rdt) {
             meta.at = rdt;
-            hash_uuid(rdt, meta.hash);
+            meta.hash = SHA2{rdt};
             meta.object = Uuid::ZERO;
             meta.rdt = CHAIN;
             return Status::OK;

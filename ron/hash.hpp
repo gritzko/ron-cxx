@@ -28,6 +28,11 @@ struct SHA2 {
         assert(base64.size_ == BASE64_SIZE);
         decode<6, ABC64>(base64.buf_, base64.size_, bits_);
     }
+
+    inline explicit SHA2(const Uuid& uuid);
+
+    inline SHA2(const SHA2& one, const SHA2& two);
+
     static bool valid(slice_t base64) {
         if (base64.size_ != BASE64_SIZE) return false;
         for (int i = 0; i < BASE64_SIZE; i++)
@@ -132,14 +137,17 @@ void WriteOpHashable(const typename Frame::Cursor& cursor, SomeStream& stream,
     }
 }
 
-inline void hash_uuid(const Uuid& uuid, SHA2& hash) {
+SHA2::SHA2(const Uuid& uuid) : known_bits_{SIZE << 3} {
     SHA2Stream stream;
     stream.WriteUuid(uuid);
-    stream.close(hash.bits_);
+    stream.close(bits_);
 }
 
-inline void hash_root(const Word origin, SHA2& hash) {
-    return hash_uuid(Uuid{0, origin}, hash);
+SHA2::SHA2(const SHA2& one, const SHA2& two) : known_bits_{SIZE << 3} {
+    SHA2Stream stream;
+    stream.WriteHash(one);
+    stream.WriteHash(two);
+    stream.close(bits_);
 }
 
 template <typename Frame>

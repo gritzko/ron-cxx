@@ -27,11 +27,9 @@ void test_serialization () {
     TextFrame frame = builder.frame();
     const string &data = frame.data();
     Cursor cur = frame.cursor();
-    SHA2 SRC_HASH;
-    SHA2 LWW_HASH;
+    SHA2 SRC_HASH{Uuid{"0+src"}};
+    SHA2 LWW_HASH{Uuid{"lww"}};
 //    IOStream out{IOSink{STDOUT_FILENO}};
-    hash_uuid(Uuid{"0+src"}, SRC_HASH);
-    hash_uuid(Uuid{"lww"}, LWW_HASH);
 //    WriteOpHashable<Frame, IOStream>(cur, out, SRC_HASH, LWW_HASH);
     SHA2Stream ophash;
     WriteOpHashable<Frame, SHA2Stream>(cur, ophash, SRC_HASH, LWW_HASH);

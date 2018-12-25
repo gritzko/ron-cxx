@@ -32,7 +32,7 @@ void test_serialization () {
 //    IOStream out{IOSink{STDOUT_FILENO}};
 //    WriteOpHashable<Frame, IOStream>(cur, out, SRC_HASH, LWW_HASH);
     SHA2Stream ophash;
-    WriteOpHashable<Frame, SHA2Stream>(cur, ophash, SRC_HASH, LWW_HASH);
+    WriteOpHashable<Cursor, SHA2Stream>(cur, ophash, SRC_HASH, LWW_HASH);
     SHA2 OP_HASH;
     ophash.close(OP_HASH.bits_);
     string okhex =  "97fa0525e009867adffe5e2c71f93057dfb8293c25c27292cd4caf230a0e39ec";

@@ -123,7 +123,7 @@ void test_terms() {
 
 void test_defaults () {
     Frame::Builder b;
-    Frame raw{"@12345+test :lww ;@1234500001+test :12345+test 'key' 'value' ;"};
+    Frame raw{"@12345+test :lww; @1234500001+test :12345+test 'key' 'value';"};
     b.AppendFrame(raw);
     Frame nice = b.frame();
     assert(nice.data()=="@12345+test :lww;\n 'key' 'value';\n");

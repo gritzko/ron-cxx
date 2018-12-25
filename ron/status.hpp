@@ -23,6 +23,9 @@ struct Status {
     static const Status DB_FAIL;
     static const Status IOFAIL;
 
+    static const Status NOTYPE;
+    static const Status NOTOPEN;
+
     static const Status CHAINBREAK;
     static const Status HASHBREAK;
     static const Status TREEBREAK;

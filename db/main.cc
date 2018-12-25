@@ -119,8 +119,9 @@ Status CommandHashFrame(const std::string& filename) {
             hash_op<Frame>(cur, sha2, sha2prev, sha2ref);
             tips[id.origin()] = id.value();  // TODO causality checks
             hashes[id] = sha2;
-            report.AppendNewOp(RAW, SHA2_UUID, id, sha2.base64());
-        } else if (id == SHA2_UUID && cur.size() > 2 && cur.type(2) == STRING) {
+            report.AppendNewOp(RAW, OpMeta::SHA2_UUID, id, sha2.base64());
+        } else if (id == OpMeta::SHA2_UUID && cur.size() > 2 &&
+                   cur.type(2) == STRING) {
             string base64 = cur.parse_string(2);
             SHA2 hash;
             SHA2::ParseBase64(hash, base64);

@@ -8,9 +8,9 @@
 
 namespace ron {
 
-// Let's use SHA512/256 here because it is reasonably fast
-// https://www.cryptopp.com/benchmarks.html
-// and reasonably secure, apparently.
+/** Let's use SHA512/256 here because it is reasonably fast
+ * https://www.cryptopp.com/benchmarks.html
+ * and reasonably secure, apparently. */
 struct SHA2 {
     static constexpr size_t SIZE = 32;
     // defined length, 0 to SIZE
@@ -22,9 +22,10 @@ struct SHA2 {
         : bits_{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
           known_bits_{0} {}
-    // my motivation for using Base64: Base64 is less clutter.
-    // noone is going to spell hashes on the phone anyway.
-    SHA2(slice_t base64) {  // TODO sizes!
+    /** my motivation for using Base64: Base64 is less clutter.
+     * noone is going to spell hashes on the phone anyway.
+     * @author gritzko  */
+    explicit SHA2(slice_t base64) {  // TODO sizes!
         assert(base64.size_ == BASE64_SIZE);
         decode<6, ABC64>(base64.buf_, base64.size_, bits_);
     }
@@ -32,6 +33,9 @@ struct SHA2 {
     inline explicit SHA2(const Uuid& uuid);
 
     inline SHA2(const SHA2& one, const SHA2& two);
+
+    template <typename Cursor>
+    SHA2(Cursor& cur, const SHA2& prev, const SHA2& ref);
 
     static bool valid(slice_t base64) {
         if (base64.size_ != BASE64_SIZE) return false;
@@ -110,8 +114,8 @@ struct Stream {
 
 typedef Stream<Botan::SHA_512_256> SHA2Stream;
 
-template <typename Frame, typename SomeStream>
-void WriteOpHashable(const typename Frame::Cursor& cursor, SomeStream& stream,
+template <typename Cursor, typename SomeStream>
+void WriteOpHashable(const Cursor& cursor, SomeStream& stream,
                      const SHA2& prev_hash, const SHA2& ref_hash) {
     const Op& op = cursor.op();
     stream.WriteUuid(op.id());
@@ -154,8 +158,16 @@ template <typename Frame>
 inline void hash_op(const typename Frame::Cursor& cur, SHA2& hash,
                     const SHA2& prev_hash, const SHA2& ref_hash) {
     SHA2Stream stream;
-    WriteOpHashable<Frame, SHA2Stream>(cur, stream, prev_hash, ref_hash);
+    WriteOpHashable<typename Frame::Cursor, SHA2Stream>(cur, stream, prev_hash,
+                                                        ref_hash);
     stream.close(hash.bits_);
+}
+
+template <typename Cursor>
+SHA2::SHA2(Cursor& cur, const SHA2& prev, const SHA2& ref) : known_bits_{SIZE} {
+    SHA2Stream stream;
+    WriteOpHashable<Cursor, SHA2Stream>(cur, stream, prev, ref);
+    stream.close(bits_);
 }
 
 };  // namespace ron

@@ -8,7 +8,19 @@
 
 namespace ron {
 
-enum RDT : uint8_t { CHAIN = 0, ACK = 1, LWW = 2, RGA = 3 };
+enum RDT : uint8_t { CHAIN, ACK, META, LWW, RGA, RDT_COUNT };  // ??!!
+const Uuid RDT_UUIDS[] = {};
+
+inline RDT uuid2rdt(const Uuid &rdt_id) {
+    for (int i = 0; i < RDT_COUNT; i++)
+        if (rdt_id == RDT_UUIDS[i]) return (RDT)i;
+    return CHAIN;  //?
+}
+
+inline Uuid rdt2uuid(RDT rdt) {
+    assert(rdt < RDT_COUNT);
+    return RDT_UUIDS[rdt];
+}
 
 template <class Frame>
 class MasterRDT {

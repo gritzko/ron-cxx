@@ -8,6 +8,7 @@
 #include "rdt/rdt.hpp"
 #include "rocksdb/db.h"
 #include "ron/hash.hpp"
+#include "ron/opmeta.hpp"
 #include "ron/ron.hpp"
 
 namespace ron {
@@ -18,64 +19,22 @@ class Replica {
     typedef typename Frame::Batch Batch;
     typedef typename Frame::Builder Builder;
     typedef typename Frame::Cursor Cursor;
+    typedef rocksdb::ColumnFamilyHandle CFHandle;
 
    private:
     rocksdb::DB* db_;
-
     rocksdb::WriteOptions wo_;
     rocksdb::ReadOptions ro_;
-
-   public:
-    // The defining feature of an op chain is that the next op references
-    // the previous (yarn-previous) one; a chain is a chunk of some yarn.
-    // The hash of the next op only depends on the previous op.
-    struct OpMeta {
-        Uuid at;
-        SHA2 hash;
-        Uuid object;
-        RDT rdt;
-
-        OpMeta() : at{}, hash{}, object{}, rdt{} {}
-        Status FirstChainOp(const OpMeta& prev, const OpMeta& ref, Cursor& cur);
-        // learns/verifies 3 annotations: @obj, @sha2, @prev
-        Status NextChainOp(Cursor& op);
-        Status ScanChain(Cursor& cur) {
-            Status ret;
-            do {
-                ret = NextChainOp(cur);
-            } while (ret && cur.Next());
-            return ret;
-        }
-        inline Status ScanChain(const std::string& data) {
-            Frame f{data};
-            Cursor c{f};
-            return ScanChain(c);
-        }
-        static Status YarnRoot(OpMeta& meta, Word origin) {
-            meta.at = Uuid{0, origin};
-            meta.hash = SHA2{SHA2{Uuid{0, origin}}, SHA2{}};
-            meta.object = Uuid::ZERO;
-            meta.rdt = CHAIN;
-            return Status::OK;
-        }
-        static Status RdtRoot(OpMeta& meta, const Uuid& rdt) {
-            meta.at = rdt;
-            meta.hash = SHA2{rdt};
-            meta.object = Uuid::ZERO;
-            meta.rdt = CHAIN;
-            return Status::OK;
-        }
-    };
-
-    // chain cache - skip db reads for ongoing op chains
-    std::unordered_map<Word, OpMeta> tips_;
-
-   public:
-    typedef rocksdb::ColumnFamilyHandle CFHandle;
-
     CFHandle* trunk_;
+
     std::unordered_map<Uuid, CFHandle*> objects_;
 
+   public:
+    // chain cache - skip db reads for ongoing op chains
+    typedef std::unordered_map<Word, OpMeta> tipmap_t;
+    tipmap_t tips_;
+
+   public:
     Replica() : db_{nullptr}, trunk_{nullptr}, objects_{}, wo_{}, ro_{} {}
 
     //  L I F E C Y C L E
@@ -94,6 +53,7 @@ class Replica {
     const rocksdb::ReadOptions& ro() const { return ro_; }
     const rocksdb::WriteOptions& wo() const { return wo_; }
     inline bool open() const { return db_ != nullptr; }
+    inline CFHandle* trunk() const { return trunk_; }
 
     //  C H A I N  S T O R E
 
@@ -101,12 +61,14 @@ class Replica {
     Status FindChainMeta(Uuid op_id, OpMeta& meta) {
         std::string chain;
         Status ok = FindChain(op_id, chain);
-        if (ok) meta.ScanChain(chain);
-        return ok;
+        if (!ok) return ok;
+        Cursor c{chain};
+        while (c.valid()) {
+            if (c.id().version() == NAME) meta.ScanAnno(c);
+            c.Next();
+        }
+        return Status::OK;
     }
-
-    Status WalkChain(const Frame& chain, const Frame& meta, const Uuid& to,
-                     std::string& hash);
 
     rocksdb::Iterator* FindYarn(Word replica);
 
@@ -197,17 +159,6 @@ inline slice_t slice(rocksdb::Slice s) {
     return slice_t{s.data_, (fsize_t)s.size_};
 }
 inline slice_t slice(const rocksdb::Slice* s) { return slice(*s); }
-
-extern const Uuid HISTORY_CF_UUID;
-extern const Uuid LOG_CF_UUID;
-extern const std::string HISTORY_CF_NAME;
-extern const std::string LOG_CF_NAME;
-extern const Uuid CHAIN_STORE;
-extern const Uuid TRUNK_STORE;
-extern const Uuid SHA2_UUID;
-extern const Uuid OBJ_UUID;
-extern const Uuid PREV_UUID;
-extern const Uuid RDT_UUID;
 
 }  // namespace ron
 

@@ -7,14 +7,16 @@
 
 namespace ron {
 
-// A 128-bit key has the UUID and the RDT/reducer id.
-// UUID origin flag bits are always RON_UUID/TIME, hence reused for the RDT
-// id. The bit layout is: origin(60) variety(4) value(60) reducer(4)
-// * yarns, scans
-// * unknown-type fetch
-// * prefix compression: value tail bits, reducer bits
-// * same cf for chains(yarns), objects
-// * origin-locality
+/**
+ *  A 128-bit key has the UUID and the RDT/reducer id.
+ *  UUID origin flag bits are always RON_UUID/TIME, hence reused for the RDT
+ *  id. The bit layout is: origin(60) variety(4) value(60) reducer(4)
+ *  * yarns, scans
+ *  * unknown-type fetch
+ *  * prefix compression: value tail bits, reducer bits
+ *  * same cf for chains(yarns), objects
+ *  * origin-locality
+ */
 struct Key {
     uint64pair bits;
 

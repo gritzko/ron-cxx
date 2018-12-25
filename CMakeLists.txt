@@ -88,6 +88,10 @@ add_executable(test-hash ron/test/hash.cc)
 target_link_libraries(test-hash ron botan)
 add_test(HASH test-hash)
 
+add_executable(test-meta ron/test/meta.cc)
+target_link_libraries(test-meta ron botan)
+add_test(HASH test-meta)
+
 #  L I B R D T  ( H E A D E R  O N L Y )
 
 add_library(rdt INTERFACE)

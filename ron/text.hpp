@@ -188,6 +188,8 @@ class TextFrame {
     static constexpr char ESC = '\\';
 
     typedef std::vector<Cursor> Cursors;
+
+    inline void swap(std::string& str) { std::swap(data_, str); }
 };
 
 }  // namespace ron
@@ -197,6 +199,8 @@ namespace std {
 inline void swap(ron::TextFrame::Builder& builder, std::string& str) {
     swap(builder.data_, str);
 }
+
+inline void swap(ron::TextFrame& f, std::string& str) { f.swap(str); }
 
 }  // namespace std
 

@@ -6,13 +6,6 @@ using namespace std;
 
 namespace ron {
 
-const Uuid CHAIN_STORE{};
-const Uuid TRUNK_STORE{1024260140364201984, Word::PAYLOAD_BITS};
-const Uuid SHA2_UUID{1003339682156642304UL, 0};
-const Uuid OBJ_UUID{929632683238096896UL, 0};
-const Uuid PREV_UUID{952132676872044544UL, 0};
-const Uuid RDT_UUID{984282809185075200UL, 0};
-
 //  U T I L
 
 template <typename Frame>
@@ -23,13 +16,9 @@ ColumnFamilyOptions Replica<Frame>::CFOptions() const {
     return cfo;
 }
 
-const Uuid HISTORY_CF_UUID = Uuid{805545704900788224UL, 0};
-const string HISTORY_CF_NAME = HISTORY_CF_UUID.str();
-const Uuid LOG_CF_UUID = Uuid{879235468267356160UL, 0};
-const string LOG_CF_NAME = LOG_CF_UUID.str();
-
 //  C H A I N S
 
+/*
 template <typename Frame>
 Status Replica<Frame>::OpMeta::FirstChainOp(const OpMeta& prev,
                                             const OpMeta& ref, Cursor& cur) {
@@ -86,7 +75,7 @@ Status Replica<Frame>::OpMeta::NextChainOp(Cursor& cur) {
     hash = next_hash;
 
     return Status::OK;
-}
+}*/
 
 //  L I F E C Y C L E
 
@@ -191,20 +180,18 @@ Status Replica<Frame>::FindChain(Uuid op_id, std::string& chain) {
     // can parallelize this if a yarn is pinned to a thread
 }
 
-template <class Frame>
-Status Replica<Frame>::WalkChain(const Frame& chain, const Frame& meta,
-                                 const Uuid& to, std::string& hash) {
-    Cursor chc = chain.cursor();
-    return Status::OK;
-}
-
 //  R E C E I V E S
 
+/** The key lifecycle method: accepts a new chain of ops, checks it
+ * against existing ops, checks integrity/consistency/causality,
+ * saves the chain, updates object state.
+ * @param batch a WriteBatch for all the db writes
+ * @param branch
+ * @param chain a cursor positioned on the head of the chain;
+ *              will be moved to the first non-chain op (or EOF) */
 template <class Frame>
 Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
                                     Cursor& chain) {
-    OpMeta prev_meta, ref_meta;
-
     const Uuid& id = chain.id();
     if (id.version() != TIME) return Status::BAD_STATE;
 
@@ -213,69 +200,76 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
         if (ref >= id) return Status::CAUSEBREAK;
     } else {
         if (ref.version() != NAME) return Status::BAD_STATE;
+        if (uuid2rdt(ref) == RDT_COUNT) return Status::NOT_IMPLEMENTED;
     }
 
     // PREV: fetch the meta on the prev op (likely, chain)
     auto ti = tips_.find(id.origin());
-    if (ti != tips_.end()) {
-        prev_meta = ti->second;
-    } else if (!FindChainMeta(Uuid{NEVER, id.origin()}, prev_meta)) {
-        OpMeta::YarnRoot(prev_meta, id.origin());
+    if (ti == tips_.end()) {
+        auto ib = tips_.insert(tipmap_t::value_type{id.origin(), OpMeta{}});
+        ti = ib.first;
+        if (!FindChainMeta(Uuid{NEVER, id.origin()}, ti->second))
+            ti->second = OpMeta(id.origin(), SHA2{});
     }
+    // the tip should stay in the cache, so we do in-place writes
+    OpMeta& tip = ti->second;
 
-    bool new_chain = true;
-    // prev_meta.at.zero() || ref.version() != TIME || ref.origin() !=
-    // id.origin();
-
+    OpMeta refd{tip};
     // REF: fetch the meta on the referenced op (get the object)
-    if (ref.version() == NAME) {  // new object
-        OpMeta::RdtRoot(ref_meta, ref);
-    } else if (ref == prev_meta.at) {  // continue a chain
-        ref_meta = prev_meta;
-        new_chain = false;
-    } else if (ref <= prev_meta.at) {
-        return Status::CAUSEBREAK;
-    } else if (ref != prev_meta.at) {  // a new chain
-        // TODO the cache
-        Status ok = FindChainMeta(ref, ref_meta);
-        if (!ok) return ok;
+    if (ref != tip.id) {
+        if (ref.version() == NAME) {  // new object
+            refd = OpMeta{ref};
+        } else {
+            Status ok = FindChainMeta(ref, refd);
+            if (!ok) return ok;
+        }
     }
 
     // START OUR CHAIN-LET
     Builder chainlet;
-    OpMeta meta;
-    meta.FirstChainOp(prev_meta, ref_meta, chain);
+    tip = OpMeta{chain, tip, refd};
     chainlet.AppendOp(chain);
+    if (tip.head()) {
+        Builder annos;
+        tip.AppendAnnos(annos);
+        batch.Merge(trunk_, Key{tip.chain_id(), META}, annos.data());
+    }
+
+    // TODO chain comparator: sort annos just after the op!!!!
 
     // walk/check the chainlet
     while (chain.Next()) {
-        Status ok = meta.NextChainOp(chain);  // checks hash-mentions
-        if (!ok) return ok;
-        if (chain.id().version() == TIME) {
+        if (chain.id().version() == NAME) {
+            Status ok = tip.ScanAnno(chain);
+            if (!ok) return ok;
+        } else if (tip.next(chain)) {
+            tip = OpMeta{chain, tip, tip};
             chainlet.AppendOp(chain);
+        } else {
+            break;  // end of the chain
         }
     }
 
     // OK, SAVE
-    Key ckey{id, CHAIN};
-    Key okey{meta.object, meta.rdt};
-    if (new_chain) {    // FIXME chain rdt to keep annos (name>time) test
-        Builder annos;  // TODO default prev_id for builder/cursor
-        annos.AppendNewOp(HEADER, SHA2_UUID, id, meta.hash.base64());
-        annos.AppendNewOp(HEADER, OBJ_UUID, id, meta.object);
-        batch.Merge(trunk_, ckey, annos.frame().data());
-    }
     const string& data = chainlet.data();
-    batch.Merge(trunk_, ckey, data);  // TODO branches
-    batch.Merge(trunk_, okey, data);
+    batch.Merge(trunk_, Key{tip.chain_id(), CHAIN}, data);  // TODO branches
+    batch.Merge(trunk_, Key{tip.object, uuid2rdt(tip.rdt)}, data);
 
-    tips_[id.origin()] = meta;
     return Status::OK;
 }
 
 template <typename Frame>
 Status Replica<Frame>::Get(Frame& object, const Uuid& id, const Uuid& rdt,
                            const Uuid& branch) {
+    if (db_ == nullptr) return Status::NOTOPEN;
+    RDT t = uuid2rdt(rdt);
+    if (t == RDT::RDT_COUNT) return Status::NOTYPE;
+    string data;
+    Slice key{Key{id, t}};
+    auto ok = db_->Get(ro_, trunk_, key, &data);
+    if (ok.IsNotFound()) return Status::NOT_FOUND;
+    if (!ok.ok()) return Status::DB_FAIL;
+    object.swap(data);
     return Status::OK;
 }
 

@@ -82,6 +82,7 @@ union Word {
     inline uint64_t payload() const { return _64 & MAX_VALUE; }
     inline bool is_zero() const { return _64 == 0U; }
     inline Word inc() const { return Word{_64 + 1U}; }
+    inline Word dec() const { return Word{_64 - 1U}; }
     inline bool operator<(const Word& b) const { return _64 < b._64; }
     inline bool operator>(const Word& b) const { return _64 > b._64; }
     inline bool operator>=(const Word& b) const { return _64 >= b._64; }
@@ -171,6 +172,7 @@ struct Uuid : public Atom {
     }
     inline Uuid derived() const { return Derived(value(), origin()); }
     inline Uuid inc() const { return Uuid{value().inc(), origin()}; }
+    inline Uuid dec() const { return Uuid{value().dec(), origin()}; }
     inline bool operator<(const Uuid& b) const { return words_ < b.words_; }
     inline bool operator>(const Uuid& b) const { return words_ > b.words_; }
     inline bool operator==(const Uuid& b) const { return words_ == b.words_; }

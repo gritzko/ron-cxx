@@ -6,7 +6,7 @@ namespace ron {
 constexpr uint8_t Word::OFFSET6[10];
 constexpr uint64_t Word::LOWER6[11];
 const Word Word::NEVER{Word::MAX_VALUE};
-const Uuid Uuid::ZERO{};
+const Uuid Uuid::NIL{};
 const Uuid Uuid::FATAL{Word::MAX_VALUE, Word::MAX_VALUE};
 
 size_t Word::write_base64(char* to) const {

@@ -21,8 +21,8 @@ void test_db_chain_merge () {
     string op2 = "@1gHHUW0001+test :1gHHUW+test 'key' 'value' ;";
     Cursor c1{op1};
     Cursor c2{op2};
-    assert(db.ReceiveChain(batch, Uuid::ZERO, c1));
-    assert(db.ReceiveChain(batch, Uuid::ZERO, c2));
+    assert(db.ReceiveChain(batch, Uuid::NIL, c1));
+    assert(db.ReceiveChain(batch, Uuid::NIL, c2));
     db.db().Write(db.wo(), &batch);
     //db.db().Merge(db.wo(), db.trunk_, key, op1);
     //db.db().Merge(db.wo(), db.trunk_, key, op2);

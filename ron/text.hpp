@@ -95,7 +95,7 @@ class TextFrame {
         void escape(std::string& escaped, const slice_t& unescaped);
 
        public:
-        Builder() : term_{RAW}, prev_{Uuid::ZERO}, data_{} {}
+        Builder() : term_{RAW}, prev_{Uuid::NIL}, data_{} {}
 
         // copy-as-strings
         void AppendOp(const Cursor& cur);

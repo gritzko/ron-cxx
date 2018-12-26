@@ -181,7 +181,8 @@ struct Uuid : public Atom {
     inline bool operator<=(const Uuid& b) const { return words_ <= b.words_; }
     inline bool operator>=(const Uuid& b) const { return words_ >= b.words_; }
 
-    static const Uuid ZERO;
+    /** Nil UUID as per RFC4122 */
+    static const Uuid NIL;
     static const Uuid FATAL;
 
     inline static Uuid Parse(char variety, const slice_t& value, char version,

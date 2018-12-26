@@ -6,7 +6,7 @@ namespace ron {
 
 /** Error codes are RON UUIDs - to serialize them as ops, store, send.
  *  For example, `@error :1gOFEM+gritzko CAUSEBREAK;`
- *  The OK status is 0 (aka "null UUID"). */
+ *  The OK status is 0 (aka "nil UUID"). */
 struct Status {
     Uuid code_;
 

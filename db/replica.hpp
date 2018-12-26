@@ -84,8 +84,8 @@ class Replica {
 
     Status GetObject(const Uuid& store, const Uuid& key, Frame& frame);
 
-    Status Get(Frame& object, const Uuid& id, const Uuid& rdt = Uuid::ZERO,
-               const Uuid& branch = Uuid::ZERO);
+    Status Get(Frame& object, const Uuid& id, const Uuid& rdt = Uuid::NIL,
+               const Uuid& branch = Uuid::NIL);
 
     // Q U E R I E S
 

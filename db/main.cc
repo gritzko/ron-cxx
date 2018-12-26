@@ -13,6 +13,8 @@ using namespace std;
 
 typedef TextFrame Frame;
 typedef Replica<Frame> RonReplica;
+typedef Frame::Builder Builder;
+typedef Frame::Cursor Cursor;
 
 // ## HUMANE
 // create database test with spaces sha3,vv, compression gz, format binary
@@ -26,14 +28,18 @@ typedef Replica<Frame> RonReplica;
 // db ":tag >test >1AbC2+gritzko"
 
 DEFINE_bool(create, false, "create a new replica");
-DEFINE_string(feed, "-", "feed a RON frame");
+DEFINE_string(feed, "", "feed a RON frame");
+DEFINE_string(write, "", "write a RON frame (new ops)");
+DEFINE_string(get, "", "get a RON frame (e.g. --get @1gPH5o+gritzko:lww)");
 DEFINE_bool(now, false, "print the current time(stamp)");
-DEFINE_string(hash, "-", "Merkle-hash a causally ordered frame");
+DEFINE_string(hash, "", "Merkle-hash a causally ordered frame");
 DEFINE_bool(h, false, "Show help");
 DECLARE_bool(help);
 DECLARE_string(helpmatch);
 
 Status CommandHashFrame(const string& filename);
+Status CommandWriteNewFrame(RonReplica& replica, const string& filename);
+Status CommandGetFrame(RonReplica& replica, const string& name);
 
 Status RunCommands() {
     RonReplica replica{};
@@ -51,6 +57,10 @@ Status RunCommands() {
         cout << now.str() << endl;
     } else if (!FLAGS_hash.empty()) {
         ok = CommandHashFrame(FLAGS_hash);
+    } else if (!FLAGS_get.empty()) {
+        ok = CommandGetFrame(replica, FLAGS_get);
+    } else if (!FLAGS_write.empty()) {
+        ok = CommandWriteNewFrame(replica, FLAGS_write);
     } else {
     }
 
@@ -91,12 +101,56 @@ Status LoadFrame(Frame& target, int fd) {
 }
 
 Status LoadFrame(Frame& target, const string& filename) {
-    int fd = open(filename.c_str(), O_RDONLY);
+    int fd = filename.empty() ? STDIN_FILENO : open(filename.c_str(), O_RDONLY);
     if (fd < 0) return Status::IOFAIL;
     return LoadFrame(target, fd);
 }
 
-Status CommandHashFrame(const std::string& filename) {
+Status CommandGetFrame(RonReplica& replica, const string& name) {
+    Uuid id{name};
+    Frame result;
+    Status ok = replica.Get(result, id, LWW_UUID);
+    if (ok) cout << result.data() << '\n';
+    return ok;
+}
+
+Status CommandWriteNewFrame(RonReplica& replica, const string& filename) {
+    Uuid now = replica.now();
+    Frame unstamped;
+    LoadFrame(unstamped, filename);
+    Builder stamp;
+    Cursor uc = unstamped.cursor();
+    constexpr uint64_t MAXSEQ = 1 << 30;
+    while (uc.valid()) {
+        if (uc.id().origin() != 0) return Status::BAD_STATE;
+        Uuid id{now.value()._64 + uc.id().value()._64, now.origin()};
+        Uuid ref{uc.ref()};
+        if (ref.origin() == 0 && ref.value() < MAXSEQ) {
+            ref = Uuid{now.value()._64 + uc.ref().value()._64, now.origin()};
+        }
+        stamp.AppendAmendedOp(uc, RAW, id, ref);
+        uc.Next();
+    }
+    Frame stamped = stamp.frame();
+
+    cout << stamped.data() << '\n';
+
+    Cursor cur = stamped.cursor();
+    Status ok = Status::OK;
+    rocksdb::WriteBatch batch;
+
+    while (cur.valid() && ok) {
+        ok = replica.ReceiveChain(batch, Uuid::NIL, cur);
+    }
+
+    if (ok) {
+        replica.db().Write(replica.wo(), &batch);
+    }
+
+    return ok;
+}
+
+Status CommandHashFrame(const string& filename) {
     Frame frame;
     LoadFrame(frame, filename);
     Frame::Builder report;

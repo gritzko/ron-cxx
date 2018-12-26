@@ -9,7 +9,7 @@ using namespace std;
 
 int main (int argn, char** args) {
 
-    //cout<<Uuid{"NOTOPEN"}.value()._64<<'\n';
+    //cout<<Uuid{"rga"}.value()._64<<'\n';
 
     static_assert(sizeof(Word)==8, "no mishup");
     static_assert(sizeof(Uuid)==16, "...");

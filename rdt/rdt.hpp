@@ -8,8 +8,14 @@
 
 namespace ron {
 
+const Uuid CHAIN_UUID{715112314629521408UL, 0};
+const Uuid ACK_UUID{677716977128570880UL, 0};
+const Uuid META_UUID{894494834235015168UL, 0};
+const Uuid LWW_UUID{881557636825219072UL, 0};
+const Uuid RGA_UUID{985043671231496192UL, 0};
+
 enum RDT : uint8_t { CHAIN, ACK, META, LWW, RGA, RDT_COUNT };  // ??!!
-const Uuid RDT_UUIDS[] = {};
+const Uuid RDT_UUIDS[] = {CHAIN_UUID, ACK_UUID, META_UUID, LWW_UUID, RGA_UUID};
 
 inline RDT uuid2rdt(const Uuid &rdt_id) {
     for (int i = 0; i < RDT_COUNT; i++)

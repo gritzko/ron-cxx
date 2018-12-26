@@ -100,9 +100,16 @@ class TextFrame {
         // copy-as-strings
         void AppendOp(const Cursor& cur);
 
+        // template <typename Cursor2>
+        void AppendValues(const Cursor& cur);
+
         // RON coding conversion (parsing, re-serialization)
-        template <typename Cursor2>
-        void AppendOp(const Cursor2& cur);
+        // template <typename Cursor2>
+        // void AppendOp(const Cursor& cur);
+
+        // template <typename Cursor2>
+        void AppendAmendedOp(const Cursor& cur, TERM newterm, const Uuid& newid,
+                             const Uuid& newref);
 
         const TextFrame frame() const { return TextFrame{data_}; }
 

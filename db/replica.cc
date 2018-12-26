@@ -99,7 +99,10 @@ Status Replica<Frame>::Create(std::string home, Word origin) {
 
     trunk_ = nullptr;  // db_->DefaultColumnFamily();
 
-    if (origin == 0) origin = Word::random();  // TODO key!!!
+    // TODO priv/pub key setup
+
+    // set the clock up
+    if (origin == 0) origin = Word::random();
     now_ = Uuid::Time(0, origin);
     now();
     Builder nowrec;

@@ -31,10 +31,10 @@ void TextFrame::Builder::AppendOp(const Cursor& cur) {
     Write('\n');
 }
 
-template <typename Cursor2>
-void TextFrame::Builder::AppendOp(const Cursor2& cur) {
+// template <typename Cursor2>
+void TextFrame::Builder::AppendValues(const Cursor& cur) {
     const Op& op = cur.op();
-    AppendSpec(op.id(), op.ref());
+    frange_t range;
     for (fsize_t i = 2; i < op.size(); i++) {
         Write(' ');
         switch (op.type(i)) {
@@ -47,7 +47,8 @@ void TextFrame::Builder::AppendOp(const Cursor2& cur) {
                 break;
             case STRING:
                 Write(ATOM_PUNCT[STRING]);
-                WriteString(cur.unescape(op.atom(i).origin().range()));
+                range = op.atom(i).origin().range();
+                WriteString(Cursor::unescape(cur.data().slice(range)));
                 Write(ATOM_PUNCT[STRING]);
                 break;
             case FLOAT:
@@ -55,9 +56,29 @@ void TextFrame::Builder::AppendOp(const Cursor2& cur) {
                 break;
         }
     }
+}
+
+// template <typename Cursor2>
+void TextFrame::Builder::AppendAmendedOp(const Cursor& cur, TERM newterm,
+                                         const Uuid& newid,
+                                         const Uuid& newref) {
+    const Op& op = cur.op();
+    AppendSpec(newid, newref);
+    AppendValues(cur);
+    Write(TERM_PUNCT[newterm]);
+    Write('\n');
+}
+
+/*
+//template <typename Cursor2>
+void TextFrame::Builder::AppendOp(const Cursor& cur) {
+    const Op& op = cur.op();
+    AppendSpec(op.id(), op.ref());
+    AppendValues(cur);
     Write(TERM_PUNCT[op.term()]);
     Write('\n');
 }
+*/
 
 void TextFrame::Builder::WriteInt(int64_t value) {
     char tmp[20];

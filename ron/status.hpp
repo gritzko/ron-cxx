@@ -4,11 +4,14 @@
 
 namespace ron {
 
+/** Error codes are RON UUIDs - to serialize them as ops, store, send.
+ *  For example, `@error :1gOFEM+gritzko CAUSEBREAK;`
+ *  The OK status is 0 (aka "null UUID"). */
 struct Status {
     Uuid code_;
 
     Status() : code_{0, 0} {}
-    Status(uint64_t err_code) : code_{err_code, Word::MAX_VALUE} {}
+    explicit Status(uint64_t err_code) : code_{err_code, 0} {}
 
     operator bool() const {
         return code_[ORIGIN] != Word::PAYLOAD_BITS;  // not an error

@@ -28,12 +28,41 @@ typedef Replica<Frame> RonReplica;
 DEFINE_bool(create, false, "create a new replica");
 DEFINE_string(feed, "-", "feed a RON frame");
 DEFINE_bool(now, false, "print the current time(stamp)");
-DEFINE_string(hash, "-", "Merkle-hash the input");
+DEFINE_string(hash, "-", "Merkle-hash a causally ordered frame");
 DEFINE_bool(h, false, "Show help");
 DECLARE_bool(help);
 DECLARE_string(helpmatch);
 
 Status CommandHashFrame(const string& filename);
+
+Status RunCommands () {
+    RonReplica replica{};
+    Status ok;
+
+    if (FLAGS_create) {
+        ok = replica.Create(".swarmdb");
+    } else {
+        ok = replica.Open(".swarmdb");
+    }
+    if (!ok) return ok;
+
+    if (FLAGS_now) {
+        // TODO load replica clocks
+        cout << Uuid{Uuid::HybridTime(time(nullptr)), Word::NEVER}.str()
+             << endl;
+    } else if (!FLAGS_hash.empty()) {
+        ok = CommandHashFrame(FLAGS_hash);
+    } else {
+    }
+
+    if (!ok) {
+        cerr << ok.str() << endl;
+    }
+
+    if (replica.open()) replica.Close();
+
+    return Status::OK;
+}
 
 int main(int argn, char** args) {
     gflags::SetUsageMessage("swarmdb -- a syncable embedded RON database");
@@ -44,26 +73,9 @@ int main(int argn, char** args) {
     }
     gflags::HandleCommandLineHelpFlags();
 
-    RonReplica replica{};
-    Status ok;
+    Status ok = RunCommands();
 
-    if (FLAGS_create) {
-        ok = replica.Create(".swarmdb");
-    } else if (FLAGS_now) {
-        // TODO load replica clocks
-        cout << Uuid{Uuid::HybridTime(time(nullptr)), Word::NEVER}.str()
-             << endl;
-    } else if (!FLAGS_hash.empty()) {
-        ok = CommandHashFrame(FLAGS_hash);
-    } else {
-        ok = replica.Open(".swarmdb");
-    }
-
-    if (!ok) {
-        cerr << ok.str() << endl;
-    }
-
-    if (replica.open()) replica.Close();
+    if (!ok) cerr<<"error"<<ok.str()<<'\n';
 
     return ok ? 0 : -1;
 }
@@ -84,6 +96,7 @@ Status LoadFrame(Frame& target, const string& filename) {
     if (fd < 0) return Status::IOFAIL;
     return LoadFrame(target, fd);
 }
+
 
 Status CommandHashFrame(const std::string& filename) {
     Frame frame;

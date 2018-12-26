@@ -116,11 +116,11 @@ class MergeCursor {
     const std::string& data() const { return op().data(); }
     //
     Status Merge(typename Frame::Builder& output) {
-        if (empty()) return 0;
+        if (empty()) return Status::OK;
         do {
             output.AppendOp(*cursors_[0]);
         } while (Next());
-        return 0;
+        return Status::OK;
     }
 };
 

@@ -20,6 +20,8 @@ namespace ron {
 struct Key {
     uint64pair bits;
 
+    static constexpr size_t SIZE = sizeof(bits);
+
     Key(const Uuid& id, RDT rdt)
         : bits{
               htobe64((id.origin()._64 << Word::FBS) | id.variety()),

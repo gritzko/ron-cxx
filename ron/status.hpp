@@ -7,11 +7,24 @@ namespace ron {
 /** Error codes are RON UUIDs - to serialize them as ops, store, send.
  *  For example, `@error :1gOFEM+gritzko CAUSEBREAK;`
  *  The OK status is 0 (aka "nil UUID"). */
-struct Status {
+class Status {
     Uuid code_;
+    std::string comment_;
 
+   public:
     Status() : code_{0, 0} {}
     explicit Status(uint64_t err_code) : code_{err_code, 0} {}
+    Status(const Uuid& code, const std::string& comment)
+        : code_{code}, comment_{comment} {}
+
+    inline explicit operator Uuid() const { return code_; }
+
+    inline const Uuid& code() const { return code_; }
+    inline const std::string& comment() const { return comment_; }
+
+    inline Status comment(const std::string& add_comment) const {
+        return Status{code_, add_comment};
+    }
 
     operator bool() const {
         return code_[ORIGIN] != Word::PAYLOAD_BITS;  // not an error

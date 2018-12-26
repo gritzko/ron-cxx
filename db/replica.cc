@@ -6,6 +6,9 @@ using namespace std;
 
 namespace ron {
 
+template <typename Frame>
+const Uuid Replica<Frame>::NOW_UUID{915334634030497792UL, 0};
+
 //  U T I L
 
 template <typename Frame>
@@ -80,7 +83,7 @@ Status Replica<Frame>::OpMeta::NextChainOp(Cursor& cur) {
 //  L I F E C Y C L E
 
 template <typename Frame>
-Status Replica<Frame>::Create(std::string home) {
+Status Replica<Frame>::Create(std::string home, Word origin) {
     DBOptions db_options;
     db_options.create_if_missing = true;
     db_options.error_if_exists = true;
@@ -94,9 +97,18 @@ Status Replica<Frame>::Create(std::string home) {
     auto status = DB::Open(options, home, &db_);
     if (!status.ok()) return Status::DB_FAIL;
 
-    trunk_ = db_->DefaultColumnFamily();
+    trunk_ = nullptr;  // db_->DefaultColumnFamily();
 
-    return Status::OK;
+    if (origin == 0) origin = Word::random();  // TODO key!!!
+    now_ = Uuid::Time(0, origin);
+    now();
+    Builder nowrec;
+    nowrec.AppendNewOp(RAW, NOW_UUID, now_);
+    cout << nowrec.data() << '\n';
+    db_->Put(wo(), nil_key(), nowrec.data());
+
+    db_->Close();
+    return Open(home);
 }
 
 template <typename Frame>
@@ -124,7 +136,21 @@ Status Replica<Frame>::Open(std::string home) {
     auto i = handles.begin();
     trunk_ = *i;
 
+    string meta;
+    auto ok = db_->Get(ro_, nil_key(), &meta);
+    Cursor mc{meta};
+    do {
+        if (mc.id() == NOW_UUID) now_ = mc.ref();
+    } while (mc.Next());
+
     return Status::OK;
+}
+
+template <typename Frame>
+Uuid Replica<Frame>::now() {
+    Uuid next{Uuid::HybridTime(time(nullptr)), now_.origin()};
+    now_ = next > now_ ? next : now_.inc();
+    return now_;
 }
 
 template <typename Frame>
@@ -134,10 +160,10 @@ Status Replica<Frame>::GC() {
 
 template <typename Frame>
 Status Replica<Frame>::Close() {
-    //    if (trunk_) {
-    //        delete trunk_;
-    //        trunk_ = nullptr;
-    //    }
+    if (trunk_) {
+        delete trunk_;
+        trunk_ = nullptr;
+    }
     if (db_) {
         delete db_;
         db_ = nullptr;
@@ -234,6 +260,7 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
         tip.AppendAnnos(annos);
         batch.Merge(trunk_, Key{tip.chain_id(), META}, annos.data());
     }
+    See(id);
 
     // TODO chain comparator: sort annos just after the op!!!!
 
@@ -248,6 +275,7 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
         } else {
             break;  // end of the chain
         }
+        See(chain.id());
     }
 
     // OK, SAVE

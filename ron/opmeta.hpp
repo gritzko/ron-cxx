@@ -50,15 +50,15 @@ struct OpMeta {
     /** RDT-root meta (an rdt root is referenced by an object creation op). */
     explicit OpMeta(const Uuid& rdt_id)
         : OpMeta{rdt_id, SHA2{rdt_id}, Uuid::NIL,
-                 rdt_id, Uuid::NIL,   Uuid::NIL} {
+                 rdt_id, Uuid::NIL,    Uuid::NIL} {
         assert(rdt_id.version() == NAME);
     }
 
     /** Yarn-root meta, serves as the prev op for the first op in a yarn. */
     OpMeta(Word yarn, const SHA2& creds)
         : OpMeta{Uuid{0, yarn}, SHA2{SHA2{Uuid{0, yarn}}, creds},
-                 Uuid::NIL,    Uuid::NIL,
-                 Uuid::NIL,    Uuid{0, yarn}} {}
+                 Uuid::NIL,     Uuid::NIL,
+                 Uuid::NIL,     Uuid{0, yarn}} {}
 
     /** Regular op meta.
      * @param {op} the op

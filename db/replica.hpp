@@ -20,6 +20,9 @@ class Replica {
     typedef typename Frame::Builder Builder;
     typedef typename Frame::Cursor Cursor;
     typedef rocksdb::ColumnFamilyHandle CFHandle;
+    typedef std::unordered_map<Word, OpMeta> tipmap_t;
+
+    static const Uuid NOW_UUID;
 
    private:
     rocksdb::DB* db_;
@@ -27,19 +30,21 @@ class Replica {
     rocksdb::ReadOptions ro_;
     CFHandle* trunk_;
 
+    Uuid now_;
+
     std::unordered_map<Uuid, CFHandle*> objects_;
 
-   public:
     // chain cache - skip db reads for ongoing op chains
-    typedef std::unordered_map<Word, OpMeta> tipmap_t;
     tipmap_t tips_;
+
+    Key nil_key() const { return Key{Uuid::NIL, META}; }
 
    public:
     Replica() : db_{nullptr}, trunk_{nullptr}, objects_{}, wo_{}, ro_{} {}
 
     //  L I F E C Y C L E
 
-    Status Create(std::string home);
+    Status Create(std::string home, Word origin = 0);
 
     Status Open(std::string home);
 
@@ -48,6 +53,14 @@ class Replica {
     Status Close();
 
     ~Replica();
+
+    Uuid now();
+    Status See(const Uuid& timestamp) {
+        if (timestamp < now_) return Status::OK;
+        // TODO sanity/plausibility check
+        now_ = Uuid{timestamp.value(), now_.origin()};
+        return Status::OK;
+    }
 
     rocksdb::DB& db() { return *db_; }
     const rocksdb::ReadOptions& ro() const { return ro_; }

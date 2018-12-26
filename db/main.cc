@@ -35,7 +35,7 @@ DECLARE_string(helpmatch);
 
 Status CommandHashFrame(const string& filename);
 
-Status RunCommands () {
+Status RunCommands() {
     RonReplica replica{};
     Status ok;
 
@@ -47,9 +47,8 @@ Status RunCommands () {
     if (!ok) return ok;
 
     if (FLAGS_now) {
-        // TODO load replica clocks
-        cout << Uuid{Uuid::HybridTime(time(nullptr)), Word::NEVER}.str()
-             << endl;
+        Uuid now = replica.now();
+        cout << now.str() << endl;
     } else if (!FLAGS_hash.empty()) {
         ok = CommandHashFrame(FLAGS_hash);
     } else {
@@ -75,7 +74,7 @@ int main(int argn, char** args) {
 
     Status ok = RunCommands();
 
-    if (!ok) cerr<<"error"<<ok.str()<<'\n';
+    if (!ok) cerr << "error" << ok.str() << '\n';
 
     return ok ? 0 : -1;
 }
@@ -96,7 +95,6 @@ Status LoadFrame(Frame& target, const string& filename) {
     if (fd < 0) return Status::IOFAIL;
     return LoadFrame(target, fd);
 }
-
 
 Status CommandHashFrame(const std::string& filename) {
     Frame frame;

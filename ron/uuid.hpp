@@ -104,6 +104,12 @@ union Word {
     }
     inline int64_t integer() const { return (int64_t)_64; }
     inline double number() const { return *(double*)&_64; }
+    inline static Word random() {
+        auto i = (uint64_t)rand();
+        i <<= 30;
+        i ^= (uint64_t)rand();
+        return Word{i & MAX_VALUE};
+    }
 };
 
 enum half_t { VALUE = 0, ORIGIN = 1 };

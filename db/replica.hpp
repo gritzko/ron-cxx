@@ -70,35 +70,44 @@ class Replica {
 
     //  C H A I N  S T O R E
 
-    Status FindChain(Uuid op_id, std::string& chain);
-    Status FindChainMeta(Uuid op_id, OpMeta& meta) {
-        std::string chain;
-        Status ok = FindChain(op_id, chain);
-        if (!ok) return ok;
-        Cursor c{chain};
-        while (c.valid()) {
-            if (c.id().version() == NAME) meta.ScanAnno(c);
-            c.Next();
-        }
-        return Status::OK;
-    }
-
     rocksdb::Iterator* FindYarn(Word replica);
+    rocksdb::Iterator* FindChain(const Uuid& op_id);
 
     //  O B J E C T  S T O R E
 
-    Status CreateObjectStore(Uuid store);
+    Status CreateBranch(Uuid store);
 
-    Status FillObjectStore(Uuid store, VV version);
+    Status FillBranch(Uuid store, VV version);
 
-    Status SplitObjectStore(Uuid store, Uuid new_store, VV version);
+    Status SplitBranch(Uuid store, Uuid new_store, VV version);
 
-    Status DropObjectStore(Uuid store);
+    Status DropBranch(Uuid store);
 
     Status GetObject(const Uuid& store, const Uuid& key, Frame& frame);
 
     Status Get(Frame& object, const Uuid& id, const Uuid& rdt = Uuid::NIL,
                const Uuid& branch = Uuid::NIL);
+
+    inline Status GetChain(Frame& chain, Uuid chain_id) {
+        return Get(chain, chain_id, CHAIN_UUID);
+    }
+
+    /** If we don't know the exact chain id, we have to scan the table to
+     *  find the chain. Then, we scan the chain to find the op. */
+    inline Status FindOpMeta(OpMeta& meta, const Uuid& target_id);
+
+    /** Fetches the op metadata for the chain head op.
+     * @param meta - the op meta object with op id set to the chain id */
+    Status GetHeadMeta(OpMeta& meta) {
+        Frame raw;
+        Uuid chain_id = meta.id;
+        Status ok = Get(raw, chain_id, META_UUID);
+        if (!ok) return ok;
+        for (Cursor c = raw.cursor(); ok && c.valid(); c.Next()) {
+            ok = meta.ReadAnnotation(c);
+        }
+        return ok;
+    }
 
     // Q U E R I E S
 

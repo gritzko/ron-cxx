@@ -32,9 +32,9 @@ void test_db_chain_merge () {
     Frame got;
     db.Get(got, Uuid{"1gHHUW+test"}, LWW_TYPE_ID);
     assert(got.data()==merged);
-    string chain;
-    assert(db.FindChain(Uuid{"1gHHUW+test"}, chain));
-    assert(chain==merged);
+    Frame chain;
+    assert(db.GetChain(chain, Uuid{"1gHHUW+test"}));
+    assert(chain.data()==merged);
     assert(db.Close());
     rmdir(path.c_str());
 }

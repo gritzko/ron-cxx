@@ -14,8 +14,8 @@ const Uuid META_UUID{894494834235015168UL, 0};
 const Uuid LWW_UUID{881557636825219072UL, 0};
 const Uuid RGA_UUID{985043671231496192UL, 0};
 
-enum RDT : uint8_t { CHAIN, ACK, META, LWW, RGA, RDT_COUNT };  // ??!!
-const Uuid RDT_UUIDS[] = {CHAIN_UUID, ACK_UUID, META_UUID, LWW_UUID, RGA_UUID};
+enum RDT : uint8_t { META, CHAIN, ACK, LWW, RGA, RDT_COUNT };  // ??!!
+const Uuid RDT_UUIDS[] = {META_UUID, CHAIN_UUID, ACK_UUID, LWW_UUID, RGA_UUID};
 
 inline RDT uuid2rdt(const Uuid &rdt_id) {
     for (int i = 0; i < RDT_COUNT; i++)

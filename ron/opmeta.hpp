@@ -47,6 +47,10 @@ struct OpMeta {
 
     OpMeta() = default;
 
+    /** no-data-yet constructor */
+    OpMeta(const Uuid& op_id)
+        : OpMeta{op_id, SHA2{}, Uuid::NIL, Uuid::NIL, Uuid::NIL, op_id} {}
+
     /** RDT-root meta (an rdt root is referenced by an object creation op). */
     explicit OpMeta(const Uuid& id, const Uuid& rdt_id)
         : OpMeta{id, SHA2{rdt_id}, id, rdt_id, Uuid::NIL, Uuid::NIL} {
@@ -70,21 +74,40 @@ struct OpMeta {
                  prev.id,    prev.id == ref.id ? ref.id : op.id()} {}
 
     template <typename Cursor>
-    Status ScanAnno(Cursor& cur) {
-        //        const Uuid& anno = cur.id();
-        //        const Uuid& ref = cur.ref();
-        //        if (ref.version() != TIME) return Status::BAD_STATE;
-        //        if (ref!=id) return Status::BAD_STATE;
-        //        if (anno == SHA2_UUID && cur.has(2, STRING)) {
-        //            // TODO
-        //        } else if (anno == OBJ_UUID && cur.has(2, UUID)) {
-        //            ShouldBe<&OpMeta::object>(cur.parse_uuid(2));
-        //        } else if (anno == RDT_UUID && cur.has(2, UUID)) {
-        //            ShouldBe<&OpMeta::rdt>(cur.parse_uuid(2));
-        //        } else if (anno == PREV_UUID && cur.has(2, UUID)) {
-        //            ShouldBe<&OpMeta::prev>(cur.parse_uuid(2));
-        //        }
+    Status ReadAnnotation(Cursor& cur) {
+        const Uuid& id = cur.id();
+        if (id.version() != NAME) return Status::BAD_STATE;
+        if (cur.ref() != id) return Status::BAD_STATE;
+        if (id == SHA2_UUID && cur.has(2, STRING)) {
+            SHA2 annhash{cur.parse_string(2)};  // TODO format check
+            if (!hash.matches(annhash)) return Status::HASHBREAK;
+            if (annhash.known_bits_ > hash.known_bits_) hash = annhash;
+        } else if (id == OBJ_UUID && cur.has(2, UUID)) {
+            Uuid annobj = cur.parse_uuid(2);
+            if (object.zero()) {
+                object = annobj;
+            } else if (object != annobj) {
+                return Status::TREEBREAK;
+            }
+        } else if (id == RDT_UUID && cur.has(2, UUID)) {
+            Uuid annrdt = cur.parse_uuid(2);
+            if (rdt.zero()) {
+                rdt = annrdt;
+            } else if (annrdt != rdt) {
+                return Status::TREEBREAK;
+            }
+        }
         return Status::OK;
+    }
+
+    template <typename Cursor>
+    Status ScanAnnotations(Cursor& cur) {
+        Status ok = Status::OK;
+        while (ok && cur.valid()) {
+            ok = ReadAnnotation(cur);
+            cur.Next();
+        }
+        return ok;
     }
 
     /** Regular op meta, reads the annotations.
@@ -92,17 +115,7 @@ struct OpMeta {
     template <typename Frame>
     explicit OpMeta(typename Frame::Cursor& cur)
         : id{}, hash{}, object{}, rdt{} {
-        ScanAnno(cur);
-    }
-
-    template <Uuid OpMeta::*uuid>
-    bool ShouldBe(const Uuid& value) {
-        Uuid& i = this->*uuid;
-        if (i == Uuid::NIL) {
-            i = value;
-            return true;
-        }
-        return value == i;
+        ReadAnnotation(cur);
     }
 
     template <typename Builder>

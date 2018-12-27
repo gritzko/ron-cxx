@@ -181,32 +181,40 @@ Replica<Frame>::~Replica() {
 
 //  C H A I N  S T O R E
 
-// chain store records for a chain starting at 12345+origin
-// meta: @12345-origin :1234-object 5 'sha3hash' 'dsasig'
-// chain: @12345-origin :root+ref 'value1', 'value2'...
-// FindChain() finds the (only possible) chain for the id,
-// but checks no range validity, no hash validity.
 template <class Frame>
-Status Replica<Frame>::FindChain(Uuid op_id, std::string& chain) {
-    rocksdb::ReadOptions ro;
-    Key key{op_id, RDT::CHAIN};
-    auto i = db_->NewIterator(ro, trunk_);
+Status Replica<Frame>::FindOpMeta(OpMeta& meta, const Uuid& target_id) {
+    static_assert(RDT::META + 1 == RDT::CHAIN,
+                  "ensure records go in this exact order");
+    string chain_data, meta_data;
+
+    // 1. find chain
+    Key key{target_id, RDT::CHAIN};
+    std::unique_ptr<rocksdb::Iterator> i{db_->NewIterator(ro_, trunk_)};
     i->SeekForPrev(key);
-    if (!i->Valid()) {
-        delete i;
-        return Status::NOT_FOUND;
+    while (i->Valid() && Key{i->value()}.rdt() != CHAIN) i->Prev();
+    if (!i->Valid()) return Status::NOT_FOUND;
+    Key chain_key{i->value()};
+    if (chain_key.id().origin() != meta.id.origin()) return Status::NOT_FOUND;
+    chain_data = string{i->value().data(), i->value().size()};
+
+    // 2. find chain meta
+    i->Prev();
+    if (!i->Valid()) return Status::BAD_STATE;
+    Key meta_key{i->key()};
+    if (meta_key.id() != chain_key.id() || meta_key.rdt() != RDT::META)
+        return Status::BAD_STATE;
+    meta_data = string{i->value().data(), i->value().size()};
+
+    // 3. scroll the chain
+    Cursor metac{meta_data};
+    meta = OpMeta{chain_key.id()};
+    Status ok = meta.ScanAnnotations<Cursor>(metac);
+    Cursor chainc{chain_data};
+    while (meta.id != target_id && chainc.Next()) {
+        meta = OpMeta{chainc, meta, meta};
     }
-    Uuid at = Key{i->key()}.id();
-    if (at.version() != TIME) {
-        delete i;
-        return Status::NOT_FOUND;
-    }
-    chain.clear();
-    // prepend_id(op_id.derived(), chain);
-    chain.append(i->value().data_, i->value().size_);
-    delete i;
-    return Status::OK;
-    // can parallelize this if a yarn is pinned to a thread
+
+    return ok;
 }
 
 //  R E C E I V E S
@@ -237,7 +245,7 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
     if (ti == tips_.end()) {
         auto ib = tips_.insert(tipmap_t::value_type{id.origin(), OpMeta{}});
         ti = ib.first;
-        if (!FindChainMeta(Uuid{NEVER, id.origin()}, ti->second))
+        if (!FindOpMeta(ti->second, Uuid{NEVER, id.origin()}))
             ti->second = OpMeta(id.origin(), SHA2{});
     }
     // the tip should stay in the cache, so we do in-place writes
@@ -249,7 +257,7 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
         if (ref.version() == NAME) {  // new object
             refd = OpMeta{id, ref};
         } else {
-            Status ok = FindChainMeta(ref, refd);
+            Status ok = FindOpMeta(refd, ref);
             if (!ok) return ok;
         }
     }
@@ -273,7 +281,7 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
     // walk/check the chainlet
     while (chain.Next()) {
         if (chain.id().version() == NAME) {
-            Status ok = tip.ScanAnno(chain);
+            Status ok = tip.ReadAnnotation(chain);
             if (!ok) return ok;
         } else if (tip.next(chain)) {
             tip = OpMeta{chain, tip, tip};
@@ -304,7 +312,7 @@ Status Replica<Frame>::Get(Frame& object, const Uuid& id, const Uuid& rdt,
     Slice key{Key{id, t}};
     auto ok = db_->Get(ro_, trunk_, key, &data);
     if (ok.IsNotFound()) return Status::NOT_FOUND;
-    if (!ok.ok()) return Status::DB_FAIL;
+    if (!ok.ok()) return Status::DB_FAIL.comment(ok.ToString());
     object.swap(data);
     return Status::OK;
 }

@@ -16,17 +16,6 @@ typedef Replica<Frame> RonReplica;
 typedef Frame::Builder Builder;
 typedef Frame::Cursor Cursor;
 
-// ## HUMANE
-// create database test with spaces sha3,vv, compression gz, format binary
-// show object 1ABCk+gritzko with version 1BCDj, format text
-// show vv 1BCDj+gritzko
-
-// ## INHUMANE
-// db "*vv @1BCDj+gritzko ?"
-// db ":db ! 'zip' 'gz', 'spaces' >sha3>vv>json"
-// 1AbC2+gritzko
-// db ":tag >test >1AbC2+gritzko"
-
 DEFINE_bool(create, false, "create a new replica");
 DEFINE_string(feed, "", "feed a RON frame");
 DEFINE_string(write, "", "write a RON frame (new ops)");
@@ -86,7 +75,7 @@ int main(int argn, char** args) {
 
     Status ok = RunCommands();
 
-    if (!ok) cerr << "error" << ok.str() << '\n';
+    if (!ok) cerr << "error" << ok.str() << '\t' << ok.comment() << '\n';
 
     return ok ? 0 : -1;
 }

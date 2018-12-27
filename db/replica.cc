@@ -247,7 +247,7 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
     // REF: fetch the meta on the referenced op (get the object)
     if (ref != tip.id) {
         if (ref.version() == NAME) {  // new object
-            refd = OpMeta{ref};
+            refd = OpMeta{id, ref};
         } else {
             Status ok = FindChainMeta(ref, refd);
             if (!ok) return ok;
@@ -257,6 +257,9 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
     // START OUR CHAIN-LET
     Builder chainlet;
     tip = OpMeta{chain, tip, refd};
+    if (tip.chain_id().zero()) return Status::BAD_STATE;
+    if (tip.object.zero()) return Status::BAD_STATE;
+
     chainlet.AppendOp(chain);
     if (tip.head()) {
         Builder annos;
@@ -283,8 +286,10 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
 
     // OK, SAVE
     const string& data = chainlet.data();
+    RDT rdt = uuid2rdt(tip.rdt);
+    if (rdt == RDT_COUNT) return Status::NOT_IMPLEMENTED;  // TODO db meta-types
     batch.Merge(trunk_, Key{tip.chain_id(), CHAIN}, data);  // TODO branches
-    batch.Merge(trunk_, Key{tip.object, uuid2rdt(tip.rdt)}, data);
+    batch.Merge(trunk_, Key{tip.object, rdt}, data);
 
     return Status::OK;
 }

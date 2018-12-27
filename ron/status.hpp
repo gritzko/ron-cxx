@@ -13,7 +13,7 @@ class Status {
 
    public:
     Status() : code_{0, 0} {}
-    explicit Status(uint64_t err_code) : code_{err_code, 0} {}
+    explicit Status(uint64_t err_code) : code_{err_code, Word::PAYLOAD_BITS} {}
     Status(const Uuid& code, const std::string& comment)
         : code_{code}, comment_{comment} {}
 
@@ -36,6 +36,7 @@ class Status {
     static const Status NOT_IMPLEMENTED;
     static const Status NOT_FOUND;
     static const Status BAD_STATE;
+    static const Status BADARGS;
     static const Status DB_FAIL;
     static const Status IOFAIL;
 

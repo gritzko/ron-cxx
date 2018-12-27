@@ -48,9 +48,8 @@ struct OpMeta {
     OpMeta() = default;
 
     /** RDT-root meta (an rdt root is referenced by an object creation op). */
-    explicit OpMeta(const Uuid& rdt_id)
-        : OpMeta{rdt_id, SHA2{rdt_id}, Uuid::NIL,
-                 rdt_id, Uuid::NIL,    Uuid::NIL} {
+    explicit OpMeta(const Uuid& id, const Uuid& rdt_id)
+        : OpMeta{id, SHA2{rdt_id}, id, rdt_id, Uuid::NIL, Uuid::NIL} {
         assert(rdt_id.version() == NAME);
     }
 

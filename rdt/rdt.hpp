@@ -20,7 +20,7 @@ const Uuid RDT_UUIDS[] = {CHAIN_UUID, ACK_UUID, META_UUID, LWW_UUID, RGA_UUID};
 inline RDT uuid2rdt(const Uuid &rdt_id) {
     for (int i = 0; i < RDT_COUNT; i++)
         if (rdt_id == RDT_UUIDS[i]) return (RDT)i;
-    return CHAIN;  //?
+    return RDT_COUNT;
 }
 
 inline Uuid rdt2uuid(RDT rdt) {

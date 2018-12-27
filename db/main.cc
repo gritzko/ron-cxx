@@ -30,7 +30,9 @@ typedef Frame::Cursor Cursor;
 DEFINE_bool(create, false, "create a new replica");
 DEFINE_string(feed, "", "feed a RON frame");
 DEFINE_string(write, "", "write a RON frame (new ops)");
-DEFINE_string(get, "", "get a RON frame (e.g. --get @1gPH5o+gritzko:lww)");
+DEFINE_string(get, "",
+              "get a RON frame, e.g. --get @1gPH5o+gritzko:lww or "
+              "1gPH5o+gritzko.lww or 1gPH5o+gritzko)");
 DEFINE_bool(now, false, "print the current time(stamp)");
 DEFINE_string(hash, "", "Merkle-hash a causally ordered frame");
 DEFINE_bool(h, false, "Show help");
@@ -107,9 +109,25 @@ Status LoadFrame(Frame& target, const string& filename) {
 }
 
 Status CommandGetFrame(RonReplica& replica, const string& name) {
-    Uuid id{name};
+    if (name.empty()) return Status::BADARGS;
+    Uuid id{}, rdt{};
+    size_t dot;
+    if (name[0] == '@') {
+        string termd{name};
+        termd.push_back(';');
+        TextFrame::Cursor cur{termd};
+        if (!cur.valid()) return Status::BADARGS;
+        id = cur.id();
+        rdt = cur.ref();
+    } else if ((dot = name.find('.')) != -1) {
+        id = Uuid{name.substr(0, dot)};
+        rdt = Uuid{name.substr(dot + 1, name.size() - dot - 1)};
+    } else {
+        id = Uuid{name};
+    }
+    if (id == Uuid::FATAL || rdt == Uuid::FATAL) return Status::BADARGS;
     Frame result;
-    Status ok = replica.Get(result, id, LWW_UUID);
+    Status ok = replica.Get(result, id, rdt);
     if (ok) cout << result.data() << '\n';
     return ok;
 }

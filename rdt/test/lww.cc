@@ -1,12 +1,12 @@
 #include <iostream>
 #include <cassert>
 #include "ron/ron.hpp"
-#include "rdt/lww.hpp"
+#include "rdt/rdt.hpp"
 
 using namespace ron;
 using namespace std;
 
-typedef LastWriteWinsRDT<typename ron::TextFrame> LWW;
+typedef LastWriteWinsRDT<typename ron::TextFrame> TextLWW;
 
 string scan (const TextFrame& frame) {
     string ret;
@@ -24,12 +24,19 @@ string scan (const TextFrame& frame) {
     return ret;
 }
 
+void test_rdt_ids () {
+    assert(uuid2rdt(Uuid{"lww"})==RDT::LWW);
+    assert(rdt2uuid(RDT::LWW).str()=="lww");
+}
+
 int main (int argn, char** args) {
+
+    test_rdt_ids();
 
     TextFrame::Builder ab_builder, c_builder, abc_builder, b2_builder, 
     abbc_builder, ab2c_builder, ab2c_builder2;
     vector<TextFrame> inputs;
-    LWW lww;
+    TextLWW lww;
 
     ab_builder.AppendNewOp(HEADER, Uuid{"1+src"}, Uuid{"lww"});
     ab_builder.AppendNewOp(REDUCED, Uuid{"2+src"}, Uuid{"1+src"}, "a", "A");

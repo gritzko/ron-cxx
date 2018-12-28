@@ -76,21 +76,21 @@ add_dependencies(ron botan-project)
 
 #  L I B R O N  U N I T  T E S T S
 
-add_executable(test-uuid ron/test/uuid.cc)
-target_link_libraries(test-uuid ron)
-add_test(UUID test-uuid)
+add_executable(test01-uuid ron/test/uuid.cc)
+target_link_libraries(test01-uuid ron)
+add_test(UUID test01-uuid)
 
-add_executable(test-text ron/test/text.cc)
-target_link_libraries(test-text ron)
-add_test(TEXT test-text)
+add_executable(test02-text ron/test/text.cc)
+target_link_libraries(test02-text ron)
+add_test(TEXT test02-text)
 
-add_executable(test-hash ron/test/hash.cc)
-target_link_libraries(test-hash ron botan)
-add_test(HASH test-hash)
+add_executable(test03-hash ron/test/hash.cc)
+target_link_libraries(test03-hash ron botan)
+add_test(HASH test03-hash)
 
-add_executable(test-meta ron/test/meta.cc)
-target_link_libraries(test-meta ron botan)
-add_test(HASH test-meta)
+add_executable(test04-meta ron/test/meta.cc)
+target_link_libraries(test04-meta ron botan)
+add_test(HASH test04-meta)
 
 #  L I B R D T  ( H E A D E R  O N L Y )
 
@@ -99,13 +99,13 @@ target_include_directories(rdt INTERFACE rdt/)
 
 #  R D T  U N I T  T E S T S
 
-add_executable(test-lww rdt/test/lww.cc)
-target_link_libraries(test-lww ron rdt)
-add_test(LWW test-lww)
+add_executable(test10-lww rdt/test/lww.cc)
+target_link_libraries(test10-lww ron rdt)
+add_test(LWW test10-lww)
 
-add_executable(test-metardt rdt/test/meta.cc)
-target_link_libraries(test-metardt ron rdt)
-add_test(META test-metardt)
+add_executable(test11-metardt rdt/test/meta.cc)
+target_link_libraries(test11-metardt ron rdt)
+add_test(META test11-metardt)
 
 #  S W A R M D B
 
@@ -118,10 +118,10 @@ target_link_libraries(swarmdb ron botan rocksdb pthread z bz2 snappy)
 
 #  S W A R M D B  U N I T  T E S T S
 
-add_executable(test-chains db/test/chains.cc)
-add_dependencies(test-chains swarmdb)
-target_link_libraries(test-chains swarmdb)
-add_test(CHAINS test-chains)
+add_executable(test20-chains db/test/chains.cc)
+add_dependencies(test20-chains swarmdb)
+target_link_libraries(test20-chains swarmdb)
+add_test(CHAINS test20-chains)
 
 #  S W A R M D B  C L I
 

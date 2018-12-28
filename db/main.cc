@@ -61,7 +61,7 @@ Status RunCommands() {
 
     if (replica.open()) replica.Close();
 
-    return Status::OK;
+    return ok;
 }
 
 int main(int argn, char** args) {
@@ -75,7 +75,7 @@ int main(int argn, char** args) {
 
     Status ok = RunCommands();
 
-    if (!ok) cerr << "error" << ok.str() << '\t' << ok.comment() << '\n';
+    if (!ok) cerr << "error\t" << ok.str() << '\t' << ok.comment() << '\n';
 
     return ok ? 0 : -1;
 }

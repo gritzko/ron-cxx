@@ -61,11 +61,13 @@ void test_chain_breaks () {
  */
 
 void test_keys () {
-    Uuid id{"1gA9cz+gritzko"};
+    string idstr = "1gA9cz+gritzko";
+    Uuid id{idstr};
     Key chain{id, RDT::CHAIN};
     assert(chain.rdt()==RDT::CHAIN);
     Uuid id2 = chain.id();
     assert(id2==id);
+    assert(id2.str()==idstr);
     Key derived{id.derived(), RDT::CHAIN};
     assert(derived.id()==id);
 }

@@ -75,21 +75,23 @@ struct OpMeta {
 
     template <typename Cursor>
     Status ReadAnnotation(Cursor& cur) {
-        const Uuid& id = cur.id();
-        if (id.version() != NAME) return Status::BAD_STATE;
-        if (cur.ref() != id) return Status::BAD_STATE;
-        if (id == SHA2_UUID && cur.has(2, STRING)) {
+        const Uuid& name = cur.id();
+        if (name.version() != NAME)
+            return Status::BAD_STATE.comment("not an annotation");
+        if (cur.ref() != id)
+            return Status::BAD_STATE.comment("annotation for a wrong op");
+        if (name == SHA2_UUID && cur.has(2, STRING)) {
             SHA2 annhash{cur.parse_string(2)};  // TODO format check
             if (!hash.matches(annhash)) return Status::HASHBREAK;
             if (annhash.known_bits_ > hash.known_bits_) hash = annhash;
-        } else if (id == OBJ_UUID && cur.has(2, UUID)) {
+        } else if (name == OBJ_UUID && cur.has(2, UUID)) {
             Uuid annobj = cur.parse_uuid(2);
             if (object.zero()) {
                 object = annobj;
             } else if (object != annobj) {
                 return Status::TREEBREAK;
             }
-        } else if (id == RDT_UUID && cur.has(2, UUID)) {
+        } else if (name == RDT_UUID && cur.has(2, UUID)) {
             Uuid annrdt = cur.parse_uuid(2);
             if (rdt.zero()) {
                 rdt = annrdt;

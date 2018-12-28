@@ -132,7 +132,7 @@ Status Replica<Frame>::Open(std::string home) {
 
     auto status = DB::Open(options, home, families, &handles, &db_);
     if (!status.ok()) {
-        return Status::DB_FAIL;
+        return Status::DB_FAIL.comment(status.ToString());
     }
 
     auto i = handles.begin();
@@ -191,17 +191,18 @@ Status Replica<Frame>::FindOpMeta(OpMeta& meta, const Uuid& target_id) {
     std::unique_ptr<rocksdb::Iterator> i{db_->NewIterator(ro_, trunk_)};
     i->SeekForPrev(key);
     while (i->Valid() && Key{i->key()}.rdt() != CHAIN) i->Prev();
-    if (!i->Valid()) return Status::NOT_FOUND;
-    Key chain_key{i->value()};
-    if (chain_key.id().origin() != meta.id.origin()) return Status::NOT_FOUND;
+    if (!i->Valid()) return Status::NOT_FOUND.comment("no such chain");
+    Key chain_key{i->key()};
+    if (chain_key.id().origin() != target_id.origin())
+        return Status::NOT_FOUND.comment("chain from a wrong yarn?");
     chain_data = string{i->value().data(), i->value().size()};
 
     // 2. find chain meta
     i->Prev();
-    if (!i->Valid()) return Status::BAD_STATE;
+    if (!i->Valid()) return Status::BAD_STATE.comment("no meta record");
     Key meta_key{i->key()};
     if (meta_key.id() != chain_key.id() || meta_key.rdt() != RDT::META)
-        return Status::BAD_STATE;
+        return Status::BAD_STATE.comment("bad meta record");
     meta_data = string{i->value().data(), i->value().size()};
 
     // 3. scroll the chain
@@ -264,8 +265,9 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
     // START OUR CHAIN-LET
     Builder chainlet;
     tip = OpMeta{chain, tip, refd};
-    if (tip.chain_id().zero()) return Status::BAD_STATE;
-    if (tip.object.zero()) return Status::BAD_STATE;
+    if (tip.chain_id().zero())
+        return Status::BAD_STATE.comment("cant find chain");
+    if (tip.object.zero()) return Status::BAD_STATE.comment("cant find object");
 
     chainlet.AppendOp(chain);
     if (tip.head()) {

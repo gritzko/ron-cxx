@@ -2,8 +2,8 @@
 #define rdt_rdt_hpp
 
 #include "rdt/chain.hpp"
-#include "rdt/meta.hpp"
 #include "rdt/lww.hpp"
+#include "rdt/meta.hpp"
 #include "ron/op.hpp"
 #include "ron/status.hpp"
 
@@ -85,8 +85,8 @@ class MasterRDT {
     }
 };
 
-template<typename Frame>
-std::string Merge ( RDT rdt, const typename Frame::Cursors& inputs) {
+template <typename Frame>
+std::string Merge(RDT rdt, const typename Frame::Cursors &inputs) {
     typedef MasterRDT<Frame> Reducer;
     Reducer reducer;
     typedef typename Reducer::Cursor Cursor;

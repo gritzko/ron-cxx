@@ -107,10 +107,9 @@ Status Replica<Frame>::Create(std::string home, Word origin) {
     now();
     Builder nowrec;
     nowrec.AppendNewOp(RAW, NOW_UUID, now_);
-    cout << nowrec.data() << '\n';
     db_->Put(wo(), nil_key(), nowrec.data());
 
-    db_->Close();
+    Close();
     return Open(home);
 }
 
@@ -191,7 +190,7 @@ Status Replica<Frame>::FindOpMeta(OpMeta& meta, const Uuid& target_id) {
     Key key{target_id, RDT::CHAIN};
     std::unique_ptr<rocksdb::Iterator> i{db_->NewIterator(ro_, trunk_)};
     i->SeekForPrev(key);
-    while (i->Valid() && Key{i->value()}.rdt() != CHAIN) i->Prev();
+    while (i->Valid() && Key{i->key()}.rdt() != CHAIN) i->Prev();
     if (!i->Valid()) return Status::NOT_FOUND;
     Key chain_key{i->value()};
     if (chain_key.id().origin() != meta.id.origin()) return Status::NOT_FOUND;

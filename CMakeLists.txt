@@ -103,6 +103,10 @@ add_executable(test-lww rdt/test/lww.cc)
 target_link_libraries(test-lww ron rdt)
 add_test(LWW test-lww)
 
+add_executable(test-metardt rdt/test/meta.cc)
+target_link_libraries(test-metardt ron rdt)
+add_test(META test-metardt)
+
 #  S W A R M D B
 
 add_library(swarmdb SHARED

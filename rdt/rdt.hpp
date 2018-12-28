@@ -2,6 +2,7 @@
 #define rdt_rdt_hpp
 
 #include "rdt/chain.hpp"
+#include "rdt/meta.hpp"
 #include "rdt/lww.hpp"
 #include "ron/op.hpp"
 #include "ron/status.hpp"
@@ -32,6 +33,7 @@ template <class Frame>
 class MasterRDT {
     LastWriteWinsRDT<Frame> lww_;
     OpChain<Frame> chain_;
+    MetaRDT<Frame> meta_;
 
    public:
     typedef typename Frame::Builder Builder;
@@ -39,15 +41,17 @@ class MasterRDT {
     typedef std::vector<Frame> Frames;
     typedef std::vector<Cursor> Cursors;
 
-    MasterRDT() : lww_{} {}
+    MasterRDT() : lww_{}, chain_{}, meta_{} {}
 
     virtual Status Merge(Builder &output, RDT reducer,
                          const std::vector<Cursor> &inputs) const {
         switch (reducer) {
-            case LWW:
-                return lww_.Merge(output, inputs);
             case CHAIN:
                 return chain_.Merge(output, inputs);
+            case META:
+                return meta_.Merge(output, inputs);
+            case LWW:
+                return lww_.Merge(output, inputs);
             default:
                 return Status::NOT_IMPLEMENTED;
         }
@@ -55,10 +59,12 @@ class MasterRDT {
 
     virtual Status GC(Builder &output, RDT reducer, const Frame &input) const {
         switch (reducer) {
-            case LWW:
-                return lww_.GC(output, input);
             case CHAIN:
                 return chain_.GC(output, input);
+            case META:
+                return meta_.GC(output, input);
+            case LWW:
+                return lww_.GC(output, input);
             default:
                 return Status::NOT_IMPLEMENTED;
         }
@@ -67,15 +73,27 @@ class MasterRDT {
     virtual Status MergeGC(Builder &output, RDT reducer,
                            const std::vector<Cursor> &inputs) const {
         switch (reducer) {
-            case LWW:
-                return lww_.MergeGC(output, inputs);
             case CHAIN:
                 return chain_.MergeGC(output, inputs);
+            case META:
+                return meta_.MergeGC(output, inputs);
+            case LWW:
+                return lww_.MergeGC(output, inputs);
             default:
                 return Status::NOT_IMPLEMENTED;
         }
     }
 };
+
+template<typename Frame>
+std::string Merge ( RDT rdt, const typename Frame::Cursors& inputs) {
+    typedef MasterRDT<Frame> Reducer;
+    Reducer reducer;
+    typedef typename Reducer::Cursor Cursor;
+    typename Reducer::Builder builder;
+    reducer.Merge(builder, rdt, inputs);
+    return builder.data();
+}
 
 }  // namespace ron
 

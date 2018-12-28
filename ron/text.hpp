@@ -39,6 +39,7 @@ class TextFrame {
               prev_id_{} {
             Next();
         }
+        explicit Cursor(const std::string& str) : Cursor{slice_t{str}} {}
         explicit Cursor(const TextFrame& host) : Cursor{host.data_} {}
         const Op& op() const { return op_; }
         bool Next();

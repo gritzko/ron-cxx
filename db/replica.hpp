@@ -109,6 +109,10 @@ class Replica {
         return ok;
     }
 
+    inline Status FindTipMeta(OpMeta& meta, Word origin) {
+        return FindOpMeta(meta, Uuid{NEVER, origin});
+    }
+
     // Q U E R I E S
 
     Status DataQuery(Builder& response, Uuid id);

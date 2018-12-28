@@ -71,7 +71,7 @@ struct OpMeta {
     explicit OpMeta(const Cursor& op, const OpMeta& prev, const OpMeta& ref)
         : OpMeta{op.id(),    SHA2{op, prev.hash, ref.hash},
                  ref.object, ref.rdt,
-                 prev.id,    prev.id == ref.id ? ref.id : op.id()} {}
+                 prev.id,    prev.id == ref.id ? ref.chain_id() : op.id()} {}
 
     template <typename Cursor>
     Status ReadAnnotation(Cursor& cur) {

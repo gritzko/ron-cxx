@@ -181,17 +181,28 @@ Replica<Frame>::~Replica() {
 //  C H A I N  S T O R E
 
 template <class Frame>
+rocksdb::Iterator* Replica<Frame>::FindChain(const Uuid& target_id) {
+    if (!open()) return nullptr;
+    Key key{target_id, RDT::CHAIN};
+    rocksdb::Iterator* i{db_->NewIterator(ro_, trunk_)};
+    i->SeekForPrev(key);
+    while (i->Valid() && (key=Key{i->key()}).rdt() != CHAIN) i->Prev();
+    if (!i->Valid() || key.id().origin()!=target_id.origin()) {
+        delete i;
+        i = nullptr;
+    }
+    return i;
+}
+
+template <class Frame>
 Status Replica<Frame>::FindOpMeta(OpMeta& meta, const Uuid& target_id) {
     static_assert(RDT::META + 1 == RDT::CHAIN,
                   "ensure records go in this exact order");
     string chain_data, meta_data;
 
     // 1. find chain
-    Key key{target_id, RDT::CHAIN};
-    std::unique_ptr<rocksdb::Iterator> i{db_->NewIterator(ro_, trunk_)};
-    i->SeekForPrev(key);
-    while (i->Valid() && Key{i->key()}.rdt() != CHAIN) i->Prev();
-    if (!i->Valid()) return Status::NOT_FOUND.comment("no such chain");
+    std::unique_ptr<rocksdb::Iterator> i{FindChain(target_id)};
+    if (!i) return Status::NOT_FOUND.comment("no such chain");
     Key chain_key{i->key()};
     if (chain_key.id().origin() != target_id.origin())
         return Status::NOT_FOUND.comment("chain from a wrong yarn?");
@@ -213,9 +224,12 @@ Status Replica<Frame>::FindOpMeta(OpMeta& meta, const Uuid& target_id) {
     while (meta.id != target_id && chainc.Next()) {
         meta = OpMeta{chainc, meta, meta};
     }
+    if (!chainc.valid() && target_id.value()!=NEVER)
+        return Status::NOT_FOUND.comment("no such op in the chain");
 
     return ok;
 }
+
 
 //  R E C E I V E S
 
@@ -245,7 +259,7 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
     if (ti == tips_.end()) {
         auto ib = tips_.insert(tipmap_t::value_type{id.origin(), OpMeta{}});
         ti = ib.first;
-        if (!FindOpMeta(ti->second, Uuid{NEVER, id.origin()}))
+        if (!FindTipMeta(ti->second, id.origin()))
             ti->second = OpMeta(id.origin(), SHA2{});
     }
     // the tip should stay in the cache, so we do in-place writes

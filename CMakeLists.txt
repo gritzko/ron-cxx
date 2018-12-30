@@ -115,6 +115,7 @@ set(SWARMDB_SOURCES
         db/map/chain.cc
         db/map/op.cc
         db/map/yarn.cc
+        db/map/meta.cc
         db/map/map.hpp
     )
 

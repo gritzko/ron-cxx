@@ -94,7 +94,7 @@ class Replica {
 
     /** If we don't know the exact chain id, we have to scan the table to
      *  find the chain. Then, we scan the chain to find the op. */
-    inline Status FindOpMeta(OpMeta& meta, const Uuid& target_id);
+    Status FindOpMeta(OpMeta& meta, const Uuid& target_id);
 
     /** Fetches the op metadata for the chain head op.
      * @param meta - the op meta object with op id set to the chain id */

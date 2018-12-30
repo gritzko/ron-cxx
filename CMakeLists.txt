@@ -109,9 +109,15 @@ add_test(META test11-metardt)
 
 #  S W A R M D B
 
-add_library(swarmdb SHARED
+set(SWARMDB_SOURCES
         db/replica.hpp
         db/replica.cc
+        db/map/chain.cc
+        db/map/map.hpp
+    )
+
+add_library(swarmdb SHARED
+    ${SWARMDB_SOURCES}
         )
 add_dependencies(swarmdb rocksdblib)
 target_link_libraries(swarmdb ron botan rocksdb pthread z bz2 snappy)
@@ -126,11 +132,8 @@ add_test(CHAINS test20-chains)
 #  S W A R M D B  C L I
 
 add_executable(swarmdb-bin
-    db/replica.hpp
-    db/replica.cc
+    ${SWARMDB_SOURCES}
     db/main.cc
-    db/merge_ops.hpp
-    db/key.hpp
     )
 add_dependencies(swarmdb-bin rocksdblib)
 target_link_libraries(swarmdb-bin ron botan rocksdb pthread z bz2 snappy gflags)

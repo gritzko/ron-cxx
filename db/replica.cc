@@ -1,4 +1,5 @@
 #include "db/replica.hpp"
+#include "db/map/map.hpp"
 #include "db/merge_ops.hpp"
 
 using namespace rocksdb;
@@ -20,65 +21,6 @@ ColumnFamilyOptions Replica<Frame>::CFOptions() const {
 }
 
 //  C H A I N S
-
-/*
-template <typename Frame>
-Status Replica<Frame>::OpMeta::FirstChainOp(const OpMeta& prev,
-                                            const OpMeta& ref, Cursor& cur) {
-    object = ref.object;
-    rdt = ref.rdt;
-    at = cur.id();
-    // first op hash, according to our records
-    hash_op<Frame>(cur, hash, prev.hash, ref.hash);
-    return Status::OK;
-}
-
-template <typename Frame>
-Status Replica<Frame>::OpMeta::NextChainOp(Cursor& cur) {
-    SHA2 need_hash{};
-    // HAVE ? COMPARE : SET
-    while (cur.valid() && cur.id().version() == NAME) {  // eat annos
-        if (cur.id() == SHA2_UUID && cur.type(2) == ATOM::STRING) {
-            need_hash = SHA2{cur.parse_string(2)};  // FIXME check
-        } else if (cur.id() == OBJ_UUID && cur.type(2) == ATOM::UUID) {
-            const Uuid& need_object = cur.parse_uuid(2);
-            if (object.zero()) {
-                object = need_object;
-            } else if (cur.parse_uuid(2) != object) {
-                return Status::TREEBREAK;
-            }
-        } else if (cur.id() == PREV_UUID && cur.type(2) == ATOM::UUID) {
-            const Uuid& need_prev = cur.parse_uuid(2);
-            if (!at.zero() && need_prev != at) return Status::CHAINBREAK;
-        }
-        cur.Next();
-    }
-    if (!cur.valid()) return Status::OK;
-
-    const Uuid& ref = cur.ref();
-    const Uuid& id = cur.id();
-
-    if (ref.version() == NAME) {
-        if (!at.zero()) return Status::CHAINBREAK;
-        object = id;
-        // rdt = uuid2rdt(ref); FIXME
-        // at = id;
-    } else {
-        if (ref != at) return Status::BAD_STATE;
-        if (id.origin() != at.origin()) return Status::CHAINBREAK;
-        if (id <= at) return Status::CAUSEBREAK;
-    }
-
-    SHA2 next_hash;  // = SHA2{hash_, hash_, cur};
-    hash_op<Frame>(cur, next_hash, hash, hash);
-    if (!need_hash.matches(next_hash))  // length-0 hash equals anything
-        return Status::HASHBREAK;
-
-    at = id;
-    hash = next_hash;
-
-    return Status::OK;
-}*/
 
 //  L I F E C Y C L E
 
@@ -186,8 +128,8 @@ rocksdb::Iterator* Replica<Frame>::FindChain(const Uuid& target_id) {
     Key key{target_id, RDT::CHAIN};
     rocksdb::Iterator* i{db_->NewIterator(ro_, trunk_)};
     i->SeekForPrev(key);
-    while (i->Valid() && (key=Key{i->key()}).rdt() != CHAIN) i->Prev();
-    if (!i->Valid() || key.id().origin()!=target_id.origin()) {
+    while (i->Valid() && (key = Key{i->key()}).rdt() != CHAIN) i->Prev();
+    if (!i->Valid() || key.id().origin() != target_id.origin()) {
         delete i;
         i = nullptr;
     }
@@ -204,8 +146,6 @@ Status Replica<Frame>::FindOpMeta(OpMeta& meta, const Uuid& target_id) {
     std::unique_ptr<rocksdb::Iterator> i{FindChain(target_id)};
     if (!i) return Status::NOT_FOUND.comment("no such chain");
     Key chain_key{i->key()};
-    if (chain_key.id().origin() != target_id.origin())
-        return Status::NOT_FOUND.comment("chain from a wrong yarn?");
     chain_data = string{i->value().data(), i->value().size()};
 
     // 2. find chain meta
@@ -224,12 +164,11 @@ Status Replica<Frame>::FindOpMeta(OpMeta& meta, const Uuid& target_id) {
     while (meta.id != target_id && chainc.Next()) {
         meta = OpMeta{chainc, meta, meta};
     }
-    if (!chainc.valid() && target_id.value()!=NEVER)
+    if (!chainc.valid() && target_id.value() != NEVER)
         return Status::NOT_FOUND.comment("no such op in the chain");
 
     return ok;
 }
-
 
 //  R E C E I V E S
 
@@ -332,29 +271,12 @@ Status Replica<Frame>::Get(Frame& object, const Uuid& id, const Uuid& rdt,
     return Status::OK;
 }
 
-/*   template <class Frame>
-Status Replica<Frame>::ReceiveLog(ron::Uuid store, Frame frame){
-   WriteBatch batch;
-
-   Cursor cur = frame.cursor();
-   while (cur.valid()) { // TODO big switch for 16 op patterns
-       if (cur.op().ref().version()==UUID::NAME) {
-           if (cur.op().id().version()==UUID::TIME) {
-               ReceiveChain(store, cur, batch); // new object
-           } else if (cur.op().id().version()==UUID::DERIVED) {
-               // hash check?
-           } else {
-               return Status::BAD_STATE;
-           }
-       } else {
-           ReceiveChain(store, cur, batch);
-       }
-   }
-
-   db_->Write(wo, &batch);
-
-   return Status::OK;
-}*/
+template <typename Frame>
+Status Replica<Frame>::ReceiveQuery(Builder& response, Uuid object_store,
+                                    Cursor& query) {
+    MasterMapper<Frame> mapper{this};
+    return mapper.Map(response, query);
+}
 
 /*template<typename Frame>
 template<class FrameB>

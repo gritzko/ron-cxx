@@ -19,6 +19,7 @@ typedef Frame::Cursor Cursor;
 DEFINE_bool(create, false, "create a new replica");
 DEFINE_string(feed, "", "feed a RON frame");
 DEFINE_string(write, "", "write a RON frame (new ops)");
+DEFINE_string(query, "", "submit a RON query (e.g. @chain:1gPH5o+gritzko?)");
 DEFINE_string(get, "",
               "get a RON frame, e.g. --get @1gPH5o+gritzko:lww or "
               "1gPH5o+gritzko.lww or 1gPH5o+gritzko)");
@@ -31,6 +32,7 @@ DECLARE_string(helpmatch);
 Status CommandHashFrame(const string& filename);
 Status CommandWriteNewFrame(RonReplica& replica, const string& filename);
 Status CommandGetFrame(RonReplica& replica, const string& name);
+Status CommandQuery(RonReplica& replica, const string& name);
 
 Status RunCommands() {
     RonReplica replica{};
@@ -48,6 +50,8 @@ Status RunCommands() {
         cout << now.str() << endl;
     } else if (!FLAGS_hash.empty()) {
         ok = CommandHashFrame(FLAGS_hash);
+    } else if (!FLAGS_query.empty()) {
+        ok = CommandQuery(replica, FLAGS_query);
     } else if (!FLAGS_get.empty()) {
         ok = CommandGetFrame(replica, FLAGS_get);
     } else if (!FLAGS_write.empty()) {
@@ -71,7 +75,7 @@ int main(int argn, char** args) {
 
     Status ok = RunCommands();
 
-    if (!ok) cerr << "error\t" << ok.code().value().str() << '\t' << ok.comment() << '\n';
+    if (!ok) cerr << "error\t" << ok.str() << '\n';
 
     return ok ? 0 : -1;
 }
@@ -91,6 +95,24 @@ Status LoadFrame(Frame& target, const string& filename) {
     int fd = filename.empty() ? STDIN_FILENO : open(filename.c_str(), O_RDONLY);
     if (fd < 0) return Status::IOFAIL;
     return LoadFrame(target, fd);
+}
+
+Status CommandQuery(RonReplica& replica, const string& name) {
+    if (name.empty()) return Status::BADARGS;
+    Uuid id{}, rdt{};
+    size_t dot;
+    string termd{name};
+    if (termd.find('?') == -1) termd.push_back('?');
+    TextFrame::Cursor cur{termd};
+    if (!cur.valid()) return Status::BADARGS.comment("need a query op");
+    id = cur.id();
+    rdt = cur.ref();
+    if (id == Uuid::FATAL || rdt == Uuid::FATAL)
+        return Status::BADARGS.comment("not an UUID");
+    Builder result;
+    Status ok = replica.ReceiveQuery(result, Uuid::NIL, cur);
+    if (ok) cout << result.data() << '\n';
+    return ok;
 }
 
 Status CommandGetFrame(RonReplica& replica, const string& name) {

@@ -155,21 +155,7 @@ class Replica {
     // a hash check MUST follow its op in the frame => the hash must be cached
     Status ReceiveSHA2Check(const Uuid& id, const SHA2& check);
 
-    Status ReceiveQuery(Builder& response, Uuid object_store,
-                        const Frame& query) {
-        Cursor cur = query.cursor();
-        //        switch (cur.op().type().value().get30(1)) { // assuming these
-        //        names <= 5 chars
-        //            case LWW_INT:
-        //            //case RGA_DATA_ID[VALUE]:
-        //                return data_.RecvQuery(response, cur);
-        //            case VV_FUNC_INT:
-        //                return vv_.RecvQuery(response, cur);
-        //            case SHA3_FUNC_INT:
-        //                return sha3_.RecvQuery(response, cur);
-        //        }
-        return Status::OK;
-    }
+    Status ReceiveQuery(Builder& response, Uuid object_store, Cursor& query);
 
     Status RecvData(Builder& response, const Frame& query) {
         return Status::OK;

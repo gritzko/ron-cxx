@@ -76,6 +76,8 @@ union Word {
     inline fsize_t get30(int pos) const {
         return fsize_t(_64 >> (pos ? 30U : 0U)) & ((1U << 30U) - 1U);
     }
+    inline fsize_t higher() const { return (_64 & PAYLOAD_BITS) >> 30; }
+    inline fsize_t lower() const { return _64 & (PAYLOAD_BITS >> 30); }
     inline uint8_t flags() const { return _8[7] >> 4U; }
     inline void zero() { _64 = 0U; }
     size_t write_base64(char* to) const;

@@ -30,7 +30,7 @@ class Status {
         return code_[ORIGIN] != Word::PAYLOAD_BITS;  // not an error
     }
 
-    std::string str() const { return code_.str(); }
+    std::string str() const { return code().value().str() + '\t' + comment(); }
 
     static const Status OK;
     static const Status NOT_IMPLEMENTED;

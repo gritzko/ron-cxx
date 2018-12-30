@@ -113,6 +113,7 @@ set(SWARMDB_SOURCES
         db/replica.hpp
         db/replica.cc
         db/map/chain.cc
+        db/map/op.cc
         db/map/map.hpp
     )
 

@@ -47,6 +47,26 @@ namespace ron {
     static const Uuid OP_MAPPER_ID{933371022772535296UL,0};
 
     template<typename Frame>
+    struct YarnMapper {
+        typedef typename Frame::Cursor Cursor;
+        typedef typename Frame::Builder Builder;
+        typedef Replica<Frame> HostReplica;
+
+        HostReplica* host_;
+
+        YarnMapper(HostReplica* host) : host_{host} {}
+
+        Status Map(Builder& response, Cursor& query) const;
+
+        Status Write(rocksdb::WriteBatch& batch, Cursor& query) const {
+            return Status::NOT_IMPLEMENTED;
+        }
+
+    };
+
+    static const Uuid YARN_MAPPER_ID{1109533813702131712UL,0};
+
+    template<typename Frame>
     struct MasterMapper {
         typedef typename Frame::Cursor Cursor;
         typedef typename Frame::Builder Builder;
@@ -54,8 +74,9 @@ namespace ron {
 
         ChainMapper<Frame> chain_;
         OpMapper<Frame> op_;
+        YarnMapper<Frame> yarn_;
 
-        MasterMapper(HostReplica* host) : chain_{host}, op_{host} {}
+        MasterMapper(HostReplica* host) : chain_{host}, op_{host}, yarn_{host} {}
 
         /** Map RON events into some external representation (e.g. JSON). */
         Status Map(Builder& response, Cursor& query) const {
@@ -64,6 +85,8 @@ namespace ron {
                 return chain_.Map(response, query);
             } else if (id == OP_MAPPER_ID) {
                 return op_.Map(response, query);
+            } else if (id == YARN_MAPPER_ID) {
+                return yarn_.Map(response, query);
             } else {
                 return Status::NOT_IMPLEMENTED.comment("unknown mapper");
             }

@@ -70,7 +70,7 @@ class Replica {
 
     //  C H A I N  S T O R E
 
-    rocksdb::Iterator* FindYarn(Word replica);
+    rocksdb::Iterator* FindYarn(const Uuid& replica);
     rocksdb::Iterator* FindChain(const Uuid& op_id);
 
     //  O B J E C T  S T O R E

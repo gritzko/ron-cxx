@@ -137,6 +137,20 @@ rocksdb::Iterator* Replica<Frame>::FindChain(const Uuid& target_id) {
 }
 
 template <class Frame>
+rocksdb::Iterator* Replica<Frame>::FindYarn(const Uuid& target_id) {
+    if (!open()) return nullptr;
+    Key key{target_id, RDT::CHAIN};
+    rocksdb::Iterator* i{db_->NewIterator(ro_, trunk_)};
+    i->Seek(key);
+    while (i->Valid() && (key = Key{i->key()}).rdt() != CHAIN) i->Next();
+    if (!i->Valid() || key.id().origin() != target_id.origin()) {
+        delete i;
+        i = nullptr;
+    }
+    return i;
+}
+
+template <class Frame>
 Status Replica<Frame>::FindOpMeta(OpMeta& meta, const Uuid& target_id) {
     static_assert(RDT::META + 1 == RDT::CHAIN,
                   "ensure records go in this exact order");

@@ -4,10 +4,10 @@ using namespace std;
 
 namespace ron {
 
-int64_t TextFrame::Cursor::parse_int(fsize_t idx) {
-    Atom& atom = op_.data()[idx];
-    assert(atom.type() == INT);
-    const slice_t range = data().slice(atom.origin().range());
+int64_t TextFrame::Cursor::parse_int(slice_t range) {
+    // Atom& atom = op_.data()[idx];
+    // assert(atom.type() == INT);
+    // const slice_t range = data().slice(atom.origin().range());
     const char* i = range.begin();
     bool neg = false;
     if (*i == '-') {
@@ -23,20 +23,19 @@ int64_t TextFrame::Cursor::parse_int(fsize_t idx) {
         i++;
     }
     if (neg) ret = -ret;
-    atom[VALUE] = *(Word*)&ret;
+    // atom[VALUE] = *(Word*)&ret;
     return ret;
 }
 
-double TextFrame::Cursor::parse_float(fsize_t idx) {
-    Atom& atom = op_.data()[idx];
-    assert(atom.type() == FLOAT);
-    const slice_t range = data().slice(atom.origin().range());
+double TextFrame::Cursor::parse_float(slice_t range) {
+    //    Atom& atom = op_.data()[idx];
+    //  assert(atom.type() == FLOAT);
+    // const slice_t range = data().slice(atom.origin().range());
     char fs[32];  // FIXME size limits
     strncpy(fs, range.buf_, range.size_);
     fs[range.size_] = 0;
-    double ret;
-    sscanf(fs, "%lf", &ret);
-    atom[VALUE] = *(Word*)&ret;
+    double ret = strtod(fs, nullptr);
+    // atom[VALUE] = *(Word*)&ret;
     return ret;
 }
 

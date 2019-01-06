@@ -29,6 +29,9 @@ class TextFrame {
         static constexpr int RON_FULL_STOP = 255;
         static constexpr int SPEC_SIZE = 2;  // open RON
 
+        static int64_t parse_int(slice_t data);
+        static double parse_float(slice_t data);
+
        public:
         explicit Cursor(const slice_t& data)
             : data_{data},
@@ -55,28 +58,23 @@ class TextFrame {
         inline const Uuid& ref() const { return op_.ref(); }
         inline fsize_t size() const { return op_.size(); }
         inline ATOM type(fsize_t idx) const { return op_.type(idx); }
-        int64_t parse_int(fsize_t idx);
-        double parse_float(fsize_t idx);
-        void parse(fsize_t idx) {
-            switch (op().type(idx)) {
-                case INT:
-                    parse_int(idx);
-                    break;
-                case FLOAT:
-                    parse_float(idx);
-                    break;
-                default:
-                    break;
-            }
-        }
         static std::string unescape(const slice_t& data);
-        inline std::string parse_string(fsize_t idx) const {
-            const Atom& atom = op().atom(idx);
-            assert(atom.type() == STRING);
-            return unescape(slice(atom.origin().range()));
+        std::string string(fsize_t idx) const {
+            assert(type(idx) == STRING);
+            // FIXME check metrics
+            slice_t esc = data_.slice(op_.atom(idx).origin().range());
+            return unescape(esc);
         }
-        inline Uuid parse_uuid(fsize_t idx) {
-            assert(op_.atom(idx).type() == UUID);
+        int64_t integer(fsize_t idx) const {
+            assert(type(idx) == INT);
+            return int64_t(op_.atom(idx).value());
+        }
+        double number(fsize_t idx) const {
+            assert(type(idx) == FLOAT);
+            return double(op_.atom(idx).value());
+        }
+        Uuid uuid(fsize_t idx) const {
+            assert(type(idx) == UUID);
             return op_.uuid(idx);
         }
     };

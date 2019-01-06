@@ -112,6 +112,10 @@ union Word {
         i ^= (uint64_t)rand();
         return Word{i & MAX_VALUE};
     }
+    explicit Word(double val) : _64{*(uint64_t*)&val} {}
+    inline explicit operator double() const { return *(double*)this; }
+    explicit Word(int64_t val) : _64{*(uint64_t*)&val} {}
+    inline explicit operator int64_t() const { return *(int64_t*)this; }
 };
 
 enum half_t { VALUE = 0, ORIGIN = 1 };
@@ -138,11 +142,11 @@ struct Atom {
     static Atom String(frange_t range) {
         return Atom{0, Word{STRING_ATOM, range}};
     }
-    static Atom Float(frange_t range) {
-        return Atom{0, Word{FLOAT_ATOM, range}};
+    static Atom Float(double value, frange_t range) {
+        return Atom{Word{value}, Word{FLOAT_ATOM, range}};
     }
-    static Atom Integer(frange_t range) {
-        return Atom{0, Word{INT_ATOM, range}};
+    static Atom Integer(int64_t value, frange_t range) {
+        return Atom{Word{value}, Word{INT_ATOM, range}};
     }
     inline ATOM type() const {
         uint8_t fb = ofb();

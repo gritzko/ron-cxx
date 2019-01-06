@@ -44,8 +44,8 @@ void test_basic_cycle () {
     assert(cursor.Next());
     assert(op.ref()=="1+src");
     assert(op.id()=="2+orig");
-    assert(cursor.parse_string(2)=="key");
-    assert(cursor.parse_string(3)=="value");
+    assert(cursor.string(2)=="key");
+    assert(cursor.string(3)=="value");
     assert(!cursor.Next());
 }
 
@@ -63,12 +63,12 @@ void test_optional_chars () {
     assert(copt.Next()); // start state: space :)
     assert(copt.op().id()=="1A00000001");
     assert(copt.op().ref()=="1A");
-    assert(copt.parse_int(2)==28);
-    assert(copt.parse_string(3)=="abc");
-    assert(copt.parse_int(4)==3);
+    assert(copt.integer(2)==28);
+    assert(copt.string(3)=="abc");
+    assert(copt.integer(4)==3);
 
     assert(copt.Next());
-    assert(copt.parse_float(2)==3.1415); // :)
+    assert(copt.number(2)==3.1415); // :)
 
     assert(!copt.Next());
     assert(!copt.valid());
@@ -77,15 +77,15 @@ void test_optional_chars () {
 void test_signs () {
     Frame signs{"@2:1 -1 ,-1.2, +1.23,-1e+2, -2.0e+1,"};
     Cursor cur = signs.cursor();
-    assert(cur.parse_int(2)==-1);
+    assert(cur.integer(2)==-1);
     assert(cur.Next());
-    assert(cur.parse_float(2)==-1.2);
+    assert(cur.number(2)==-1.2);
     assert(cur.Next());
-    assert(cur.parse_float(2)==1.23);
+    assert(cur.number(2)==1.23);
     assert(cur.Next());
-    assert(cur.parse_float(2)==-100.0);
+    assert(cur.number(2)==-100.0);
     assert(cur.Next());
-    assert(cur.parse_float(2)==-20);
+    assert(cur.number(2)==-20);
     assert(!cur.Next());
 }
 
@@ -104,13 +104,18 @@ void test_string_escapes () {
     Frame cycle = builder.frame();
     Cursor cc = cycle.cursor();
     assert(cc.valid());
-    assert(cc.parse_string(2)==STR1);
-    assert(cc.parse_string(3)==STR2);
+    assert(cc.string(2)==STR1);
+    assert(cc.string(3)==STR2);
 
     // FIXME \u
     //Frame good{" 'esc \\'', '\\u0020', '\\r\\n\\t\\\\', "};
     //Cursor cur = good.cursor();
+}
 
+void test_string_metrics () {
+    string bad_utf8 = "@id :ref 'bad string \x80';";
+    Cursor bad{bad_utf8};
+    assert(!bad.valid());
 }
 
 void test_terms() {
@@ -143,5 +148,6 @@ int main (int argn, char** args) {
     test_string_escapes();
     test_terms();
     test_defaults();
+    test_string_metrics();
     return 0;
 }

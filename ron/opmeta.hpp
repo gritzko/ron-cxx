@@ -81,18 +81,18 @@ struct OpMeta {
         if (cur.ref() != id)
             return Status::BAD_STATE.comment("annotation for a wrong op");
         if (name == SHA2_UUID && cur.has(2, STRING)) {
-            SHA2 annhash{cur.parse_string(2)};  // TODO format check
+            SHA2 annhash{cur.string(2)};  // TODO format check
             if (!hash.matches(annhash)) return Status::HASHBREAK;
             if (annhash.known_bits_ > hash.known_bits_) hash = annhash;
         } else if (name == OBJ_UUID && cur.has(2, UUID)) {
-            Uuid annobj = cur.parse_uuid(2);
+            Uuid annobj = cur.uuid(2);
             if (object.zero()) {
                 object = annobj;
             } else if (object != annobj) {
                 return Status::TREEBREAK;
             }
         } else if (name == RDT_UUID && cur.has(2, UUID)) {
-            Uuid annrdt = cur.parse_uuid(2);
+            Uuid annrdt = cur.uuid(2);
             if (rdt.zero()) {
                 rdt = annrdt;
             } else if (annrdt != rdt) {

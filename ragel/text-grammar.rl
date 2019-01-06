@@ -14,7 +14,7 @@
     action end_int {
         intb.end(p);
         if (intb.size() > 21) { cs = 0; fbreak; }
-        op_.AddAtom(Atom::Integer(body.range_of(intb))); 
+        op_.AddAtom(Atom::Integer(parse_int(intb), body.range_of(intb))); 
         lastintb = intb.buf_;
     }
     action begin_string { strb.begin(p); }
@@ -26,7 +26,7 @@
     action end_float { 
         floatb.end(p);
         if (floatb.size() > 24) { cs = 0; fbreak; }
-        op_.AddAtom(Atom::Float(body.range_of(floatb))); 
+        op_.AddAtom(Atom::Float(parse_float(floatb), body.range_of(floatb))); 
     }
     action end_quoted_uuid {
         op_.AddAtom(Uuid{variety, value, version, origin}); 

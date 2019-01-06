@@ -212,7 +212,7 @@ Status CommandHashFrame(const string& filename) {
             report.AppendNewOp(RAW, OpMeta::SHA2_UUID, id, sha2.base64());
         } else if (id == OpMeta::SHA2_UUID && cur.size() > 2 &&
                    cur.type(2) == STRING) {
-            string base64 = cur.parse_string(2);
+            string base64 = cur.string(2);
             SHA2 hash;
             SHA2::ParseBase64(hash, base64);
             auto hi = hashes.find(id);

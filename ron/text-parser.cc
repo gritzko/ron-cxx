@@ -93,7 +93,7 @@ bool TextFrame::Cursor::Next() {
                     goto _out;
                 }
             }
-            op_.AddAtom(Atom::Integer(body.range_of(intb)));
+            op_.AddAtom(Atom::Integer(parse_int(intb), body.range_of(intb)));
             lastintb = intb.buf_;
         }
 #line 38 "ragel/./text-grammar.rl"
@@ -119,7 +119,8 @@ bool TextFrame::Cursor::Next() {
                     goto _out;
                 }
             }
-            op_.AddAtom(Atom::Float(body.range_of(floatb)));
+            op_.AddAtom(
+                Atom::Float(parse_float(floatb), body.range_of(floatb)));
         }
 #line 38 "ragel/./text-grammar.rl"
             {
@@ -206,7 +207,7 @@ bool TextFrame::Cursor::Next() {
                     goto _out;
                 }
             }
-            op_.AddAtom(Atom::Integer(body.range_of(intb)));
+            op_.AddAtom(Atom::Integer(parse_int(intb), body.range_of(intb)));
             lastintb = intb.buf_;
         }
 #line 13 "ragel/././uuid-grammar.rl"
@@ -320,7 +321,8 @@ bool TextFrame::Cursor::Next() {
                     goto _out;
                 }
             }
-            op_.AddAtom(Atom::Float(body.range_of(floatb)));
+            op_.AddAtom(
+                Atom::Float(parse_float(floatb), body.range_of(floatb)));
         }
 #line 16 "ragel/././uuid-grammar.rl"
             { origin.end(p); }
@@ -365,7 +367,8 @@ bool TextFrame::Cursor::Next() {
                     goto _out;
                 }
             }
-            op_.AddAtom(Atom::Float(body.range_of(floatb)));
+            op_.AddAtom(
+                Atom::Float(parse_float(floatb), body.range_of(floatb)));
         }
 #line 13 "ragel/././uuid-grammar.rl"
             { value.end(p); }
@@ -584,7 +587,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Integer(body.range_of(intb)));
+                op_.AddAtom(
+                    Atom::Integer(parse_int(intb), body.range_of(intb)));
                 lastintb = intb.buf_;
             }
                 goto st1;
@@ -600,7 +604,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
                 goto st1;
             tr47 :
@@ -657,7 +662,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Integer(body.range_of(intb)));
+                op_.AddAtom(
+                    Atom::Integer(parse_int(intb), body.range_of(intb)));
                 lastintb = intb.buf_;
             }
 #line 13 "ragel/././uuid-grammar.rl"
@@ -741,7 +747,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
 #line 16 "ragel/././uuid-grammar.rl"
                 { origin.end(p); }
@@ -776,7 +783,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
@@ -999,7 +1007,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Integer(body.range_of(intb)));
+                op_.AddAtom(
+                    Atom::Integer(parse_int(intb), body.range_of(intb)));
                 lastintb = intb.buf_;
             }
                 goto st4;
@@ -1015,7 +1024,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
                 goto st4;
             tr44 :
@@ -1072,7 +1082,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Integer(body.range_of(intb)));
+                op_.AddAtom(
+                    Atom::Integer(parse_int(intb), body.range_of(intb)));
                 lastintb = intb.buf_;
             }
 #line 13 "ragel/././uuid-grammar.rl"
@@ -1156,7 +1167,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
 #line 16 "ragel/././uuid-grammar.rl"
                 { origin.end(p); }
@@ -1191,7 +1203,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
@@ -1396,7 +1409,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Integer(body.range_of(intb)));
+                op_.AddAtom(
+                    Atom::Integer(parse_int(intb), body.range_of(intb)));
                 lastintb = intb.buf_;
             }
                 goto st9;
@@ -1412,7 +1426,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
                 goto st9;
             tr50 :
@@ -1469,7 +1484,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Integer(body.range_of(intb)));
+                op_.AddAtom(
+                    Atom::Integer(parse_int(intb), body.range_of(intb)));
                 lastintb = intb.buf_;
             }
 #line 13 "ragel/././uuid-grammar.rl"
@@ -1553,7 +1569,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
 #line 16 "ragel/././uuid-grammar.rl"
                 { origin.end(p); }
@@ -1588,7 +1605,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
@@ -1771,7 +1789,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Integer(body.range_of(intb)));
+                op_.AddAtom(
+                    Atom::Integer(parse_int(intb), body.range_of(intb)));
                 lastintb = intb.buf_;
             }
                 goto st12;
@@ -1787,7 +1806,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
                 goto st12;
             tr51 :
@@ -1844,7 +1864,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Integer(body.range_of(intb)));
+                op_.AddAtom(
+                    Atom::Integer(parse_int(intb), body.range_of(intb)));
                 lastintb = intb.buf_;
             }
 #line 13 "ragel/././uuid-grammar.rl"
@@ -1928,7 +1949,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
 #line 16 "ragel/././uuid-grammar.rl"
                 { origin.end(p); }
@@ -1963,7 +1985,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
@@ -2232,7 +2255,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Integer(body.range_of(intb)));
+                op_.AddAtom(
+                    Atom::Integer(parse_int(intb), body.range_of(intb)));
                 lastintb = intb.buf_;
             }
                 goto st16;
@@ -2248,7 +2272,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
                 goto st16;
             tr52 :
@@ -2305,7 +2330,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Integer(body.range_of(intb)));
+                op_.AddAtom(
+                    Atom::Integer(parse_int(intb), body.range_of(intb)));
                 lastintb = intb.buf_;
             }
 #line 13 "ragel/././uuid-grammar.rl"
@@ -2389,7 +2415,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
 #line 16 "ragel/././uuid-grammar.rl"
                 { origin.end(p); }
@@ -2424,7 +2451,8 @@ bool TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Atom::Float(body.range_of(floatb)));
+                op_.AddAtom(
+                    Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }

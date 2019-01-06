@@ -16,7 +16,7 @@ string scan (const TextFrame& frame) {
             ret.append(",");
         const Op& op = cur.op();
         if (op.size()>2 && op.atom(2).type()==ATOM::STRING) {
-            ret.append(cur.parse_string(2));
+            ret.append(cur.string(2));
         } else {
             ret.append("_");
         }

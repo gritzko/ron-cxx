@@ -2,6 +2,7 @@
 
     machine TEXT_FRAME;
     include UUID "./uuid-grammar.rl";
+    include UTF8 "./utf8-grammar.rl";
 
     action end_id {
         op_.SetId(Uuid{variety, value, version, origin});
@@ -56,7 +57,7 @@
     # JSON-ey string
     UNIESC = "\\u" [0-9a-fA-F]{4};
     ESC = "\\" [nrt\\b'/"];
-    CHAR = [^'\n\r\\];
+    CHAR = CODEPOINT - ['\n\r\\];
     STRING = ( (UNIESC|ESC|CHAR)* ) >begin_string %end_string;
 
     # op term (header op, raw/reduced op, query op)

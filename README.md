@@ -3,6 +3,7 @@
 Replicated Object Notation (RON) is a format for distributed live data.
 This Ragel/C++ implementation aims to be used as a rocksdb-based storage
 engine, also as a library in higher-level languages, using bindings.
+See http://replicated.cc for the protocol spec.
 
 ## New 2.1 features
 

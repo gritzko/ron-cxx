@@ -3,9 +3,8 @@
 
 namespace ron {
 
-void TextFrame::Builder::AppendOp(const Cursor& cur) {
+void TextFrame::Builder::WriteValues(const Cursor& cur) {
     const Op& op = cur.op();
-    AppendSpec(op.id(), op.ref());
     for (fsize_t i = 2; i < op.size(); i++) {
         const Atom& atom = op.atom(i);
         Write(' ');
@@ -27,12 +26,18 @@ void TextFrame::Builder::AppendOp(const Cursor& cur) {
                 break;
         }
     }
+}
+
+void TextFrame::Builder::AppendOp(const Cursor& cur) {
+    const Op& op = cur.op();
+    WriteSpec(op.id(), op.ref());
+    WriteValues(cur);
     Write(TERM_PUNCT[op.term_]);
     Write('\n');
 }
 
-// template <typename Cursor2>
-void TextFrame::Builder::AppendValues(const Cursor& cur) {
+template <typename Cursor2>
+void TextFrame::Builder::WriteValues(const Cursor2& cur) {
     const Op& op = cur.op();
     frange_t range;
     for (fsize_t i = 2; i < op.size(); i++) {
@@ -63,22 +68,20 @@ void TextFrame::Builder::AppendAmendedOp(const Cursor& cur, TERM newterm,
                                          const Uuid& newid,
                                          const Uuid& newref) {
     const Op& op = cur.op();
-    AppendSpec(newid, newref);
-    AppendValues(cur);
+    WriteSpec(newid, newref);
+    WriteValues(cur);
     Write(TERM_PUNCT[newterm]);
     Write('\n');
 }
 
-/*
-//template <typename Cursor2>
+template <typename Cursor2>
 void TextFrame::Builder::AppendOp(const Cursor& cur) {
     const Op& op = cur.op();
-    AppendSpec(op.id(), op.ref());
-    AppendValues(cur);
+    WriteSpec(op.id(), op.ref());
+    WriteValues(cur);
     Write(TERM_PUNCT[op.term()]);
     Write('\n');
 }
-*/
 
 void TextFrame::Builder::WriteInt(int64_t value) {
     char tmp[20];

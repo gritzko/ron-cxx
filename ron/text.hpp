@@ -18,7 +18,7 @@ class TextFrame {
     const std::string& data() const { return data_; }
 
     class Cursor {
-        // the cursor does not own the memory
+        /** Frame data; the cursor does not own the memory */
         slice_t data_;
         Op op_;
         int pos_;
@@ -82,6 +82,7 @@ class TextFrame {
     struct Builder {
         TERM term_;
         Uuid prev_;
+        /** Frame data (builder owns the memory) */
         std::string data_;
 
         inline void Write(char c) { data_.push_back(c); }
@@ -93,64 +94,39 @@ class TextFrame {
 
         void escape(std::string& escaped, const slice_t& unescaped);
 
-       public:
-        Builder() : term_{RAW}, prev_{Uuid::NIL}, data_{} {}
-
-        // copy-as-strings
-        void AppendOp(const Cursor& cur);
-
-        // template <typename Cursor2>
-        void AppendValues(const Cursor& cur);
-
-        // RON coding conversion (parsing, re-serialization)
-        // template <typename Cursor2>
-        // void AppendOp(const Cursor& cur);
-
-        // template <typename Cursor2>
-        void AppendAmendedOp(const Cursor& cur, TERM newterm, const Uuid& newid,
-                             const Uuid& newref);
-
-        const TextFrame frame() const { return TextFrame{data_}; }
-
-        const std::string& data() const { return data_; }
-
-        bool empty() const { return data_.empty(); }
-
-        //  B E A U T I F Y I N G   T E M P L A T E S
-
         // terminates the op
-        void AppendAtoms() { Write(TERM_PUNCT[term_]); }
+        void WriteAtoms() { Write(TERM_PUNCT[term_]); }
 
         template <typename... Ts>
-        void AppendAtoms(int64_t value, Ts... args) {
+        void WriteAtoms(int64_t value, Ts... args) {
             Write(' ');
             WriteInt(value);
-            AppendAtoms(args...);
+            WriteAtoms(args...);
         }
 
         template <typename... Ts>
-        void AppendAtoms(Uuid value, Ts... args) {
+        void WriteAtoms(Uuid value, Ts... args) {
             Write(value.is_ambiguous() ? ' ' : ATOM_PUNCT[UUID]);
             WriteUuid(value);
-            AppendAtoms(args...);
+            WriteAtoms(args...);
         }
 
         template <typename... Ts>
-        void AppendAtoms(double value, Ts... args) {
+        void WriteAtoms(double value, Ts... args) {
             Write(' ');
             WriteFloat(value);
-            AppendAtoms(args...);
+            WriteAtoms(args...);
         }
 
         template <typename... Ts>
-        void AppendAtoms(const std::string& value, Ts... args) {
+        void WriteAtoms(const std::string& value, Ts... args) {
             Write(ATOM_PUNCT[STRING]);
             WriteString(value);
             Write(ATOM_PUNCT[STRING]);
-            AppendAtoms(args...);
+            WriteAtoms(args...);
         }
 
-        void AppendSpec(const Uuid& id, const Uuid& ref) {
+        void WriteSpec(const Uuid& id, const Uuid& ref) {
             bool seq_id = id == prev_.inc();
             if (!seq_id) {
                 Write(SPEC_PUNCT[EVENT]);
@@ -164,16 +140,43 @@ class TextFrame {
             prev_ = id;
         }
 
+        void WriteValues(const Cursor& cur);
+
+        template <typename Cursor2>
+        void WriteValues(const Cursor2& cur);
+
+       public:
+        Builder() : term_{RAW}, prev_{Uuid::NIL}, data_{} {}
+
+        /** A shortcut method, avoids re-serialization of atoms. */
+        void AppendOp(const Cursor& cur);
+
+        /** RON coding conversion (parsing, re-serialization) */
+        template <typename Cursor2>
+        void AppendOp(const Cursor& cur);
+
+        // template <typename Cursor2>
+        void AppendAmendedOp(const Cursor& cur, TERM newterm, const Uuid& newid,
+                             const Uuid& newref);
+
+        const TextFrame frame() const { return TextFrame{data_}; }
+
+        const std::string& data() const { return data_; }
+
+        bool empty() const { return data_.empty(); }
+
+        /** A convenience API method to add an op with any number of atoms. */
         template <typename... Ts>
         void AppendNewOp(TERM term, const Uuid& id, const Uuid& ref,
                          Ts... args) {
             term_ = term;
-            AppendSpec(id, ref);
+            WriteSpec(id, ref);
             Write(' ');
-            AppendAtoms(args...);
+            WriteAtoms(args...);
             Write('\n');
         }
 
+        /** A convenience method to add all ops from the cursor. */
         template <typename Cur>
         void AppendAll(Cur& cur) {
             if (!cur.valid()) return;
@@ -182,6 +185,7 @@ class TextFrame {
             } while (cur.Next());
         }
 
+        /** A convenience method to add all ops from the frame. */
         template <typename Frame2>
         void AppendFrame(const Frame2& frame) {
             auto cur = frame.cursor();

@@ -17,7 +17,10 @@ class VV {
     inline bool covers(const Uuid& point) const {
         return get(point.origin()).value() >= point.value();
     }
+    inline bool empty() const { return vv_.empty(); }
 };
+
+const VV EMPTY_VV{};
 
 }  // namespace ron
 

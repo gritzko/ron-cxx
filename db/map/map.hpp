@@ -14,9 +14,9 @@ namespace ron {
 
         HostReplica* host_;
 
-        ChainMapper(HostReplica* host) : host_{host} {}
+        explicit ChainMapper(HostReplica* host) : host_{host} {}
 
-        Status Map(Builder& response, Cursor& query) const;
+        Status Map(Builder& response, Cursor& query, const VV& hili=EMPTY_VV) const;
 
         Status Write(rocksdb::WriteBatch& batch, Cursor& query) const {
             return Status::NOT_IMPLEMENTED;
@@ -34,9 +34,9 @@ namespace ron {
 
         HostReplica* host_;
 
-        OpMapper(HostReplica* host) : host_{host} {}
+        explicit OpMapper(HostReplica* host) : host_{host} {}
 
-        Status Map(Builder& response, Cursor& query) const;
+        Status Map(Builder& response, Cursor& query, const VV& hili=EMPTY_VV) const;
 
         Status Write(rocksdb::WriteBatch& batch, Cursor& query) const {
             return Status::NOT_IMPLEMENTED;
@@ -54,9 +54,9 @@ namespace ron {
 
         HostReplica* host_;
 
-        YarnMapper(HostReplica* host) : host_{host} {}
+        explicit YarnMapper(HostReplica* host) : host_{host} {}
 
-        Status Map(Builder& response, Cursor& query) const;
+        Status Map(Builder& response, Cursor& query, const VV& hili=EMPTY_VV) const;
 
         Status Write(rocksdb::WriteBatch& batch, Cursor& query) const {
             return Status::NOT_IMPLEMENTED;
@@ -74,9 +74,9 @@ namespace ron {
 
         HostReplica* host_;
 
-        MetaMapper(HostReplica* host) : host_{host} {}
+        explicit MetaMapper(HostReplica* host) : host_{host} {}
 
-        Status Map(Builder& response, Cursor& query) const;
+        Status Map(Builder& response, Cursor& query, const VV& hili=EMPTY_VV) const;
 
         Status Write(rocksdb::WriteBatch& batch, Cursor& query) const {
             return Status::NOT_IMPLEMENTED;
@@ -101,10 +101,10 @@ namespace ron {
         YarnMapper<Frame> yarn_;
         MetaMapper<Frame> meta_;
 
-        MasterMapper(HostReplica* host) : chain_{host}, op_{host}, yarn_{host}, meta_{host} {}
+        explicit MasterMapper(HostReplica* host) : chain_{host}, op_{host}, yarn_{host}, meta_{host} {}
 
         /** Map RON events into some external representation (e.g. JSON). */
-        Status Map(Builder& response, Cursor& query) const {
+        Status Map(Builder& response, Cursor& query, const VV& hili=EMPTY_VV) const {
             const Uuid& id = query.id();
             if (id == CHAIN_MAPPER_ID) {
                 return chain_.Map(response, query);

@@ -3,7 +3,7 @@
 namespace ron {
 
     template<typename Frame>
-    Status MetaMapper<Frame>::Map(Builder& response, Cursor& query) const {
+    Status MetaMapper<Frame>::Map(Builder& response, Cursor& query, const VV& hili) const {
         const Uuid& ref = query.ref();
         if (ref.version()!=TIME) return Status::BADARGS.comment("need an op id");
         OpMeta meta;

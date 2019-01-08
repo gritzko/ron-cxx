@@ -41,8 +41,8 @@ ExternalProject_Add(botan-project
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ./configure.py --prefix=${CRYPTO_PREFIX} --minimized-build --enable-modules=sha3,sha2_64
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND make -n libs
-    INSTALL_COMMAND make -n install
+    BUILD_COMMAND make libs
+    INSTALL_COMMAND make install
     )
 ExternalProject_Get_Property(botan-project install_dir)
 add_library(botan STATIC IMPORTED db/test/chains.cc)

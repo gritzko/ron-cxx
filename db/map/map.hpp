@@ -18,7 +18,7 @@ namespace ron {
 
         Status Map(Builder& response, Cursor& query, const VV& hili=EMPTY_VV) const;
 
-        Status Write(rocksdb::WriteBatch& batch, Cursor& query) const {
+        Status Write(Builder& patch, Cursor& query) const {
             return Status::NOT_IMPLEMENTED;
         }
 
@@ -38,7 +38,7 @@ namespace ron {
 
         Status Map(Builder& response, Cursor& query, const VV& hili=EMPTY_VV) const;
 
-        Status Write(rocksdb::WriteBatch& batch, Cursor& query) const {
+        Status Write(Builder& patch, Cursor& query) const {
             return Status::NOT_IMPLEMENTED;
         }
 
@@ -58,7 +58,7 @@ namespace ron {
 
         Status Map(Builder& response, Cursor& query, const VV& hili=EMPTY_VV) const;
 
-        Status Write(rocksdb::WriteBatch& batch, Cursor& query) const {
+        Status Write(Builder& patch, Cursor& query) const {
             return Status::NOT_IMPLEMENTED;
         }
 
@@ -78,7 +78,7 @@ namespace ron {
 
         Status Map(Builder& response, Cursor& query, const VV& hili=EMPTY_VV) const;
 
-        Status Write(rocksdb::WriteBatch& batch, Cursor& query) const {
+        Status Write(Builder& patch, Cursor& query) const {
             return Status::NOT_IMPLEMENTED;
         }
 
@@ -128,7 +128,7 @@ namespace ron {
         }
 
         /** Consume external representation, produce new RON events. */
-        Status Write(rocksdb::WriteBatch& batch, Cursor& query) const {
+        Status Write(Builder& patch, Cursor& query) const {
             return Status::NOT_IMPLEMENTED;
         }
 

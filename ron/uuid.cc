@@ -27,8 +27,7 @@ bool Word::is_all_digits() const {
     return true;
 }
 
-std::string Uuid::str() const {
-    char ret[Word::BASE64_WORD_LEN * 2 + 2 + 1];
+size_t Uuid::write_base64(char* ret) const {
     size_t len = 0;
     int vrt = variety();
     if (vrt) {
@@ -41,6 +40,12 @@ std::string Uuid::str() const {
         ret[len++] = UUID_PUNCT[schm];
         len += words_.second.write_base64(ret + len);
     }
+    return len;
+}
+
+std::string Uuid::str() const {
+    char ret[Word::BASE64_WORD_LEN * 2 + 2 + 1];
+    size_t len = write_base64(ret);
     return std::string(ret, len);
 }
 

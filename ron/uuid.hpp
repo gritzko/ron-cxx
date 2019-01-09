@@ -169,6 +169,7 @@ struct Uuid : public Atom {
     inline enum UUID version() const { return (enum UUID)(ofb() & 3U); }
     inline uint8_t variety() const { return vfb(); }
     inline Word& word(int a, int i) { return Atom::word(i); }
+    size_t write_base64(char* to) const;
     std::string str() const;
     inline bool zero() const { return value() == 0; }
     inline bool is_ambiguous() const {

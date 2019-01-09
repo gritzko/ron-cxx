@@ -25,6 +25,8 @@ DEFINE_string(get, "",
               "1gPH5o+gritzko.lww or 1gPH5o+gritzko)");
 DEFINE_bool(now, false, "print the current time(stamp)");
 DEFINE_string(hash, "", "Merkle-hash a causally ordered frame");
+DEFINE_string(dump, "", "dump the db");
+DEFINE_string(store, "", "db store dir (defaults to .swarmdb)");
 DEFINE_bool(h, false, "Show help");
 DECLARE_bool(help);
 DECLARE_string(helpmatch);
@@ -33,15 +35,18 @@ Status CommandHashFrame(const string& filename);
 Status CommandWriteNewFrame(RonReplica& replica, const string& filename);
 Status CommandGetFrame(RonReplica& replica, const string& name);
 Status CommandQuery(RonReplica& replica, const string& name);
+Status CommandDump(RonReplica& replica, const string& prefix);
 
 Status RunCommands() {
     RonReplica replica{};
     Status ok;
+    string store = ".swarmdb";
+    if (!FLAGS_store.empty()) store = FLAGS_store;
 
     if (FLAGS_create) {
-        ok = replica.Create(".swarmdb");
+        ok = replica.Create(store);
     } else {
-        ok = replica.Open(".swarmdb");
+        ok = replica.Open(store);
     }
     if (!ok) return ok;
 
@@ -56,6 +61,8 @@ Status RunCommands() {
         ok = CommandGetFrame(replica, FLAGS_get);
     } else if (!FLAGS_write.empty()) {
         ok = CommandWriteNewFrame(replica, FLAGS_write);
+    } else if (!FLAGS_dump.empty()) {
+        ok = CommandDump(replica, FLAGS_dump);
     } else {
     }
 
@@ -95,6 +102,29 @@ Status LoadFrame(Frame& target, const string& filename) {
     int fd = filename.empty() ? STDIN_FILENO : open(filename.c_str(), O_RDONLY);
     if (fd < 0) return Status::IOFAIL;
     return LoadFrame(target, fd);
+}
+
+Status CommandDump(RonReplica& replica, const string& what) {
+    rocksdb::Iterator* i = replica.db().NewIterator(replica.ro());
+    if (!i) return Status::BAD_STATE;
+    i->SeekToFirst();
+    while (i->Valid()) {
+        Key key{i->key()};
+        char k[64];
+        size_t l = 0;
+        k[l++] = '\n';
+        k[l++] = '*';
+        l += rdt2uuid(key.rdt()).write_base64(k + l);
+        k[l++] = '#';
+        l += key.id().write_base64(k + l);
+        k[l++] = '\n';
+        write(STDOUT_FILENO, k, l);
+        rocksdb::Slice val = i->value();
+        write(STDOUT_FILENO, val.data(), val.size());
+        i->Next();
+    }
+    delete i;
+    return Status::OK;
 }
 
 Status CommandQuery(RonReplica& replica, const string& name) {

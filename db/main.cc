@@ -25,8 +25,8 @@ DEFINE_string(get, "",
               "1gPH5o+gritzko.lww or 1gPH5o+gritzko)");
 DEFINE_bool(now, false, "print the current time(stamp)");
 DEFINE_string(hash, "", "Merkle-hash a causally ordered frame");
-DEFINE_string(dump, "", "dump the db");
-DEFINE_string(store, "", "db store dir (defaults to .swarmdb)");
+DEFINE_string(dump, "", "dump the db (e.g. --dump meta or --dump -)");
+DEFINE_string(store, ".swarmdb", "db store dir");
 DEFINE_bool(h, false, "Show help");
 DECLARE_bool(help);
 DECLARE_string(helpmatch);
@@ -40,8 +40,7 @@ Status CommandDump(RonReplica& replica, const string& prefix);
 Status RunCommands() {
     RonReplica replica{};
     Status ok;
-    string store = ".swarmdb";
-    if (!FLAGS_store.empty()) store = FLAGS_store;
+    string store = FLAGS_store;
 
     if (FLAGS_create) {
         ok = replica.Create(store);
@@ -105,11 +104,16 @@ Status LoadFrame(Frame& target, const string& filename) {
 }
 
 Status CommandDump(RonReplica& replica, const string& what) {
+    RDT rdt = RDT_COUNT;
+    if (what.size() > 1) {
+        rdt = uuid2rdt(Uuid{what});
+        if (rdt == RDT_COUNT) return Status::BADARGS.comment("unknown RDT");
+    }
     rocksdb::Iterator* i = replica.db().NewIterator(replica.ro());
-    if (!i) return Status::BAD_STATE;
-    i->SeekToFirst();
-    while (i->Valid()) {
+    if (!i) return Status::BAD_STATE.comment("db is not open?");
+    for (i->SeekToFirst(); i->Valid(); i->Next()) {
         Key key{i->key()};
+        if (rdt != RDT_COUNT && key.rdt() != rdt) continue;
         char k[64];
         size_t l = 0;
         k[l++] = '\n';
@@ -121,7 +125,6 @@ Status CommandDump(RonReplica& replica, const string& what) {
         write(STDOUT_FILENO, k, l);
         rocksdb::Slice val = i->value();
         write(STDOUT_FILENO, val.data(), val.size());
-        i->Next();
     }
     delete i;
     return Status::OK;

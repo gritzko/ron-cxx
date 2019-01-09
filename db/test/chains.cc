@@ -30,7 +30,7 @@ void test_db_chain_merge () {
     db.db().Get(db.ro(), db.trunk(), key, &merged); // FIXME hash?
     assert(merged=="@1gHHUW+test :lww;\n 'key' 'value';\n");
     Frame got;
-    db.Get(got, Uuid{"1gHHUW+test"}, LWW_TYPE_ID);
+    assert(db.Get(got, Uuid{"1gHHUW+test"}, LWW_TYPE_ID));
     assert(got.data()==merged);
     Frame chain;
     assert(db.GetChain(chain, Uuid{"1gHHUW+test"}));

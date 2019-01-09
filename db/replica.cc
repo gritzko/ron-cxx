@@ -277,7 +277,8 @@ Status Replica<Frame>::Get(Frame& object, const Uuid& id, const Uuid& rdt,
     RDT t = uuid2rdt(rdt);
     if (t == RDT::RDT_COUNT) return Status::NOTYPE;
     string data;
-    Slice key{Key{id, t}};
+    Key k{id, t};
+    Slice key{k};
     auto ok = db_->Get(ro_, trunk_, key, &data);
     if (ok.IsNotFound()) return Status::NOT_FOUND;
     if (!ok.ok()) return Status::DB_FAIL.comment(ok.ToString());

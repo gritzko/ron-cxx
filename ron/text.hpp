@@ -57,7 +57,10 @@ class TextFrame {
         inline const Uuid& id() const { return op_.id(); }
         inline const Uuid& ref() const { return op_.ref(); }
         inline fsize_t size() const { return op_.size(); }
-        inline ATOM type(fsize_t idx) const { return op_.type(idx); }
+        inline ATOM type(fsize_t idx) const {
+            assert(size() > idx);
+            return op_.type(idx);
+        }
         static std::string unescape(const slice_t& data);
         std::string string(fsize_t idx) const {
             assert(type(idx) == STRING);
@@ -76,6 +79,10 @@ class TextFrame {
         Uuid uuid(fsize_t idx) const {
             assert(type(idx) == UUID);
             return op_.uuid(idx);
+        }
+        Atom atom(fsize_t idx) const {  // TODO inherit Op! skip boilerplate
+            assert(size() > idx);
+            return op_.atom(idx);
         }
     };
 

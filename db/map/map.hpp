@@ -90,6 +90,25 @@ namespace ron {
     static const Uuid HEAD_MAPPER_ID{804339484962324480UL,0};
     static const Uuid OBJ_MAPPER_ID{929632683238096896UL,0};
 
+    template <typename Frame>
+    struct CSVMapper {
+        typedef typename Frame::Cursor Cursor;
+        typedef typename Frame::Builder Builder;
+        typedef Replica<Frame> HostReplica;
+        typedef typename MatrixRDT<Frame>::mx_t mx_t;
+
+        HostReplica* host_;
+
+        explicit CSVMapper(HostReplica* host) : host_{host} {}
+
+        Status Map(Builder& response, Cursor& query, const VV& hili=EMPTY_VV) const;
+
+        Status Write(Builder& patch, Cursor& query) const;
+
+    };
+
+    static const Uuid CSV_MAPPER_ID{718297752286527488UL,0};
+
     template<typename Frame>
     struct MasterMapper {
         typedef typename Frame::Cursor Cursor;

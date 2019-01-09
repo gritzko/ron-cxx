@@ -49,8 +49,8 @@ class LastWriteWinsRDT {
         return Status::OK;
     }
 
-    virtual Status MergeGC(Builder &output,
-                           const typename Frame::Cursors &inputs) const {
+    Status MergeGC(Builder &output,
+                   const typename Frame::Cursors &inputs) const {
         Builder unclean;
         Status ok = Merge(unclean, inputs);
         if (!ok) return ok;

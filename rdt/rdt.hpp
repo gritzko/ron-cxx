@@ -4,6 +4,7 @@
 #include "rdt/chain.hpp"
 #include "rdt/lww.hpp"
 #include "rdt/meta.hpp"
+#include "rdt/mx.hpp"
 #include "ron/op.hpp"
 #include "ron/status.hpp"
 
@@ -14,6 +15,7 @@ const Uuid ACK_UUID{677716977128570880UL, 0};
 const Uuid META_UUID{894494834235015168UL, 0};
 const Uuid LWW_UUID{881557636825219072UL, 0};
 const Uuid RGA_UUID{985043671231496192UL, 0};
+const Uuid MX_UUID{899594025567256576UL, 0};
 
 enum RDT : uint8_t { META, CHAIN, ACK, LWW, RGA, RDT_COUNT };  // ??!!
 const Uuid RDT_UUIDS[] = {META_UUID, CHAIN_UUID, ACK_UUID, LWW_UUID, RGA_UUID};
@@ -43,8 +45,8 @@ class MasterRDT {
 
     MasterRDT() : lww_{}, chain_{}, meta_{} {}
 
-    virtual Status Merge(Builder &output, RDT reducer,
-                         const std::vector<Cursor> &inputs) const {
+    Status Merge(Builder &output, RDT reducer,
+                 const std::vector<Cursor> &inputs) const {
         switch (reducer) {
             case CHAIN:
                 return chain_.Merge(output, inputs);
@@ -57,7 +59,7 @@ class MasterRDT {
         }
     }
 
-    virtual Status GC(Builder &output, RDT reducer, const Frame &input) const {
+    Status GC(Builder &output, RDT reducer, const Frame &input) const {
         switch (reducer) {
             case CHAIN:
                 return chain_.GC(output, input);
@@ -70,8 +72,8 @@ class MasterRDT {
         }
     }
 
-    virtual Status MergeGC(Builder &output, RDT reducer,
-                           const std::vector<Cursor> &inputs) const {
+    Status MergeGC(Builder &output, RDT reducer,
+                   const std::vector<Cursor> &inputs) const {
         switch (reducer) {
             case CHAIN:
                 return chain_.MergeGC(output, inputs);

@@ -107,6 +107,10 @@ add_executable(test11-metardt rdt/test/meta.cc)
 target_link_libraries(test11-metardt ron rdt)
 add_test(META test11-metardt)
 
+add_executable(test12-mx rdt/test/mx.cc)
+target_link_libraries(test12-mx ron rdt)
+add_test(LWW test12-mx)
+
 #  S W A R M D B
 
 set(SWARMDB_SOURCES
@@ -117,6 +121,7 @@ set(SWARMDB_SOURCES
         db/map/yarn.cc
         db/map/meta.cc
         db/map/map.hpp
+        db/map/csv.cc
     )
 
 add_library(swarmdb SHARED

@@ -8,8 +8,10 @@
 
 namespace ron {
 
-// max RON frame size is 1<<30
+/** Frame size or any other size limited by frame size (e.g. string length) */
 typedef uint32_t fsize_t;
+/** Max RON frame size is 1<<30 (a frame is atomically processed, so 1GB max) */
+constexpr fsize_t FSIZE_MAX{1 << 30};
 typedef std::pair<fsize_t, fsize_t> frange_t;
 
 struct slice_t {

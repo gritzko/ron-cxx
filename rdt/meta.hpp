@@ -33,8 +33,8 @@ class MetaRDT {
         return Status::OK;
     }
 
-    virtual Status MergeGC(Builder &output,
-                           const typename Frame::Cursors &inputs) const {
+    Status MergeGC(Builder &output,
+                   const typename Frame::Cursors &inputs) const {
         return Merge(output, inputs);
     }
 };

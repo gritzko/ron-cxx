@@ -287,6 +287,20 @@ Status Replica<Frame>::Get(Frame& object, const Uuid& id, const Uuid& rdt,
 }
 
 template <typename Frame>
+Status Replica<Frame>::GetMap(Frame& result, const Uuid& id, const Uuid& map,
+                              const Uuid& branch) {
+    if (db_ == nullptr) return Status::NOTOPEN;
+    Builder qb;
+    qb.AppendNewOp(QUERY, map, id);
+    Cursor query{qb.data()};
+    MasterMapper<Frame> mapper{this};
+    Builder re;
+    Status ok = mapper.Map(re, query);
+    result = re.frame();
+    return ok;
+}
+
+template <typename Frame>
 Status Replica<Frame>::ReceiveQuery(Builder& response, Uuid object_store,
                                     Cursor& query) {
     MasterMapper<Frame> mapper{this};

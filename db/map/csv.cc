@@ -33,10 +33,11 @@ namespace ron {
                 } else {
                     csv.append("NOTIMPL");
                 }
-                csv.push_back(',');
+                if (c<maxcol) csv.push_back(',');
             }
             csv.push_back('\n');
         }
+        response.AppendNewOp(RAW, CSV_MAPPER_ID, obj, csv);
         return Status::OK;
     }
 
@@ -49,5 +50,6 @@ namespace ron {
         return Status::NOT_IMPLEMENTED;
     }
 
+    template class CSVMapper<TextFrame>; // TODO automate?
 
 }

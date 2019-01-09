@@ -88,6 +88,9 @@ class Replica {
     Status Get(Frame& object, const Uuid& id, const Uuid& rdt = Uuid::NIL,
                const Uuid& branch = Uuid::NIL);
 
+    Status GetMap(Frame& result, const Uuid& id, const Uuid& map = Uuid::NIL,
+                  const Uuid& branch = Uuid::NIL);
+
     inline Status GetChain(Frame& chain, Uuid chain_id) {
         return Get(chain, chain_id, CHAIN_UUID);
     }

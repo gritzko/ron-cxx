@@ -119,8 +119,9 @@ namespace ron {
         OpMapper<Frame> op_;
         YarnMapper<Frame> yarn_;
         MetaMapper<Frame> meta_;
+        CSVMapper<Frame> csv_;
 
-        explicit MasterMapper(HostReplica* host) : chain_{host}, op_{host}, yarn_{host}, meta_{host} {}
+        explicit MasterMapper(HostReplica* host) : chain_{host}, op_{host}, yarn_{host}, meta_{host}, csv_{host} {}
 
         /** Map RON events into some external representation (e.g. JSON). */
         Status Map(Builder& response, Cursor& query, const VV& hili=EMPTY_VV) const {
@@ -141,8 +142,10 @@ namespace ron {
                 return meta_.Map(response, query);
             } else if (id == OBJ_MAPPER_ID) {
                 return meta_.Map(response, query);
+            } else if (id == CSV_MAPPER_ID) {
+                return csv_.Map(response, query);
             } else {
-                return Status::NOT_IMPLEMENTED.comment("unknown mapper");
+                return Status::NOT_IMPLEMENTED.comment("unknown mapper "+id.str());
             }
         }
 

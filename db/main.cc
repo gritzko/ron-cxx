@@ -27,6 +27,9 @@ DEFINE_bool(now, false, "print the current time(stamp)");
 DEFINE_string(hash, "", "Merkle-hash a causally ordered frame");
 DEFINE_string(dump, "", "dump the db (e.g. --dump meta or --dump -)");
 DEFINE_string(store, ".swarmdb", "db store dir");
+DEFINE_bool(
+    clean, false,
+    "clean the result of metadata (e.g. --get @csv:1h8GbW+gYpLcnUnF6 --clean)");
 DEFINE_bool(h, false, "Show help");
 DECLARE_bool(help);
 DECLARE_string(helpmatch);
@@ -167,8 +170,17 @@ Status CommandGetFrame(RonReplica& replica, const string& name) {
     }
     if (id == Uuid::FATAL || rdt == Uuid::FATAL) return Status::BADARGS;
     Frame result;
-    Status ok = replica.Get(result, id, rdt);
-    if (ok) cout << result.data() << '\n';
+    Status ok = id.version() == TIME ? replica.Get(result, id, rdt)
+                                     : replica.GetMap(result, rdt, id);
+    if (!ok) return ok;
+    if (!FLAGS_clean) {
+        cout << result.data() << '\n';
+    } else {
+        Cursor c = result.cursor();  // TODO
+        if (c.valid() && c.has(2, STRING)) {
+            cout << c.string(2);
+        }
+    }
     return ok;
 }
 

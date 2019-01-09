@@ -71,7 +71,9 @@ add_library(ron STATIC
     ron/text-parser.cc
     ron/text-builder.cc
     ron/hash.cc
-    ron/vv.hpp ron/opmeta.hpp)
+    ron/vv.hpp
+    ron/opmeta.hpp
+    )
 add_dependencies(ron botan-project)
 
 #  L I B R O N  U N I T  T E S T S

@@ -17,8 +17,9 @@ const Uuid LWW_UUID{881557636825219072UL, 0};
 const Uuid RGA_UUID{985043671231496192UL, 0};
 const Uuid MX_UUID{899594025567256576UL, 0};
 
-enum RDT : uint8_t { META, CHAIN, ACK, LWW, RGA, RDT_COUNT };  // ??!!
-const Uuid RDT_UUIDS[] = {META_UUID, CHAIN_UUID, ACK_UUID, LWW_UUID, RGA_UUID};
+enum RDT : uint8_t { META, CHAIN, ACK, LWW, RGA, MX, RDT_COUNT };  // ??!!
+const Uuid RDT_UUIDS[] = {META_UUID, CHAIN_UUID, ACK_UUID,
+                          LWW_UUID,  RGA_UUID,   MX_UUID};
 
 inline RDT uuid2rdt(const Uuid &rdt_id) {
     for (int i = 0; i < RDT_COUNT; i++)
@@ -36,6 +37,7 @@ class MasterRDT {
     LastWriteWinsRDT<Frame> lww_;
     OpChain<Frame> chain_;
     MetaRDT<Frame> meta_;
+    MatrixRDT<Frame> mx_;
 
    public:
     typedef typename Frame::Builder Builder;
@@ -43,7 +45,7 @@ class MasterRDT {
     typedef std::vector<Frame> Frames;
     typedef std::vector<Cursor> Cursors;
 
-    MasterRDT() : lww_{}, chain_{}, meta_{} {}
+    MasterRDT() : lww_{}, chain_{}, meta_{}, mx_{} {}
 
     Status Merge(Builder &output, RDT reducer,
                  const std::vector<Cursor> &inputs) const {
@@ -54,6 +56,8 @@ class MasterRDT {
                 return meta_.Merge(output, inputs);
             case LWW:
                 return lww_.Merge(output, inputs);
+            case MX:
+                return mx_.Merge(output, inputs);
             default:
                 return Status::NOT_IMPLEMENTED;
         }
@@ -67,6 +71,8 @@ class MasterRDT {
                 return meta_.GC(output, input);
             case LWW:
                 return lww_.GC(output, input);
+            case MX:
+                return mx_.GC(output, input);
             default:
                 return Status::NOT_IMPLEMENTED;
         }
@@ -81,6 +87,8 @@ class MasterRDT {
                 return meta_.MergeGC(output, inputs);
             case LWW:
                 return lww_.MergeGC(output, inputs);
+            case MX:
+                return mx_.MergeGC(output, inputs);
             default:
                 return Status::NOT_IMPLEMENTED;
         }

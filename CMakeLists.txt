@@ -35,7 +35,7 @@ find_package(gflags REQUIRED)
 find_package(gflags COMPONENTS nothreads_static)
 
 ExternalProject_Add(botan-project
-    GIT_REPOSITORY git@github.com:randombit/botan.git
+    GIT_REPOSITORY https://github.com/randombit/botan.git
     GIT_TAG a792728e8941b62761052f5e0d288ba13a016c77
     PREFIX ${CRYPTO_PREFIX}
     UPDATE_COMMAND ""

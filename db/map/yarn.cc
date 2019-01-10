@@ -17,7 +17,7 @@ namespace ron {
             }
             do {
                 i->Next();
-            } while (i->Valid() && Key{i->key()}.rdt()!=CHAIN);
+            } while (i->Valid() && Key{i->key()}.rdt()!=CHAIN_RDT);
         }
         return Status::OK;
     }

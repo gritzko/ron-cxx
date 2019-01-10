@@ -25,8 +25,8 @@ string scan (const TextFrame& frame) {
 }
 
 void test_rdt_ids () {
-    assert(uuid2rdt(Uuid{"lww"})==RDT::LWW);
-    assert(rdt2uuid(RDT::LWW).str()=="lww");
+    assert(uuid2rdt(Uuid{"lww"})==LWW_RDT);
+    assert(rdt2uuid(LWW_RDT).str()=="lww");
 }
 
 int main (int argn, char** args) {

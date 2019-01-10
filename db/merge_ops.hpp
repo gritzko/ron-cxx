@@ -32,7 +32,6 @@ class RDTMergeOperator : public rocksdb::MergeOperator {
 
         if (merge_in.existing_value) {
             inputs.push_back(Cursor{slice(merge_in.existing_value)});
-            // ? read @rdt
         }
         for (auto s : merge_in.operand_list) {
             inputs.push_back(Cursor{slice(s)});
@@ -52,10 +51,10 @@ class RDTMergeOperator : public rocksdb::MergeOperator {
         Key key{dbkey};
         RDT rdt = key.rdt();
         Builder out;
-        Cursors inputs{};  // operand_list.size() + 1
+        Cursors inputs{};
+        inputs.reserve(operand_list.size() + 1);
         for (auto s : operand_list) {
             inputs.push_back(Cursor{slice(s)});
-            // read rdt?
         }
 
         Status ok = reducer_.Merge(out, rdt, inputs);

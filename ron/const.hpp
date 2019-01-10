@@ -9,7 +9,7 @@ enum RON : uint8_t {
     CLOSED = 1,
     TEXT = 2,
     BINARY = 4,
-    JSON = 6,
+    JSONi = 6,
     CBOR = 8,
     NOMINAL = 10,
     TEXT_OPEN = TEXT | OPEN,

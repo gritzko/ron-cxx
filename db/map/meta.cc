@@ -8,16 +8,24 @@ namespace ron {
         if (ref.version()!=TIME) return Status::BADARGS.comment("need an op id");
         OpMeta meta;
         Status ok = host_->FindOpMeta(meta, query.ref());
-        if (query.id()==META_MAPPER_ID) {
-            meta.AppendAnnos(response);
-        } else if (query.id()==SHA2_MAPPER_ID) {
-            response.AppendNewOp(RAW, SHA2_MAPPER_ID, ref, meta.hash.base64());
-        } else if (query.id()==PREV_MAPPER_ID) {
-            response.AppendNewOp(RAW, PREV_MAPPER_ID, ref, Uuid{meta.prev, ref.origin()});
-        } else if (query.id()==HEAD_MAPPER_ID) {
-            response.AppendNewOp(RAW, HEAD_MAPPER_ID, ref, Uuid{meta.chain, ref.origin()});
-        } else if (query.id()==OBJ_MAPPER_ID) {
-            response.AppendNewOp(RAW, OBJ_MAPPER_ID, ref, meta.object);
+        const Uuid& id = query.id();
+        const MAP map = uuid2map(id);
+        switch (map) {
+            case META_MAP:
+                meta.AppendAnnos(response);
+                break;
+            case SHA2_MAP:
+                response.AppendNewOp(RAW, SHA2_MAP_ID, ref, meta.hash.base64());
+                break;
+            case PREV_MAP:
+                response.AppendNewOp(RAW, PREV_MAP_ID, ref, Uuid{meta.prev, ref.origin()});
+                break;
+            case HEAD_MAP:
+                response.AppendNewOp(RAW, HEAD_MAP_ID, ref, Uuid{meta.chain, ref.origin()});
+                break;
+            case OBJ_MAP:
+                response.AppendNewOp(RAW, OBJ_MAP_ID, ref, meta.object);
+                break;
         }
         return Status::OK;
     }

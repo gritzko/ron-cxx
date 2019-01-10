@@ -16,7 +16,7 @@ void test_db_chain_merge () {
     string path = Uuid::HybridTime(time(nullptr)).str();
     assert(db.Create(path));
     rocksdb::WriteBatch batch;
-    Key key{Uuid{"1gHHUW+test"}, RDT::CHAIN};
+    Key key{Uuid{"1gHHUW+test"}, CHAIN_RDT};
     string op1 = "@1gHHUW+test :lww ;";
     string op2 = "@1gHHUW0001+test :1gHHUW+test 'key' 'value' ;";
     Cursor c1{op1};
@@ -30,7 +30,7 @@ void test_db_chain_merge () {
     db.db().Get(db.ro(), db.trunk(), key, &merged); // FIXME hash?
     assert(merged=="@1gHHUW+test :lww;\n 'key' 'value';\n");
     Frame got;
-    assert(db.Get(got, Uuid{"1gHHUW+test"}, LWW_TYPE_ID));
+    assert(db.Get(got, Uuid{"1gHHUW+test"}, LWW_RDT_ID));
     assert(got.data()==merged);
     Frame chain;
     assert(db.GetChain(chain, Uuid{"1gHHUW+test"}));
@@ -63,12 +63,12 @@ void test_chain_breaks () {
 void test_keys () {
     string idstr = "1gA9cz+gritzko";
     Uuid id{idstr};
-    Key chain{id, RDT::CHAIN};
-    assert(chain.rdt()==RDT::CHAIN);
+    Key chain{id, CHAIN_RDT};
+    assert(chain.rdt()==CHAIN_RDT);
     Uuid id2 = chain.id();
     assert(id2==id);
     assert(id2.str()==idstr);
-    Key derived{id.derived(), RDT::CHAIN};
+    Key derived{id.derived(), CHAIN_RDT};
     assert(derived.id()==id);
 }
 

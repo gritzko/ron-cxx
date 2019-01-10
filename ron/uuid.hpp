@@ -206,6 +206,8 @@ struct Uuid : public Atom {
     static Word HybridTime(time_t seconds, long int nanos = 0);
 };
 
+const static Uuid FATAL{Word::MAX_VALUE, Word::MAX_VALUE};
+
 typedef std::pair<uint64_t, uint64_t> uint64pair;
 
 }  // namespace ron

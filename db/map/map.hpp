@@ -2,6 +2,7 @@
 #define CPP_MAPPERS_HPP
 
 #include "db/replica.hpp"
+#include "db/map/const.hpp"
 
 namespace ron {
 
@@ -24,8 +25,6 @@ namespace ron {
 
     };
 
-    static const Uuid CHAIN_MAPPER_ID{715112314629521408UL,0};
-
     template<typename Frame>
     struct OpMapper {
         typedef typename Frame::Cursor Cursor;
@@ -43,8 +42,6 @@ namespace ron {
         }
 
     };
-
-    static const Uuid OP_MAPPER_ID{933371022772535296UL,0};
 
     template<typename Frame>
     struct YarnMapper {
@@ -64,8 +61,6 @@ namespace ron {
 
     };
 
-    static const Uuid YARN_MAPPER_ID{1109533813702131712UL,0};
-
     template<typename Frame>
     struct MetaMapper {
         typedef typename Frame::Cursor Cursor;
@@ -84,12 +79,6 @@ namespace ron {
 
     };
 
-    static const Uuid META_MAPPER_ID{894494834235015168UL,0};
-    static const Uuid SHA2_MAPPER_ID{1003339682156642304UL,0};
-    static const Uuid PREV_MAPPER_ID{952132676872044544UL,0};
-    static const Uuid HEAD_MAPPER_ID{804339484962324480UL,0};
-    static const Uuid OBJ_MAPPER_ID{929632683238096896UL,0};
-
     template <typename Frame>
     struct CSVMapper {
         typedef typename Frame::Cursor Cursor;
@@ -107,7 +96,6 @@ namespace ron {
 
     };
 
-    static const Uuid CSV_MAPPER_ID{718297752286527488UL,0};
 
     template<typename Frame>
     struct MasterMapper {
@@ -126,26 +114,25 @@ namespace ron {
         /** Map RON events into some external representation (e.g. JSON). */
         Status Map(Builder& response, Cursor& query, const VV& hili=EMPTY_VV) const {
             const Uuid& id = query.id();
-            if (id == CHAIN_MAPPER_ID) {
-                return chain_.Map(response, query);
-            } else if (id == OP_MAPPER_ID) {
-                return op_.Map(response, query);
-            } else if (id == YARN_MAPPER_ID) {
-                return yarn_.Map(response, query);
-            } else if (id == META_MAPPER_ID) {
-                return meta_.Map(response, query);
-            } else if (id == SHA2_MAPPER_ID) {
-                return meta_.Map(response, query);
-            } else if (id == PREV_MAPPER_ID) {
-                return meta_.Map(response, query);
-            } else if (id == HEAD_MAPPER_ID) {
-                return meta_.Map(response, query);
-            } else if (id == OBJ_MAPPER_ID) {
-                return meta_.Map(response, query);
-            } else if (id == CSV_MAPPER_ID) {
-                return csv_.Map(response, query);
-            } else {
-                return Status::NOT_IMPLEMENTED.comment("unknown mapper "+id.str());
+            if (id.version()!=NAME) return Status::BAD_STATE;
+            const MAP map = uuid2map(id);
+            switch (map) {
+                case CHAIN_MAP:
+                    return chain_.Map(response, query);
+                case OP_MAP:
+                    return op_.Map(response, query);
+                case YARN_MAP:
+                    return yarn_.Map(response, query);
+                case META_MAP:
+                case SHA2_MAP:
+                case PREV_MAP:
+                case HEAD_MAP:
+                case OBJ_MAP:
+                    return meta_.Map(response, query);
+                case CSV_MAP:
+                    return csv_.Map(response, query);
+                default:
+                    return Status::NOT_IMPLEMENTED.comment("unknown mapper "+id.str());
             }
         }
 

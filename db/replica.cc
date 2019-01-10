@@ -125,10 +125,10 @@ Replica<Frame>::~Replica() {
 template <class Frame>
 rocksdb::Iterator* Replica<Frame>::FindChain(const Uuid& target_id) {
     if (!open()) return nullptr;
-    Key key{target_id, RDT::CHAIN};
+    Key key{target_id, CHAIN_RDT};
     rocksdb::Iterator* i{db_->NewIterator(ro_, trunk_)};
     i->SeekForPrev(key);
-    while (i->Valid() && (key = Key{i->key()}).rdt() != CHAIN) i->Prev();
+    while (i->Valid() && (key = Key{i->key()}).rdt() != CHAIN_RDT) i->Prev();
     if (!i->Valid() || key.id().origin() != target_id.origin()) {
         delete i;
         i = nullptr;
@@ -139,10 +139,10 @@ rocksdb::Iterator* Replica<Frame>::FindChain(const Uuid& target_id) {
 template <class Frame>
 rocksdb::Iterator* Replica<Frame>::FindYarn(const Uuid& target_id) {
     if (!open()) return nullptr;
-    Key key{target_id, RDT::CHAIN};
+    Key key{target_id, CHAIN_RDT};
     rocksdb::Iterator* i{db_->NewIterator(ro_, trunk_)};
     i->Seek(key);
-    while (i->Valid() && (key = Key{i->key()}).rdt() != CHAIN) i->Next();
+    while (i->Valid() && (key = Key{i->key()}).rdt() != CHAIN_RDT) i->Next();
     if (!i->Valid() || key.id().origin() != target_id.origin()) {
         delete i;
         i = nullptr;
@@ -152,7 +152,7 @@ rocksdb::Iterator* Replica<Frame>::FindYarn(const Uuid& target_id) {
 
 template <class Frame>
 Status Replica<Frame>::FindOpMeta(OpMeta& meta, const Uuid& target_id) {
-    static_assert(RDT::META + 1 == RDT::CHAIN,
+    static_assert(RDT::META_RDT + 1 == RDT::CHAIN_RDT,
                   "ensure records go in this exact order");
     string chain_data, meta_data;
 
@@ -166,7 +166,7 @@ Status Replica<Frame>::FindOpMeta(OpMeta& meta, const Uuid& target_id) {
     i->Prev();
     if (!i->Valid()) return Status::BAD_STATE.comment("no meta record");
     Key meta_key{i->key()};
-    if (meta_key.id() != chain_key.id() || meta_key.rdt() != RDT::META)
+    if (meta_key.id() != chain_key.id() || meta_key.rdt() != RDT::META_RDT)
         return Status::BAD_STATE.comment("bad meta record");
     meta_data = string{i->value().data(), i->value().size()};
 
@@ -240,7 +240,7 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
     if (tip.head()) {
         Builder annos;
         tip.AppendAnnos(annos);
-        batch.Merge(trunk_, Key{tip.chain_id(), META}, annos.data());
+        batch.Merge(trunk_, Key{tip.chain_id(), META_RDT}, annos.data());
     }
     See(id);
 
@@ -264,7 +264,7 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
     const string& data = chainlet.data();
     RDT rdt = uuid2rdt(tip.rdt);
     if (rdt == RDT_COUNT) return Status::NOT_IMPLEMENTED;  // TODO db meta-types
-    batch.Merge(trunk_, Key{tip.chain_id(), CHAIN}, data);  // TODO branches
+    batch.Merge(trunk_, Key{tip.chain_id(), CHAIN_RDT}, data);  // TODO branches
     batch.Merge(trunk_, Key{tip.object, rdt}, data);
 
     return Status::OK;

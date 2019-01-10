@@ -4,14 +4,14 @@ namespace ron {
 
     template<typename Frame>
     Status CSVMapper<Frame>::Map(Builder& response, Cursor& query, const VV& hili) const {
-        if (query.id()!=CSV_MAPPER_ID) return Status::BAD_STATE;
+        if (query.id()!=CSV_MAP_ID) return Status::BAD_STATE;
         Uuid obj = query.ref(); // TODO version - Replica API
         Frame mx;
-        Status ok = host_->Get(mx, obj, MX_UUID);
+        Status ok = host_->Get(mx, obj, MX_RDT_ID);
         if (!ok) return ok;
         // output, comma-separated, check strings
         Cursor i = mx.cursor();
-        if (!i.valid() || i.ref()!=MX_UUID)
+        if (!i.valid() || i.ref()!=MX_RDT_ID)
             return Status::NOT_FOUND.comment("not a mx object");
         mx_t values;
         fsize_t maxcol{0}, maxrow{0};
@@ -37,7 +37,7 @@ namespace ron {
             }
             csv.push_back('\n');
         }
-        response.AppendNewOp(RAW, CSV_MAPPER_ID, obj, csv);
+        response.AppendNewOp(RAW, CSV_MAP_ID, obj, csv);
         return Status::OK;
     }
 

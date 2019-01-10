@@ -1,6 +1,7 @@
 #ifndef RON_REPLICA_HPP
 #define RON_REPLICA_HPP
 
+#include <db/map/const.hpp>
 #include <rdt/lww.hpp>
 #include <string>
 #include <unordered_map>
@@ -37,7 +38,7 @@ class Replica {
     // chain cache - skip db reads for ongoing op chains
     tipmap_t tips_;
 
-    Key nil_key() const { return Key{Uuid::NIL, META}; }
+    Key nil_key() const { return Key{Uuid::NIL, META_RDT}; }
 
    public:
     Replica() : db_{nullptr}, trunk_{nullptr}, objects_{}, wo_{}, ro_{} {}
@@ -92,7 +93,7 @@ class Replica {
                   const Uuid& branch = Uuid::NIL);
 
     inline Status GetChain(Frame& chain, Uuid chain_id) {
-        return Get(chain, chain_id, CHAIN_UUID);
+        return Get(chain, chain_id, CHAIN_MAP_ID);
     }
 
     /** If we don't know the exact chain id, we have to scan the table to
@@ -104,7 +105,7 @@ class Replica {
     Status GetHeadMeta(OpMeta& meta) {
         Frame raw;
         Uuid chain_id = meta.id;
-        Status ok = Get(raw, chain_id, META_UUID);
+        Status ok = Get(raw, chain_id, META_MAP_ID);
         if (!ok) return ok;
         for (Cursor c = raw.cursor(); ok && c.valid(); c.Next()) {
             ok = meta.ReadAnnotation(c);

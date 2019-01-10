@@ -118,6 +118,7 @@ add_test(LWW test12-mx)
 set(SWARMDB_SOURCES
         db/replica.hpp
         db/replica.cc
+        db/map/const.hpp
         db/map/chain.cc
         db/map/op.cc
         db/map/yarn.cc
@@ -138,6 +139,11 @@ add_executable(test20-chains db/test/chains.cc)
 add_dependencies(test20-chains swarmdb)
 target_link_libraries(test20-chains swarmdb)
 add_test(CHAINS test20-chains)
+
+add_executable(test21-mappers db/test/mappers.cc)
+add_dependencies(test21-mappers swarmdb)
+target_link_libraries(test21-mappers swarmdb)
+add_test(MAPPERS test21-mappers)
 
 #  S W A R M D B  C L I
 

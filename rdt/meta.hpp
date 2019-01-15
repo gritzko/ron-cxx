@@ -12,14 +12,14 @@ class MetaRDT {
     static bool less_than(const Op &a, const Op &b) {
         return a.id() == b.id() ? a.ref() > b.ref() : a.id() < b.id();
     }
-    typedef MergeCursor<Frame, less_than> merger;
+    typedef MergeCursor<Frame, less_than> MergeCursor;
     typedef typename Frame::Builder Builder;
     typedef typename Frame::Cursor Cursor;
     typedef typename Frame::Cursors Cursors;
 
    public:
     Status Merge(typename Frame::Builder &output, Cursors &inputs) const {
-        merger m{inputs};
+        MergeCursor m{inputs};
         m.Merge(output);
         return Status::OK;
     }

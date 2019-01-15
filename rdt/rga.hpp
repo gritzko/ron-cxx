@@ -46,14 +46,14 @@ class RGArrayRDT {
     }
 
     Status Merge(Builder &output, Cursors &inputs) const {
-        // FIXME Merger does not own the cursors
+        // FIXME Merger should not own the cursors
         MergeCursor m{};
         sort(inputs.begin(), inputs.end(), id_cmp);
         while (!inputs.empty()) {
             Uuid root = inputs.front().id();
             while (!inputs.empty() && inputs.front().id() == root) {
                 m.Add(inputs.front());
-                inputs.erase(inputs.begin()); // FIXME host destroyed
+                inputs.erase(inputs.begin());  // FIXME host destroyed
             }
             // render subtree
             while (!m.empty()) {

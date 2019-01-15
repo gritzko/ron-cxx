@@ -20,7 +20,7 @@ while read UUID; do
     NM=${UUIDHI}"_"${NAME}
     ID=${NM}"_ID"
     IDNAME=${NM}"_NAME"
-    CONST=$CONST"static const uint64_t $IDNAME{${INT}UL};\n"
+    CONST=$CONST"static constexpr uint64_t $IDNAME{${INT}UL};\n"
     CONST=$CONST"static const Uuid $ID{${IDNAME},0};\n"
     ENUM=$ENUM"\n\t${NM},"
     ARRAY=${ARRAY}"\n\t$ID,"
@@ -30,7 +30,7 @@ done
 
 ENUM=$ENUM"\n\t$COUNT\n};\n"
 U2E=$U2E"\t\tdefault: return $COUNT;\n\t}\n}"
-ARRAY=${ARRAY}"\n\tUuid::FATAL\n};"
+ARRAY=${ARRAY}"\n\tFATAL\n};"
 
 echo -e $ENUM
 

@@ -210,6 +210,8 @@ const static Uuid FATAL{Word::MAX_VALUE, Word::MAX_VALUE};
 
 typedef std::pair<uint64_t, uint64_t> uint64pair;
 
+typedef std::pair<Uuid, Uuid> Spec;
+
 }  // namespace ron
 
 namespace std {

@@ -73,7 +73,7 @@ add_library(ron STATIC
     ron/hash.cc
     ron/vv.hpp
     ron/opmeta.hpp
-    )
+        )
 add_dependencies(ron botan-project)
 
 #  L I B R O N  U N I T  T E S T S
@@ -112,6 +112,10 @@ add_test(META test11-metardt)
 add_executable(test12-mx rdt/test/mx.cc)
 target_link_libraries(test12-mx ron rdt)
 add_test(LWW test12-mx)
+
+add_executable(test14-rga rdt/test/rga.cc)
+target_link_libraries(test14-rga ron rdt)
+add_test(RGA test14-rga)
 
 #  S W A R M D B
 

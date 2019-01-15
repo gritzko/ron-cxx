@@ -26,6 +26,8 @@ namespace ron {
             case OBJ_MAP:
                 response.AppendNewOp(RAW, OBJ_MAP_ID, ref, meta.object);
                 break;
+            default:
+                return Status::NOT_IMPLEMENTED;
         }
         return Status::OK;
     }

@@ -7,6 +7,7 @@ using namespace ron;
 using namespace std;
 
 typedef LastWriteWinsRDT<typename ron::TextFrame> TextLWW;
+typedef TextFrame::Cursors Cursors;
 
 string scan (const TextFrame& frame) {
     string ret;
@@ -47,13 +48,15 @@ int main (int argn, char** args) {
     inputs.push_back(ab_builder.frame());
     inputs.push_back(c_builder.frame());
 
-    lww.Merge(abc_builder, cursors(inputs));
+    Cursors i1 = cursors(inputs);
+    lww.Merge(abc_builder, i1);
     TextFrame abc = abc_builder.frame();
     assert(scan(abc)=="_,a,b,c");
 
     inputs.push_back(b2_builder.frame());
 
-    lww.Merge(abbc_builder, cursors(inputs));
+    Cursors i2 = cursors(inputs);
+    lww.Merge(abbc_builder, i2);
     TextFrame abbc = abbc_builder.frame();
     assert(scan(abbc)=="_,a,b,c,b");
 
@@ -61,7 +64,8 @@ int main (int argn, char** args) {
     TextFrame ab2c = ab2c_builder.frame();
     assert(scan(ab2c)=="_,a,c,b");
 
-    lww.MergeGC(ab2c_builder2, cursors(inputs));
+    Cursors i3 = cursors(inputs);
+    lww.MergeGC(ab2c_builder2, i3);
     TextFrame ab2c2 = ab2c_builder2.frame();
     assert(scan(ab2c2)=="_,a,c,b");
     assert(ab2c.data()==ab2c2.data());

@@ -14,10 +14,10 @@ class OpChain {
     typedef MergeCursor<Frame, less_than> merger;
     typedef typename Frame::Builder Builder;
     typedef typename Frame::Cursor Cursor;
+    typedef typename Frame::Cursors Cursors;
 
    public:
-    Status Merge(typename Frame::Builder &output,
-                 const std::vector<Cursor> &inputs) const {
+    Status Merge(typename Frame::Builder &output, Cursors &inputs) const {
         merger m{inputs};
         m.Merge(output);
         return Status::OK;
@@ -29,8 +29,7 @@ class OpChain {
         return Status::OK;
     }
 
-    Status MergeGC(Builder &output,
-                   const typename Frame::Cursors &inputs) const {
+    Status MergeGC(Builder &output, Cursors &inputs) const {
         return Merge(output, inputs);
     }
 };

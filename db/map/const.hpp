@@ -55,7 +55,7 @@ namespace ron {
         CSV_MAP_ID,
         TXT_MAP_ID,
         JSON_MAP_ID,
-        Uuid::FATAL
+        FATAL
     };
 
     inline Uuid map2uuid (MAP e) { return MAP_IDS[e]; }

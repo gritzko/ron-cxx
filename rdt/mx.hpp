@@ -45,7 +45,7 @@ class MatrixRDT {
    public:
     typedef std::unordered_map<mxidx_t, Atom> mx_t;
 
-    Status Merge(typename Frame::Builder &output, const Cursors &inputs) const {
+    Status Merge(typename Frame::Builder &output, Cursors &inputs) const {
         merger m{inputs};
         m.Merge(output);
         return Status::OK;
@@ -66,7 +66,7 @@ class MatrixRDT {
         return Status::OK;
     }
 
-    Status MergeGC(Builder &output, const Cursors &inputs) const {
+    Status MergeGC(Builder &output, Cursors &inputs) const {
         return Status::NOT_IMPLEMENTED;
     }
 };

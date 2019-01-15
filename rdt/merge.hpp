@@ -20,19 +20,8 @@ class MergeCursor {
    public:
     MergeCursor() : cursors_{} {}
 
-    MergeCursor(const Frames& inputs) : MergeCursor{} {
-        for (int i = 0; i < inputs.size(); i++) {
-            Add(inputs[i]);
-        }
-    }
-
     MergeCursor(const Cursors& inputs) : MergeCursor{} {
         for (int i = 0; i < inputs.size(); i++) Add(inputs[i]);
-    }
-    // add a frame to merge
-    void Add(const Frame& input) {
-        cursors_.push_back(new Cursor{input});
-        pop((int)cursors_.size() - 1);
     }
 
     void Add(const Cursor& input) {
@@ -45,6 +34,7 @@ class MergeCursor {
     // returns the current op
     const Op& op() const { return cursors_[0]->op(); }
     const Frame& frame() const { return cursors_[0]->frame(); }
+    const Cursor& current() const { return *cursors_.front(); }
 
    private:
     static inline int up(int idx) { return ((idx + 1) >> 1) - 1; }

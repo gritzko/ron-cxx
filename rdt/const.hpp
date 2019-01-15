@@ -28,7 +28,7 @@ static const Uuid MX_RDT_ID{MX_RDT_NAME, 0};
 
 static const Uuid RDT_IDS[] = {META_RDT_ID, CHAIN_RDT_ID, ACK_RDT_ID,
                                LWW_RDT_ID,  RGA_RDT_ID,   MX_RDT_ID,
-                               Uuid::FATAL};
+                               FATAL};
 
 inline Uuid rdt2uuid(RDT e) { return RDT_IDS[e]; }
 

@@ -8,6 +8,7 @@ namespace ron {
         if (ref.version()!=TIME) return Status::BADARGS.comment("need an op id");
         OpMeta meta;
         Status ok = host_->FindOpMeta(meta, query.ref());
+        if (!ok) return ok;
         const Uuid& id = query.id();
         const MAP map = uuid2map(id);
         switch (map) {

@@ -16,10 +16,11 @@ using namespace std;
 template <class Frame>
 class RGArrayRDT {
     static bool less_than(const Op &a, const Op &b) { return b.id() < a.id(); }
-    typedef MergeCursor<Frame, less_than> MergeCursor;
+    typedef MergeCursor<Frame, less_than> MCursor;
     typedef typename Frame::Builder Builder;
     typedef typename Frame::Cursor Cursor;
     typedef typename Frame::Cursors Cursors;
+    typedef typename Cursors::iterator PCursor;
 
     struct {
         bool operator()(const Cursor &a, const Cursor &b) const {
@@ -40,38 +41,38 @@ class RGArrayRDT {
             inserts.insert(entry);
         }
 
-        MergeCursor m{};
+        MCursor m{};
         m.Add(*least.second);
         inserts.erase(least);  //?
+
+        return Status::NOT_IMPLEMENTED;
     }
 
     Status Merge(Builder &output, Cursors &inputs) const {
-        // FIXME Merger should not own the cursors
-        MergeCursor m{};
-        sort(inputs.begin(), inputs.end(), id_cmp);
-        while (!inputs.empty()) {
-            Uuid root = inputs.front().id();
-            while (!inputs.empty() && inputs.front().id() == root) {
-                m.Add(inputs.front());
-                inputs.erase(inputs.begin());  // FIXME host destroyed
+        MCursor m{};
+
+        auto max = std::min_element(inputs.begin(), inputs.end(), id_cmp);
+        uint64_t added{0}, b{1};
+        PCursor i;
+        for (i = inputs.begin(), b = 1; i != inputs.end(); i++, b <<= 1)
+            if (i->id() == max->id()) {
+                m.Add(i);
+                added |= b;
             }
-            // render subtree
-            while (!m.empty()) {
-                output.AppendOp(m.current());
-                const Uuid id = m.current().id();
-                m.Next();
-                auto i = inputs.begin();
-                while (i != inputs.end()) {
-                    if (i->ref() == id) {
-                        m.Add(*i);
-                        inputs.erase(i);
-                        i = inputs.begin();
-                    } else {
-                        i++;
-                    }
+
+        while (!m.empty()) {
+            output.AppendOp(m.current());
+            const Uuid id = m.current().id();
+            m.Next();
+            for (i = inputs.begin(), b = 1; i != inputs.end(); i++, b <<= 1)
+                if ((b & added) == 0 && i->ref() == id) {
+                    m.Add(i);
+                    added |= b;
                 }
-            }
         }
+
+        if (!inputs.empty())
+            return Status::CAUSEBREAK.comment("not a single causal tree");
 
         return Status::OK;
     }

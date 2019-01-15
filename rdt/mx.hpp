@@ -37,7 +37,7 @@ template <class Frame>
 class MatrixRDT {
     static bool less_than(const Op &a, const Op &b) { return a.id() < b.id(); }
 
-    typedef MergeCursor<Frame, less_than> MergeCursor;
+    typedef MergeCursor<Frame, less_than> MCursor;
     typedef typename Frame::Builder Builder;
     typedef typename Frame::Cursor Cursor;
     typedef typename Frame::Cursors Cursors;
@@ -46,7 +46,7 @@ class MatrixRDT {
     typedef std::unordered_map<mxidx_t, Atom> mx_t;
 
     Status Merge(typename Frame::Builder &output, Cursors &inputs) const {
-        MergeCursor m{inputs};
+        MCursor m{inputs};
         m.Merge(output);
         return Status::OK;
     }

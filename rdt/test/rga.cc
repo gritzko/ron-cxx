@@ -11,11 +11,9 @@ typedef RGArrayRDT<typename ron::TextFrame> RGA;
 string despace (string& orig) {
     string ret;
     bool ows{false};
-    for(auto i=orig.begin(); i!=orig.end(); i++) {
-        bool ws = *i==' ' || *i=='\n' || *i=='\r';
-        if (ws && !ows) ret.push_back(' ');
-        ows = ws;
-        if (!ws) ret.push_back(*i);
+    for (char &i : orig) {
+        if (i ==' ' || i =='\n' || i =='\r') continue;
+        ret.push_back(i);
     }
     return ret;
 }
@@ -24,8 +22,9 @@ void test_chain_merge () {
     string abc = "@1+A :rga! 'a', 'b', 'c',";
     string def = "@1000000004+B :1000000003+A 'D', 'E', 'F', ";
     string abcdef = Merge<TextFrame>(RGA_RDT, {abc, def});
+    string correct = "@1+A :rga; 'a'; 'b'; 'c'; @1000000004+B 'D'; 'E'; 'F';";
     // FIXME punkt!!!
-    assert(despace(abcdef)=="@1+A :rga; 'a'; 'b'; 'c'; @1000000004+B 'D'; 'E'; 'F'; ");
+    assert(despace(abcdef)==despace(correct));
 }
 
 void test_sibling_merge () {
@@ -33,7 +32,8 @@ void test_sibling_merge () {
     string childA = "@1a+B :1+A 'b';";
     string childB = "@1b+C :1+A 'a';";
     string ab =  Merge<TextFrame>(RGA_RDT, {parent, childA, childB});
-    assert(despace(ab)=="@1+A :rga; @1b+C 'a'; @1a+B :1+A 'b'; ");
+    string correct = "@1+A :rga; @1b+C 'a'; @1a+B :1+A 'b'; ";
+    assert(despace(ab)==despace(correct));
 }
 
 int main (int argn, char** args) {

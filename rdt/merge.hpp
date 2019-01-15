@@ -14,26 +14,27 @@ class MergeCursor {
     typedef typename Frame::Cursor Cursor;
     typedef std::vector<Frame> Frames;
     typedef std::vector<Cursor> Cursors;
+    typedef typename Cursors::iterator PCursor;
 
-    std::vector<typename Frame::Cursor*> cursors_;
+    std::vector<PCursor> cursors_;
 
    public:
     MergeCursor() : cursors_{} {}
 
-    MergeCursor(const Cursors& inputs) : MergeCursor{} {
-        for (int i = 0; i < inputs.size(); i++) Add(inputs[i]);
+    explicit MergeCursor(Cursors& inputs) : MergeCursor{} {
+        for (auto i = inputs.begin(); i != inputs.end(); i++) Add(i);
     }
 
-    void Add(const Cursor& input) {
-        if (!input.valid()) return;
-        cursors_.push_back(new Cursor{input});
+    void Add(PCursor input) {
+        if (!input->valid()) return;
+        cursors_.push_back(input);
         pop((int)cursors_.size() - 1);
     }
     // no more ops
     bool empty() const { return size() == 0; }
     // returns the current op
-    const Op& op() const { return cursors_[0]->op(); }
-    const Frame& frame() const { return cursors_[0]->frame(); }
+    const Op& op() const { return cursors_.front()->op(); }
+    const Frame& frame() const { return cursors_.front()->frame(); }
     const Cursor& current() const { return *cursors_.front(); }
 
    private:
@@ -78,8 +79,7 @@ class MergeCursor {
 
     void eject() {
         if (!size()) return;
-        delete cursors_[0];
-        cursors_[0] = cursors_[cursors_.size() - 1];
+        cursors_[0] = cursors_.back();
         cursors_.pop_back();
         push(0);
     }
@@ -108,7 +108,7 @@ class MergeCursor {
     Status Merge(typename Frame::Builder& output) {
         if (empty()) return Status::OK;
         do {
-            output.AppendOp(*cursors_[0]);
+            output.AppendOp(*cursors_.front());
         } while (Next());
         return Status::OK;
     }

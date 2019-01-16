@@ -30,6 +30,7 @@ class RGArrayRDT {
 
    public:
     Status MergeBig(Builder &output, Cursors &inputs) const {
+        /*
         typedef unordered_multimap<Uuid, Cursor *> insmap_t;
         insmap_t inserts;
         typedef typename insmap_t::value_type insmapval_t;
@@ -44,13 +45,14 @@ class RGArrayRDT {
         MCursor m{};
         m.Add(*least.second);
         inserts.erase(least);  //?
-
+        */
         return Status::NOT_IMPLEMENTED;
     }
 
     Status Merge(Builder &output, Cursors &inputs) const {
-        MCursor m{};
+        if (inputs.size() > 3) return MergeBig(output, inputs);
 
+        MCursor m{};
         auto max = std::min_element(inputs.begin(), inputs.end(), id_cmp);
         uint64_t added{0}, b{1};
         PCursor i;
@@ -71,10 +73,8 @@ class RGArrayRDT {
                 }
         }
 
-        if (!inputs.empty())
-            return Status::CAUSEBREAK.comment("not a single causal tree");
-
-        return Status::OK;
+        return added + 1 == 1 << inputs.size() ? Status::OK
+                                               : Status::CAUSEBREAK;
     }
 
     Status GC(Builder &output, const Frame &input) const {

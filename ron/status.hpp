@@ -30,6 +30,8 @@ class Status {
         return code_[ORIGIN] != Word::PAYLOAD_BITS;  // not an error
     }
 
+    bool operator==(const Status& b) const { return code() == b.code(); }
+
     std::string str() const { return code().value().str() + '\t' + comment(); }
 
     static const Status OK;

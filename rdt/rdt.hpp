@@ -83,22 +83,25 @@ class MasterRDT {
 };
 
 template <typename Frame>
-std::string MergeCursors(RDT rdt, typename Frame::Cursors &inputs) {
+Status MergeCursors(std::string &ret, RDT rdt,
+                    typename Frame::Cursors &inputs) {
     typedef MasterRDT<Frame> Reducer;
     Reducer reducer;
     typedef typename Reducer::Cursor Cursor;
     typename Reducer::Builder builder;
-    reducer.Merge(builder, rdt, inputs);
-    return builder.data();
+    Status ok = reducer.Merge(builder, rdt, inputs);
+    swap(builder, ret);
+    return ok;
 }
 
 template <typename Frame>
-std::string Merge(RDT rdt, const std::vector<std::string> &inputs) {
+Status Merge(std::string &ret, RDT rdt,
+             const std::vector<std::string> &inputs) {
     typedef typename Frame::Cursor Cursor;
     typedef typename Frame::Cursors Cursors;
     Cursors curs{};
-    for (int i = 0; i < inputs.size(); i++) curs.push_back(Cursor{inputs[i]});
-    return MergeCursors<Frame>(rdt, curs);
+    for (const auto &input : inputs) curs.push_back(Cursor{input});
+    return MergeCursors<Frame>(ret, rdt, curs);
 }
 
 }  // namespace ron

@@ -18,6 +18,7 @@ int main (int argn, char** args) {
         Cursor{"@now :34567+origin;"},
         Cursor{"@now :23456+origin;"},
     };
-    string now = MergeCursors<TextFrame>(META_RDT, inputs);
+    string now;
+    assert(MergeCursors<TextFrame>(now, META_RDT, inputs));
     assert(now=="@now :34567+origin;\n@pubkey 'ABCDEF...';\n");
 }

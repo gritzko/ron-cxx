@@ -1,6 +1,9 @@
+#include <utility>
+
 #ifndef ron_open_text_hpp
 #define ron_open_text_hpp
 #include "op.hpp"
+#include "status.hpp"
 
 namespace ron {
 
@@ -11,8 +14,8 @@ class TextFrame {
     typedef std::vector<TextFrame> Batch;
 
     TextFrame() : data_{} {}
-    explicit TextFrame(const std::string& data) : data_{data} {}
-    explicit TextFrame(const std::string&& data) : data_{data} {}
+    explicit TextFrame(std::string data) : data_{std::move(data)} {}
+    // explicit TextFrame(const std::string&& data) : data_{data} {}
     TextFrame& operator=(const TextFrame& orig) = default;
 
     const std::string& data() const { return data_; }
@@ -61,6 +64,7 @@ class TextFrame {
             assert(size() > idx);
             return op_.type(idx);
         }
+        inline TERM term() const { return op_.term(); }
         static std::string unescape(const slice_t& data);
         std::string string(fsize_t idx) const {
             assert(type(idx) == STRING);
@@ -207,6 +211,8 @@ class TextFrame {
     typedef std::vector<Cursor> Cursors;
 
     inline void swap(std::string& str) { std::swap(data_, str); }
+
+    Status Split(std::vector<TextFrame>& to);
 };
 
 }  // namespace ron

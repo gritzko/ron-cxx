@@ -13,7 +13,7 @@ string despace (string& orig) {
     string ret;
     bool ows{false};
     for (char &i : orig) {
-        if (i ==' ' || i =='\n' || i =='\r') continue;
+        if (isspace(i)) continue;
         ret.push_back(i);
     }
     return ret;
@@ -24,8 +24,7 @@ void test_chain_merge () {
     string def = "@1000000004+B :1000000003+A 'D', 'E', 'F', ";
     string abcdef;
     assert(Merge<TextFrame>(abcdef, RGA_RDT, {abc, def}));
-    string correct = "@1+A :rga; 'a'; 'b'; 'c'; @1000000004+B 'D'; 'E'; 'F';";
-    // FIXME punkt!!!
+    string correct = "@1+A :rga! 'a', 'b', 'c', @1000000004+B 'D', 'E', 'F',";
     assert(despace(abcdef)==despace(correct));
 }
 
@@ -35,7 +34,8 @@ void test_sibling_merge () {
     string childB = "@1b+C :1+A 'a';";
     string ab;
     assert(Merge<TextFrame>(ab, RGA_RDT, {parent, childA, childB}));
-    string correct = "@1+A :rga; @1b+C 'a'; @1a+B :1+A 'b'; ";
+    string correct = "@1+A :rga! @1b+C 'a', @1a+B :1+A 'b', ";
+    cerr<<despace(ab)<<"\n"<<despace(correct);
     assert(despace(ab)==despace(correct));
 }
 

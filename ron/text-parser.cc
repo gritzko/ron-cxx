@@ -4108,6 +4108,8 @@ bool TextFrame::Cursor::Next() {
     // atoms "<<(pe-p)<<" bytes left, prev_id_ "<<prev_id_.str()<<'\n';
 
     if (term && cs != RON_error) {
+        op_.term_ =
+            TERM(strchr(TERM_PUNCT, term) - TERM_PUNCT);  // FIXME gen a fn
         return true;
     } else {
         cs = RON_error;

@@ -41,7 +41,9 @@ void test_basic_cycle () {
     assert(op.size()==2);
     assert(op.ref()==Uuid{"lww"});
     assert(op.id()=="1+src");
+    assert(cursor.term()==HEADER);
     assert(cursor.Next());
+    assert(cursor.term()==REDUCED);
     assert(op.ref()=="1+src");
     assert(op.id()=="2+orig");
     assert(cursor.string(2)=="key");

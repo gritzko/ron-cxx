@@ -54,7 +54,7 @@ class RGArrayRDT {
 
         MCursor m{};
         auto max = std::min_element(inputs.begin(), inputs.end(), id_cmp);
-        uint64_t added{0}, b{1};
+        uint64_t added{0}, b{1};  // TODO refs[MAX_INPUTS]
         PCursor i;
         for (i = inputs.begin(), b = 1; i != inputs.end(); i++, b <<= 1)
             if (i->id() == max->id()) {
@@ -62,9 +62,12 @@ class RGArrayRDT {
                 added |= b;
             }
 
+        TERM term = HEADER;
         while (!m.empty()) {
-            output.AppendOp(m.current());
-            const Uuid id = m.current().id();
+            auto &cur = m.current();
+            output.AppendAmendedOp(cur, term, cur.id(), cur.ref());
+            term = REDUCED;
+            const Uuid id = cur.id();
             m.Next();
             for (i = inputs.begin(), b = 1; i != inputs.end(); i++, b <<= 1)
                 if ((b & added) == 0 && i->ref() == id) {
@@ -73,8 +76,7 @@ class RGArrayRDT {
                 }
         }
 
-        return added + 1 == 1 << inputs.size() ? Status::OK
-                                               : Status::CAUSEBREAK;
+        return ++added == 1 << inputs.size() ? Status::OK : Status::CAUSEBREAK;
     }
 
     Status GC(Builder &output, const Frame &input) const {

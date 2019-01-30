@@ -64,4 +64,21 @@ std::string TextFrame::Cursor::unescape(const slice_t& data) {
     return ret;
 }
 
+Status TextFrame::Split(std::vector<TextFrame>& to) {
+    const string& d = data_;
+    const size_t s = d.size();
+    size_t pos = 0;
+    do {
+        size_t at = d.find(".\n", pos);
+        if (at == string::npos)
+            at = s;
+        else
+            at += 2;
+        to.emplace_back(d.substr(pos, at - pos));
+        pos = at;
+        while (pos < s && isspace(d[pos])) pos++;
+    } while (pos < s);
+    return Status::OK;
+}
+
 }  // namespace ron

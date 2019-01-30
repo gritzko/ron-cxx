@@ -63,6 +63,9 @@ add_library(ron STATIC
     ron/slice.hpp
     ron/hash.hpp
     ron/portable_endian.hpp
+    ron/vv.hpp
+    ron/opmeta.hpp
+    ron/ct.hpp
     ron/status.cc
     ron/uuid.cc
     ron/uuid-parser.cc
@@ -71,8 +74,6 @@ add_library(ron STATIC
     ron/text-parser.cc
     ron/text-builder.cc
     ron/hash.cc
-    ron/vv.hpp
-    ron/opmeta.hpp
         )
 add_dependencies(ron botan-project)
 
@@ -129,6 +130,7 @@ set(SWARMDB_SOURCES
         db/map/meta.cc
         db/map/map.hpp
         db/map/csv.cc
+        db/map/txt.cc
     )
 
 add_library(swarmdb SHARED

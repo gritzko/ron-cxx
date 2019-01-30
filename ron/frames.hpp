@@ -16,5 +16,49 @@ std::vector<typename Frame::Cursor> cursors(const std::vector<Frame>& frames) {
     return ret;
 }
 
+template <typename Frame>
+Status CompareFrames(const Frame& frame_a, const Frame& frame_b) {
+    typedef typename Frame::Cursor Cursor;
+    Cursor a = frame_a.cursor();
+    Cursor b = frame_b.cursor();
+    while (a.valid() && b.valid()) {
+        while (a.valid() && a.id() == COMMENT_UUID) a.Next();
+        while (b.valid() && b.id() == COMMENT_UUID) b.Next();
+        if (!a.valid() || !b.valid()) break;
+        if (a.id() != b.id()) return Status::BADID;
+        if (a.ref() != b.ref()) return Status::BADREF;
+        if (a.size() != b.size()) return Status::BADVALUE;
+        for (int i = 2; i < a.size(); i++) {
+            if (a.type(i) != b.type(i))
+                return Status::BADVALUE.comment("value type mismatch");
+            switch (a.type(i)) {
+                case INT:
+                    if (a.integer(i) != b.integer(i))
+                        return Status::BADVALUE.comment("different int");
+                    break;
+                case FLOAT:
+                    if (a.number(i) != b.number(i))
+                        return Status::BADVALUE.comment("different float");
+                    break;
+                case UUID:
+                    if (a.uuid(i) != b.uuid(i))
+                        return Status::BADVALUE.comment("different UUID");
+                    break;
+                case STRING:
+                    if (a.string(i) != b.string(i))
+                        return Status::BADVALUE.comment("different string");
+                    break;
+            }
+        }
+        a.Next();
+        b.Next();
+    }
+    while (a.valid() && a.id() == COMMENT_UUID) a.Next();
+    while (b.valid() && b.id() == COMMENT_UUID) b.Next();
+    if (a.valid() || b.valid())
+        return Status::BADFRAME.comment("one frame is longer");
+    return Status::OK;
+}
+
 }  // namespace ron
 #endif

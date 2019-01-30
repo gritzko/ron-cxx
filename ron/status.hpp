@@ -41,6 +41,10 @@ class Status {
     static const Status BADARGS;
     static const Status DB_FAIL;
     static const Status IOFAIL;
+    static const Status BADFRAME;
+    static const Status BADID;
+    static const Status BADREF;
+    static const Status BADVALUE;
 
     static const Status NOTYPE;
     static const Status NOTOPEN;

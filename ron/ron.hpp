@@ -2,6 +2,7 @@
 #define ron_ron_hpp
 
 #include "const.hpp"
+#include "ct.hpp"
 #include "frames.hpp"
 #include "status.hpp"
 #include "text.hpp"

@@ -301,10 +301,78 @@ Status Replica<Frame>::GetMap(Frame& result, const Uuid& id, const Uuid& map,
 }
 
 template <typename Frame>
-Status Replica<Frame>::ReceiveQuery(Builder& response, Uuid object_store,
-                                    Cursor& query) {
+Status Replica<Frame>::ReceiveObjectQuery(Builder& response,
+                                          const Uuid& object_store,
+                                          Cursor& query) {
+    if (db_ == nullptr) return Status::NOTOPEN;
+    const Uuid& id = query.id();
+    const Uuid& ref = query.ref();
+    RDT t = uuid2rdt(ref);
+    if (t == RDT::RDT_COUNT) return Status::NOTYPE;
+    string data;
+    Key k{id, t};
+    Slice key{k};
+    auto ok = db_->Get(ro_, trunk_, key, &data);
+    if (ok.IsNotFound()) return Status::NOT_FOUND;
+    if (!ok.ok()) return Status::DB_FAIL.comment(ok.ToString());
+    response.AppendFrame(Frame{data});
+    query.Next();
+    return Status::OK;
+}
+
+template <typename Frame>
+Status Replica<Frame>::ReceiveMapQuery(Builder& response, Uuid object_store,
+                                       Cursor& query) {
     MasterMapper<Frame> mapper{this};
-    return mapper.Map(response, query);
+    Status ok = mapper.Map(response, query);
+    query.Next();
+    return ok;
+}
+
+template <typename Frame>
+Status Replica<Frame>::Receive(Builder& response, const Uuid& branch,
+                               Cursor& c) {
+    rocksdb::WriteBatch batch;
+    Status ok = Status::OK;
+    while (c.valid() && ok) {
+        const Uuid& id = c.id();
+        if (c.id() == COMMENT_UUID) {
+            c.Next();
+        } else if (c.term() == QUERY) {
+            switch (id.version()) {
+                case TIME:
+                    ok = ReceiveQuery(response, branch, c);
+                    break;
+                case NAME:
+                case DERIVED:
+                    ok = ReceiveMapQuery(response, branch, c);
+                    break;
+                default:
+                    ok = Status::NOT_IMPLEMENTED.comment("TODO: blobs");
+            }
+        } else {
+            switch (id.version()) {
+                case TIME:
+                    ok = ReceiveChain(batch, branch, c);
+                    break;
+                case NAME:
+                    ok = ReceiveCheck(branch, c);
+                    break;
+                case DERIVED:
+                    ok = ReceiveMap(batch, branch, c);
+                    break;
+                default:
+                    ok = Status::NOT_IMPLEMENTED.comment("TODO: blobs");
+            }
+        }
+    }
+
+    if (ok && batch.Count() > 0) {
+        auto dbok = db().Write(wo(), &batch);
+        if (!dbok.ok()) ok = Status::DB_FAIL.comment(dbok.ToString());
+    }
+
+    return ok;
 }
 
 /*template<typename Frame>

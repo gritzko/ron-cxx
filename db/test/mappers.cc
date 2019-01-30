@@ -1,9 +1,11 @@
 #include <unistd.h>
 #include "ron/ron.hpp"
 #include "db/replica.hpp"
-#include "db/map/const.hpp"
+#include "db/map/map.hpp"
+
 using namespace ron;
 using namespace std;
+
 typedef TextFrame Frame;
 typedef Frame::Cursor Cursor;
 typedef Replica<Frame> TextReplica;

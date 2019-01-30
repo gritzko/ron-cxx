@@ -83,11 +83,12 @@ union Word {
     size_t write_base64(char* to) const;
     inline uint64_t payload() const { return _64 & MAX_VALUE; }
     inline bool is_zero() const { return _64 == 0U; }
-    inline Word inc() const { return Word{_64 + 1U}; }
+    inline Word inc(uint64_t by = 1UL) const { return Word{_64 + by}; }
     inline Word dec() const { return Word{_64 - 1U}; }
     inline bool operator<(const Word& b) const { return _64 < b._64; }
     inline bool operator>(const Word& b) const { return _64 > b._64; }
     inline bool operator>=(const Word& b) const { return _64 >= b._64; }
+    inline bool operator<=(const Word& b) const { return _64 <= b._64; }
     inline bool operator==(const Word& b) const { return _64 == b._64; }
     inline bool operator!=(const Word& b) const { return _64 != b._64; }
     inline size_t hash() const {
@@ -184,7 +185,9 @@ struct Uuid : public Atom {
                                (uint64_t(UUID::DERIVED) << Word::PBS)};
     }
     inline Uuid derived() const { return Derived(value(), origin()); }
-    inline Uuid inc() const { return Uuid{value().inc(), origin()}; }
+    inline Uuid inc(uint64_t by = 1UL) const {
+        return Uuid{value().inc(by), origin()};
+    }
     inline Uuid dec() const { return Uuid{value().dec(), origin()}; }
     inline bool operator<(const Uuid& b) const { return words_ < b.words_; }
     inline bool operator>(const Uuid& b) const { return words_ > b.words_; }
@@ -207,6 +210,7 @@ struct Uuid : public Atom {
 };
 
 const static Uuid FATAL{Word::MAX_VALUE, Word::MAX_VALUE};
+const static Uuid COMMENT_UUID{1134907106097364992UL, 0};
 
 typedef std::pair<uint64_t, uint64_t> uint64pair;
 

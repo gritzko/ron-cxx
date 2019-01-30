@@ -96,6 +96,22 @@ namespace ron {
 
     };
 
+    template <typename Frame>
+    struct TxtMapper {
+        typedef typename Frame::Cursor Cursor;
+        typedef typename Frame::Builder Builder;
+        typedef Replica<Frame> HostReplica;
+        typedef typename MatrixRDT<Frame>::mx_t mx_t;
+
+        HostReplica* host_;
+
+        explicit TxtMapper(HostReplica* host) : host_{host} {}
+
+        Status Map(Builder& response, Cursor& query, const VV& hili=EMPTY_VV) const;
+
+        Status Write(Builder& patch, Cursor& query) const;
+
+    };
 
     template<typename Frame>
     struct MasterMapper {

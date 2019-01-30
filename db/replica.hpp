@@ -150,20 +150,53 @@ class Replica {
     // converts any-coded incoming frame into internal-coded chains, queries,
     // hash checks
     template <class FrameB>
-    Status Receive(Uuid conn_id, const FrameB& frame);
+    Status Receive(Uuid conn_id, const FrameB& frame) {
+        return Status::NOT_IMPLEMENTED;
+    }
 
     // feed a causally ordered log - checks causality, updates the chain cache
     Status ReceiveChain(rocksdb::WriteBatch& batch, Uuid object_store,
                         Cursor& chain);
 
-    // a hash check MUST follow its op in the frame => the hash must be cached
-    Status ReceiveSHA2Check(const Uuid& id, const SHA2& check);
-
-    Status ReceiveQuery(Builder& response, Uuid object_store, Cursor& query);
-
-    Status RecvData(Builder& response, const Frame& query) {
-        return Status::OK;
+    Status ReceiveMap(rocksdb::WriteBatch& batch, Uuid object_store,
+                      Cursor& chain) {
+        return Status::NOT_IMPLEMENTED;
     }
+
+    Status ReceiveCheck(const Uuid& branch, Cursor& check) {
+        return Status::NOT_IMPLEMENTED;
+    }
+
+    // a hash check MUST follow its op in the frame => the hash must be cached
+    Status ReceiveSHA2Check(const Uuid& id, const SHA2& check) {
+        return Status::NOT_IMPLEMENTED;
+    }
+
+    Status ReceiveQuery(Builder& response, const Uuid& object_store,
+                        Cursor& query) {
+        const Uuid& ref = query.ref();
+        RDT rdt = uuid2rdt(ref);
+        if (rdt != RDT_COUNT) {
+            return ReceiveObjectQuery(response, object_store, query);
+        }
+        MAP mapper = uuid2map(ref);
+        if (mapper != MAP_COUNT) {
+            return ReceiveMapQuery(response, object_store, query);
+        }
+        return Status::NOT_IMPLEMENTED.comment("unknown RDT/mapper " +
+                                               ref.str());
+    }
+
+    Status ReceiveObjectQuery(Builder& response, const Uuid& object_store,
+                              Cursor& query);
+
+    Status ReceiveMapQuery(Builder& response, Uuid object_store, Cursor& query);
+
+    Status RecvData(Builder& response, Cursor& query) {
+        return Status::NOT_IMPLEMENTED;
+    }
+
+    Status Receive(Builder& response, const Uuid& branch, Cursor& c);
 
    private:
     //  U T I L

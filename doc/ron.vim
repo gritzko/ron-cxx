@@ -15,7 +15,7 @@ syn match ANNOTATION /@\s*[0-9A-Za-z_\~]\{1,10}\>/
 hi ANNOTATION ctermfg=Grey cterm=italic
 
 syn match NAME_ATOM /\(>\s*\)\=\<[0-9A-Za-z_\~]\{1,10}\>/
-hi NAME_ATOM ctermfg=Green cterm=underline,bold
+hi NAME_ATOM ctermfg=Green cterm=bold
 
 syn match INT_ATOM /\(=\s*\)\=[+-]\=[0-9]\{1,19}\>/
 hi INT_ATOM ctermfg=LightGreen
@@ -29,8 +29,10 @@ hi FLOAT_ATOM ctermfg=Green
 syn match UUID_ATOM /\(>\s*\)\=\<\([0-9A-F][/]\)\=[0-9A-Za-z_~]\{1,10}[-+$%][0-9A-Za-z_~]\{1,10}\>/
 hi UUID_ATOM ctermfg=Green cterm=underline
 
-syn match RM_CHAIN /([0-9]\{1,10})/
-hi RM_CHAIN ctermfg=DarkRed cterm=bold
+syn match NAME_CHAIN /([0-9A-Za-z_~]\{1,10}\s\s*[0-9]\{1,10})/
+hi NAME_CHAIN ctermfg=DarkGreen cterm=bold
+syn match EMPTY_VAL_CHAIN /([0-9]\{1,10})/
+hi EMPTY_VAL_CHAIN ctermfg=DarkGreen cterm=bold
 
 syn match STRING_CHAIN /"\(\\u[0-9a-fA-F]\{4}\|\\[^\n\r]\|[^'\\\n\r]\)*"/
 hi STRING_CHAIN ctermfg=DarkGreen cterm=bold
@@ -39,7 +41,7 @@ syn match STRING_ATOM /'\(\\u[0-9a-fA-F]\{4}\|\\[^\n\r]\|[^'\\\n\r]\)*'/
 hi STRING_ATOM ctermfg=DarkGreen
 
 syn match OP_RM_ID  /@\s*\([0-9A-F][/]\)\=[0-9A-Za-z_~]\{1,10}[-][0-9A-Za-z_~]\{1,10}\>/
-hi OP_RM_ID ctermfg=LightMagenta
+hi OP_RM_ID ctermfg=LightCyan
 
 syn match OP_ID  /@\s*\([0-9A-F][/]\)\=[0-9A-Za-z_~]\{1,10}[+][0-9A-Za-z_~]\{1,10}\>/
 hi OP_ID ctermfg=Blue
@@ -48,7 +50,7 @@ syn match REF_ID /:\s*\([0-9A-F][/]\)\=[0-9A-Za-z_~]\{1,10}\([-+$%][0-9A-Za-z_~]
 hi REF_ID ctermfg=DarkBlue
 
 syn match RM_REF_ID /:\s*\([0-9A-F][/]\)\=[0-9A-Za-z_~]\{1,10}[-][0-9A-Za-z_~]\{1,10}\>/
-hi RM_REF_ID ctermfg=Magenta
+hi RM_REF_ID ctermfg=Cyan
 
 syn match OPTERM /[!?,;]/
 hi OPTERM ctermfg=Brown

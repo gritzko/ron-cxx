@@ -155,6 +155,7 @@ add_test(MAPPERS test21-mappers)
 
 add_executable(swarmdb-bin
     ${SWARMDB_SOURCES}
+    db/fs.cc
     db/main.cc
     )
 add_dependencies(swarmdb-bin rocksdblib)

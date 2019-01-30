@@ -1,16 +1,16 @@
-@~ :in 'create an array' !
+@~ 'create an array' !
 @1hTDE6+test_rga :rga ; 1; 2; 5;
 .
 
-@~ :in 'patch an array' !
+@~ 'patch an array' !
 @1hTDEk+test_rga :1hTDE60002+test_rga 3; 4;
 .
 
-@~ :in 'query the state' !
+@~ 'query the state' !
 @1hTDE6+test_rga :rga ?
 .
 
-@~ :out 'all merged' ?
+@~ 'was it merged' ?
 @1hTDE6+test_rga :rga! 
     1, 2, 
 @1hTDEk+test_rga 
@@ -19,15 +19,15 @@
     5,
 .
 
-@~ :in 'remove the 3' !
+@~ 'remove the 3' !
 @1hTDEz+test_rga :1hTDEk+test_rga rm;
 .
 
-@~ :in 'query the state' !
+@~ 'query the state' !
 @1hTDE6+test_rga :rga ?
 .
 
-@~ :out 'all merged' ?
+@~ 'merged again' ?
 @1hTDE6+test_rga :rga! 
     1, 2, 
 @1hTDEk+test_rga 

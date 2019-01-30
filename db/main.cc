@@ -165,24 +165,28 @@ Status CommandTest(RonReplica& replica, const string& file) {
     ok = tests.Split(io);
     if (!ok) return ok;
     Builder b;
-    for (int i = 0; i < io.size(); i++) {
+    for (int i = 0; ok && i < io.size(); i++) {
         Cursor c = io[i].cursor();
         if (c.id() != COMMENT_UUID)
             return Status::BADFRAME.comment("no in/out header");
-        Uuid ref = c.ref();
+        TERM term = c.term();
+        string comment = "";
+        if (c.size()>2 && c.has(2, STRING))
+            comment = c.string(2);
         c.Next();
-        if (ref == OUT_UUID) {
+        if (term == QUERY) {
             Frame re = b.frame();
             b = Builder{};
             ok = CompareFrames<Frame>(re, io[i]);
             if (!ok) {
                 cerr << io[i].data() << '\n';
-                cerr << "@~ :have !\n";
+                cerr << "@~ 'the actual response' !\n";
                 cerr << re.data() << '\n';
-                return ok;
             }
-        } else if (ref == IN_UUID) {
-            replica.Receive(b, Uuid::NIL, c);
+            cerr << "?\t" << comment << '\t' << (ok?"OK":"FAIL") << endl;
+        } else if (term == HEADER) {
+            ok = replica.Receive(b, Uuid::NIL, c);
+            cerr << "!\t" << comment << '\t' << (ok?"OK":"FAIL") << endl;
         } else {
             return Status::BADFRAME.comment("bad in/out header");
         }

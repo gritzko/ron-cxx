@@ -161,6 +161,9 @@ add_dependencies(swarmdb-bin rocksdblib)
 target_link_libraries(swarmdb-bin ron botan rocksdb pthread z bz2 snappy gflags)
 SET_TARGET_PROPERTIES(swarmdb-bin PROPERTIES OUTPUT_NAME swarmdb)
 
+add_test(bb-lww swarmdb --test ${CMAKE_SOURCE_DIR}/test/lww.ron)
+add_test(bb-rga swarmdb --test ${CMAKE_SOURCE_DIR}/test/rga.ron)
+
 add_custom_target(
         format
         COMMAND clang-format

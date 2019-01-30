@@ -140,6 +140,8 @@ Status CommandTest(RonReplica& replica, const string& file) {
     ok = tests.Split(io);
     if (!ok) return ok;
     Builder b;
+    static const string OK{"\033[0;32mOK\033[0m"};
+    static const string FAIL{"\033[1;31mFAIL\033[0m"};
     for (int i = 0; ok && i < io.size(); i++) {
         Cursor c = io[i].cursor();
         if (c.id() != COMMENT_UUID)
@@ -158,10 +160,10 @@ Status CommandTest(RonReplica& replica, const string& file) {
                 cerr << "@~ 'the actual response' !\n";
                 cerr << re.data() << '\n';
             }
-            cerr << "?\t" << comment << '\t' << (ok?"OK":"FAIL") << endl;
+            cerr << "?\t" << comment << '\t' << (ok?OK:FAIL) << endl;
         } else if (term == HEADER) {
             ok = replica.Receive(b, Uuid::NIL, c);
-            cerr << "!\t" << comment << '\t' << (ok?"OK":"FAIL") << endl;
+            cerr << "!\t" << comment << '\t' << (ok?OK:FAIL) << endl;
         } else {
             return Status::BADFRAME.comment("bad in/out header");
         }

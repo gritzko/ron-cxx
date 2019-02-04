@@ -52,8 +52,21 @@ void test_ct_path () {
     assert(p== sizeof(depths)/sizeof(fsize_t) - 1);
 }
 
+void test_ct_path_fail () {
+    string frame{"@1i08e4+path :rga! 'a', @1i08z+path 'b', @1i08k+path :1i0FAIL+path 'c',"};
+    Cursor c{frame};
+    CTPath path{c.id()};
+    c.Next();
+    assert(path.AddNext(c)); //a
+    c.Next();
+    assert(path.AddNext(c)); //b
+    c.Next();
+    assert(path.AddNext(c)==Status::CAUSEBREAK); //c
+}
+
 int main (int argn, char** args) {
     test_simple_meta();
     test_ct_basic();
     test_ct_path();
+    test_ct_path_fail();
 }

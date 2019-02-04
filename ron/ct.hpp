@@ -179,7 +179,7 @@ class CTPath {
     Status AddNext(const Uuid& id, const Uuid& ref) {
         while (path_.size() && path_.back() > ref) path_.pop_back();
         if (-1 == depth() || path_.back() != ref)
-            return Status::BADARGS.comment("not a single-root causal tree!");
+            return Status::CAUSEBREAK.comment("not a single-root causal tree!");
         path_.push_back(id);
         ++pos_;
         return Status::OK;

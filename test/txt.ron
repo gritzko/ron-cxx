@@ -1,55 +1,55 @@
-@~ :in 'Request-response testing for the plain text mapper (a.k.a. txt)' !
+@~ 'Request-response testing for the plain text mapper (a.k.a. txt)' !
 @1hL9lO+test_txt :rga ; 'H'; 'e'; 'l'; 'l'; 'o'; ' '; 't'; 'h'; 'e'; 'r'; 'e';
 .
-@~ :in 'Request the text' ?
-@txt :1hL9lO+test_txt ? 
+@~ 'Request the text' !
+@1hL9lO-test_txt :txt ? 
 .
-@~ :out 'should be the correct string' !
-@txt :1hL9lO+test_txt 'Hello there' !
+@~ 'should be the correct string' ?
+@1hL9lO-test_txt :txt 'Hello there' !
 .
 
 
-@~ :in 'Now, lets add a letter' !
+@~ 'Now, lets add a letter' !
 @1hL9lO000C+test_txt :1hL9lO000B+test_txt '!';
 .
-@~ :in 'Request the text' ?
-@txt :1hL9lO+test_txt ? 
+@~ 'Request the text' !
+@1hL9lO-test_txt :txt ? 
 .
-@~ :out 'The letter must be there' !
-@txt :1hL9lO+test_txt 'Hello there!' !
+@~ 'The letter must be there' ?
+@1hL9lO-test_txt :txt 'Hello there!' !
 .
 
 
-@~ :in 'OK, lets edit the string (range-delete, insert)' !
-@1hL9lO000D-test_txt :1hL9lO000C+test_txt ;;;;;;
+@~ 'OK, lets edit the string (range-delete, insert)' !
+@1hL9lO000D+test_txt :1hL9lO000C+test_txt rm; rm; rm; rm; rm; rm;
 @1hL9lO000J+test_txt :1hL9lO0006+test_txt 'w'; 'o'; 'r'; 'l'; 'd';
 .
-@~ :in ?
-@txt :1hL9lO+test_txt ?
+@~ 'query' ! 
+@1hL9lO-test_txt :txt ?
 .
-@~ :out 'The edited string' !
-@txt :1hL9lO+test_txt 'Hello world' !
-.
-
-
-@~ :in 'Lets undelete a letter' !
-@1hL9lO000O+test_txt :1hL9lO000D-test_txt ;
-.
-@~ :in ?
-@txt :1hL9lO+test_txt ?
-.
-@~ :out 'The "!" returns' !
-@txt :1hL9lO+test_txt 'Hello world!' !
+@~ 'The edited string' ?
+@1hL9lO-test_txt :txt 'Hello world' !
 .
 
 
-@~ :in 'An ack is not a delete' !
-@1hL9lO000P-test_txt_B :1hL9lO0001+test_txt 'an ack is like a fake delete';
+@~ 'Lets undelete a letter' !
+@1hL9lO000O+test_txt :1hL9lO000D+test_txt un;
 .
-@~ :in ?
-@txt :1hL9lO+test_txt ?
+@~ !
+@1hL9lO-test_txt :txt ?
 .
-@~ :out 'No changes' !
-@txt :1hL9lO+test_txt 'Hello world!' !
+@~ 'The "!" returns' ?
+@1hL9lO-test_txt :txt 'Hello world!' !
+.
+
+
+@~ 'An ack is not a delete' !
+@1hL9lO000P+test_txt_B :1hL9lO0001+test_txt ;
+.
+@~ ! 
+@1hL9lO-test_txt :txt ?
+.
+@~ 'No changes' ?
+@1hL9lO-test_txt :txt 'Hello world!' !
 .
 

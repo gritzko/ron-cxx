@@ -27,9 +27,33 @@ void test_ct_basic () {
     assert(*i==head.inc(2));
     ++i;
     assert(*i==head.inc(3));
+    --i;
+    assert(*i==head.inc(2));
+    --i;
+    assert(*i==head.inc());
+    i.CausallyPrev();
+    assert(*i==head);
+}
+
+void test_ct_path () {
+    string frame{"@1i08e4+path :rga! 'a', @1i08z+path 'b', @1i08k+path :1i08e4+path 'c', 'd',"};
+    fsize_t depths[] = {0, 1, 2, 1, 2};
+    Cursor c{frame};
+    CTPath path{c.id()};
+    int p=0;
+    assert(path.depth() == depths[p]);
+    assert(path.position() == p);
+    while (c.Next()) {
+        ++p;
+        path.AddNext(c);
+        assert(path.depth() == depths[p]);
+        assert(path.position() == p);
+    }
+    assert(p== sizeof(depths)/sizeof(fsize_t) - 1);
 }
 
 int main (int argn, char** args) {
     test_simple_meta();
     test_ct_basic();
+    test_ct_path();
 }

@@ -8,5 +8,6 @@
 #include "text.hpp"
 #include "uuid.hpp"
 #include "vv.hpp"
+#include "spans.hpp"
 
 #endif

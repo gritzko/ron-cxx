@@ -3,7 +3,9 @@
 
 #include <algorithm>
 #include <unordered_map>
+#include "rdt/const.hpp"
 #include "rdt/merge.hpp"
+#include "ron/ron.hpp"
 
 namespace ron {
 
@@ -16,11 +18,11 @@ using namespace std;
 template <class Frame>
 class RGArrayRDT {
     static bool less_than(const Op &a, const Op &b) { return b.id() < a.id(); }
-    typedef MergeCursor<Frame, less_than> MCursor;
-    typedef typename Frame::Builder Builder;
-    typedef typename Frame::Cursor Cursor;
-    typedef typename Frame::Cursors Cursors;
-    typedef typename Cursors::iterator PCursor;
+    using MCursor = MergeCursor<Frame, less_than>;
+    using Builder = typename Frame::Builder;
+    using Cursor = typename Frame::Cursor;
+    using Cursors = typename Frame::Cursors;
+    using PCursor = typename Cursors::iterator;
 
     struct {
         bool operator()(const Cursor &a, const Cursor &b) const {
@@ -33,7 +35,7 @@ class RGArrayRDT {
         /*
         typedef unordered_multimap<Uuid, Cursor *> insmap_t;
         insmap_t inserts;
-        typedef typename insmap_t::value_type insmapval_t;
+        using insmap_t::value_type insmapval_t;
         insmapval_t least{FATAL, nullptr};
         for (int i = 0; i < inputs.size(); i++) {
             const Cursor &c = inputs[i];
@@ -56,11 +58,12 @@ class RGArrayRDT {
         auto max = std::min_element(inputs.begin(), inputs.end(), id_cmp);
         uint64_t added{0}, b{1};  // TODO refs[MAX_INPUTS]
         PCursor i;
-        for (i = inputs.begin(), b = 1; i != inputs.end(); i++, b <<= 1)
+        for (i = inputs.begin(), b = 1; i != inputs.end(); i++, b <<= 1) {
             if (i->id() == max->id()) {
                 m.Add(i);
                 added |= b;
             }
+        }
 
         TERM term = HEADER;
         while (!m.empty()) {
@@ -87,6 +90,124 @@ class RGArrayRDT {
         return Status::NOT_IMPLEMENTED;
     }
 };
+
+enum RGA_ENTRY : uint8_t {
+    ZERO = 0,
+    ENTRY = 1,
+    REMOVE = 2,
+    UNDO = 3,
+    TRASH = 4
+};
+
+const Uuid RM_UUID{986569793370849280UL, 0UL};
+const Uuid UN_UUID{1040894463876005888UL, 0UL};
+
+template <typename Cursor>
+inline RGA_ENTRY entry_type(const Cursor &cur) {
+    if (cur.size() == 3 && cur.has(2, UUID)) {
+        // TODO const Uuid& v = cur.uuid(2);
+        Uuid v = cur.uuid(2);
+        if (v == RM_UUID) {
+            return REMOVE;
+        }
+        if (v == UN_UUID) {
+            return UNDO;
+        }
+    }
+    return ENTRY;
+}
+
+/**  */
+template <class Frame>
+Status ScanRGA(std::vector<bool>& tombstones, const Frame &frame) {
+    using Cursor = typename Frame::Cursor;
+    tombstones.clear();
+    RGA_ENTRY state{ZERO};
+    Cursor cur = frame.cursor();
+    const Uuid root = cur.id();
+    if (cur.ref() != RGA_RDT_ID || root.version() != TIME)
+        return Status::BADARGS.comment("not an RGA/CT frame");
+    Uuids path{};
+    path.push_back(root);
+    std::vector<bool> kills;
+    kills.push_back(false);
+    tombstones.push_back(true);
+    fsize_t depth = 1;
+    fsize_t pos = 0;
+    fsize_t ceiling[] = {0, 0, 0, 0, 0};
+
+    while (cur.Next()) {
+        const Uuid &id = cur.id();
+        const Uuid &ref = cur.ref();
+        ++pos;
+
+        // sanity checks
+        if (ref > id) return Status::BADARGS.comment("ref/id order reversal");
+        if (id.version() != TIME)
+            return Status::BADARGS.comment(
+                "malformed frame, id is not an event");
+
+        // unroll the stack, get to the (causal) parent
+        while (path.back() != ref) {
+            switch (state) {
+                case ZERO:
+                    return Status::CAUSEBREAK.comment("not a CT");
+                case ENTRY:
+                    if (kills.back()) {
+                        const Span &span = path.back_span();
+                        fsize_t p = span.ref() + span.size() - 1;
+                        tombstones[p] = true;
+                    }
+                    if (depth == ceiling[ENTRY]) {
+                        state = ZERO;
+                    }
+                    break;
+                case REMOVE:
+                    if (kills.back()) {
+                        fsize_t at =
+                            ceiling[REMOVE] - (depth - ceiling[REMOVE]);
+                        if (at > 0) {
+                            kills[at] = true;
+                        }
+                    }
+                    if (depth == ceiling[REMOVE]) {
+                        state = ENTRY;
+                    }
+                    break;
+                case UNDO:
+
+                    break;
+                case TRASH:
+                    // look at the ceilings
+                    break;
+            }
+            --depth;
+            path.pop_back();
+            kills.pop_back();
+        }
+
+        // state switch
+        RGA_ENTRY et = entry_type(cur);
+        // versioning here. future subtrees := TRASH
+        if (et == state) {
+        } else if (et == state + 1) {
+            state = et;
+            ceiling[state] = depth + 1; // TODO check off by 1
+        } else {
+            state = TRASH;
+            ceiling[TRASH] = depth + 1;
+        }
+        tombstones.push_back(state != ENTRY);
+        ++depth;
+        path.push_back(id); // TODO && pos!!!
+        kills.push_back(false);
+
+        assert(path.size() == kills.size());
+    }
+    // FIXME oops pop the rest
+
+    return Status::OK;
+}
 
 }  // namespace ron
 

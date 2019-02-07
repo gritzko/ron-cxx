@@ -13,7 +13,7 @@ void test_simple_meta () {
     string chain = "@1gN97b+gritzko :lww! 'key' 'value'";
 }
 
-void test_ct_basic () {
+/*void test_ct_basic () {
     Uuid head{"1i08e4+gYpLcnUnF6"};
     string frame{"@1i08e4+gYpLcnUnF6 :rga! 'a', 'b', 'c',"};
     CT ct;
@@ -33,9 +33,9 @@ void test_ct_basic () {
     assert(*i==head.inc());
     i.CausallyPrev();
     assert(*i==head);
-}
+}*/
 
-void test_ct_path () {
+/*void test_ct_path () {
     string frame{"@1i08e4+path :rga! 'a', @1i08z+path 'b', @1i08k+path :1i08e4+path 'c', 'd',"};
     fsize_t depths[] = {0, 1, 2, 1, 2};
     Cursor c{frame};
@@ -62,11 +62,51 @@ void test_ct_path_fail () {
     assert(path.AddNext(c)); //b
     c.Next();
     assert(path.AddNext(c)==Status::CAUSEBREAK); //c
+}*/
+/*
+void test_ct_scan_all0 () {
+    string frame{"@1i08e4+path :rga! 'a', @1i08z+path 'b', @1i08k+path :1i08e4+path 'c', 'd',"};
+    Cursor c{frame};
+    CTScan<Cursor> scan{c};
+    const vector<bool>& tombs = scan.visibility();
+    assert(!tombs[0]);
+    assert(!tombs[1]);
+    assert(!tombs[2]);
+    assert(!tombs[3]);
+    assert(!tombs[4]);
 }
 
+void test_ct_scan_rm () {
+    string frame{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, @1i08e40003+path :1i08e40002+path 'd',"};
+    Cursor c{frame};
+    CTScan<Cursor> scan{c};
+    const vector<bool>& tombs = scan.visibility();
+    assert(!tombs[0]);
+    assert(!tombs[1]);
+    assert( tombs[2]);
+    assert( tombs[3]);
+    assert(!tombs[4]);
+}
+
+void test_ct_scan_rmun () {
+    string frame{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, un, @1i08e40003+path :1i08e40002+path 'd',"};
+    Cursor c{frame};
+    CTScan<Cursor> scan{c};
+    const vector<bool>& tombs = scan.visibility();
+    assert(!tombs[0]);
+    assert(!tombs[1]);
+    assert(!tombs[2]);
+    assert( tombs[3]);
+    assert( tombs[4]);
+    assert(!tombs[5]);
+}
+*/
 int main (int argn, char** args) {
     test_simple_meta();
-    test_ct_basic();
-    test_ct_path();
-    test_ct_path_fail();
+    //test_ct_basic();
+    //test_ct_path();
+    //test_ct_path_fail();
+    //test_ct_scan_all0();
+    //test_ct_scan_rm();
+    //test_ct_scan_rmun();
 }

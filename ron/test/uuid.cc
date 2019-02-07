@@ -48,6 +48,9 @@ void test_uuids () {
     --i;
     assert(*i==one);
 
+    ids.pop_back();
+    assert(ids.size()==2);
+
 }
 
 

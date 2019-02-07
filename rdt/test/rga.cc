@@ -6,7 +6,8 @@
 using namespace ron;
 using namespace std;
 
-typedef typename ron::TextFrame::Cursor Cursor;
+using Frame = TextFrame;
+typedef typename Frame::Cursor Cursor;
 typedef RGArrayRDT<typename ron::TextFrame> RGA;
 
 string despace (string& orig) {
@@ -50,9 +51,22 @@ void test_multitree () {
     assert(reducer.Merge(b, c)==Status::CAUSEBREAK);
 }
 
+void test_ct_scan_all0 () {
+    Frame frame{"@1i08e4+path :rga! 'a', @1i08z+path 'b', @1i08k+path :1i08e4+path 'c', 'd',"};
+    vector<bool> tombs{};
+    assert(ScanRGA<Frame>(tombs, frame));
+    assert( tombs[0]);
+    assert(!tombs[1]);
+    assert(!tombs[2]);
+    assert(!tombs[3]);
+    assert(!tombs[4]);
+}
+
+
 int main (int argn, char** args) {
     test_chain_merge();
     test_sibling_merge();
     test_multitree();
+    test_ct_scan_all0();
     return 0;
 }

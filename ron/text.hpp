@@ -53,6 +53,9 @@ class TextFrame {
         inline bool has(fsize_t idx, ATOM atype) const {
             return size() > idx && type(idx) == atype;
         }
+        inline bool is(fsize_t idx, const Uuid& id) const {
+            return has(idx, UUID) && uuid(idx) == id;
+        }
         const slice_t data() const { return data_; }
         inline slice_t slice(frange_t range) const {
             return data().slice(range);

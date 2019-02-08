@@ -159,6 +159,7 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
 
         // unroll the stack, get to the (causal) parent
         while (path.back() != ref) {
+            fsize_t at;
             switch (state) {
                 case ZERO:
                     return Status::CAUSEBREAK.comment("not a CT");
@@ -171,15 +172,17 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
                     break;
                 case REMOVE:
                     if (!kills.back()) {
-                        fsize_t at =
-                            ceiling[REMOVE] - (depth - ceiling[REMOVE]);
+                        at = ceiling[REMOVE] - (depth - ceiling[REMOVE]);
                         if (at > 0) {
                             kills[at] = true;
                         }
                     }
                     break;
                 case UNDO:
-
+                    at = ceiling[UNDO] - (depth - ceiling[UNDO]);
+                    if (at > ceiling[REMOVE]) {
+                        kills[at] = true;
+                    }
                     break;
                 case TRASH:
                     // look at the ceilings
@@ -187,7 +190,7 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
             }
             --depth;
             if (depth == ceiling[state]) {
-                state = RGA_ENTRY(uint8_t(state)-1);
+                state = RGA_ENTRY(uint8_t(state) - 1);
             }
             path.pop_back();
             kills.pop_back();

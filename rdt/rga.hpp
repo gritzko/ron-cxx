@@ -119,7 +119,7 @@ inline RGA_ENTRY entry_type(const Cursor &cur) {
 
 /**  */
 template <class Frame>
-Status ScanRGA(std::vector<bool>& tombstones, const Frame &frame) {
+Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
     using Cursor = typename Frame::Cursor;
     tombstones.clear();
     RGA_ENTRY state{ZERO};
@@ -135,10 +135,20 @@ Status ScanRGA(std::vector<bool>& tombstones, const Frame &frame) {
     fsize_t depth = 1;
     fsize_t pos = 0;
     fsize_t ceiling[] = {0, 0, 0, 0, 0};
+    Uuid id, ref;
+    RGA_ENTRY et;
 
-    while (cur.Next()) {
-        const Uuid &id = cur.id();
-        const Uuid &ref = cur.ref();
+    do {
+        cur.Next();
+        if (cur.valid()) {
+            id = cur.id();
+            ref = cur.ref();
+            et = entry_type(cur);
+        } else {
+            id = Uuid::Time(NEVER, 0);
+            ref = root;
+            et = ZERO;
+        }
         ++pos;
 
         // sanity checks
@@ -158,20 +168,14 @@ Status ScanRGA(std::vector<bool>& tombstones, const Frame &frame) {
                         fsize_t p = span.ref() + span.size() - 1;
                         tombstones[p] = true;
                     }
-                    if (depth == ceiling[ENTRY]) {
-                        state = ZERO;
-                    }
                     break;
                 case REMOVE:
-                    if (kills.back()) {
+                    if (!kills.back()) {
                         fsize_t at =
                             ceiling[REMOVE] - (depth - ceiling[REMOVE]);
                         if (at > 0) {
                             kills[at] = true;
                         }
-                    }
-                    if (depth == ceiling[REMOVE]) {
-                        state = ENTRY;
                     }
                     break;
                 case UNDO:
@@ -182,29 +186,33 @@ Status ScanRGA(std::vector<bool>& tombstones, const Frame &frame) {
                     break;
             }
             --depth;
+            if (depth == ceiling[state]) {
+                state = RGA_ENTRY(uint8_t(state)-1);
+            }
             path.pop_back();
             kills.pop_back();
         }
 
         // state switch
-        RGA_ENTRY et = entry_type(cur);
         // versioning here. future subtrees := TRASH
         if (et == state) {
         } else if (et == state + 1) {
             state = et;
-            ceiling[state] = depth + 1; // TODO check off by 1
+            ceiling[state] = depth;  // TODO check off by 1
         } else {
             state = TRASH;
-            ceiling[TRASH] = depth + 1;
+            ceiling[TRASH] = depth;
         }
         tombstones.push_back(state != ENTRY);
         ++depth;
-        path.push_back(id); // TODO && pos!!!
+        path.push_back(id);  // TODO && pos!!!
         kills.push_back(false);
 
         assert(path.size() == kills.size());
-    }
-    // FIXME oops pop the rest
+        assert(tombstones.size() == pos + 1);
+    } while (cur.valid());
+
+    tombstones.pop_back();
 
     return Status::OK;
 }

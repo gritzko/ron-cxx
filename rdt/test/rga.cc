@@ -36,7 +36,6 @@ void test_sibling_merge () {
     string ab;
     assert(Merge<TextFrame>(ab, RGA_RDT, {parent, childA, childB}));
     string correct = "@1+A :rga! @1b+C 'a', @1a+B :1+A 'b', ";
-    cerr<<despace(ab)<<"\n"<<despace(correct);
     assert(despace(ab)==despace(correct));
 }
 
@@ -52,6 +51,9 @@ void test_multitree () {
 }
 
 void test_ct_scan_all0 () {
+    //  !
+    //    a   c
+    //      b   d
     Frame frame{"@1i08e4+path :rga! 'a', @1i08z+path 'b', @1i08k+path :1i08e4+path 'c', 'd',"};
     vector<bool> tombs{};
     assert(ScanRGA<Frame>(tombs, frame));
@@ -60,6 +62,39 @@ void test_ct_scan_all0 () {
     assert(!tombs[2]);
     assert(!tombs[3]);
     assert(!tombs[4]);
+    assert(tombs.size()==5);
+}
+
+void test_ct_scan_rm () {
+    //  !
+    //    a
+    //      b
+    //        rm d
+    Frame frame{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, @1i08e40003+path :1i08e40002+path 'd',"};
+    vector<bool> tombs{};
+    assert(ScanRGA<Frame>(tombs, frame));
+    assert( tombs[0]);
+    assert(!tombs[1]);
+    assert( tombs[2]);
+    assert( tombs[3]);
+    assert(!tombs[4]);
+}
+
+void test_ct_scan_rm2 () {
+    //  !
+    //    a
+    //      b
+    //        rm    d
+    //           rm
+    Frame frame{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, rm, @1i08e40003+path :1i08e40002+path 'd',"};
+    vector<bool> tombs{};
+    assert(ScanRGA<Frame>(tombs, frame));
+    assert( tombs[0]);
+    assert( tombs[1]);
+    assert( tombs[2]);
+    assert( tombs[3]);
+    assert( tombs[4]);
+    assert(!tombs[5]);
 }
 
 
@@ -68,5 +103,7 @@ int main (int argn, char** args) {
     test_sibling_merge();
     test_multitree();
     test_ct_scan_all0();
+    test_ct_scan_rm();
+    test_ct_scan_rm2();
     return 0;
 }

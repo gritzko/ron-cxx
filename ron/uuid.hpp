@@ -91,8 +91,8 @@ union Word {
     inline bool operator<=(const Word& b) const { return _64 <= b._64; }
     inline bool operator==(const Word& b) const { return _64 == b._64; }
     inline bool operator!=(const Word& b) const { return _64 != b._64; }
-    inline Word operator + (const Word& a) const { return Word{_64+a._64}; }
-    inline Word operator + (const uint64_t i) const { return Word{_64+i}; }
+    inline Word operator+(const Word& a) const { return Word{_64 + a._64}; }
+    inline Word operator+(const uint64_t i) const { return Word{_64 + i}; }
     inline size_t hash() const {
         static constexpr auto _64_hash_fn = std::hash<uint64_t>{};
         return _64_hash_fn(_64);
@@ -198,7 +198,9 @@ struct Uuid : public Atom {
     inline bool operator!=(const Uuid& b) const { return words_ != b.words_; }
     inline bool operator<=(const Uuid& b) const { return words_ <= b.words_; }
     inline bool operator>=(const Uuid& b) const { return words_ >= b.words_; }
-    inline Uuid operator + (uint64_t i) const { return Uuid{value()+i, origin()}; }
+    inline Uuid operator+(uint64_t i) const {
+        return Uuid{value() + i, origin()};
+    }
 
     /** Nil UUID as per RFC4122 */
     static const Uuid NIL;

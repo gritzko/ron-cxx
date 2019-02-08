@@ -117,6 +117,28 @@ void test_ct_scan_rm_un () {
     assert(!tombs[6]);
 }
 
+void test_ct_scan_trash () {
+    //  !
+    //    a
+    //      b
+    //        rm       d
+    //           rm      un
+    //              c       rm
+    //                         rm
+    Frame frame{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, rm, 'c', @1i08e40003+path :1i08e40002+path 'd', un, rm, rm,"};
+    vector<bool> tombs{};
+    assert(ScanRGA<Frame>(tombs, frame));
+    assert( tombs[0]);
+    assert( tombs[1]);
+    assert( tombs[2]);
+    assert( tombs[3]);
+    assert( tombs[4]);
+    assert( tombs[5]);
+    assert(!tombs[6]);
+    assert( tombs[7]);
+    assert( tombs[8]);
+    assert( tombs[9]);
+}
 
 int main (int argn, char** args) {
     test_chain_merge();
@@ -126,5 +148,6 @@ int main (int argn, char** args) {
     test_ct_scan_rm();
     test_ct_scan_rm2();
     test_ct_scan_rm_un();
+    test_ct_scan_trash();
     return 0;
 }

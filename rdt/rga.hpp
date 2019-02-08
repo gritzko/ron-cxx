@@ -99,6 +99,10 @@ enum RGA_ENTRY : uint8_t {
     TRASH = 4
 };
 
+inline RGA_ENTRY inc(RGA_ENTRY e) { return RGA_ENTRY(uint8_t(e) + 1); }
+
+inline RGA_ENTRY dec(RGA_ENTRY e) { return RGA_ENTRY(uint8_t(e) - 1); }
+
 const Uuid RM_UUID{986569793370849280UL, 0UL};
 const Uuid UN_UUID{1040894463876005888UL, 0UL};
 
@@ -117,7 +121,8 @@ inline RGA_ENTRY entry_type(const Cursor &cur) {
     return ENTRY;
 }
 
-/**  */
+/** Scans an RGA frame, produces a map of tombstones
+ *  (true for invisible/removed ops, false for visibles). */
 template <class Frame>
 Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
     using Cursor = typename Frame::Cursor;
@@ -128,7 +133,7 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
     if (cur.ref() != RGA_RDT_ID || root.version() != TIME)
         return Status::BADARGS.comment("not an RGA/CT frame");
     inc_stack<Uuid> path{};
-    inc_stack<fsize_t> positions;
+    inc_stack<fsize_t> positions{};
     path.push_back(root);
     std::vector<bool> kills;
     kills.push_back(false);
@@ -155,9 +160,8 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
 
         // sanity checks
         if (ref > id) return Status::BADARGS.comment("ref/id order reversal");
-        if (id.version() != TIME)
-            return Status::BADARGS.comment(
-                "malformed frame, id is not an event");
+        if (id.version() != TIME || ref.version() != TIME)
+            return Status::BADARGS.comment("invalid event id");
 
         // unroll the stack, get to the (causal) parent
         while (path.back() != ref) {
@@ -173,7 +177,7 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
                 case REMOVE:
                     if (kills.back()) break;
                     at = ceiling[REMOVE] - (depth - ceiling[REMOVE]);
-                    if (at > 0) { // aka ceiling[ZERO]
+                    if (at > 0) {  // aka ceiling[ZERO]
                         kills[at] = true;
                     }
                     break;
@@ -184,12 +188,12 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
                     }
                     break;
                 case TRASH:
-                    // look at the ceilings
+                    // a tombstone is already set
                     break;
             }
             --depth;
-            if (depth == ceiling[state]) {
-                state = RGA_ENTRY(uint8_t(state) - 1);
+            while (depth == ceiling[state]) {
+                state = dec(state);
             }
             path.pop_back();
             kills.pop_back();
@@ -198,17 +202,21 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
 
         // state switch
         // versioning here. future subtrees := TRASH
-        if (et == state) {
-        } else if (et == state + 1) {
-            state = et;
-            ceiling[state] = depth;
-        } else {
-            state = TRASH;
-            ceiling[TRASH] = depth;
+        if (et != state) {
+            if (et != state + 1) {
+                while (state < TRASH) {
+                    state = inc(state);
+                    ceiling[state] = depth;
+                }
+            } else {
+                state = et;
+                ceiling[state] = depth;
+            }
         }
+
         tombstones.push_back(state != ENTRY);
         ++depth;
-        path.push_back(id);  // FIXME && pos!!!  inc_stack<fsize_t>, inc_stack<Uuid>
+        path.push_back(id);
         kills.push_back(false);
         positions.push_back(pos);
 

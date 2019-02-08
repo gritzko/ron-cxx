@@ -1,13 +1,12 @@
 #ifndef RON_INC_STACK_HPP
 #define RON_INC_STACK_HPP
 
-#include <vector>
 #include <cstdint>
+#include <vector>
 
-template<typename value_t>
+template <typename value_t>
 class inc_stack {
-
-public:
+   public:
     using len_t = uint32_t;
 
     struct span_t {
@@ -17,26 +16,24 @@ public:
         span_t(const value_t& v) : value{v}, size{1} {}
     };
 
-private:
-
+   private:
     using spans_t = std::vector<span_t>;
     spans_t spans_;
     len_t size_;
 
-public:
-
+   public:
     inc_stack() : spans_{}, size_{0} {}
 
     inline len_t size() const { return size_; }
     inline len_t span_size() const { return (len_t)spans_.size(); }
     inline bool empty() const { return size_ == 0; }
     inline const value_t front() const { return spans_.front().value; }
-    inline const value_t back() const { 
+    inline const value_t back() const {
         const span_t& b = spans_.back();
-        return b.value + (b.size-1); 
+        return b.value + (b.size - 1);
     }
     inline const span_t& front_span() const { return spans_.front(); }
-    inline const span_t& back_span () const { return spans_.back(); }
+    inline const span_t& back_span() const { return spans_.back(); }
 
     void push_back(const value_t& i) {
         ++size_;
@@ -58,7 +55,6 @@ public:
             spans_.back().size--;
         }
     }
-
 };
 
 #endif

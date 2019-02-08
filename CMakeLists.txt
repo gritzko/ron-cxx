@@ -65,7 +65,6 @@ add_library(ron STATIC
     ron/portable_endian.hpp
     ron/vv.hpp
     ron/opmeta.hpp
-    ron/ct.hpp
     ron/status.cc
     ron/uuid.cc
     ron/uuid-parser.cc
@@ -74,6 +73,7 @@ add_library(ron STATIC
     ron/text-parser.cc
     ron/text-builder.cc
     ron/hash.cc
+    ron/inc_stack.hpp
         )
 add_dependencies(ron botan-project)
 

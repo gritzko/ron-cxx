@@ -64,30 +64,6 @@ void test_ct_path_fail () {
     assert(path.AddNext(c)==Status::CAUSEBREAK); //c
 }*/
 /*
-void test_ct_scan_all0 () {
-    string frame{"@1i08e4+path :rga! 'a', @1i08z+path 'b', @1i08k+path :1i08e4+path 'c', 'd',"};
-    Cursor c{frame};
-    CTScan<Cursor> scan{c};
-    const vector<bool>& tombs = scan.visibility();
-    assert(!tombs[0]);
-    assert(!tombs[1]);
-    assert(!tombs[2]);
-    assert(!tombs[3]);
-    assert(!tombs[4]);
-}
-
-void test_ct_scan_rm () {
-    string frame{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, @1i08e40003+path :1i08e40002+path 'd',"};
-    Cursor c{frame};
-    CTScan<Cursor> scan{c};
-    const vector<bool>& tombs = scan.visibility();
-    assert(!tombs[0]);
-    assert(!tombs[1]);
-    assert( tombs[2]);
-    assert( tombs[3]);
-    assert(!tombs[4]);
-}
-
 void test_ct_scan_rmun () {
     string frame{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, un, @1i08e40003+path :1i08e40002+path 'd',"};
     Cursor c{frame};
@@ -101,8 +77,19 @@ void test_ct_scan_rmun () {
     assert(!tombs[5]);
 }
 */
+
+void test_inc_stack () {
+    inc_stack<fsize_t> is;
+    for(fsize_t i=0; i<1000; i++) {
+        is.push_back(i);
+    }
+    assert(is.size()==1000);
+    assert(is.span_size()==1);
+}
+
 int main (int argn, char** args) {
     test_simple_meta();
+    test_inc_stack();
     //test_ct_basic();
     //test_ct_path();
     //test_ct_path_fail();

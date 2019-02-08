@@ -52,7 +52,7 @@ public:
     void pop_back() {
         assert(!empty());
         --size_;
-        if (spans_.back().size() == 1) {
+        if (spans_.back().size == 1) {
             spans_.pop_back();
         } else {
             spans_.back().size--;

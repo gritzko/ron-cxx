@@ -85,6 +85,13 @@ void test_inc_stack () {
     }
     assert(is.size()==1000);
     assert(is.span_size()==1);
+    is.push_back(0);
+    assert(is.size()==1001);
+    assert(is.span_size()==2);
+    is.pop_back();
+    is.pop_back();
+    assert(is.size()==999);
+    assert(is.span_size()==1);
 }
 
 int main (int argn, char** args) {

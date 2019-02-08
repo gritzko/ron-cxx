@@ -127,11 +127,13 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
     const Uuid root = cur.id();
     if (cur.ref() != RGA_RDT_ID || root.version() != TIME)
         return Status::BADARGS.comment("not an RGA/CT frame");
-    Uuids path{};
+    inc_stack<Uuid> path{};
+    inc_stack<fsize_t> positions;
     path.push_back(root);
     std::vector<bool> kills;
     kills.push_back(false);
     tombstones.push_back(true);
+    positions.push_back(0);
     fsize_t depth = 1;
     fsize_t pos = 0;
     fsize_t ceiling[] = {0, 0, 0, 0, 0};
@@ -164,18 +166,15 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
                 case ZERO:
                     return Status::CAUSEBREAK.comment("not a CT");
                 case ENTRY:
-                    if (kills.back()) {
-                        const Span &span = path.back_span();
-                        fsize_t p = span.ref() + span.size() - 1;
-                        tombstones[p] = true;
-                    }
+                    if (!kills.back()) break;
+                    at = positions.back();
+                    tombstones[at] = true;
                     break;
                 case REMOVE:
-                    if (!kills.back()) {
-                        at = ceiling[REMOVE] - (depth - ceiling[REMOVE]);
-                        if (at > 0) {
-                            kills[at] = true;
-                        }
+                    if (kills.back()) break;
+                    at = ceiling[REMOVE] - (depth - ceiling[REMOVE]);
+                    if (at > 0) { // aka ceiling[ZERO]
+                        kills[at] = true;
                     }
                     break;
                 case UNDO:
@@ -194,6 +193,7 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
             }
             path.pop_back();
             kills.pop_back();
+            positions.pop_back();
         }
 
         // state switch
@@ -201,15 +201,16 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
         if (et == state) {
         } else if (et == state + 1) {
             state = et;
-            ceiling[state] = depth;  // TODO check off by 1
+            ceiling[state] = depth;
         } else {
             state = TRASH;
             ceiling[TRASH] = depth;
         }
         tombstones.push_back(state != ENTRY);
         ++depth;
-        path.push_back(id);  // TODO && pos!!!
+        path.push_back(id);  // FIXME && pos!!!  inc_stack<fsize_t>, inc_stack<Uuid>
         kills.push_back(false);
+        positions.push_back(pos);
 
         assert(path.size() == kills.size());
         assert(tombstones.size() == pos + 1);

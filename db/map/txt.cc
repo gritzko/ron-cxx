@@ -1,32 +1,32 @@
 #include "map.hpp"
+#include "rdt/rga.hpp"
+
+using namespace std;
 
 namespace ron {
 
     template<typename Frame>
     Status TxtMapper<Frame>::Map(Builder& response, Cursor& query, const VV& hili) const {
+        Uuid id = query.id().event();
         Frame state;
-        //CT ct{state.cursor()};
-        string text;
+        Status ok = host_->Get(state, id, RGA_RDT_ID);
+        vector<bool> tombs;
+        ScanRGA<Frame>(tombs, state);
         // now, walk em both
-
-        // 0. 2-pass algo
-        CT{};
-        // 1. build ct
-        // 2. reverse: pick rm-ranges (heap, start-pos-len, all fsize_t)
-        // 3. walk the frame, make the string
-
-        // 2. walk the frame again, add non-rm data, color it
-
-        // iterate
-        //  insert?
-        //    append letter (?!!! - variable length, string metrics)
-        //    append to ct
-        //  remove?
-        //    see depth
-        //    unroll, mark
-        return Status::NOT_IMPLEMENTED;
+        string text;
+        Cursor c = state.cursor();
+        fsize_t pos = 0;
+        while (c.valid()) {
+            if (!tombs[pos]) {
+                text.append(c.string(2));
+            }
+            c.Next();
+            pos++;
+        }
+        response.AppendNewOp(RAW, id, TXT_MAP_ID, text);
+        return Status::OK;
     }
 
-    template class OpMapper<TextFrame>;
+    template class TxtMapper<TextFrame>;
 
 }

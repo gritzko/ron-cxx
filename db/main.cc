@@ -48,11 +48,10 @@ Status CommandQuery(RonReplica& replica, const string& name);
 Status CommandDump(RonReplica& replica, const string& prefix);
 Status CommandTest(RonReplica& replica, const string& file);
 
-string basename(string const& pathname) ;
+string basename(string const& pathname);
 Status rm_dir(string path);
 bool file_exists(const std::string& name);
 Status CompareFrames(const Frame& a, const Frame& b);
-
 
 Status RunCommands() {
     RonReplica replica{};
@@ -147,9 +146,8 @@ Status CommandTest(RonReplica& replica, const string& file) {
         if (c.id() != COMMENT_UUID)
             return Status::BADFRAME.comment("no in/out header");
         TERM term = c.term();
-        string comment = "";
-        if (c.size()>2 && c.has(2, STRING))
-            comment = c.string(2);
+        string comment;
+        if (c.size() > 2 && c.has(2, STRING)) comment = c.string(2);
         c.Next();
         if (term == QUERY) {
             Frame re = b.frame();
@@ -160,10 +158,10 @@ Status CommandTest(RonReplica& replica, const string& file) {
                 cerr << "@~ 'the actual response' !\n";
                 cerr << re.data() << '\n';
             }
-            cerr << "?\t" << comment << '\t' << (ok?OK:FAIL) << endl;
+            cerr << "?\t" << comment << '\t' << (ok ? OK : FAIL) << endl;
         } else if (term == HEADER) {
             ok = replica.Receive(b, Uuid::NIL, c);
-            cerr << "!\t" << comment << '\t' << (ok?OK:FAIL) << endl;
+            cerr << "!\t" << comment << '\t' << (ok ? OK : FAIL) << endl;
         } else {
             return Status::BADFRAME.comment("bad in/out header");
         }
@@ -257,7 +255,8 @@ Status CommandWriteNewFrame(RonReplica& replica, const string& filename) {
     Cursor uc = unstamped.cursor();
     constexpr uint64_t MAXSEQ = 1 << 30;
     while (uc.valid()) {
-        if (uc.id().origin() != 0) return Status::BAD_STATE;
+        if (uc.id().origin() != 0)
+            return Status::BAD_STATE.comment("stamped already");
         Uuid id{now.value()._64 + uc.id().value()._64, now.origin()};
         Uuid ref{uc.ref()};
         if (ref.origin() == 0 && ref.value() < MAXSEQ) {
@@ -313,7 +312,7 @@ Status CommandHashFrame(const string& filename) {
             } else if (ref.version() == NAME) {
                 sha2ref = SHA2{ref};
             } else {
-                return Status::BAD_STATE;
+                return Status::BAD_STATE.comment("unrecognized op pattern");
             }
             SHA2 sha2;
             hash_op<Frame>(cur, sha2, sha2prev, sha2ref);

@@ -84,7 +84,9 @@ class Replica {
 
     Status DropBranch(Uuid store);
 
-    Status GetObject(const Uuid& store, const Uuid& key, Frame& frame);
+    Status GetObject(Frame& frame, const Uuid& key, const Uuid& store=Uuid::NIL) {
+        return Status::NOT_IMPLEMENTED;
+    }
 
     Status Get(Frame& object, const Uuid& id, const Uuid& rdt = Uuid::NIL,
                const Uuid& branch = Uuid::NIL);

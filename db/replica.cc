@@ -57,7 +57,7 @@ Status Replica<Frame>::Create(std::string home, Word origin) {
 
 template <typename Frame>
 Status Replica<Frame>::Open(std::string home) {
-    if (db_) return Status::BAD_STATE;
+    if (db_) return Status::BAD_STATE.comment("db open already");
 
     Options options;
     options.create_if_missing = false;
@@ -197,13 +197,15 @@ template <class Frame>
 Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
                                     Cursor& chain) {
     const Uuid& id = chain.id();
-    if (id.version() != TIME) return Status::BAD_STATE;
+    if (id.version() != TIME)
+        return Status::BAD_STATE.comment("not an event?!");
 
     const Uuid& ref = chain.ref();
     if (ref.version() == TIME) {
         if (ref >= id) return Status::CAUSEBREAK;
     } else {
-        if (ref.version() != NAME) return Status::BAD_STATE;
+        if (ref.version() != NAME)
+            return Status::BAD_STATE.comment("ref is either TIME or NAME");
         if (uuid2rdt(ref) == RDT_COUNT) return Status::NOT_IMPLEMENTED;
     }
 

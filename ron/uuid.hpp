@@ -187,6 +187,7 @@ struct Uuid : public Atom {
                                (uint64_t(UUID::DERIVED) << Word::PBS)};
     }
     inline Uuid derived() const { return Derived(value(), origin()); }
+    inline Uuid event() const { return Time(value(), origin()); }
     inline Uuid inc(uint64_t by = 1UL) const {
         return Uuid{value().inc(by), origin()};
     }

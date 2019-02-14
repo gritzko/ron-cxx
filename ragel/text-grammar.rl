@@ -35,6 +35,8 @@
         if (!intb.same(uuidb))
             op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
+    action begin_span {}
+    action end_span {}
     action op_term { 
         term = fc; 
         pos_++; 
@@ -76,8 +78,11 @@
     SPEC = '@' UUID %end_id space* ( ':' UUID %end_ref )? ;
     ATOMS = ATOM (space* ATOM)* ;
 
+    # op spans
+    SPAN = ( [(] space* ([']STRING['])? space* digit+ space* [)] );
+
     # RON op: an immutable unit of change
-    OP = (SPEC|BARE_ATOM)? space* ATOMS? space* OPTERM ;
+    OP = (SPEC|BARE_ATOM)? space* ATOMS? space* SPAN? space* OPTERM ;
 
     # a frame terminator (mandatory in the streaming mode)
     DOT = ".\n" ;

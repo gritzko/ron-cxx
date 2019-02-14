@@ -142,6 +142,12 @@ void test_defaults () {
     assert(nc.op().ref()==Uuid{"12345+test"});
 }
 
+void test_span_spread () {
+    Frame raw{"@1iDEKK+gYpLcnUnF6 :1iDEKA+gYpLcnUnF6 ('abcd' 4);"};
+    Cursor c = raw.cursor();
+    assert(c.valid());
+}
+
 int main (int argn, char** args) {
     test_basic_cycle();
     test_optional_chars();
@@ -151,5 +157,6 @@ int main (int argn, char** args) {
     test_terms();
     test_defaults();
     test_string_metrics();
+    test_span_spread();
     return 0;
 }

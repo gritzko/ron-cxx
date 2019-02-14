@@ -15,7 +15,7 @@ syn match ANNOTATION /@\s*[0-9A-Za-z_\~]\{1,10}\>/
 hi ANNOTATION ctermfg=Grey cterm=italic
 
 syn match NAME_ATOM /\(>\s*\)\=\<[0-9A-Za-z_\~]\{1,10}\>/
-hi NAME_ATOM ctermfg=DarkGreen cterm=bold
+hi NAME_ATOM ctermfg=DarkGreen cterm=underline
 
 syn match INT_ATOM /\(=\s*\)\=[+-]\=[0-9]\{1,19}\>/
 hi INT_ATOM ctermfg=LightGreen

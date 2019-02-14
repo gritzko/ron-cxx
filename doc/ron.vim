@@ -29,11 +29,11 @@ hi FLOAT_ATOM ctermfg=LightGreen
 syn match UUID_ATOM /\(>\s*\)\=\<\([0-9A-F][/]\)\=[0-9A-Za-z_~]\{1,10}[-+$%][0-9A-Za-z_~]\{1,10}\>/
 hi UUID_ATOM ctermfg=DarkGreen cterm=underline
 
-syn match SPAN /([0-9]\{1,10})/
-hi SPAN ctermfg=White cterm=bold
+syn match SPAN /(\s*\('\(\\u[0-9a-fA-F]\{4}\|\\[^\n\r]\|[^'\\\n\r]\)*'\)\=\s*[0-9]\{1,10}\s*)/
+hi SPAN ctermfg=White
 
-syn match STRING_CHAIN /"\(\\u[0-9a-fA-F]\{4}\|\\[^\n\r]\|[^'\\\n\r]\)*"/
-hi STRING_CHAIN ctermfg=Green cterm=bold
+"syn match STRING_CHAIN /"\(\\u[0-9a-fA-F]\{4}\|\\[^\n\r]\|[^'\\\n\r]\)*"/
+"hi STRING_CHAIN ctermfg=Green cterm=bold
 
 syn match STRING_ATOM /'\(\\u[0-9a-fA-F]\{4}\|\\[^\n\r]\|[^'\\\n\r]\)*'/
 hi STRING_ATOM ctermfg=Green

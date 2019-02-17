@@ -5,6 +5,14 @@ This Ragel/C++ implementation aims to be used as a rocksdb-based storage
 engine, also as a library in higher-level languages, using bindings.
 See http://replicated.cc for the protocol spec.
 
+## Building
+
+* ensure you have a C++ compiler, make, CMake
+* mkdir build && cd build && cmake .. && make
+
+SwarmDB depends on rocksdb, gflags, botan-2, snappy, but it downloads
+and builds them on its own. zlib, libbz2 are taken from the system.
+
 ## New 2.1 features
 
 * RON-open two-UUID notation

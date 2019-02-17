@@ -7,16 +7,49 @@ enable_testing()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(LLVM_ENABLE_RTTI ON)
 set(CMAKE_CXX_FLAGS "-frtti -fno-exceptions")
-set(ROCKSDB_PREFIX ${CMAKE_SOURCE_DIR}/deps/rocksdb)
-set(CXXOPTS_PREFIX ${CMAKE_SOURCE_DIR}/deps/cxxopts)
-set(CRYPTO_PREFIX ${CMAKE_SOURCE_DIR}/deps/botan)
+set(DEPS_PREFIX ${CMAKE_SOURCE_DIR}/deps)
+set(ROCKSDB_PREFIX ${DEPS_PREFIX}/build/rocksdb)
+#set(CXXOPTS_PREFIX ${DEPS_PREFIX}/build/cxxopts)
+set(CRYPTO_PREFIX ${DEPS_PREFIX}/build/botan)
+set(snappy_PREFIX ${DEPS_PREFIX}/build/snappy)
+set(GFLAGS_PREFIX ${DEPS_PREFIX}/build/gflags)
 
 include_directories(".")
+include_directories(${DEPS_PREFIX}/include/)
+link_directories(${DEPS_PREFIX}/lib/)
 
 #  D E P E N D E N C I E S
+
+ExternalProject_Add(
+    gflags_lib
+    PREFIX ${GFLAGS_PREFIX}
+    GIT_REPOSITORY git@github.com:gflags/gflags.git
+    GIT_TAG 28f50e0
+    CMAKE_ARGS CMAKE_CXX_FLAGS="-frtti" -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX} 
+    BUILD_COMMAND cmake . && $(MAKE)
+    BUILD_IN_SOURCE 1
+    INSTALL_COMMAND make install
+)
+add_library(gflags STATIC IMPORTED)
+set_property(TARGET gflags PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/libgflags.a)
+add_dependencies(gflags gflags_lib)
+
+ExternalProject_Add(
+    snappy_lib
+    PREFIX ${snappy_PREFIX}
+    GIT_REPOSITORY https://github.com/google/snappy.git
+    GIT_TAG d4be414dd66026d6736a3741e8a85779ba4ea949
+    CMAKE_ARGS CMAKE_CXX_FLAGS="-frtti" -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
+    BUILD_COMMAND cmake . && $(MAKE)
+    BUILD_IN_SOURCE 1
+    INSTALL_COMMAND make install
+)
+#include_directories(${snappy_PREFIX}/include)
+add_library(snappy STATIC IMPORTED)
+set_property(TARGET snappy PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/libsnappy.a)
+add_dependencies(snappy snappy_lib)
 
 ExternalProject_Add(rocksdblib
     GIT_REPOSITORY https://github.com/facebook/rocksdb.git
@@ -24,30 +57,26 @@ ExternalProject_Add(rocksdblib
     GIT_PROGRESS true
     UPDATE_COMMAND ""
     PREFIX ${ROCKSDB_PREFIX}
-    CMAKE_ARGS -DCMAKE_CXX_FLAGS="-frtti" -DCMAKE_INSTALL_PREFIX:PATH=    ${ROCKSDB_PREFIX} -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+    CMAKE_ARGS -DCMAKE_CXX_FLAGS="-frtti" -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
     BUILD_COMMAND ${CMAKE_COMMAND} --build . --target rocksdb -- -j8
-    INSTALL_COMMAND ""
+    INSTALL_COMMAND make install
 )
-include_directories(${ROCKSDB_PREFIX}/src/rocksdblib/include/)
-link_directories(${ROCKSDB_PREFIX}/src/rocksdblib-build/)
-
-find_package(gflags REQUIRED)
-find_package(gflags COMPONENTS nothreads_static)
 
 ExternalProject_Add(botan-project
     GIT_REPOSITORY https://github.com/randombit/botan.git
     GIT_TAG a792728e8941b62761052f5e0d288ba13a016c77
     PREFIX ${CRYPTO_PREFIX}
     UPDATE_COMMAND ""
-    CONFIGURE_COMMAND ./configure.py --prefix=${CRYPTO_PREFIX} --minimized-build --enable-modules=sha3,sha2_64
+    CONFIGURE_COMMAND ./configure.py --prefix=${DEPS_PREFIX} --minimized-build --enable-modules=sha3,sha2_64
     BUILD_IN_SOURCE 1
     BUILD_COMMAND make libs
     INSTALL_COMMAND make install
     )
 ExternalProject_Get_Property(botan-project install_dir)
 add_library(botan STATIC IMPORTED db/test/chains.cc)
-set_property(TARGET botan PROPERTY IMPORTED_LOCATION ${CRYPTO_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}botan-2${CMAKE_STATIC_LIBRARY_SUFFIX})
-include_directories(${CRYPTO_PREFIX}/include/botan-2)
+set_property(TARGET botan PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}botan-2${CMAKE_STATIC_LIBRARY_SUFFIX})
+include_directories(${DEPS_PREFIX}/include/botan-2)
+
 
 #  L I B R O N
 

@@ -1,7 +1,6 @@
 #ifndef rdt_mx_hpp
 #define rdt_mx_hpp
 
-#include <bits/unordered_map.h>
 #include <unordered_map>
 #include "rdt/merge.hpp"
 #include "ron/status.hpp"

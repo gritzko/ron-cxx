@@ -58,7 +58,7 @@ ExternalProject_Add(rocksdblib
     UPDATE_COMMAND ""
     PREFIX ${ROCKSDB_PREFIX}
     CMAKE_ARGS -DCMAKE_CXX_FLAGS="-frtti" -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
-    BUILD_COMMAND ${CMAKE_COMMAND} --build . --target rocksdb -- -j8
+    BUILD_COMMAND make rocksdb
     INSTALL_COMMAND make install
 )
 
@@ -105,6 +105,7 @@ add_library(ron STATIC
     ron/inc_stack.hpp
         )
 add_dependencies(ron botan-project)
+set_property(TARGET ron PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 #  L I B R O N  U N I T  T E S T S
 
@@ -167,6 +168,7 @@ add_library(swarmdb SHARED
         )
 add_dependencies(swarmdb rocksdblib)
 target_link_libraries(swarmdb ron botan rocksdb pthread z bz2 snappy)
+set_property(TARGET swarmdb PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 #  S W A R M D B  U N I T  T E S T S
 

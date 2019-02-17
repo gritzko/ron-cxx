@@ -8,7 +8,7 @@ enable_testing()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 11)
 set(LLVM_ENABLE_RTTI ON)
-set(CMAKE_CXX_FLAGS "-frtti -fno-exceptions")
+set(CMAKE_CXX_FLAGS "-frtti -fPIC")
 set(DEPS_PREFIX ${CMAKE_SOURCE_DIR}/deps)
 set(ROCKSDB_PREFIX ${DEPS_PREFIX}/build/rocksdb)
 #set(CXXOPTS_PREFIX ${DEPS_PREFIX}/build/cxxopts)
@@ -57,9 +57,9 @@ ExternalProject_Add(rocksdblib
     GIT_PROGRESS true
     UPDATE_COMMAND ""
     PREFIX ${ROCKSDB_PREFIX}
-    CMAKE_ARGS -DCMAKE_CXX_FLAGS="-frtti" -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
-    BUILD_COMMAND make rocksdb
-    INSTALL_COMMAND make install
+    CMAKE_ARGS -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
+    BUILD_COMMAND make rocksdb -j4
+    INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdblib/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
 )
 add_library(rocksdb STATIC IMPORTED)
 set_property(TARGET rocksdb PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/librocksdb.a)

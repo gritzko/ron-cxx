@@ -61,6 +61,9 @@ ExternalProject_Add(rocksdblib
     BUILD_COMMAND make rocksdb
     INSTALL_COMMAND make install
 )
+add_library(rocksdb STATIC IMPORTED)
+set_property(TARGET rocksdb PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/librocksdb.a)
+add_dependencies(rocksdb rocksdblib)
 
 ExternalProject_Add(botan-project
     GIT_REPOSITORY https://github.com/randombit/botan.git
@@ -166,7 +169,7 @@ set(SWARMDB_SOURCES
 add_library(swarmdb SHARED
     ${SWARMDB_SOURCES}
         )
-add_dependencies(swarmdb rocksdblib)
+add_dependencies(swarmdb rocksdb)
 target_link_libraries(swarmdb ron botan rocksdb pthread z bz2 snappy)
 set_property(TARGET swarmdb PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
@@ -189,7 +192,7 @@ add_executable(swarmdb-bin
     db/fs.cc
     db/main.cc
     )
-add_dependencies(swarmdb-bin rocksdblib)
+add_dependencies(swarmdb-bin rocksdb)
 target_link_libraries(swarmdb-bin ron botan rocksdb pthread z bz2 snappy gflags)
 SET_TARGET_PROPERTIES(swarmdb-bin PROPERTIES OUTPUT_NAME swarmdb)
 

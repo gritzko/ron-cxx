@@ -3,12 +3,12 @@ project(cpp)
 include(ExternalProject)
 enable_testing()
 
-#  S E T T I N G S
+#  S E T T I N G S}
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 11)
 set(LLVM_ENABLE_RTTI ON)
-set(CMAKE_CXX_FLAGS "-frtti -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frtti -fPIC")
 set(DEPS_PREFIX ${CMAKE_SOURCE_DIR}/deps)
 set(ROCKSDB_PREFIX ${DEPS_PREFIX}/build/rocksdb)
 #set(CXXOPTS_PREFIX ${DEPS_PREFIX}/build/cxxopts)
@@ -27,7 +27,7 @@ ExternalProject_Add(
     PREFIX ${GFLAGS_PREFIX}
     GIT_REPOSITORY git@github.com:gflags/gflags.git
     GIT_TAG 28f50e0
-    CMAKE_ARGS CMAKE_CXX_FLAGS="-frtti" -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX} 
+    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX} 
     BUILD_COMMAND cmake . && $(MAKE)
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND make install
@@ -41,7 +41,7 @@ ExternalProject_Add(
     PREFIX ${snappy_PREFIX}
     GIT_REPOSITORY https://github.com/google/snappy.git
     GIT_TAG d4be414dd66026d6736a3741e8a85779ba4ea949
-    CMAKE_ARGS CMAKE_CXX_FLAGS="-frtti" -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
+    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
     BUILD_COMMAND cmake . && $(MAKE)
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND make install
@@ -57,7 +57,7 @@ ExternalProject_Add(rocksdblib
     GIT_PROGRESS true
     UPDATE_COMMAND ""
     PREFIX ${ROCKSDB_PREFIX}
-    CMAKE_ARGS -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
+    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
     BUILD_COMMAND make rocksdb -j4
     INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdblib/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
 )
@@ -70,10 +70,10 @@ ExternalProject_Add(botan-project
     GIT_TAG a792728e8941b62761052f5e0d288ba13a016c77
     PREFIX ${CRYPTO_PREFIX}
     UPDATE_COMMAND ""
-    CONFIGURE_COMMAND ./configure.py --prefix=${DEPS_PREFIX} --minimized-build --enable-modules=sha3,sha2_64
+    CONFIGURE_COMMAND ./configure.py --cxxflags=${CMAKE_CXX_FLAGS} --ldflags=${CMAKE_EXE_LINKER_FLAGS} --cc-bin=${CMAKE_CXX_COMPILER} --prefix=${DEPS_PREFIX} --minimized-build --enable-modules=sha3,sha2_64
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND make libs
-    INSTALL_COMMAND make install
+    BUILD_COMMAND make libbotan-2.a
+    INSTALL_COMMAND cp -RL build/include/botan ${DEPS_PREFIX}/include && cp libbotan-2.a ${DEPS_PREFIX}/lib
     )
 ExternalProject_Get_Property(botan-project install_dir)
 add_library(botan STATIC IMPORTED db/test/chains.cc)
@@ -170,7 +170,7 @@ add_library(swarmdb SHARED
     ${SWARMDB_SOURCES}
         )
 add_dependencies(swarmdb rocksdb)
-target_link_libraries(swarmdb ron botan rocksdb pthread z bz2 snappy)
+target_link_libraries(swarmdb pthread z bz2 snappy botan ron rocksdb)
 set_property(TARGET swarmdb PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 #  S W A R M D B  U N I T  T E S T S
@@ -193,7 +193,7 @@ add_executable(swarmdb-bin
     db/main.cc
     )
 add_dependencies(swarmdb-bin rocksdb)
-target_link_libraries(swarmdb-bin ron botan rocksdb pthread z bz2 snappy gflags)
+target_link_libraries(swarmdb-bin pthread z bz2 snappy gflags botan ron rocksdb)
 SET_TARGET_PROPERTIES(swarmdb-bin PROPERTIES OUTPUT_NAME swarmdb)
 
 add_test(bb-lww swarmdb --test ${CMAKE_SOURCE_DIR}/test/lww.ron)

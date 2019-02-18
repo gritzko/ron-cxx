@@ -59,7 +59,7 @@ Status TextFrame::Cursor::Next() {
     slice_t value, origin;
     char variety, version;
 
-    atoms.resize(0);
+    atoms.clear();
     op_.AddAtom(prev_id_.inc());
     op_.AddAtom(prev_id_);
 

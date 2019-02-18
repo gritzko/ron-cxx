@@ -47,7 +47,7 @@ struct Op {
         atoms_.reserve(2);
         atoms_[1] = ref;
     }
-    inline void AddAtom(const Atom& value) { atoms_.push_back(value); }
+    inline void AddAtom(Atom value) { atoms_.push_back(value); }
 };
 
 }  // namespace ron

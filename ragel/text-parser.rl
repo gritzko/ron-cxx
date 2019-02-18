@@ -7,7 +7,7 @@ namespace ron {
 %% write data;
 
 
-bool TextFrame::Cursor::Next () {
+Status TextFrame::Cursor::Next () {
 
     Atoms& atoms = op_.atoms_;
 
@@ -17,14 +17,14 @@ bool TextFrame::Cursor::Next () {
     switch (cs) {
         case RON_error:
             if (off_!=0) {
-                return false;
+                return Status::BAD_STATE;
             }
             %% write init;
             break;
 
         case RON_FULL_STOP:
             cs = RON_error;
-            return false;
+            return Status::ENDOFFRAME;
 
         default:
             break;
@@ -32,7 +32,7 @@ bool TextFrame::Cursor::Next () {
 
     if (data().size()<=off_) {
         cs = RON_error;
-        return false;
+        return Status::ENDOFFRAME;
     }
 
     slice_t body{data()};
@@ -70,10 +70,10 @@ bool TextFrame::Cursor::Next () {
 
     if (term && cs!=RON_error) {
         op_.term_ = TERM(strchr(TERM_PUNCT, term) - TERM_PUNCT); // FIXME gen a fn
-        return true;
+        return Status::OK;
     } else {
         cs = RON_error;
-        return false;
+        return Status::BAD_STATE;
     }
 
 }

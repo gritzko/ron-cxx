@@ -3,6 +3,7 @@
 namespace ron {
 
 const Status Status::OK{};
+const Status Status::ENDOFFRAME{258734343834084750UL};
 const Status Status::NOT_IMPLEMENTED{421215369505919885UL};
 const Status Status::NOT_FOUND{428933766657507328UL};
 const Status Status::BAD_STATE{201032812431266688UL};

@@ -20,6 +20,10 @@ struct slice_t {
 
     explicit slice_t(const char* buf, fsize_t size = 0)
         : buf_{buf}, size_{size} {}
+    explicit slice_t(const uint8_t* buf, size_t size = 0)
+        : buf_{(const char*)buf}, size_{static_cast<fsize_t>(size)} {
+        assert(size < FSIZE_MAX);
+    }
     slice_t() : buf_{nullptr}, size_{0} {}
     slice_t(const slice_t& orig) : buf_{orig.buf_}, size_{orig.size_} {}
     slice_t(const std::string& data)

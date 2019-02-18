@@ -39,16 +39,16 @@ class TextFrame {
         explicit Cursor(const slice_t& data)
             : data_{data},
               op_{TERM::RAW},
-              cs{0},
               off_{0},
               pos_{-1},
+              cs{0},
               prev_id_{} {
             Next();
         }
         explicit Cursor(const std::string& str) : Cursor{slice_t{str}} {}
         explicit Cursor(const TextFrame& host) : Cursor{host.data_} {}
         const Op& op() const { return op_; }
-        bool Next();
+        Status Next();
         inline bool valid() const { return cs != 0; }
         inline bool has(fsize_t idx, ATOM atype) const {
             return size() > idx && type(idx) == atype;

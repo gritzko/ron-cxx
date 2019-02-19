@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include "ron/ron.hpp"
 #include "db/replica.hpp"
+#define DEBUG 1
 
 using namespace ron;
 using namespace std;

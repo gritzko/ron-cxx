@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include "ron/ron.hpp"
 #include "ron/hash.hpp"
+#define DEBUG 1
 
 using namespace ron;
 using namespace std;

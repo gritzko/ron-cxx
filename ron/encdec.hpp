@@ -21,7 +21,7 @@ void encode(char* coded, const uint8_t* bytes, int bit_size) {
             coded++;
         }
     }
-    if (bc) {
+    if (bit_size>0) {
         bits <<= bit_width - bc;
         *coded = coding[bits & MASK];
     }
@@ -45,7 +45,7 @@ bool decode(uint8_t* bytes, const char* coded, uint32_t bit_size) {
             bytes++;
         }
     }
-    if (bc) {
+    if (bit_size>0) {
         *bytes = uint8_t((bits << (8 - bc)) & 0xff);
     }
     return true;

@@ -3,6 +3,7 @@
 #include <cassert>
 #include "ron/uuid.hpp"
 #include "ron/spans.hpp"
+#define DEBUG 1
 
 using namespace ron;
 using namespace std;

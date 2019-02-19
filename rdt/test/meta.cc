@@ -2,6 +2,7 @@
 #include <cassert>
 #include "ron/ron.hpp"
 #include "rdt/rdt.hpp"
+#define DEBUG 1
 
 using namespace ron;
 using namespace std;
@@ -13,10 +14,13 @@ int main (int argn, char** args) {
     TextMeta reducer;
     typedef TextFrame::Cursors Cursors;
     typedef TextFrame::Cursor Cursor;
+    string f1 = "@now :12345+origin; @pubkey 'ABCDEF...';";
+    string f2 = "@now :34567+origin;";
+    string f3 = "@now :23456+origin;";
     Cursors inputs{
-        Cursor{"@now :12345+origin; @pubkey 'ABCDEF...';"},
-        Cursor{"@now :34567+origin;"},
-        Cursor{"@now :23456+origin;"},
+        Cursor{f1},
+        Cursor{f2},
+        Cursor{f3},
     };
     string now;
     assert(MergeCursors<TextFrame>(now, META_RDT, inputs));

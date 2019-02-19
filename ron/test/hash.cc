@@ -44,9 +44,11 @@ void test_serialization () {
     string not_a_hash = okbase;
     not_a_hash[SHA2::BASE64_SIZE-1] = '1';
     assert(!SHA2::valid(not_a_hash));
-    SHA2 op2;
+    SHA2 op2, op3;
     assert(SHA2::ParseBase64(op2, okbase));
     assert(op2 == OP_HASH);
+    assert(SHA2::ParseHex(op3, okhex));
+    assert(op3 == OP_HASH);
 }
 
 void test_partial_match () {

@@ -1,6 +1,6 @@
 #ifndef RON_CONST_HPP
 #define RON_CONST_HPP
-#include <cstdint>
+#include <stdint.h>
 
 namespace ron {
 

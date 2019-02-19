@@ -20,6 +20,13 @@ include_directories(".")
 include_directories(${DEPS_PREFIX}/include/)
 link_directories(${DEPS_PREFIX}/lib/)
 
+include(ProcessorCount)
+ProcessorCount(CORES)
+if(CORES EQUAL 0)
+    set(CORES 1)
+endif()
+set(MAKE_FLAGS "-j${CORES}")
+
 #  D E P E N D E N C I E S
 
 ExternalProject_Add(
@@ -28,7 +35,7 @@ ExternalProject_Add(
     GIT_REPOSITORY git@github.com:gflags/gflags.git
     GIT_TAG 28f50e0
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX} 
-    BUILD_COMMAND cmake . && $(MAKE)
+    BUILD_COMMAND cmake . && $(MAKE) ${MAKE_FLAGS}
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND make install
 )
@@ -42,7 +49,8 @@ ExternalProject_Add(
     GIT_REPOSITORY https://github.com/google/snappy.git
     GIT_TAG d4be414dd66026d6736a3741e8a85779ba4ea949
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
-    BUILD_COMMAND cmake . && $(MAKE)
+    BUILD_COMMAND cmake . && $(MAKE) ${MAKE_FLAGS}
+
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND make install
 )
@@ -58,7 +66,7 @@ ExternalProject_Add(rocksdblib
     UPDATE_COMMAND ""
     PREFIX ${ROCKSDB_PREFIX}
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
-    BUILD_COMMAND make rocksdb -j4
+    BUILD_COMMAND make rocksdb ${MAKE_FLAGS}
     INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdblib/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
 )
 add_library(rocksdb STATIC IMPORTED)
@@ -72,7 +80,7 @@ ExternalProject_Add(botan-project
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ./configure.py --cxxflags=${CMAKE_CXX_FLAGS} --ldflags=${CMAKE_EXE_LINKER_FLAGS} --cc-bin=${CMAKE_CXX_COMPILER} --prefix=${DEPS_PREFIX} --minimized-build --enable-modules=sha3,sha2_64
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND make libbotan-2.a
+    BUILD_COMMAND make ${MAKE_FLAGS} libbotan-2.a
     INSTALL_COMMAND cp -RL build/include/botan ${DEPS_PREFIX}/include && cp libbotan-2.a ${DEPS_PREFIX}/lib
     )
 ExternalProject_Get_Property(botan-project install_dir)

@@ -14,7 +14,7 @@ namespace ron {
 struct SHA2 {
     static constexpr size_t SIZE = 32;
     // defined length, 0 to SIZE
-    uint32_t known_bits_;
+    uint32_t known_bits_; // FIXME use string
     uint8_t bits_[SIZE];
     static constexpr size_t HEX_SIZE = SIZE * 8 / 4;
     static constexpr size_t BASE64_SIZE = SIZE * 8 / 6 + 1;
@@ -27,7 +27,7 @@ struct SHA2 {
      * @author gritzko  */
     explicit SHA2(slice_t base64) {  // TODO sizes!
         assert(base64.size_ == BASE64_SIZE);
-        decode<6, ABC64>(base64.buf_, base64.size_, bits_);
+        decode<6, ABC64>(bits_, base64.buf_, base64.size_*6);
     }
 
     inline explicit SHA2(const Uuid& uuid);
@@ -64,24 +64,24 @@ struct SHA2 {
     }
     std::string hex() const {
         char data[HEX_SIZE];
-        encode<4, HEX_PUNCT>(bits_, SIZE, data);
+        encode<4, HEX_PUNCT>(data, bits_, SIZE*8);
         return std::string{data, HEX_SIZE};
     }
 
     static bool ParseHex(SHA2& ret, const std::string& hash) {
         assert(hash.size() <= HEX_SIZE);
         ret.known_bits_ = uint32_t(hash.size()) << 2;
-        return decode<4, ABC16>(hash.data(), hash.size(), ret.bits_);
+        return decode<4, ABC16>(ret.bits_, hash.data(), hash.size()*4);
     }
 
     static bool ParseBase64(SHA2& ret, const std::string& hash) {
         assert(hash.size() <= BASE64_SIZE);
         ret.known_bits_ = uint32_t(hash.size()) * 6;
-        return decode<6, ABC64>(hash.data(), hash.size(), ret.bits_);
+        return decode<6, ABC64>(ret.bits_, hash.data(), hash.size()*6);
     }
     std::string base64() const {
         char data[BASE64_SIZE];
-        encode<6, BASE_PUNCT>(bits_, SIZE, data);
+        encode<6, BASE_PUNCT>(data, bits_, SIZE*8);
         return std::string{data, BASE64_SIZE};
     }
 };

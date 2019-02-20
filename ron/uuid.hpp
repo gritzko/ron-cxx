@@ -1,6 +1,6 @@
 #ifndef ron_uuid_hpp
 #define ron_uuid_hpp
-#include <cstdint>
+#include <stdint.h>
 #include <iostream>
 #include <string>
 #include "const.hpp"

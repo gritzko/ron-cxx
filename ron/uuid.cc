@@ -67,6 +67,14 @@ Word Uuid::HybridTime(time_t seconds, long int nanos) {
     return ret;
 }
 
+#include <sys/time.h>
+
+Word Uuid::Now () {
+    timeval tv;
+    gettimeofday(&tv, nullptr);
+    return HybridTime(tv.tv_sec, long(tv.tv_usec)*1000);
+}
+
 const uint8_t ABC[128] = {
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,

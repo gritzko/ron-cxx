@@ -14,7 +14,7 @@ void test_db_yarn_root () {
 
 void test_db_chain_merge () {
     TextReplica db{};
-    string path = Uuid::HybridTime(time(nullptr)).str();
+    string path = Uuid::Now().str();
     assert(db.Create(path));
     rocksdb::WriteBatch batch;
     Key key{Uuid{"1gHHUW+test"}, CHAIN_RDT};

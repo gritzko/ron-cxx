@@ -213,6 +213,7 @@ struct Uuid : public Atom {
     }
 
     static Word HybridTime(time_t seconds, long int nanos = 0);
+    static Word Now();
 };
 
 const static Uuid FATAL{Word::MAX_VALUE, Word::MAX_VALUE};

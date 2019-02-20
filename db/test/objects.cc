@@ -11,7 +11,7 @@ typedef Replica<Frame> TextReplica;
 
 void test_db_lww_object_merge () {
     TextReplica db{};
-    string path = Uuid::HybridTime(time(nullptr)).str();
+    string path = Uuid::Now().str();
     assert(db.Create(path));
     assert(db.Receive("@1gIBSU+gritzko :lww ;"));
     assert(db.Receive("@1gIBSU0001+gritzko :1gIBSU+gritzko 'one' 1 ;"));

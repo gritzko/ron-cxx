@@ -9,7 +9,7 @@ void encode(char* coded, const uint8_t* bytes, int bit_size) {
     uint32_t bits = 0;
     uint32_t bc = 0;
     static const uint32_t MASK = (1U << bit_width) - 1U;
-    while (bit_size>0) {
+    while (bit_size>=8) {
         bits <<= 8;
         bc += 8;
         bits |= *bytes;
@@ -21,7 +21,7 @@ void encode(char* coded, const uint8_t* bytes, int bit_size) {
             coded++;
         }
     }
-    if (bit_size>0) {
+    if (bc>0) {
         bits <<= bit_width - bc;
         *coded = coding[bits & MASK];
     }
@@ -31,7 +31,7 @@ template <int bit_width, const int8_t table[256]>
 bool decode(uint8_t* bytes, const char* coded, uint32_t bit_size) {
     uint32_t bits = 0;
     uint32_t bc = 0;
-    while (bit_size>0) {
+    while (bit_size>=bit_width) {
         bits <<= bit_width;
         bc += bit_width;
         int8_t value = table[*coded];
@@ -45,7 +45,7 @@ bool decode(uint8_t* bytes, const char* coded, uint32_t bit_size) {
             bytes++;
         }
     }
-    if (bit_size>0) {
+    if (bc>0) {
         *bytes = uint8_t((bits << (8 - bc)) & 0xff);
     }
     return true;

@@ -46,6 +46,10 @@ struct Key {
     operator rocksdb::Slice() const {
         return rocksdb::Slice{(char*)this, sizeof(Key)};
     }
+
+    std::string str () const {
+        return "*" + rdt2uuid(rdt()).str() + "#" + id().str();
+    }
 };
 
 }  // namespace ron

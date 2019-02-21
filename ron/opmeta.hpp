@@ -59,7 +59,7 @@ struct OpMeta {
 
     /** Yarn-root meta, serves as the prev op for the first op in a yarn. */
     OpMeta(Word yarn, const SHA2& creds)
-        : OpMeta{Uuid{0, yarn}, SHA2{SHA2{Uuid{0, yarn}}, creds},
+        : OpMeta{Uuid{0, yarn}, SHA2::MerklePairHash(SHA2{Uuid{0, yarn}}, creds),
                  Uuid::NIL,     Uuid::NIL,
                  Uuid::NIL,     Uuid{0, yarn}} {}
 
@@ -69,7 +69,7 @@ struct OpMeta {
      * @param {ref} meta for the referenced op (in a chain, prev==ref) */
     template <typename Cursor>
     explicit OpMeta(const Cursor& op, const OpMeta& prev, const OpMeta& ref)
-        : OpMeta{op.id(),    SHA2{op, prev.hash, ref.hash},
+        : OpMeta{op.id(), SHA2::OpMerkleHash(op, prev.hash, ref.hash),
                  ref.object, ref.rdt,
                  prev.id,    prev.id == ref.id ? ref.chain_id() : op.id()} {}
 
@@ -81,7 +81,7 @@ struct OpMeta {
         if (cur.ref() != id)
             return Status::BAD_STATE.comment("annotation for a wrong op");
         if (name == SHA2_UUID && cur.has(2, STRING)) {
-            SHA2 annhash{cur.string(2)};  // TODO format check
+            SHA2 annhash = SHA2::ParseBase64(cur.string(2));  // TODO format check
             if (!hash.matches(annhash)) return Status::HASHBREAK;
             if (annhash.known_bits_ > hash.known_bits_) hash = annhash;
         } else if (name == OBJ_UUID && cur.has(2, UUID)) {

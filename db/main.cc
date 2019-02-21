@@ -322,8 +322,7 @@ Status CommandHashFrame(const string& filename) {
         } else if (id == OpMeta::SHA2_UUID && cur.size() > 2 &&
                    cur.type(2) == STRING) {
             string base64 = cur.string(2);
-            SHA2 hash;
-            SHA2::ParseBase64(hash, base64);
+            SHA2 hash = SHA2::ParseBase64(base64);
             auto hi = hashes.find(id);
             if (hi == hashes.end()) {
                 hashes[id] = hash;

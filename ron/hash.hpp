@@ -23,20 +23,12 @@ struct SHA2 {
 
     SHA2() : known_bits_{0}, bits_{SIZE, 0} {}
 
-    /** my motivation for using Base64: Base64 is less clutter.
-     * noone is going to spell hashes on the phone anyway.
-     * @author gritzko  */
-    explicit SHA2(const std::string& base64) {
-        assert(base64.size() == BASE64_SIZE);
-        decode<6, ABC64>(bits_, base64.data(), BIT_SIZE);
-    }
-
     inline explicit SHA2(const Uuid& uuid);
 
-    inline SHA2(const SHA2& one, const SHA2& two);
+    inline static SHA2 MerklePairHash(const SHA2& one, const SHA2& two);
 
     template <typename Cursor>
-    SHA2(Cursor& cur, const SHA2& prev, const SHA2& ref);
+    static SHA2 OpMerkleHash(Cursor& cur, const SHA2& prev, const SHA2& ref);
 
     static bool valid(slice_t base64) {
         if (base64.size_ != BASE64_SIZE) return false;
@@ -70,25 +62,37 @@ struct SHA2 {
         return data;
     }
 
-    static bool ParseHex(SHA2& ret, const std::string& hash) {
+    static SHA2 ParseHex(const std::string& hash) {
+        SHA2 ret;
         assert(hash.size() <= HEX_SIZE);
-        ret.known_bits_ = uint32_t(hash.size()) << 2;
-        if (ret.known_bits_>BIT_SIZE) ret.known_bits_ = BIT_SIZE;
-        return decode<4, ABC16>(ret.bits_, hash.data(), ret.known_bits_);
+        uint32_t b = uint32_t(hash.size()) << 2;
+        if (b>BIT_SIZE) b = BIT_SIZE;
+        if (decode<4, ABC16>(ret.bits_, hash.data(), ret.known_bits_))
+            ret.known_bits_ = b;
+        return ret;
     }
 
-    static bool ParseBase64(SHA2& ret, const std::string& hash) {
+    static SHA2 ParseBase64(const std::string& hash) {
+        SHA2 ret;
         assert(hash.size() <= BASE64_SIZE);
-        ret.known_bits_ = uint32_t(hash.size()) * 6;
-        if (ret.known_bits_>BIT_SIZE) ret.known_bits_ = BIT_SIZE;
-        return decode<6, ABC64>(ret.bits_, hash.data(), ret.known_bits_);
+        uint32_t b = uint32_t(hash.size()) * 6;
+        if (b>BIT_SIZE) b = BIT_SIZE;
+        if (decode<6, ABC64>(ret.bits_, hash.data(), ret.known_bits_))
+            ret.known_bits_ = b;
+        return ret;
     }
+
+    /** my motivation for using Base64: Base64 is less clutter.
+     * noone is going to spell hashes on the phone anyway.
+     * @author gritzko  */
     std::string base64() const {
         std::string data;
         data.reserve(BASE64_SIZE);
         encode<6, BASE_PUNCT>(data, (const uint8_t*)bits_.data(), known_bits_);
         return data;
     }
+
+    inline uint32_t known_bits() const { return known_bits_; }
 };
 
 // a binary stream of RON primitives
@@ -156,11 +160,14 @@ SHA2::SHA2(const Uuid& uuid) : known_bits_{BIT_SIZE} {
     stream.close(bits_);
 }
 
-SHA2::SHA2(const SHA2& one, const SHA2& two) : known_bits_{BIT_SIZE} {
+SHA2 SHA2::MerklePairHash(const SHA2& one, const SHA2& two) {
+    SHA2 ret;
+    ret.known_bits_ = BIT_SIZE;
     SHA2Stream stream;
     stream.WriteHash(one);
     stream.WriteHash(two);
-    stream.close(bits_);
+    stream.close(ret.bits_);
+    return ret;
 }
 
 template <typename Frame>
@@ -173,10 +180,13 @@ inline void hash_op(const typename Frame::Cursor& cur, SHA2& hash,
 }
 
 template <typename Cursor>
-SHA2::SHA2(Cursor& cur, const SHA2& prev, const SHA2& ref) : known_bits_{BIT_SIZE} {
+SHA2 SHA2::OpMerkleHash(Cursor& cur, const SHA2& prev, const SHA2& ref) {
+    SHA2 ret;
+    ret.known_bits_ = BIT_SIZE;
     SHA2Stream stream;
     WriteOpHashable<Cursor, SHA2Stream>(cur, stream, prev, ref);
-    stream.close(bits_);
+    stream.close(ret.bits_);
+    return ret;
 }
 
 };  // namespace ron

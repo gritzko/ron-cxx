@@ -14,21 +14,21 @@ namespace ron {
 struct SHA2 {
     static constexpr size_t SIZE = 32;
     static constexpr size_t BIT_SIZE = SIZE*8;
-    // defined length, 0 to SIZE
-    uint32_t known_bits_; // FIXME use string
-    uint8_t bits_[SIZE];
     static constexpr size_t HEX_SIZE = SIZE * 8 / 4;
     static constexpr size_t BASE64_SIZE = SIZE * 8 / 6 + 1;
-    SHA2()
-        : bits_{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-          known_bits_{0} {}
+
+    /** the number of meaningful *bits* */
+    uint32_t known_bits_;
+    std::string bits_;
+
+    SHA2() : known_bits_{0}, bits_{SIZE, 0} {}
+
     /** my motivation for using Base64: Base64 is less clutter.
      * noone is going to spell hashes on the phone anyway.
      * @author gritzko  */
-    explicit SHA2(slice_t base64) {  // TODO sizes!
-        assert(base64.size_ == BASE64_SIZE);
-        decode<6, ABC64>(bits_, base64.buf_, BIT_SIZE);
+    explicit SHA2(const std::string& base64) {
+        assert(base64.size() == BASE64_SIZE);
+        decode<6, ABC64>(bits_, base64.data(), BIT_SIZE);
     }
 
     inline explicit SHA2(const Uuid& uuid);
@@ -47,14 +47,14 @@ struct SHA2 {
 
     inline bool defined() const { return known_bits_ > 0; }
     bool operator==(const SHA2& b) const {
-        return memcmp(bits_, b.bits_, SIZE) == 0;
+        return bits_==b.bits_;
     }
 
     bool operator!=(const SHA2& b) const { return !(*this == b); }
     inline bool matches(const SHA2& b) const {
         int bits = std::min(known_bits_, b.known_bits_);
         int bytes = bits >> 3;
-        if (memcmp(bits_, b.bits_, size_t(bytes)) != 0) return false;
+        if (memcmp(bits_.data(), b.bits_.data(), size_t(bytes)) != 0) return false;
         int tail = bits & 7;
         if (tail) {
             uint8_t mine = bits_[bytes] >> (8 - tail);
@@ -64,9 +64,10 @@ struct SHA2 {
         return true;
     }
     std::string hex() const {
-        char data[HEX_SIZE];
-        encode<4, HEX_PUNCT>(data, bits_, SIZE*8);
-        return std::string{data, HEX_SIZE};
+        std::string data;
+        data.reserve(HEX_SIZE);
+        encode<4, HEX_PUNCT>(data, (const uint8_t*)bits_.data(), known_bits_);
+        return data;
     }
 
     static bool ParseHex(SHA2& ret, const std::string& hash) {
@@ -83,9 +84,10 @@ struct SHA2 {
         return decode<6, ABC64>(ret.bits_, hash.data(), ret.known_bits_);
     }
     std::string base64() const {
-        char data[BASE64_SIZE];
-        encode<6, BASE_PUNCT>(data, bits_, BIT_SIZE);
-        return std::string{data, BASE64_SIZE};
+        std::string data;
+        data.reserve(BASE64_SIZE);
+        encode<6, BASE_PUNCT>(data, (const uint8_t*)bits_.data(), known_bits_);
+        return data;
     }
 };
 
@@ -104,7 +106,7 @@ struct Stream {
         return Write(slice_t{(char*)&tmp, sizeof(uint64pair)});
     }
     inline Status WriteHash(const SHA2& data) {
-        return Write(slice_t{(char*)data.bits_, SHA2::SIZE});
+        return Write(slice_t{data.bits_.data(), SHA2::SIZE});
     }
     inline Status WriteUuid(const Uuid& uuid) { return WriteAtom(uuid); }
     inline Status WriteAtomRangeless(const Atom& atom) {
@@ -113,6 +115,10 @@ struct Stream {
         return Write(slice_t{(char*)&tmp, sizeof(uint64pair)});
     }
     inline void close(void* result) { sink_.final((uint8_t*)result); }
+    inline void close(std::string& result) {
+        result.resize(sink_.output_length());
+        sink_.final((uint8_t*)result.data()); 
+    }
 };
 
 typedef Stream<Botan::SHA_512_256> SHA2Stream;
@@ -144,13 +150,13 @@ void WriteOpHashable(const Cursor& cursor, SomeStream& stream,
     }
 }
 
-SHA2::SHA2(const Uuid& uuid) : known_bits_{SIZE << 3} {
+SHA2::SHA2(const Uuid& uuid) : known_bits_{BIT_SIZE} {
     SHA2Stream stream;
     stream.WriteUuid(uuid);
     stream.close(bits_);
 }
 
-SHA2::SHA2(const SHA2& one, const SHA2& two) : known_bits_{SIZE << 3} {
+SHA2::SHA2(const SHA2& one, const SHA2& two) : known_bits_{BIT_SIZE} {
     SHA2Stream stream;
     stream.WriteHash(one);
     stream.WriteHash(two);
@@ -167,7 +173,7 @@ inline void hash_op(const typename Frame::Cursor& cur, SHA2& hash,
 }
 
 template <typename Cursor>
-SHA2::SHA2(Cursor& cur, const SHA2& prev, const SHA2& ref) : known_bits_{SIZE} {
+SHA2::SHA2(Cursor& cur, const SHA2& prev, const SHA2& ref) : known_bits_{BIT_SIZE} {
     SHA2Stream stream;
     WriteOpHashable<Cursor, SHA2Stream>(cur, stream, prev, ref);
     stream.close(bits_);

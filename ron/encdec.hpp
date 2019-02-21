@@ -1,34 +1,34 @@
 #ifndef RON_ENCDEC_H
 #define RON_ENCDEC_H
 #include <cstdint>
+#include <string>
 
 namespace ron {
 
 template <uint8_t bit_width, const char* coding>
-void encode(char* coded, const uint8_t* bytes, int bit_size) {
+void encode(std::string& coded, const uint8_t* raw, int bit_size) {
     uint32_t bits = 0;
     uint32_t bc = 0;
-    static const uint32_t MASK = (1U << bit_width) - 1U;
+    static constexpr uint32_t MASK = (1U << bit_width) - 1U;
     while (bit_size>=8) {
         bits <<= 8;
         bc += 8;
-        bits |= *bytes;
-        ++bytes;
+        bits |= *raw;
+        ++raw;
         bit_size-=8;
         while (bc >= bit_width) {
             bc -= bit_width;
-            *coded = coding[(bits >> bc) & MASK];
-            coded++;
+            coded.push_back(coding[(bits >> bc) & MASK]);
         }
     }
     if (bc>0) {
         bits <<= bit_width - bc;
-        *coded = coding[bits & MASK];
+        coded.push_back(coding[bits & MASK]);
     }
 }
 
 template <int bit_width, const int8_t table[256]>
-bool decode(uint8_t* bytes, const char* coded, uint32_t bit_size) {
+bool decode(std::string& raw, const char* coded, uint32_t bit_size) {
     uint32_t bits = 0;
     uint32_t bc = 0;
     while (bit_size>=bit_width) {
@@ -41,12 +41,11 @@ bool decode(uint8_t* bytes, const char* coded, uint32_t bit_size) {
         bits |= value;
         while (bc >= 8) {
             bc -= 8;
-            *bytes = uint8_t((bits >> bc) & 0xff);
-            bytes++;
+            raw.push_back( uint8_t((bits >> bc) & 0xff) );
         }
     }
     if (bc>0) {
-        *bytes = uint8_t((bits << (8 - bc)) & 0xff);
+        raw.push_back( uint8_t((bits << (8 - bc)) & 0xff) );
     }
     return true;
 }

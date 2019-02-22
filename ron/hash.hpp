@@ -21,7 +21,9 @@ struct SHA2 {
     uint32_t known_bits_;
     std::string bits_;
 
-    SHA2() : known_bits_{0}, bits_{SIZE, 0} {}
+    SHA2() : known_bits_{0}, bits_{} {
+        bits_.resize(SIZE, 0);
+    }
 
     inline explicit SHA2(const Uuid& uuid);
 
@@ -109,6 +111,7 @@ struct Stream {
         return Write(slice_t{(char*)&tmp, sizeof(uint64pair)});
     }
     inline Status WriteHash(const SHA2& data) {
+        assert(data.bits_.size()==SHA2::SIZE);
         return Write(slice_t{data.bits_.data(), SHA2::SIZE});
     }
     inline Status WriteUuid(const Uuid& uuid) { return WriteAtom(uuid); }

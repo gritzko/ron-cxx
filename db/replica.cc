@@ -215,7 +215,7 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
         auto ib = tips_.insert(tipmap_t::value_type{id.origin(), OpMeta{}});
         ti = ib.first;
         if (!FindTipMeta(ti->second, id.origin()))
-            ti->second = OpMeta(id.origin(), SHA2{});
+            ti->second = OpMeta(id.origin(), SHA2{}); //TODO
     }
     // the tip should stay in the cache, so we do in-place writes
     OpMeta& tip = ti->second;

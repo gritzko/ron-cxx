@@ -84,7 +84,7 @@ class Replica {
 
     Status DropBranch(Uuid store);
 
-    Status GetObject(Frame& frame, Uuid key, Uuid store=Uuid::NIL) {
+    Status GetObject(Frame& frame, Uuid key, Uuid store = Uuid::NIL) {
         return Status::NOT_IMPLEMENTED;
     }
 
@@ -174,8 +174,7 @@ class Replica {
         return Status::NOT_IMPLEMENTED;
     }
 
-    Status ReceiveQuery(Builder& response, Uuid object_store,
-                        Cursor& query) {
+    Status ReceiveQuery(Builder& response, Uuid object_store, Cursor& query) {
         Uuid ref = query.ref();
         RDT rdt = uuid2rdt(ref);
         if (rdt != RDT_COUNT) {

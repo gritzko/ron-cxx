@@ -273,8 +273,7 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
 }
 
 template <typename Frame>
-Status Replica<Frame>::Get(Frame& object, Uuid id, Uuid rdt,
-                           Uuid branch) {
+Status Replica<Frame>::Get(Frame& object, Uuid id, Uuid rdt, Uuid branch) {
     if (db_ == nullptr) return Status::NOTOPEN;
     RDT t = uuid2rdt(rdt);
     if (t == RDT::RDT_COUNT) return Status::NOTYPE;
@@ -289,8 +288,7 @@ Status Replica<Frame>::Get(Frame& object, Uuid id, Uuid rdt,
 }
 
 template <typename Frame>
-Status Replica<Frame>::GetMap(Frame& result, Uuid id, Uuid map,
-                              Uuid branch) {
+Status Replica<Frame>::GetMap(Frame& result, Uuid id, Uuid map, Uuid branch) {
     if (db_ == nullptr) return Status::NOTOPEN;
     Builder qb;
     qb.AppendNewOp(QUERY, map, id);
@@ -303,8 +301,7 @@ Status Replica<Frame>::GetMap(Frame& result, Uuid id, Uuid map,
 }
 
 template <typename Frame>
-Status Replica<Frame>::ReceiveObjectQuery(Builder& response,
-                                          Uuid object_store,
+Status Replica<Frame>::ReceiveObjectQuery(Builder& response, Uuid object_store,
                                           Cursor& query) {
     if (db_ == nullptr) return Status::NOTOPEN;
     Uuid id = query.id();
@@ -332,8 +329,7 @@ Status Replica<Frame>::ReceiveMapQuery(Builder& response, Uuid object_store,
 }
 
 template <typename Frame>
-Status Replica<Frame>::Receive(Builder& response, Uuid branch,
-                               Cursor& c) {
+Status Replica<Frame>::Receive(Builder& response, Uuid branch, Cursor& c) {
     rocksdb::WriteBatch batch;
     Status ok = Status::OK;
     while (c.valid() && ok) {

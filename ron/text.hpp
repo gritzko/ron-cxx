@@ -181,8 +181,7 @@ class TextFrame {
 
         /** A convenience API method to add an op with any number of atoms. */
         template <typename... Ts>
-        void AppendNewOp(TERM term, Uuid id, Uuid ref,
-                         Ts... args) {
+        void AppendNewOp(TERM term, Uuid id, Uuid ref, Ts... args) {
             term_ = term;
             WriteSpec(id, ref);
             Write(' ');

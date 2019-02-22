@@ -13,7 +13,7 @@ class inc_stack {
         value_t value;
         len_t size;
 
-        span_t(const value_t& v) : value{v}, size{1} {}
+        span_t(value_t v) : value{v}, size{1} {}
     };
 
    private:
@@ -35,7 +35,7 @@ class inc_stack {
     inline const span_t& front_span() const { return spans_.front(); }
     inline const span_t& back_span() const { return spans_.back(); }
 
-    void push_back(const value_t& i) {
+    void push_back(value_t i) {
         ++size_;
         if (spans_.empty()) {
             spans_.emplace_back(i);

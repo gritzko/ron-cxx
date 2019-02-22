@@ -103,7 +103,7 @@ class TextFrame {
         inline void Write(slice_t data) { data_.append(data.buf_, data.size_); }
         void WriteInt(int64_t value);
         void WriteFloat(double value);
-        void WriteUuid(const Uuid& value);
+        void WriteUuid(const Uuid value);
         void WriteString(const std::string& value);
 
         void escape(std::string& escaped, const slice_t& unescaped);
@@ -140,7 +140,7 @@ class TextFrame {
             WriteAtoms(args...);
         }
 
-        void WriteSpec(const Uuid& id, const Uuid& ref) {
+        void WriteSpec(Uuid id, Uuid ref) {
             bool seq_id = id == prev_.inc();
             if (!seq_id) {
                 Write(SPEC_PUNCT[EVENT]);
@@ -181,7 +181,7 @@ class TextFrame {
 
         /** A convenience API method to add an op with any number of atoms. */
         template <typename... Ts>
-        void AppendNewOp(TERM term, const Uuid& id, const Uuid& ref,
+        void AppendNewOp(TERM term, Uuid id, Uuid ref,
                          Ts... args) {
             term_ = term;
             WriteSpec(id, ref);

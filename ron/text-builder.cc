@@ -86,10 +86,10 @@ void TextFrame::Builder::AppendOp(const Cursor& cur) {
 void TextFrame::Builder::WriteInt(int64_t value) {
     char tmp[20];
     int len = sprintf(tmp, "%" PRId64, value);
-    data_.append(tmp, (size_t)len);
+    data_.append(tmp, static_cast<size_t>(len));
 }
 
-void TextFrame::Builder::WriteUuid(const Uuid& value) {
+void TextFrame::Builder::WriteUuid(const Uuid value) {
     // FIXME escaping
     data_.append(value.str());
 }
@@ -97,7 +97,7 @@ void TextFrame::Builder::WriteUuid(const Uuid& value) {
 void TextFrame::Builder::WriteFloat(double value) {
     char tmp[20];
     int len = sprintf(tmp, "%le", value);
-    data_.append(tmp, (size_t)len);
+    data_.append(tmp, static_cast<size_t>(len));
 }
 
 void TextFrame::Builder::WriteString(const std::string& value) {

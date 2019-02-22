@@ -123,7 +123,7 @@ Replica<Frame>::~Replica() {
 //  C H A I N  S T O R E
 
 template <class Frame>
-rocksdb::Iterator* Replica<Frame>::FindChain(const Uuid& target_id) {
+rocksdb::Iterator* Replica<Frame>::FindChain(Uuid target_id) {
     if (!open()) return nullptr;
     Key key{target_id, CHAIN_RDT};
     rocksdb::Iterator* i{db_->NewIterator(ro_, trunk_)};
@@ -137,7 +137,7 @@ rocksdb::Iterator* Replica<Frame>::FindChain(const Uuid& target_id) {
 }
 
 template <class Frame>
-rocksdb::Iterator* Replica<Frame>::FindYarn(const Uuid& target_id) {
+rocksdb::Iterator* Replica<Frame>::FindYarn(Uuid target_id) {
     if (!open()) return nullptr;
     Key key{target_id, CHAIN_RDT};
     rocksdb::Iterator* i{db_->NewIterator(ro_, trunk_)};
@@ -151,7 +151,7 @@ rocksdb::Iterator* Replica<Frame>::FindYarn(const Uuid& target_id) {
 }
 
 template <class Frame>
-Status Replica<Frame>::FindOpMeta(OpMeta& meta, const Uuid& target_id) {
+Status Replica<Frame>::FindOpMeta(OpMeta& meta, Uuid target_id) {
     static_assert(RDT::META_RDT + 1 == RDT::CHAIN_RDT,
                   "ensure records go in this exact order");
     string chain_data, meta_data;
@@ -196,11 +196,11 @@ Status Replica<Frame>::FindOpMeta(OpMeta& meta, const Uuid& target_id) {
 template <class Frame>
 Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
                                     Cursor& chain) {
-    const Uuid& id = chain.id();
+    Uuid id = chain.id();
     if (id.version() != TIME)
         return Status::BAD_STATE.comment("not an event?!");
 
-    const Uuid& ref = chain.ref();
+    Uuid ref = chain.ref();
     if (ref.version() == TIME) {
         if (ref >= id) return Status::CAUSEBREAK;
     } else {
@@ -273,8 +273,8 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
 }
 
 template <typename Frame>
-Status Replica<Frame>::Get(Frame& object, const Uuid& id, const Uuid& rdt,
-                           const Uuid& branch) {
+Status Replica<Frame>::Get(Frame& object, Uuid id, Uuid rdt,
+                           Uuid branch) {
     if (db_ == nullptr) return Status::NOTOPEN;
     RDT t = uuid2rdt(rdt);
     if (t == RDT::RDT_COUNT) return Status::NOTYPE;
@@ -289,8 +289,8 @@ Status Replica<Frame>::Get(Frame& object, const Uuid& id, const Uuid& rdt,
 }
 
 template <typename Frame>
-Status Replica<Frame>::GetMap(Frame& result, const Uuid& id, const Uuid& map,
-                              const Uuid& branch) {
+Status Replica<Frame>::GetMap(Frame& result, Uuid id, Uuid map,
+                              Uuid branch) {
     if (db_ == nullptr) return Status::NOTOPEN;
     Builder qb;
     qb.AppendNewOp(QUERY, map, id);
@@ -304,11 +304,11 @@ Status Replica<Frame>::GetMap(Frame& result, const Uuid& id, const Uuid& map,
 
 template <typename Frame>
 Status Replica<Frame>::ReceiveObjectQuery(Builder& response,
-                                          const Uuid& object_store,
+                                          Uuid object_store,
                                           Cursor& query) {
     if (db_ == nullptr) return Status::NOTOPEN;
-    const Uuid& id = query.id();
-    const Uuid& ref = query.ref();
+    Uuid id = query.id();
+    Uuid ref = query.ref();
     RDT t = uuid2rdt(ref);
     if (t == RDT::RDT_COUNT) return Status::NOTYPE;
     string data;
@@ -332,7 +332,7 @@ Status Replica<Frame>::ReceiveMapQuery(Builder& response, Uuid object_store,
 }
 
 template <typename Frame>
-Status Replica<Frame>::Receive(Builder& response, const Uuid& branch,
+Status Replica<Frame>::Receive(Builder& response, Uuid branch,
                                Cursor& c) {
     rocksdb::WriteBatch batch;
     Status ok = Status::OK;

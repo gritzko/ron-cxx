@@ -14,12 +14,12 @@ class Status {
    public:
     Status() : code_{0, 0} {}
     explicit Status(uint64_t err_code) : code_{err_code, Word::PAYLOAD_BITS} {}
-    Status(const Uuid& code, const std::string& comment)
+    Status(Uuid code, const std::string& comment)
         : code_{code}, comment_{comment} {}
 
     inline explicit operator Uuid() const { return code_; }
 
-    inline const Uuid& code() const { return code_; }
+    inline Uuid code() const { return code_; }
     inline const std::string& comment() const { return comment_; }
 
     inline Status comment(const std::string& add_comment) const {

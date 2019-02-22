@@ -14,7 +14,7 @@ class VV {
         return i == vv_.end() ? Uuid{Word{}, origin}
                               : Uuid{i->second, i->first};
     }
-    inline bool covers(const Uuid& point) const {
+    inline bool covers(Uuid point) const {
         return get(point.origin()).value() >= point.value();
     }
     inline bool empty() const { return vv_.empty(); }

@@ -13,27 +13,27 @@ class Span {
     fsize_t ref_;  // use 1 bit for tombstone flag
 
    public:
-    explicit Span(const Uuid& head_id, fsize_t backref = 0)
+    explicit Span(Uuid head_id, fsize_t backref = 0)
         : head_{head_id}, len_{1}, ref_{backref} {}
 
     inline Uuid front() const { return head_; }
     inline Uuid back() const { return head_.inc(len_ - 1); }
     void extend(fsize_t by = 1) { len_ += by; }
-    inline bool has(const Uuid& id) const {
+    inline bool has(Uuid id) const {
         return id.origin() == head_.origin() && head_.value() <= id.value() &&
                head_.value().inc(len_) > id.value();
     }
-    bool fits(const Uuid& id, const Uuid& ref) const {
+    bool fits(Uuid id, Uuid ref) const {
         return ref == back() && id == back().inc();
     }
-    bool fits(const Uuid& id) const { return id == back().inc(); }
+    bool fits(Uuid id) const { return id == back().inc(); }
     inline fsize_t size() const { return len_; }
     inline fsize_t ref() const { return ref_; }
     inline void pop_back() {
         assert(len_ > 0);
         --len_;
     }
-    inline bool push_back(const Uuid& id) {
+    inline bool push_back(Uuid id) {
         if (fits(id)) {
             len_++;
             return true;
@@ -51,7 +51,7 @@ class Uuids {
 
    public:
     Uuids() : spans_{}, size_{0} {}
-    void push_back(const Uuid& id) {
+    void push_back(Uuid id) {
         ++size_;
         if (spans_.empty()) {
             spans_.emplace_back(id);

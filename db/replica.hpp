@@ -56,7 +56,7 @@ class Replica {
     ~Replica();
 
     Uuid now();
-    Status See(const Uuid& timestamp) {
+    Status See(Uuid timestamp) {
         if (timestamp < now_) return Status::OK;
         // TODO sanity/plausibility check
         now_ = Uuid{timestamp.value(), now_.origin()};
@@ -71,8 +71,8 @@ class Replica {
 
     //  C H A I N  S T O R E
 
-    rocksdb::Iterator* FindYarn(const Uuid& replica);
-    rocksdb::Iterator* FindChain(const Uuid& op_id);
+    rocksdb::Iterator* FindYarn(Uuid replica);
+    rocksdb::Iterator* FindChain(Uuid op_id);
 
     //  O B J E C T  S T O R E
 
@@ -84,15 +84,15 @@ class Replica {
 
     Status DropBranch(Uuid store);
 
-    Status GetObject(Frame& frame, const Uuid& key, const Uuid& store=Uuid::NIL) {
+    Status GetObject(Frame& frame, Uuid key, Uuid store=Uuid::NIL) {
         return Status::NOT_IMPLEMENTED;
     }
 
-    Status Get(Frame& object, const Uuid& id, const Uuid& rdt = Uuid::NIL,
-               const Uuid& branch = Uuid::NIL);
+    Status Get(Frame& object, Uuid id, Uuid rdt = Uuid::NIL,
+               Uuid branch = Uuid::NIL);
 
-    Status GetMap(Frame& result, const Uuid& id, const Uuid& map = Uuid::NIL,
-                  const Uuid& branch = Uuid::NIL);
+    Status GetMap(Frame& result, Uuid id, Uuid map = Uuid::NIL,
+                  Uuid branch = Uuid::NIL);
 
     inline Status GetChain(Frame& chain, Uuid chain_id) {
         return Get(chain, chain_id, CHAIN_MAP_ID);
@@ -100,7 +100,7 @@ class Replica {
 
     /** If we don't know the exact chain id, we have to scan the table to
      *  find the chain. Then, we scan the chain to find the op. */
-    Status FindOpMeta(OpMeta& meta, const Uuid& target_id);
+    Status FindOpMeta(OpMeta& meta, Uuid target_id);
 
     /** Fetches the op metadata for the chain head op.
      * @param meta - the op meta object with op id set to the chain id */
@@ -165,18 +165,18 @@ class Replica {
         return Status::NOT_IMPLEMENTED;
     }
 
-    Status ReceiveCheck(const Uuid& branch, Cursor& check) {
+    Status ReceiveCheck(Uuid branch, Cursor& check) {
         return Status::NOT_IMPLEMENTED;
     }
 
     // a hash check MUST follow its op in the frame => the hash must be cached
-    Status ReceiveSHA2Check(const Uuid& id, const SHA2& check) {
+    Status ReceiveSHA2Check(Uuid id, const SHA2& check) {
         return Status::NOT_IMPLEMENTED;
     }
 
-    Status ReceiveQuery(Builder& response, const Uuid& object_store,
+    Status ReceiveQuery(Builder& response, Uuid object_store,
                         Cursor& query) {
-        const Uuid& ref = query.ref();
+        Uuid ref = query.ref();
         RDT rdt = uuid2rdt(ref);
         if (rdt != RDT_COUNT) {
             return ReceiveObjectQuery(response, object_store, query);
@@ -189,7 +189,7 @@ class Replica {
                                                ref.str());
     }
 
-    Status ReceiveObjectQuery(Builder& response, const Uuid& object_store,
+    Status ReceiveObjectQuery(Builder& response, Uuid object_store,
                               Cursor& query);
 
     Status ReceiveMapQuery(Builder& response, Uuid object_store, Cursor& query);
@@ -198,7 +198,7 @@ class Replica {
         return Status::NOT_IMPLEMENTED;
     }
 
-    Status Receive(Builder& response, const Uuid& branch, Cursor& c);
+    Status Receive(Builder& response, Uuid branch, Cursor& c);
 
    private:
     //  U T I L

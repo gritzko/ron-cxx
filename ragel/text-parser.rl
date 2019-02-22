@@ -11,7 +11,7 @@ Status TextFrame::Cursor::Next () {
 
     Atoms& atoms = op_.atoms_;
 
-
+    int line=1;
 
 
     switch (cs) {
@@ -40,7 +40,7 @@ Status TextFrame::Cursor::Next () {
     const char* p = pb + off_;
     const char* pe = pb + body.size();
     const char* eof = pe;
-
+    const char* lineb = p;
     slice_t intb{p,0};
     slice_t floatb{p,0};
     slice_t strb{p,0};
@@ -73,7 +73,9 @@ Status TextFrame::Cursor::Next () {
         return Status::OK;
     } else {
         cs = RON_error;
-        return Status::BAD_STATE;
+        char msg[64];
+        size_t msglen = sprintf(msg, "syntax error at line %d col %d (offset %d)", line, (int)(p-lineb), (int)(p-pb));
+        return Status::BAD_STATE.comment(std::string{msg, msglen});
     }
 
 }

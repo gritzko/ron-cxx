@@ -149,6 +149,13 @@ void test_span_spread () {
     assert(c.valid());
 }
 
+void test_syntax_errors () {
+    string invalid{"@line+ok\n:bad/"};
+    Cursor cur{invalid, false};
+    Status ok = cur.Next();
+    assert(ok.comment()=="syntax error at line 2 col 5 (offset 13)");
+}
+
 int main (int argn, char** args) {
     test_basic_cycle();
     test_optional_chars();
@@ -159,5 +166,6 @@ int main (int argn, char** args) {
     test_defaults();
     test_string_metrics();
     test_span_spread();
+    test_syntax_errors();
     return 0;
 }

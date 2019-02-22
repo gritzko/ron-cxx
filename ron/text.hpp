@@ -36,14 +36,14 @@ class TextFrame {
         static double parse_float(slice_t data);
 
        public:
-        explicit Cursor(const slice_t& data)
+        explicit Cursor(const slice_t& data, bool advance = true)
             : data_{data},
               op_{TERM::RAW},
               off_{0},
               pos_{-1},
               cs{0},
               prev_id_{} {
-            Next();
+            if (advance) Next();
         }
         explicit Cursor(const std::string& str) : Cursor{slice_t{str}} {}
         explicit Cursor(const TextFrame& host) : Cursor{host.data_} {}

@@ -42,6 +42,14 @@
         pos_++; 
         if (p<pe-1) fbreak;
     }
+    action newline {
+        if (fc=='\n') {
+            line++;
+            lineb = p;
+        }
+    }
+
+    WS = [ \r\n\t] @newline;
 
     # int64_t 
     SGN = [\-+];
@@ -68,26 +76,26 @@
     # value atom (payload) - int, float, string, UUID
     BARE_ATOM = INT | FLOAT | UUID %end_bare_uuid;
     QUOTED_ATOM =        
-            "=" space* INT  |
-            "^" space* FLOAT |
+            "=" WS* INT  |
+            "^" WS* FLOAT |
             ['] STRING ['] |
-            ">" space* UUID %end_quoted_uuid ;    
-    ATOM = QUOTED_ATOM | space BARE_ATOM ;
+            ">" WS* UUID %end_quoted_uuid;
+    ATOM = QUOTED_ATOM | WS BARE_ATOM ;
 
     # op's specifier, @id :ref
-    SPEC = '@' UUID %end_id space* ( ':' UUID %end_ref )? ;
-    ATOMS = ATOM (space* ATOM)* ;
+    SPEC = '@' UUID %end_id WS* ( ':' UUID %end_ref )? ;
+    ATOMS = ATOM (WS* ATOM)* ;
 
     # op spans
-    SPAN = ( [(] space* ([']STRING['])? space* digit+ space* [)] );
+    SPAN = ( [(] WS* ([']STRING['])? WS* digit+ WS* [)] );
 
     # RON op: an immutable unit of change
-    OP = (SPEC|BARE_ATOM)? space* ATOMS? space* SPAN? space* OPTERM ;
+    OP = (SPEC|BARE_ATOM)? WS* ATOMS? WS* SPAN? WS* OPTERM ;
 
     # a frame terminator (mandatory in the streaming mode)
     DOT = ".\n" ;
 
     # RON frame (open text coding)
-    TEXT_FRAME = (space* OP)* space* DOT? ;
+    TEXT_FRAME = (WS* OP)* WS* DOT? ;
 
 }%%

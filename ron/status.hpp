@@ -40,6 +40,7 @@ class Status {
     static const Status NOT_FOUND;
     static const Status BAD_STATE;
     static const Status BADARGS;
+    static const Status BADSYNTAX;
     static const Status DB_FAIL;
     static const Status IOFAIL;
     static const Status BADFRAME;

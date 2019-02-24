@@ -35,7 +35,8 @@ ExternalProject_Add(
     GIT_REPOSITORY git@github.com:gflags/gflags.git
     GIT_TAG 28f50e0
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX} 
-    BUILD_COMMAND cmake . && $(MAKE) ${MAKE_FLAGS}
+    CMAKE_GENERATOR "Unix Makefiles"
+    BUILD_COMMAND $(MAKE) ${MAKE_FLAGS}
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND make install
 )
@@ -49,7 +50,8 @@ ExternalProject_Add(
     GIT_REPOSITORY https://github.com/google/snappy.git
     GIT_TAG d4be414dd66026d6736a3741e8a85779ba4ea949
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
-    BUILD_COMMAND cmake . && $(MAKE) ${MAKE_FLAGS}
+    CMAKE_GENERATOR "Unix Makefiles"
+    BUILD_COMMAND $(MAKE) ${MAKE_FLAGS}
 
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND make install
@@ -66,6 +68,7 @@ ExternalProject_Add(rocksdblib
     UPDATE_COMMAND ""
     PREFIX ${ROCKSDB_PREFIX}
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
+    CMAKE_GENERATOR "Unix Makefiles"
     BUILD_COMMAND make rocksdb ${MAKE_FLAGS}
     INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdblib/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
 )

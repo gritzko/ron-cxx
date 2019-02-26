@@ -11,10 +11,10 @@ typedef bool (*less_t)(const Op& a, const Op& b);
 // asc-sorting iterator heap
 template <typename Frame, less_t less_fn>
 class MergeCursor {
-    typedef typename Frame::Cursor Cursor;
-    typedef std::vector<Frame> Frames;
-    typedef std::vector<Cursor> Cursors;
-    typedef typename Cursors::iterator PCursor;
+    using Cursor = typename Frame::Cursor;
+    using Frames = std::vector<Frame>;
+    using Cursors = std::vector<Cursor>;
+    using PCursor = typename Cursors::iterator;
 
     std::vector<PCursor> cursors_;
 

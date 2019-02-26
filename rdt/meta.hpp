@@ -13,9 +13,9 @@ class MetaRDT {
         return a.id() == b.id() ? a.ref() > b.ref() : a.id() < b.id();
     }
     typedef MergeCursor<Frame, less_than> MCursor;
-    typedef typename Frame::Builder Builder;
-    typedef typename Frame::Cursor Cursor;
-    typedef typename Frame::Cursors Cursors;
+    using Builder = typename Frame::Builder;
+    using Cursor = typename Frame::Cursor;
+    using Cursors = typename Frame::Cursors;
 
    public:
     Status Merge(typename Frame::Builder &output, Cursors &inputs) const {

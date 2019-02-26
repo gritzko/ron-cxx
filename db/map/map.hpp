@@ -9,9 +9,9 @@ namespace ron {
 
     template<typename Frame>
     struct ChainMapper {
-        typedef typename Frame::Cursor Cursor;
-        typedef typename Frame::Builder Builder;
-        typedef Replica<Frame> HostReplica;
+        using Cursor = typename Frame::Cursor;
+        using Builder = typename Frame::Builder;
+        using HostReplica = Replica<Frame>;
 
         HostReplica* host_;
 
@@ -27,9 +27,9 @@ namespace ron {
 
     template<typename Frame>
     struct OpMapper {
-        typedef typename Frame::Cursor Cursor;
-        typedef typename Frame::Builder Builder;
-        typedef Replica<Frame> HostReplica;
+        using Cursor = typename Frame::Cursor;
+        using Builder = typename Frame::Builder;
+        using HostReplica = Replica<Frame>;
 
         HostReplica* host_;
 
@@ -45,9 +45,9 @@ namespace ron {
 
     template<typename Frame>
     struct YarnMapper {
-        typedef typename Frame::Cursor Cursor;
-        typedef typename Frame::Builder Builder;
-        typedef Replica<Frame> HostReplica;
+        using Cursor = typename Frame::Cursor;
+        using Builder = typename Frame::Builder;
+        using HostReplica = Replica<Frame>;
 
         HostReplica* host_;
 
@@ -63,9 +63,9 @@ namespace ron {
 
     template<typename Frame>
     struct MetaMapper {
-        typedef typename Frame::Cursor Cursor;
-        typedef typename Frame::Builder Builder;
-        typedef Replica<Frame> HostReplica;
+        using Cursor = typename Frame::Cursor;
+        using Builder = typename Frame::Builder;
+        using HostReplica = Replica<Frame>;
 
         HostReplica* host_;
 
@@ -81,9 +81,9 @@ namespace ron {
 
     template <typename Frame>
     struct CSVMapper {
-        typedef typename Frame::Cursor Cursor;
-        typedef typename Frame::Builder Builder;
-        typedef Replica<Frame> HostReplica;
+        using Cursor = typename Frame::Cursor;
+        using Builder = typename Frame::Builder;
+        using HostReplica = Replica<Frame>;
         typedef typename MatrixRDT<Frame>::mx_t mx_t;
 
         HostReplica* host_;
@@ -98,9 +98,9 @@ namespace ron {
 
     template <typename Frame>
     struct TxtMapper {
-        typedef typename Frame::Cursor Cursor;
-        typedef typename Frame::Builder Builder;
-        typedef Replica<Frame> HostReplica;
+        using Cursor = typename Frame::Cursor;
+        using Builder = typename Frame::Builder;
+        using HostReplica = Replica<Frame>;
         typedef typename MatrixRDT<Frame>::mx_t mx_t;
 
         HostReplica* host_;
@@ -115,9 +115,9 @@ namespace ron {
 
     template<typename Frame>
     struct MasterMapper {
-        typedef typename Frame::Cursor Cursor;
-        typedef typename Frame::Builder Builder;
-        typedef Replica<Frame> HostReplica;
+        using Cursor = typename Frame::Cursor;
+        using Builder = typename Frame::Builder;
+        using HostReplica = Replica<Frame>;
 
         ChainMapper<Frame> chain_;
         OpMapper<Frame> op_;

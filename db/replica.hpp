@@ -17,11 +17,11 @@ namespace ron {
 template <typename Frame>
 class Replica {
    public:
-    typedef typename Frame::Batch Batch;
-    typedef typename Frame::Builder Builder;
-    typedef typename Frame::Cursor Cursor;
-    typedef rocksdb::ColumnFamilyHandle CFHandle;
-    typedef std::unordered_map<Word, OpMeta> tipmap_t;
+    using Batch = typename Frame::Batch;
+    using Builder = typename Frame::Builder;
+    using Cursor = typename Frame::Cursor;
+    using CFHandle = rocksdb::ColumnFamilyHandle;
+    using tipmap_t = std::unordered_map<Word, OpMeta>;
 
     static const Uuid NOW_UUID;
 

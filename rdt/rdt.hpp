@@ -21,8 +21,8 @@ class MasterRDT {
     RGArrayRDT<Frame> rga_;
 
    public:
-    typedef typename Frame::Builder Builder;
-    typedef typename Frame::Cursor Cursor;
+    using Builder = typename Frame::Builder;
+    using Cursor = typename Frame::Cursor;
     typedef std::vector<Frame> Frames;
     typedef std::vector<Cursor> Cursors;
 
@@ -87,7 +87,7 @@ Status MergeCursors(std::string &ret, RDT rdt,
                     typename Frame::Cursors &inputs) {
     typedef MasterRDT<Frame> Reducer;
     Reducer reducer;
-    typedef typename Reducer::Cursor Cursor;
+    using Cursor = typename Reducer::Cursor;
     typename Reducer::Builder builder;
     Status ok = reducer.Merge(builder, rdt, inputs);
     swap(builder, ret);
@@ -97,8 +97,8 @@ Status MergeCursors(std::string &ret, RDT rdt,
 template <typename Frame>
 Status Merge(std::string &ret, RDT rdt,
              const std::vector<std::string> &inputs) {
-    typedef typename Frame::Cursor Cursor;
-    typedef typename Frame::Cursors Cursors;
+    using Cursor = typename Frame::Cursor;
+    using Cursors = typename Frame::Cursors;
     Cursors curs{};
     for (const auto &input : inputs) curs.push_back(Cursor{input});
     return MergeCursors<Frame>(ret, rdt, curs);

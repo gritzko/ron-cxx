@@ -15,6 +15,7 @@ set(ROCKSDB_PREFIX ${DEPS_PREFIX}/build/rocksdb)
 set(CRYPTO_PREFIX ${DEPS_PREFIX}/build/botan)
 set(snappy_PREFIX ${DEPS_PREFIX}/build/snappy)
 set(GFLAGS_PREFIX ${DEPS_PREFIX}/build/gflags)
+set(DMP_PREFIX ${DEPS_PREFIX}/build/dmp)
 
 include_directories(".")
 include_directories(${DEPS_PREFIX}/include/)
@@ -90,6 +91,16 @@ ExternalProject_Get_Property(botan-project install_dir)
 add_library(botan STATIC IMPORTED db/test/chains.cc)
 set_property(TARGET botan PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}botan-2${CMAKE_STATIC_LIBRARY_SUFFIX})
 include_directories(${DEPS_PREFIX}/include/botan-2)
+
+ExternalProject_Add(
+    dmp_diff_lib
+    PREFIX ${DMP_PREFIX}
+    GIT_REPOSITORY git@github.com:gritzko/myers-diff.git
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    BUILD_IN_SOURCE 1
+    INSTALL_COMMAND cp ${DMP_PREFIX}/src/dmp_diff_lib/dmp_diff.hpp ${DEPS_PREFIX}/include/
+)
 
 
 #  L I B R O N
@@ -181,6 +192,7 @@ add_library(swarmdb SHARED
     ${SWARMDB_SOURCES}
         )
 add_dependencies(swarmdb rocksdb)
+add_dependencies(swarmdb dmp_diff_lib)
 target_link_libraries(swarmdb pthread z bz2 snappy botan ron rocksdb)
 set_property(TARGET swarmdb PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
@@ -206,6 +218,7 @@ add_executable(swarmdb-bin
 add_dependencies(swarmdb-bin rocksdb)
 target_link_libraries(swarmdb-bin pthread z bz2 snappy gflags botan ron rocksdb)
 SET_TARGET_PROPERTIES(swarmdb-bin PROPERTIES OUTPUT_NAME swarmdb)
+add_dependencies(swarmdb-bin dmp_diff_lib)
 
 add_test(bb-lww swarmdb --test ${CMAKE_SOURCE_DIR}/test/rdt/lww.ron)
 add_test(bb-rga swarmdb --test ${CMAKE_SOURCE_DIR}/test/rdt/rga.ron)

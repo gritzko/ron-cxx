@@ -232,18 +232,7 @@ Uuid::Uuid(slice_t data) {
                     value.end(p);
                 }
 #line 17 "ragel/./uuid-grammar.rl"
-                    {
-                        if (value.size() > Word::MAX_BASE64_SIZE ||
-                            origin.size() > Word::MAX_BASE64_SIZE) {
-                            cs = 0;
-                            {
-                                p++;
-                                cs = 0;
-                                goto _out;
-                            }
-                        }
-                        uuidb.end(p);
-                    }
+                    { uuidb.end(p); }
                     break;
                 case 5:
 #line 16 "ragel/./uuid-grammar.rl"
@@ -251,20 +240,9 @@ Uuid::Uuid(slice_t data) {
                     origin.end(p);
                 }
 #line 17 "ragel/./uuid-grammar.rl"
-                    {
-                        if (value.size() > Word::MAX_BASE64_SIZE ||
-                            origin.size() > Word::MAX_BASE64_SIZE) {
-                            cs = 0;
-                            {
-                                p++;
-                                cs = 0;
-                                goto _out;
-                            }
-                        }
-                        uuidb.end(p);
-                    }
+                    { uuidb.end(p); }
                     break;
-#line 244 "ron/uuid-parser.cc"
+#line 236 "ron/uuid-parser.cc"
             }
         }
 

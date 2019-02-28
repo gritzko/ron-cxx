@@ -40,7 +40,7 @@ Status TextFrame::Cursor::Next () {
     const char* p = pb + off_;
     const char* pe = pb + body.size();
     const char* eof = pe;
-    const char* lineb = p;
+    const char* lineb = pb;
     slice_t intb{p,0};
     slice_t floatb{p,0};
     slice_t strb{p,0};

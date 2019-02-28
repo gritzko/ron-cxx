@@ -92,6 +92,9 @@ class TextFrame {
             return op_.atom(idx);
         }
         static bool int_too_big(const slice_t& data);
+        static inline bool word_too_big(const slice_t data) {
+            return data.size() > Word::MAX_BASE64_SIZE;
+        }
     };
 
     struct Builder {

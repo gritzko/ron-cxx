@@ -29,11 +29,14 @@
         op_.AddAtom(Atom::Float(parse_float(floatb), body.range_of(floatb))); 
     }
     action end_quoted_uuid {
+        if (word_too_big(value) || word_too_big(origin)) { cs = 0; fbreak; }
         op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
     action end_bare_uuid { 
-        if (!intb.same(uuidb))
+        if (!intb.same(uuidb)) {
+            if (word_too_big(value) || word_too_big(origin)) { cs = 0; fbreak; }
             op_.AddAtom(Uuid{variety, value, version, origin}); 
+        }
     }
     action begin_span {}
     action end_span {}

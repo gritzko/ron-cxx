@@ -83,12 +83,9 @@ Status TextFrame::Split(std::vector<TextFrame>& to) {
 }
 
 bool TextFrame::Cursor::int_too_big(const slice_t& data) {
-    static const char* MAXINTSTR = "9223372036854775808";
+    static const char* MAXINTSTR = "9223372036854775807";
     if (data.size() < 19) {
         return false;
-    }
-    if (data.size() > 20) {
-        return true;
     }
     const char* mem = data.begin();
     size_t sz = data.size();
@@ -96,7 +93,11 @@ bool TextFrame::Cursor::int_too_big(const slice_t& data) {
         ++mem;
         --sz;
     }
-    return memcmp(mem, MAXINTSTR, sz) > 0;
+    if (sz > 19) {
+        return true;
+    }
+    int res = memcmp(mem, MAXINTSTR, sz);
+    return res > 0;
 }
 
 }  // namespace ron

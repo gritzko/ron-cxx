@@ -15,10 +15,6 @@
     action begin_origin { origin.begin(p); }
     action end_origin { origin.end(p); }
     action end_uuid { 
-        if (value.size()>Word::MAX_BASE64_SIZE || origin.size()>Word::MAX_BASE64_SIZE) {
-            cs = 0;
-            fbreak;
-        }
         uuidb.end(p);
     }
 

@@ -53,7 +53,7 @@ void test_basic_cycle () {
 }
 
 void test_optional_chars () {
-    Frame opt{"@1A 234 56K;28'abc' 3, @id 3.1415 >uuid;"};
+    Frame opt{"@1A 234 56K;+9223372036854775807'abc' 3, @id 3.1415 >uuid;"};
     Cursor copt = opt.cursor();
     assert(copt.valid());
     assert(copt.op().size()==4);
@@ -63,10 +63,12 @@ void test_optional_chars () {
     assert(!copt.op().id().zero());
     assert(copt.op().ref().zero());
 
-    assert(copt.Next()); // start state: space :)
+    Status ok = copt.Next();
+    assert(ok); // start state: space :)
     assert(copt.op().id()=="1A00000001");
     assert(copt.op().ref()=="1A");
-    assert(copt.integer(2)==28);
+    assert(copt.has(2, INT));
+    assert(copt.integer(2)==9223372036854775807L);
     assert(copt.string(3)=="abc");
     assert(copt.integer(4)==3);
 

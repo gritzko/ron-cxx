@@ -51,7 +51,7 @@ Status TextFrame::Cursor::Next() {
     const char* p = pb + off_;
     const char* pe = pb + body.size();
     const char* eof = pe;
-    const char* lineb = p;
+    const char* lineb = pb;
     slice_t intb{p, 0};
     slice_t floatb{p, 0};
     slice_t strb{p, 0};
@@ -72,7 +72,7 @@ Status TextFrame::Cursor::Next() {
         if (p == pe) goto _test_eof;
         switch (cs) {
         tr198 :
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
         {
             if ((*p) == '\n') {
                 line++;
@@ -81,7 +81,7 @@ Status TextFrame::Cursor::Next() {
         }
             goto st72;
         tr14 :
-#line 40 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
         {
             term = (*p);
             pos_++;
@@ -107,7 +107,7 @@ Status TextFrame::Cursor::Next() {
             op_.AddAtom(Atom::Integer(parse_int(intb), body.range_of(intb)));
             lastintb = intb.buf_;
         }
-#line 40 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -133,7 +133,7 @@ Status TextFrame::Cursor::Next() {
             op_.AddAtom(
                 Atom::Float(parse_float(floatb), body.range_of(floatb)));
         }
-#line 40 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -150,9 +150,10 @@ Status TextFrame::Cursor::Next() {
             value.end(p);
         }
 #line 17 "ragel/././uuid-grammar.rl"
+            { uuidb.end(p); }
+#line 31 "ragel/./text-grammar.rl"
             {
-                if (value.size() > Word::MAX_BASE64_SIZE ||
-                    origin.size() > Word::MAX_BASE64_SIZE) {
+                if (word_too_big(value) || word_too_big(origin)) {
                     cs = 0;
                     {
                         p++;
@@ -160,11 +161,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                uuidb.end(p);
+                op_.AddAtom(Uuid{variety, value, version, origin});
             }
-#line 31 "ragel/./text-grammar.rl"
-            { op_.AddAtom(Uuid{variety, value, version, origin}); }
-#line 40 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -181,9 +180,10 @@ Status TextFrame::Cursor::Next() {
             origin.end(p);
         }
 #line 17 "ragel/././uuid-grammar.rl"
+            { uuidb.end(p); }
+#line 31 "ragel/./text-grammar.rl"
             {
-                if (value.size() > Word::MAX_BASE64_SIZE ||
-                    origin.size() > Word::MAX_BASE64_SIZE) {
+                if (word_too_big(value) || word_too_big(origin)) {
                     cs = 0;
                     {
                         p++;
@@ -191,11 +191,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                uuidb.end(p);
+                op_.AddAtom(Uuid{variety, value, version, origin});
             }
-#line 31 "ragel/./text-grammar.rl"
-            { op_.AddAtom(Uuid{variety, value, version, origin}); }
-#line 40 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -224,24 +222,22 @@ Status TextFrame::Cursor::Next() {
 #line 13 "ragel/././uuid-grammar.rl"
             { value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+            { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
             {
-                if (value.size() > Word::MAX_BASE64_SIZE ||
-                    origin.size() > Word::MAX_BASE64_SIZE) {
-                    cs = 0;
-                    {
-                        p++;
-                        cs = 72;
-                        goto _out;
+                if (!intb.same(uuidb)) {
+                    if (word_too_big(value) || word_too_big(origin)) {
+                        cs = 0;
+                        {
+                            p++;
+                            cs = 72;
+                            goto _out;
+                        }
                     }
-                }
-                uuidb.end(p);
-            }
-#line 34 "ragel/./text-grammar.rl"
-            {
-                if (!intb.same(uuidb))
                     op_.AddAtom(Uuid{variety, value, version, origin});
+                }
             }
-#line 40 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -258,24 +254,22 @@ Status TextFrame::Cursor::Next() {
             origin.end(p);
         }
 #line 17 "ragel/././uuid-grammar.rl"
+            { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
             {
-                if (value.size() > Word::MAX_BASE64_SIZE ||
-                    origin.size() > Word::MAX_BASE64_SIZE) {
-                    cs = 0;
-                    {
-                        p++;
-                        cs = 72;
-                        goto _out;
+                if (!intb.same(uuidb)) {
+                    if (word_too_big(value) || word_too_big(origin)) {
+                        cs = 0;
+                        {
+                            p++;
+                            cs = 72;
+                            goto _out;
+                        }
                     }
-                }
-                uuidb.end(p);
-            }
-#line 34 "ragel/./text-grammar.rl"
-            {
-                if (!intb.same(uuidb))
                     op_.AddAtom(Uuid{variety, value, version, origin});
+                }
             }
-#line 40 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -292,24 +286,22 @@ Status TextFrame::Cursor::Next() {
             value.end(p);
         }
 #line 17 "ragel/././uuid-grammar.rl"
+            { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
             {
-                if (value.size() > Word::MAX_BASE64_SIZE ||
-                    origin.size() > Word::MAX_BASE64_SIZE) {
-                    cs = 0;
-                    {
-                        p++;
-                        cs = 72;
-                        goto _out;
+                if (!intb.same(uuidb)) {
+                    if (word_too_big(value) || word_too_big(origin)) {
+                        cs = 0;
+                        {
+                            p++;
+                            cs = 72;
+                            goto _out;
+                        }
                     }
-                }
-                uuidb.end(p);
-            }
-#line 34 "ragel/./text-grammar.rl"
-            {
-                if (!intb.same(uuidb))
                     op_.AddAtom(Uuid{variety, value, version, origin});
+                }
             }
-#line 40 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -338,24 +330,22 @@ Status TextFrame::Cursor::Next() {
 #line 16 "ragel/././uuid-grammar.rl"
             { origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+            { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
             {
-                if (value.size() > Word::MAX_BASE64_SIZE ||
-                    origin.size() > Word::MAX_BASE64_SIZE) {
-                    cs = 0;
-                    {
-                        p++;
-                        cs = 72;
-                        goto _out;
+                if (!intb.same(uuidb)) {
+                    if (word_too_big(value) || word_too_big(origin)) {
+                        cs = 0;
+                        {
+                            p++;
+                            cs = 72;
+                            goto _out;
+                        }
                     }
-                }
-                uuidb.end(p);
-            }
-#line 34 "ragel/./text-grammar.rl"
-            {
-                if (!intb.same(uuidb))
                     op_.AddAtom(Uuid{variety, value, version, origin});
+                }
             }
-#line 40 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -384,24 +374,22 @@ Status TextFrame::Cursor::Next() {
 #line 13 "ragel/././uuid-grammar.rl"
             { value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+            { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
             {
-                if (value.size() > Word::MAX_BASE64_SIZE ||
-                    origin.size() > Word::MAX_BASE64_SIZE) {
-                    cs = 0;
-                    {
-                        p++;
-                        cs = 72;
-                        goto _out;
+                if (!intb.same(uuidb)) {
+                    if (word_too_big(value) || word_too_big(origin)) {
+                        cs = 0;
+                        {
+                            p++;
+                            cs = 72;
+                            goto _out;
+                        }
                     }
-                }
-                uuidb.end(p);
-            }
-#line 34 "ragel/./text-grammar.rl"
-            {
-                if (!intb.same(uuidb))
                     op_.AddAtom(Uuid{variety, value, version, origin});
+                }
             }
-#line 40 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -418,21 +406,10 @@ Status TextFrame::Cursor::Next() {
             value.end(p);
         }
 #line 17 "ragel/././uuid-grammar.rl"
-            {
-                if (value.size() > Word::MAX_BASE64_SIZE ||
-                    origin.size() > Word::MAX_BASE64_SIZE) {
-                    cs = 0;
-                    {
-                        p++;
-                        cs = 72;
-                        goto _out;
-                    }
-                }
-                uuidb.end(p);
-            }
+            { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
             { op_.SetId(Uuid{variety, value, version, origin}); }
-#line 40 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -449,21 +426,10 @@ Status TextFrame::Cursor::Next() {
             value.end(p);
         }
 #line 17 "ragel/././uuid-grammar.rl"
-            {
-                if (value.size() > Word::MAX_BASE64_SIZE ||
-                    origin.size() > Word::MAX_BASE64_SIZE) {
-                    cs = 0;
-                    {
-                        p++;
-                        cs = 72;
-                        goto _out;
-                    }
-                }
-                uuidb.end(p);
-            }
+            { uuidb.end(p); }
 #line 10 "ragel/./text-grammar.rl"
             { op_.SetRef(Uuid{variety, value, version, origin}); }
-#line 40 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -480,21 +446,10 @@ Status TextFrame::Cursor::Next() {
             origin.end(p);
         }
 #line 17 "ragel/././uuid-grammar.rl"
-            {
-                if (value.size() > Word::MAX_BASE64_SIZE ||
-                    origin.size() > Word::MAX_BASE64_SIZE) {
-                    cs = 0;
-                    {
-                        p++;
-                        cs = 72;
-                        goto _out;
-                    }
-                }
-                uuidb.end(p);
-            }
+            { uuidb.end(p); }
 #line 10 "ragel/./text-grammar.rl"
             { op_.SetRef(Uuid{variety, value, version, origin}); }
-#line 40 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -511,21 +466,10 @@ Status TextFrame::Cursor::Next() {
             origin.end(p);
         }
 #line 17 "ragel/././uuid-grammar.rl"
-            {
-                if (value.size() > Word::MAX_BASE64_SIZE ||
-                    origin.size() > Word::MAX_BASE64_SIZE) {
-                    cs = 0;
-                    {
-                        p++;
-                        cs = 72;
-                        goto _out;
-                    }
-                }
-                uuidb.end(p);
-            }
+            { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
             { op_.SetId(Uuid{variety, value, version, origin}); }
-#line 40 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -539,7 +483,7 @@ Status TextFrame::Cursor::Next() {
         st72:
             if (++p == pe) goto _test_eof72;
             case 72:
-#line 401 "ron/text-parser.cc"
+#line 369 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr198;
@@ -629,9 +573,10 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 31 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
+                    if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
                         {
                             p++;
@@ -639,10 +584,8 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    uuidb.end(p);
+                    op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-#line 31 "ragel/./text-grammar.rl"
-                { op_.AddAtom(Uuid{variety, value, version, origin}); }
                 goto st1;
             tr85 :
 #line 16 "ragel/././uuid-grammar.rl"
@@ -650,9 +593,10 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 31 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
+                    if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
                         {
                             p++;
@@ -660,10 +604,8 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    uuidb.end(p);
+                    op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-#line 31 "ragel/./text-grammar.rl"
-                { op_.AddAtom(Uuid{variety, value, version, origin}); }
                 goto st1;
             tr101 :
 #line 14 "ragel/./text-grammar.rl"
@@ -684,22 +626,20 @@ Status TextFrame::Cursor::Next() {
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 1;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 1;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st1;
             tr113 :
@@ -708,22 +648,20 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 1;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 1;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st1;
             tr122 :
@@ -732,22 +670,20 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 1;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 1;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st1;
             tr132 :
@@ -768,22 +704,20 @@ Status TextFrame::Cursor::Next() {
 #line 16 "ragel/././uuid-grammar.rl"
                 { origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 1;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 1;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st1;
             tr140 :
@@ -804,22 +738,20 @@ Status TextFrame::Cursor::Next() {
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 1;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 1;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st1;
             tr155 :
@@ -828,18 +760,7 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 1;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
                 goto st1;
@@ -849,18 +770,7 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 1;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 10 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
                 goto st1;
@@ -870,18 +780,7 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 1;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 10 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
                 goto st1;
@@ -891,25 +790,14 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 1;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
                 goto st1;
             st1:
                 if (++p == pe) goto _test_eof1;
             case 1:
-#line 661 "ron/text-parser.cc"
+#line 597 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -942,7 +830,7 @@ Status TextFrame::Cursor::Next() {
             st2:
                 if (++p == pe) goto _test_eof2;
             case 2:
-#line 691 "ron/text-parser.cc"
+#line 627 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -987,7 +875,7 @@ Status TextFrame::Cursor::Next() {
             st3:
                 if (++p == pe) goto _test_eof3;
             case 3:
-#line 733 "ron/text-parser.cc"
+#line 669 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr13;
@@ -1015,7 +903,7 @@ Status TextFrame::Cursor::Next() {
                 if (9u <= (*p) && (*p) <= 10u) goto tr13;
                 goto st0;
             tr13 :
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -1039,7 +927,7 @@ Status TextFrame::Cursor::Next() {
                     Atom::Integer(parse_int(intb), body.range_of(intb)));
                 lastintb = intb.buf_;
             }
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1062,7 +950,7 @@ Status TextFrame::Cursor::Next() {
                 op_.AddAtom(
                     Atom::Float(parse_float(floatb), body.range_of(floatb)));
             }
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1076,9 +964,10 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 31 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
+                    if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
                         {
                             p++;
@@ -1086,11 +975,9 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    uuidb.end(p);
+                    op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-#line 31 "ragel/./text-grammar.rl"
-                { op_.AddAtom(Uuid{variety, value, version, origin}); }
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1104,9 +991,10 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 31 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
+                    if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
                         {
                             p++;
@@ -1114,11 +1002,9 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    uuidb.end(p);
+                    op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-#line 31 "ragel/./text-grammar.rl"
-                { op_.AddAtom(Uuid{variety, value, version, origin}); }
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1145,24 +1031,22 @@ Status TextFrame::Cursor::Next() {
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 4;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 4;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1176,24 +1060,22 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 4;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 4;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1207,24 +1089,22 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 4;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 4;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1250,24 +1130,22 @@ Status TextFrame::Cursor::Next() {
 #line 16 "ragel/././uuid-grammar.rl"
                 { origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 4;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 4;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1293,24 +1171,22 @@ Status TextFrame::Cursor::Next() {
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 4;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 4;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1324,21 +1200,10 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 4;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 10 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1352,21 +1217,10 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 4;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 10 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1377,7 +1231,7 @@ Status TextFrame::Cursor::Next() {
             st4:
                 if (++p == pe) goto _test_eof4;
             case 4:
-#line 1025 "ron/text-parser.cc"
+#line 937 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr13;
@@ -1422,7 +1276,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr21;
                 goto st0;
             tr24 :
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -1469,9 +1323,10 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 31 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
+                    if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
                         {
                             p++;
@@ -1479,10 +1334,8 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    uuidb.end(p);
+                    op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-#line 31 "ragel/./text-grammar.rl"
-                { op_.AddAtom(Uuid{variety, value, version, origin}); }
                 goto st5;
             tr86 :
 #line 16 "ragel/././uuid-grammar.rl"
@@ -1490,9 +1343,10 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 31 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
+                    if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
                         {
                             p++;
@@ -1500,10 +1354,8 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    uuidb.end(p);
+                    op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-#line 31 "ragel/./text-grammar.rl"
-                { op_.AddAtom(Uuid{variety, value, version, origin}); }
                 goto st5;
             tr102 :
 #line 14 "ragel/./text-grammar.rl"
@@ -1524,22 +1376,20 @@ Status TextFrame::Cursor::Next() {
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 5;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 5;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st5;
             tr114 :
@@ -1548,22 +1398,20 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 5;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 5;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st5;
             tr123 :
@@ -1572,22 +1420,20 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 5;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 5;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st5;
             tr133 :
@@ -1608,22 +1454,20 @@ Status TextFrame::Cursor::Next() {
 #line 16 "ragel/././uuid-grammar.rl"
                 { origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 5;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 5;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st5;
             tr141 :
@@ -1644,22 +1488,20 @@ Status TextFrame::Cursor::Next() {
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 5;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 5;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st5;
             tr156 :
@@ -1668,18 +1510,7 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 5;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
                 goto st5;
@@ -1689,18 +1520,7 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 5;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 10 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
                 goto st5;
@@ -1710,18 +1530,7 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 5;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 10 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
                 goto st5;
@@ -1731,25 +1540,14 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 5;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
                 goto st5;
             st5:
                 if (++p == pe) goto _test_eof5;
             case 5:
-#line 1289 "ron/text-parser.cc"
+#line 1169 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr24;
@@ -1798,7 +1596,7 @@ Status TextFrame::Cursor::Next() {
             st7:
                 if (++p == pe) goto _test_eof7;
             case 7:
-#line 1334 "ron/text-parser.cc"
+#line 1214 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -1841,7 +1639,7 @@ Status TextFrame::Cursor::Next() {
             }
                 goto st8;
             tr39 :
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -1852,7 +1650,7 @@ Status TextFrame::Cursor::Next() {
             st8:
                 if (++p == pe) goto _test_eof8;
             case 8:
-#line 1385 "ron/text-parser.cc"
+#line 1265 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr39;
@@ -1881,7 +1679,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr40;
                 goto st0;
             tr40 :
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -1892,7 +1690,7 @@ Status TextFrame::Cursor::Next() {
             st10:
                 if (++p == pe) goto _test_eof10;
             case 10:
-#line 1424 "ron/text-parser.cc"
+#line 1304 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr40;
@@ -1904,7 +1702,7 @@ Status TextFrame::Cursor::Next() {
                 if (9u <= (*p) && (*p) <= 10u) goto tr40;
                 goto st0;
             tr42 :
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -1915,7 +1713,7 @@ Status TextFrame::Cursor::Next() {
             st11:
                 if (++p == pe) goto _test_eof11;
             case 11:
-#line 1446 "ron/text-parser.cc"
+#line 1326 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr42;
@@ -1941,7 +1739,7 @@ Status TextFrame::Cursor::Next() {
             st12:
                 if (++p == pe) goto _test_eof12;
             case 12:
-#line 1466 "ron/text-parser.cc"
+#line 1346 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 34u:
                         goto st7;
@@ -2012,7 +1810,7 @@ Status TextFrame::Cursor::Next() {
             st17:
                 if (++p == pe) goto _test_eof17;
             case 17:
-#line 1539 "ron/text-parser.cc"
+#line 1419 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto st7;
                 goto st0;
             tr31 :
@@ -2024,7 +1822,7 @@ Status TextFrame::Cursor::Next() {
             st18:
                 if (++p == pe) goto _test_eof18;
             case 18:
-#line 1551 "ron/text-parser.cc"
+#line 1431 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto st17;
                 goto st0;
             tr32 :
@@ -2036,7 +1834,7 @@ Status TextFrame::Cursor::Next() {
             st19:
                 if (++p == pe) goto _test_eof19;
             case 19:
-#line 1563 "ron/text-parser.cc"
+#line 1443 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto st18;
                 goto st0;
             tr20 :
@@ -2050,7 +1848,7 @@ Status TextFrame::Cursor::Next() {
             st20:
                 if (++p == pe) goto _test_eof20;
             case 20:
-#line 1577 "ron/text-parser.cc"
+#line 1457 "ron/text-parser.cc"
                 if (48u <= (*p) && (*p) <= 57u) goto st21;
                 goto st0;
             st21:
@@ -2133,7 +1931,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr58;
                 goto st0;
             tr65 :
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -2180,9 +1978,10 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 31 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
+                    if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
                         {
                             p++;
@@ -2190,10 +1989,8 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    uuidb.end(p);
+                    op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-#line 31 "ragel/./text-grammar.rl"
-                { op_.AddAtom(Uuid{variety, value, version, origin}); }
                 goto st24;
             tr88 :
 #line 16 "ragel/././uuid-grammar.rl"
@@ -2201,9 +1998,10 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 31 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
+                    if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
                         {
                             p++;
@@ -2211,10 +2009,8 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    uuidb.end(p);
+                    op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-#line 31 "ragel/./text-grammar.rl"
-                { op_.AddAtom(Uuid{variety, value, version, origin}); }
                 goto st24;
             tr105 :
 #line 14 "ragel/./text-grammar.rl"
@@ -2235,22 +2031,20 @@ Status TextFrame::Cursor::Next() {
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 24;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 24;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st24;
             tr116 :
@@ -2259,22 +2053,20 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 24;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 24;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st24;
             tr124 :
@@ -2283,22 +2075,20 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 24;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 24;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st24;
             tr135 :
@@ -2319,22 +2109,20 @@ Status TextFrame::Cursor::Next() {
 #line 16 "ragel/././uuid-grammar.rl"
                 { origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 24;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 24;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st24;
             tr142 :
@@ -2355,22 +2143,20 @@ Status TextFrame::Cursor::Next() {
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 24;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 24;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st24;
             tr160 :
@@ -2379,18 +2165,7 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 24;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
                 goto st24;
@@ -2400,18 +2175,7 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 24;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 10 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
                 goto st24;
@@ -2421,18 +2185,7 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 24;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 10 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
                 goto st24;
@@ -2442,25 +2195,14 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 24;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
                 goto st24;
             st24:
                 if (++p == pe) goto _test_eof24;
             case 24:
-#line 1869 "ron/text-parser.cc"
+#line 1717 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr65;
@@ -2485,7 +2227,7 @@ Status TextFrame::Cursor::Next() {
             st25:
                 if (++p == pe) goto _test_eof25;
             case 25:
-#line 1890 "ron/text-parser.cc"
+#line 1738 "ron/text-parser.cc"
                 if (48u <= (*p) && (*p) <= 57u) goto st26;
                 goto st0;
             tr67 :
@@ -2497,7 +2239,7 @@ Status TextFrame::Cursor::Next() {
             st26:
                 if (++p == pe) goto _test_eof26;
             case 26:
-#line 1902 "ron/text-parser.cc"
+#line 1750 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr48;
@@ -2528,7 +2270,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr48;
                 goto st0;
             tr69 :
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -2575,9 +2317,10 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 31 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
+                    if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
                         {
                             p++;
@@ -2585,10 +2328,8 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    uuidb.end(p);
+                    op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-#line 31 "ragel/./text-grammar.rl"
-                { op_.AddAtom(Uuid{variety, value, version, origin}); }
                 goto st27;
             tr89 :
 #line 16 "ragel/././uuid-grammar.rl"
@@ -2596,9 +2337,10 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 31 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
+                    if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
                         {
                             p++;
@@ -2606,10 +2348,8 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    uuidb.end(p);
+                    op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-#line 31 "ragel/./text-grammar.rl"
-                { op_.AddAtom(Uuid{variety, value, version, origin}); }
                 goto st27;
             tr106 :
 #line 14 "ragel/./text-grammar.rl"
@@ -2630,22 +2370,20 @@ Status TextFrame::Cursor::Next() {
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 27;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 27;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st27;
             tr117 :
@@ -2654,22 +2392,20 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 27;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 27;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st27;
             tr125 :
@@ -2678,22 +2414,20 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 27;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 27;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st27;
             tr136 :
@@ -2714,22 +2448,20 @@ Status TextFrame::Cursor::Next() {
 #line 16 "ragel/././uuid-grammar.rl"
                 { origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 27;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 27;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st27;
             tr143 :
@@ -2750,22 +2482,20 @@ Status TextFrame::Cursor::Next() {
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 27;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 27;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st27;
             tr161 :
@@ -2774,18 +2504,7 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 27;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
                 goto st27;
@@ -2795,18 +2514,7 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 27;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 10 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
                 goto st27;
@@ -2816,18 +2524,7 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 27;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 10 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
                 goto st27;
@@ -2837,25 +2534,14 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 27;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
                 goto st27;
             st27:
                 if (++p == pe) goto _test_eof27;
             case 27:
-#line 2152 "ron/text-parser.cc"
+#line 1968 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr69;
@@ -2893,7 +2579,7 @@ Status TextFrame::Cursor::Next() {
             st28:
                 if (++p == pe) goto _test_eof28;
             case 28:
-#line 2189 "ron/text-parser.cc"
+#line 2005 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr72;
@@ -2950,7 +2636,7 @@ Status TextFrame::Cursor::Next() {
             st29:
                 if (++p == pe) goto _test_eof29;
             case 29:
-#line 2234 "ron/text-parser.cc"
+#line 2050 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr82;
@@ -2973,7 +2659,7 @@ Status TextFrame::Cursor::Next() {
             st30:
                 if (++p == pe) goto _test_eof30;
             case 30:
-#line 2256 "ron/text-parser.cc"
+#line 2072 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr83;
@@ -3013,7 +2699,7 @@ Status TextFrame::Cursor::Next() {
                     goto st30;
                 goto st0;
             tr91 :
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -3060,9 +2746,10 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 31 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
+                    if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
                         {
                             p++;
@@ -3070,10 +2757,8 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    uuidb.end(p);
+                    op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-#line 31 "ragel/./text-grammar.rl"
-                { op_.AddAtom(Uuid{variety, value, version, origin}); }
                 goto st31;
             tr90 :
 #line 16 "ragel/././uuid-grammar.rl"
@@ -3081,9 +2766,10 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 31 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
+                    if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
                         {
                             p++;
@@ -3091,10 +2777,8 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    uuidb.end(p);
+                    op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-#line 31 "ragel/./text-grammar.rl"
-                { op_.AddAtom(Uuid{variety, value, version, origin}); }
                 goto st31;
             tr109 :
 #line 14 "ragel/./text-grammar.rl"
@@ -3115,22 +2799,20 @@ Status TextFrame::Cursor::Next() {
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 31;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 31;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st31;
             tr118 :
@@ -3139,22 +2821,20 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 31;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 31;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st31;
             tr126 :
@@ -3163,22 +2843,20 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 31;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 31;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st31;
             tr137 :
@@ -3199,22 +2877,20 @@ Status TextFrame::Cursor::Next() {
 #line 16 "ragel/././uuid-grammar.rl"
                 { origin.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 31;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 31;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st31;
             tr144 :
@@ -3235,22 +2911,20 @@ Status TextFrame::Cursor::Next() {
 #line 13 "ragel/././uuid-grammar.rl"
                 { value.end(p); }
 #line 17 "ragel/././uuid-grammar.rl"
+                { uuidb.end(p); }
+#line 35 "ragel/./text-grammar.rl"
                 {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 31;
-                            goto _out;
+                    if (!intb.same(uuidb)) {
+                        if (word_too_big(value) || word_too_big(origin)) {
+                            cs = 0;
+                            {
+                                p++;
+                                cs = 31;
+                                goto _out;
+                            }
                         }
-                    }
-                    uuidb.end(p);
-                }
-#line 34 "ragel/./text-grammar.rl"
-                {
-                    if (!intb.same(uuidb))
                         op_.AddAtom(Uuid{variety, value, version, origin});
+                    }
                 }
                 goto st31;
             tr162 :
@@ -3259,18 +2933,7 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 31;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
                 goto st31;
@@ -3280,18 +2943,7 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 31;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 10 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
                 goto st31;
@@ -3301,18 +2953,7 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 31;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 10 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
                 goto st31;
@@ -3322,25 +2963,14 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 31;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
                 goto st31;
             st31:
                 if (++p == pe) goto _test_eof31;
             case 31:
-#line 2514 "ron/text-parser.cc"
+#line 2298 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr91;
@@ -3365,7 +2995,7 @@ Status TextFrame::Cursor::Next() {
             st32:
                 if (++p == pe) goto _test_eof32;
             case 32:
-#line 2535 "ron/text-parser.cc"
+#line 2319 "ron/text-parser.cc"
                 if (48u <= (*p) && (*p) <= 57u) goto st33;
                 goto st0;
             tr93 :
@@ -3377,7 +3007,7 @@ Status TextFrame::Cursor::Next() {
             st33:
                 if (++p == pe) goto _test_eof33;
             case 33:
-#line 2547 "ron/text-parser.cc"
+#line 2331 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 46u:
                         goto st22;
@@ -3445,7 +3075,7 @@ Status TextFrame::Cursor::Next() {
             st37:
                 if (++p == pe) goto _test_eof37;
             case 37:
-#line 2605 "ron/text-parser.cc"
+#line 2389 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr97;
@@ -3479,7 +3109,7 @@ Status TextFrame::Cursor::Next() {
             st38:
                 if (++p == pe) goto _test_eof38;
             case 38:
-#line 2638 "ron/text-parser.cc"
+#line 2422 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr72;
@@ -3543,7 +3173,7 @@ Status TextFrame::Cursor::Next() {
             st39:
                 if (++p == pe) goto _test_eof39;
             case 39:
-#line 2691 "ron/text-parser.cc"
+#line 2475 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr98;
@@ -3606,7 +3236,7 @@ Status TextFrame::Cursor::Next() {
             st40:
                 if (++p == pe) goto _test_eof40;
             case 40:
-#line 2739 "ron/text-parser.cc"
+#line 2523 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr110;
@@ -3629,7 +3259,7 @@ Status TextFrame::Cursor::Next() {
             st41:
                 if (++p == pe) goto _test_eof41;
             case 41:
-#line 2761 "ron/text-parser.cc"
+#line 2545 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr111;
@@ -3677,7 +3307,7 @@ Status TextFrame::Cursor::Next() {
             st42:
                 if (++p == pe) goto _test_eof42;
             case 42:
-#line 2797 "ron/text-parser.cc"
+#line 2581 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr119;
@@ -3711,7 +3341,7 @@ Status TextFrame::Cursor::Next() {
             st43:
                 if (++p == pe) goto _test_eof43;
             case 43:
-#line 2830 "ron/text-parser.cc"
+#line 2614 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr120;
@@ -3864,7 +3494,7 @@ Status TextFrame::Cursor::Next() {
             st46:
                 if (++p == pe) goto _test_eof46;
             case 46:
-#line 2951 "ron/text-parser.cc"
+#line 2735 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr110;
@@ -3887,7 +3517,7 @@ Status TextFrame::Cursor::Next() {
             st47:
                 if (++p == pe) goto _test_eof47;
             case 47:
-#line 2973 "ron/text-parser.cc"
+#line 2757 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr130;
@@ -3986,7 +3616,7 @@ Status TextFrame::Cursor::Next() {
             st49:
                 if (++p == pe) goto _test_eof49;
             case 49:
-#line 3053 "ron/text-parser.cc"
+#line 2837 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr120;
@@ -4041,7 +3671,7 @@ Status TextFrame::Cursor::Next() {
             st50:
                 if (++p == pe) goto _test_eof50;
             case 50:
-#line 3096 "ron/text-parser.cc"
+#line 2880 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 34u:
                         goto st2;
@@ -4112,7 +3742,7 @@ Status TextFrame::Cursor::Next() {
             st55:
                 if (++p == pe) goto _test_eof55;
             case 55:
-#line 3169 "ron/text-parser.cc"
+#line 2953 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto st2;
                 goto st0;
             tr5 :
@@ -4124,7 +3754,7 @@ Status TextFrame::Cursor::Next() {
             st56:
                 if (++p == pe) goto _test_eof56;
             case 56:
-#line 3181 "ron/text-parser.cc"
+#line 2965 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto st55;
                 goto st0;
             tr6 :
@@ -4136,7 +3766,7 @@ Status TextFrame::Cursor::Next() {
             st57:
                 if (++p == pe) goto _test_eof57;
             case 57:
-#line 3193 "ron/text-parser.cc"
+#line 2977 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto st56;
                 goto st0;
             st58:
@@ -4181,7 +3811,7 @@ Status TextFrame::Cursor::Next() {
             st60:
                 if (++p == pe) goto _test_eof60;
             case 60:
-#line 3244 "ron/text-parser.cc"
+#line 3028 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr152;
@@ -4230,7 +3860,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr154;
                 goto st0;
             tr163 :
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -4244,21 +3874,10 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 61;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -4272,21 +3891,10 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 61;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
-#line 45 "ragel/./text-grammar.rl"
+#line 48 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -4297,7 +3905,7 @@ Status TextFrame::Cursor::Next() {
             st61:
                 if (++p == pe) goto _test_eof61;
             case 61:
-#line 3339 "ron/text-parser.cc"
+#line 3115 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr163;
@@ -4349,18 +3957,7 @@ Status TextFrame::Cursor::Next() {
                 value.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 62;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
                 goto st62;
@@ -4370,25 +3967,14 @@ Status TextFrame::Cursor::Next() {
                 origin.end(p);
             }
 #line 17 "ragel/././uuid-grammar.rl"
-                {
-                    if (value.size() > Word::MAX_BASE64_SIZE ||
-                        origin.size() > Word::MAX_BASE64_SIZE) {
-                        cs = 0;
-                        {
-                            p++;
-                            cs = 62;
-                            goto _out;
-                        }
-                    }
-                    uuidb.end(p);
-                }
+                { uuidb.end(p); }
 #line 7 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
                 goto st62;
             st62:
                 if (++p == pe) goto _test_eof62;
             case 62:
-#line 3410 "ron/text-parser.cc"
+#line 3178 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr166;
@@ -4419,7 +4005,7 @@ Status TextFrame::Cursor::Next() {
             st63:
                 if (++p == pe) goto _test_eof63;
             case 63:
-#line 3442 "ron/text-parser.cc"
+#line 3210 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr167;
@@ -4476,7 +4062,7 @@ Status TextFrame::Cursor::Next() {
             st64:
                 if (++p == pe) goto _test_eof64;
             case 64:
-#line 3487 "ron/text-parser.cc"
+#line 3255 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr177;
@@ -4499,7 +4085,7 @@ Status TextFrame::Cursor::Next() {
             st65:
                 if (++p == pe) goto _test_eof65;
             case 65:
-#line 3509 "ron/text-parser.cc"
+#line 3277 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr178;
@@ -4547,7 +4133,7 @@ Status TextFrame::Cursor::Next() {
             st66:
                 if (++p == pe) goto _test_eof66;
             case 66:
-#line 3545 "ron/text-parser.cc"
+#line 3313 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr186;
@@ -4581,7 +4167,7 @@ Status TextFrame::Cursor::Next() {
             st67:
                 if (++p == pe) goto _test_eof67;
             case 67:
-#line 3578 "ron/text-parser.cc"
+#line 3346 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr167;
@@ -4636,7 +4222,7 @@ Status TextFrame::Cursor::Next() {
             st68:
                 if (++p == pe) goto _test_eof68;
             case 68:
-#line 3622 "ron/text-parser.cc"
+#line 3390 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr187;
@@ -4659,7 +4245,7 @@ Status TextFrame::Cursor::Next() {
             st69:
                 if (++p == pe) goto _test_eof69;
             case 69:
-#line 3644 "ron/text-parser.cc"
+#line 3412 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr188;
@@ -4709,7 +4295,7 @@ Status TextFrame::Cursor::Next() {
             st70:
                 if (++p == pe) goto _test_eof70;
             case 70:
-#line 3681 "ron/text-parser.cc"
+#line 3449 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr197;
@@ -4743,7 +4329,7 @@ Status TextFrame::Cursor::Next() {
             st71:
                 if (++p == pe) goto _test_eof71;
             case 71:
-#line 3714 "ron/text-parser.cc"
+#line 3482 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr152;

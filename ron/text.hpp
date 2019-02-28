@@ -91,6 +91,7 @@ class TextFrame {
             assert(size() > idx);
             return op_.atom(idx);
         }
+        static bool int_too_big(const slice_t& data);
     };
 
     struct Builder {

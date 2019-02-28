@@ -70,15 +70,33 @@ Status TextFrame::Split(std::vector<TextFrame>& to) {
     size_t pos = 0;
     do {
         size_t at = d.find(".\n", pos);
-        if (at == string::npos)
+        if (at == string::npos) {
             at = s;
-        else
+        } else {
             at += 2;
+        }
         to.emplace_back(d.substr(pos, at - pos));
         pos = at;
         while (pos < s && isspace(d[pos])) pos++;
     } while (pos < s);
     return Status::OK;
+}
+
+bool TextFrame::Cursor::int_too_big(const slice_t& data) {
+    static const char* MAXINTSTR = "9223372036854775808";
+    if (data.size() < 19) {
+        return false;
+    }
+    if (data.size() > 20) {
+        return true;
+    }
+    const char* mem = data.begin();
+    size_t sz = data.size();
+    if (*mem == '-' || *mem == '+') {
+        ++mem;
+        --sz;
+    }
+    return memcmp(mem, MAXINTSTR, sz) > 0;
 }
 
 }  // namespace ron

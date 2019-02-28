@@ -96,7 +96,7 @@ Status TextFrame::Cursor::Next() {
 #line 14 "ragel/./text-grammar.rl"
         {
             intb.end(p);
-            if (intb.size() > 21) {
+            if (int_too_big(intb)) {
                 cs = 0;
                 {
                     p++;
@@ -210,7 +210,7 @@ Status TextFrame::Cursor::Next() {
 #line 14 "ragel/./text-grammar.rl"
         {
             intb.end(p);
-            if (intb.size() > 21) {
+            if (int_too_big(intb)) {
                 cs = 0;
                 {
                     p++;
@@ -594,7 +594,7 @@ Status TextFrame::Cursor::Next() {
 #line 14 "ragel/./text-grammar.rl"
             {
                 intb.end(p);
-                if (intb.size() > 21) {
+                if (int_too_big(intb)) {
                     cs = 0;
                     {
                         p++;
@@ -669,7 +669,7 @@ Status TextFrame::Cursor::Next() {
 #line 14 "ragel/./text-grammar.rl"
             {
                 intb.end(p);
-                if (intb.size() > 21) {
+                if (int_too_big(intb)) {
                     cs = 0;
                     {
                         p++;
@@ -1027,7 +1027,7 @@ Status TextFrame::Cursor::Next() {
 #line 14 "ragel/./text-grammar.rl"
             {
                 intb.end(p);
-                if (intb.size() > 21) {
+                if (int_too_big(intb)) {
                     cs = 0;
                     {
                         p++;
@@ -1130,7 +1130,7 @@ Status TextFrame::Cursor::Next() {
 #line 14 "ragel/./text-grammar.rl"
             {
                 intb.end(p);
-                if (intb.size() > 21) {
+                if (int_too_big(intb)) {
                     cs = 0;
                     {
                         p++;
@@ -1434,7 +1434,7 @@ Status TextFrame::Cursor::Next() {
 #line 14 "ragel/./text-grammar.rl"
             {
                 intb.end(p);
-                if (intb.size() > 21) {
+                if (int_too_big(intb)) {
                     cs = 0;
                     {
                         p++;
@@ -1509,7 +1509,7 @@ Status TextFrame::Cursor::Next() {
 #line 14 "ragel/./text-grammar.rl"
             {
                 intb.end(p);
-                if (intb.size() > 21) {
+                if (int_too_big(intb)) {
                     cs = 0;
                     {
                         p++;
@@ -2145,7 +2145,7 @@ Status TextFrame::Cursor::Next() {
 #line 14 "ragel/./text-grammar.rl"
             {
                 intb.end(p);
-                if (intb.size() > 21) {
+                if (int_too_big(intb)) {
                     cs = 0;
                     {
                         p++;
@@ -2220,7 +2220,7 @@ Status TextFrame::Cursor::Next() {
 #line 14 "ragel/./text-grammar.rl"
             {
                 intb.end(p);
-                if (intb.size() > 21) {
+                if (int_too_big(intb)) {
                     cs = 0;
                     {
                         p++;
@@ -2540,7 +2540,7 @@ Status TextFrame::Cursor::Next() {
 #line 14 "ragel/./text-grammar.rl"
             {
                 intb.end(p);
-                if (intb.size() > 21) {
+                if (int_too_big(intb)) {
                     cs = 0;
                     {
                         p++;
@@ -2615,7 +2615,7 @@ Status TextFrame::Cursor::Next() {
 #line 14 "ragel/./text-grammar.rl"
             {
                 intb.end(p);
-                if (intb.size() > 21) {
+                if (int_too_big(intb)) {
                     cs = 0;
                     {
                         p++;
@@ -3025,7 +3025,7 @@ Status TextFrame::Cursor::Next() {
 #line 14 "ragel/./text-grammar.rl"
             {
                 intb.end(p);
-                if (intb.size() > 21) {
+                if (int_too_big(intb)) {
                     cs = 0;
                     {
                         p++;
@@ -3100,7 +3100,7 @@ Status TextFrame::Cursor::Next() {
 #line 14 "ragel/./text-grammar.rl"
             {
                 intb.end(p);
-                if (intb.size() > 21) {
+                if (int_too_big(intb)) {
                     cs = 0;
                     {
                         p++;

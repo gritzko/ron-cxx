@@ -13,7 +13,7 @@
     action begin_int { intb.begin(p); }
     action end_int {
         intb.end(p);
-        if (intb.size() > 21) { cs = 0; fbreak; }
+        if (int_too_big(intb)) { cs = 0; fbreak; }
         op_.AddAtom(Atom::Integer(parse_int(intb), body.range_of(intb))); 
         lastintb = intb.buf_;
     }

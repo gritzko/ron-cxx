@@ -2,18 +2,15 @@
 
 namespace ron {
 
-    void report(const char* pb, const char* p, const char* event) {
-        std::cerr<<"at "<<(p-pb)<<" '"<<*p<<"' "<<event<<"\n";
-    }
-
     Uuid::Uuid (slice_t data) {
+        using iterator = const unsigned char *;
         %% machine UUID;
         %% write data;
 
-        const char* pb = data.buf_;
-        const char* pe = data.buf_+data.size_;
-        const char* p = data.buf_;
-        const char* eof = pe;
+        iterator pb = (iterator)data.buf_;
+        iterator pe = pb+data.size_;
+        iterator p = pb;
+        iterator eof = pe;
         int cs = 0;
 
         slice_t value{}, origin{}, uuidb;

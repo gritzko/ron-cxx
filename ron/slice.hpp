@@ -76,12 +76,14 @@ struct slice_t {
         buf_ = to;
         size_ = 0;
     }
+    inline void begin(const unsigned char* to) { begin((const char*)to); }
 
     inline void end(const char* to) {
         assert(to >= buf_);
         assert(to - buf_ < (1 << 30));
         size_ = fsize_t(to - buf_);
     }
+    inline void end(const unsigned char* to) { end((const char*)to); }
 
     inline std::string str() const { return std::string{buf_, size_}; }
 

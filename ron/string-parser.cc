@@ -1,0 +1,521 @@
+
+#line 1 "ragel/string-parser.rl"
+#include <iostream>
+#include <string>
+#include "text.hpp"
+
+#line 25 "ragel/string-parser.rl"
+
+namespace ron {
+
+using namespace std;
+
+using iterator = const unsigned char*;
+
+void push_back_uniesc(u16string& res, iterator b, iterator e) {
+    cerr << "uni\n";
+}
+
+void push_back_esc(u16string& res, iterator b, iterator e) {
+    assert(*b == '\\');
+    switch (*(b + 1)) {
+        case 'b':
+            return res.push_back('\b');
+        case 'f':
+            return res.push_back('\f');
+        case 'n':
+            return res.push_back('\n');
+        case 'r':
+            return res.push_back('\r');
+        case 't':
+            return res.push_back('\t');
+        default:
+            return res.push_back(*(b + 1));
+    }
+}
+
+void push_back_cp(u16string& res, iterator b, iterator e) {
+    // deserialize
+    const unsigned int sz = e - b;
+    assert(sz && sz <= 4);
+    static uint8_t MASK[5] = {0, 127, 31, 15, 7};
+    uint32_t codepoint{static_cast<uint32_t>(*b & MASK[sz])};
+    switch (sz) {
+        case 4:
+            codepoint <<= 6;
+            codepoint |= *(++b) & 63;
+        case 3:
+            codepoint <<= 6;
+            codepoint |= *(++b) & 63;
+        case 2:
+            codepoint <<= 6;
+            codepoint |= *(++b) & 63;
+        case 1:
+            break;
+        default:
+            assert(false);
+    }
+    // serialized
+    if (codepoint < 0xd800) {
+        res.push_back((char16_t)codepoint);
+    } else if (codepoint >= 0xe000 && codepoint < 0x10000) {
+        res.push_back((char16_t)codepoint);
+    } else {
+        res.push_back(0xd800 + (codepoint >> 10));
+        res.push_back(0xdc00 + (codepoint & 1023));
+    }
+}
+
+u16string TextFrame::utf16string(Atom str_atom) const {
+    assert(str_atom.origin().flags() == STRING_ATOM);
+
+    frange_t range = str_atom.origin().range();
+    fsize_t offset = range.first, size = range.second;
+
+    u16string ret;
+    ret.reserve(size);
+
+    iterator pb = (iterator)data_.data() + offset;
+    auto pe = pb + size;
+    auto p = pb;
+    auto eof = pe;
+    int cs = 0;
+
+    iterator uniesc, esc, cp;
+
+#line 101 "ragel/string-parser.rl"
+
+#line 88 "ron/string-parser.cc"
+    static const int UTF8ESC_start = 9;
+    static const int UTF8ESC_first_final = 9;
+    static const int UTF8ESC_error = 0;
+
+    static const int UTF8ESC_en_main = 9;
+
+#line 102 "ragel/string-parser.rl"
+
+#line 98 "ron/string-parser.cc"
+    { cs = UTF8ESC_start; }
+
+#line 103 "ragel/string-parser.rl"
+
+#line 106 "ron/string-parser.cc"
+    {
+        if (p == pe) goto _test_eof;
+        switch (cs) {
+            case 9:
+                switch ((*p)) {
+                    case 10u:
+                        goto st0;
+                    case 13u:
+                        goto st0;
+                    case 39u:
+                        goto st0;
+                    case 92u:
+                        goto tr11;
+                }
+                if ((*p) < 224u) {
+                    if ((*p) > 191u) {
+                        if (192u <= (*p) && (*p) <= 223u) goto tr12;
+                    } else if ((*p) >= 128u)
+                        goto st0;
+                } else if ((*p) > 239u) {
+                    if ((*p) > 247u) {
+                        if (248u <= (*p)) goto st0;
+                    } else if ((*p) >= 240u)
+                        goto tr14;
+                } else
+                    goto tr13;
+                goto tr10;
+            tr10 :
+#line 17 "ragel/string-parser.rl"
+            {
+                cp = p;
+            }
+                goto st10;
+            tr15 :
+#line 18 "ragel/string-parser.rl"
+            {
+                push_back_cp(ret, cp, p);
+            }
+#line 17 "ragel/string-parser.rl"
+                { cp = p; }
+                goto st10;
+            tr20 :
+#line 15 "ragel/string-parser.rl"
+            {
+                push_back_esc(ret, esc, p);
+            }
+#line 17 "ragel/string-parser.rl"
+                { cp = p; }
+                goto st10;
+            tr25 :
+#line 12 "ragel/string-parser.rl"
+            {
+                push_back_uniesc(ret, uniesc, p);
+            }
+#line 17 "ragel/string-parser.rl"
+                { cp = p; }
+                goto st10;
+            st10:
+                if (++p == pe) goto _test_eof10;
+            case 10:
+#line 160 "ron/string-parser.cc"
+                switch ((*p)) {
+                    case 10u:
+                        goto st0;
+                    case 13u:
+                        goto st0;
+                    case 39u:
+                        goto st0;
+                    case 92u:
+                        goto tr16;
+                }
+                if ((*p) < 224u) {
+                    if ((*p) > 191u) {
+                        if (192u <= (*p) && (*p) <= 223u) goto tr17;
+                    } else if ((*p) >= 128u)
+                        goto st0;
+                } else if ((*p) > 239u) {
+                    if ((*p) > 247u) {
+                        if (248u <= (*p)) goto st0;
+                    } else if ((*p) >= 240u)
+                        goto tr19;
+                } else
+                    goto tr18;
+                goto tr15;
+            st0:
+                cs = 0;
+                goto _out;
+            tr11 :
+#line 11 "ragel/string-parser.rl"
+            {
+                uniesc = p;
+            }
+#line 14 "ragel/string-parser.rl"
+                { esc = p; }
+                goto st1;
+            tr16 :
+#line 18 "ragel/string-parser.rl"
+            {
+                push_back_cp(ret, cp, p);
+            }
+#line 11 "ragel/string-parser.rl"
+                { uniesc = p; }
+#line 14 "ragel/string-parser.rl"
+                { esc = p; }
+                goto st1;
+            tr21 :
+#line 15 "ragel/string-parser.rl"
+            {
+                push_back_esc(ret, esc, p);
+            }
+#line 11 "ragel/string-parser.rl"
+                { uniesc = p; }
+#line 14 "ragel/string-parser.rl"
+                { esc = p; }
+                goto st1;
+            tr26 :
+#line 12 "ragel/string-parser.rl"
+            {
+                push_back_uniesc(ret, uniesc, p);
+            }
+#line 11 "ragel/string-parser.rl"
+                { uniesc = p; }
+#line 14 "ragel/string-parser.rl"
+                { esc = p; }
+                goto st1;
+            st1:
+                if (++p == pe) goto _test_eof1;
+            case 1:
+#line 219 "ron/string-parser.cc"
+                switch ((*p)) {
+                    case 34u:
+                        goto st11;
+                    case 39u:
+                        goto st11;
+                    case 47u:
+                        goto st11;
+                    case 92u:
+                        goto st11;
+                    case 98u:
+                        goto st11;
+                    case 110u:
+                        goto st11;
+                    case 114u:
+                        goto st11;
+                    case 116u:
+                        goto st11;
+                    case 117u:
+                        goto st5;
+                }
+                goto st0;
+            st11:
+                if (++p == pe) goto _test_eof11;
+            case 11:
+                switch ((*p)) {
+                    case 10u:
+                        goto st0;
+                    case 13u:
+                        goto st0;
+                    case 39u:
+                        goto st0;
+                    case 92u:
+                        goto tr21;
+                }
+                if ((*p) < 224u) {
+                    if ((*p) > 191u) {
+                        if (192u <= (*p) && (*p) <= 223u) goto tr22;
+                    } else if ((*p) >= 128u)
+                        goto st0;
+                } else if ((*p) > 239u) {
+                    if ((*p) > 247u) {
+                        if (248u <= (*p)) goto st0;
+                    } else if ((*p) >= 240u)
+                        goto tr24;
+                } else
+                    goto tr23;
+                goto tr20;
+            tr12 :
+#line 17 "ragel/string-parser.rl"
+            {
+                cp = p;
+            }
+                goto st2;
+            tr17 :
+#line 18 "ragel/string-parser.rl"
+            {
+                push_back_cp(ret, cp, p);
+            }
+#line 17 "ragel/string-parser.rl"
+                { cp = p; }
+                goto st2;
+            tr22 :
+#line 15 "ragel/string-parser.rl"
+            {
+                push_back_esc(ret, esc, p);
+            }
+#line 17 "ragel/string-parser.rl"
+                { cp = p; }
+                goto st2;
+            tr27 :
+#line 12 "ragel/string-parser.rl"
+            {
+                push_back_uniesc(ret, uniesc, p);
+            }
+#line 17 "ragel/string-parser.rl"
+                { cp = p; }
+                goto st2;
+            st2:
+                if (++p == pe) goto _test_eof2;
+            case 2:
+#line 283 "ron/string-parser.cc"
+                if (128u <= (*p) && (*p) <= 191u) goto st10;
+                goto st0;
+            tr13 :
+#line 17 "ragel/string-parser.rl"
+            {
+                cp = p;
+            }
+                goto st3;
+            tr18 :
+#line 18 "ragel/string-parser.rl"
+            {
+                push_back_cp(ret, cp, p);
+            }
+#line 17 "ragel/string-parser.rl"
+                { cp = p; }
+                goto st3;
+            tr23 :
+#line 15 "ragel/string-parser.rl"
+            {
+                push_back_esc(ret, esc, p);
+            }
+#line 17 "ragel/string-parser.rl"
+                { cp = p; }
+                goto st3;
+            tr28 :
+#line 12 "ragel/string-parser.rl"
+            {
+                push_back_uniesc(ret, uniesc, p);
+            }
+#line 17 "ragel/string-parser.rl"
+                { cp = p; }
+                goto st3;
+            st3:
+                if (++p == pe) goto _test_eof3;
+            case 3:
+#line 313 "ron/string-parser.cc"
+                if (128u <= (*p) && (*p) <= 191u) goto st2;
+                goto st0;
+            tr14 :
+#line 17 "ragel/string-parser.rl"
+            {
+                cp = p;
+            }
+                goto st4;
+            tr19 :
+#line 18 "ragel/string-parser.rl"
+            {
+                push_back_cp(ret, cp, p);
+            }
+#line 17 "ragel/string-parser.rl"
+                { cp = p; }
+                goto st4;
+            tr24 :
+#line 15 "ragel/string-parser.rl"
+            {
+                push_back_esc(ret, esc, p);
+            }
+#line 17 "ragel/string-parser.rl"
+                { cp = p; }
+                goto st4;
+            tr29 :
+#line 12 "ragel/string-parser.rl"
+            {
+                push_back_uniesc(ret, uniesc, p);
+            }
+#line 17 "ragel/string-parser.rl"
+                { cp = p; }
+                goto st4;
+            st4:
+                if (++p == pe) goto _test_eof4;
+            case 4:
+#line 343 "ron/string-parser.cc"
+                if (128u <= (*p) && (*p) <= 191u) goto st3;
+                goto st0;
+            st5:
+                if (++p == pe) goto _test_eof5;
+            case 5:
+                if ((*p) < 65u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto st6;
+                } else if ((*p) > 70u) {
+                    if (97u <= (*p) && (*p) <= 102u) goto st6;
+                } else
+                    goto st6;
+                goto st0;
+            st6:
+                if (++p == pe) goto _test_eof6;
+            case 6:
+                if ((*p) < 65u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto st7;
+                } else if ((*p) > 70u) {
+                    if (97u <= (*p) && (*p) <= 102u) goto st7;
+                } else
+                    goto st7;
+                goto st0;
+            st7:
+                if (++p == pe) goto _test_eof7;
+            case 7:
+                if ((*p) < 65u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto st8;
+                } else if ((*p) > 70u) {
+                    if (97u <= (*p) && (*p) <= 102u) goto st8;
+                } else
+                    goto st8;
+                goto st0;
+            st8:
+                if (++p == pe) goto _test_eof8;
+            case 8:
+                if ((*p) < 65u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto st12;
+                } else if ((*p) > 70u) {
+                    if (97u <= (*p) && (*p) <= 102u) goto st12;
+                } else
+                    goto st12;
+                goto st0;
+            st12:
+                if (++p == pe) goto _test_eof12;
+            case 12:
+                switch ((*p)) {
+                    case 10u:
+                        goto st0;
+                    case 13u:
+                        goto st0;
+                    case 39u:
+                        goto st0;
+                    case 92u:
+                        goto tr26;
+                }
+                if ((*p) < 224u) {
+                    if ((*p) > 191u) {
+                        if (192u <= (*p) && (*p) <= 223u) goto tr27;
+                    } else if ((*p) >= 128u)
+                        goto st0;
+                } else if ((*p) > 239u) {
+                    if ((*p) > 247u) {
+                        if (248u <= (*p)) goto st0;
+                    } else if ((*p) >= 240u)
+                        goto tr29;
+                } else
+                    goto tr28;
+                goto tr25;
+        }
+    _test_eof10:
+        cs = 10;
+        goto _test_eof;
+    _test_eof1:
+        cs = 1;
+        goto _test_eof;
+    _test_eof11:
+        cs = 11;
+        goto _test_eof;
+    _test_eof2:
+        cs = 2;
+        goto _test_eof;
+    _test_eof3:
+        cs = 3;
+        goto _test_eof;
+    _test_eof4:
+        cs = 4;
+        goto _test_eof;
+    _test_eof5:
+        cs = 5;
+        goto _test_eof;
+    _test_eof6:
+        cs = 6;
+        goto _test_eof;
+    _test_eof7:
+        cs = 7;
+        goto _test_eof;
+    _test_eof8:
+        cs = 8;
+        goto _test_eof;
+    _test_eof12:
+        cs = 12;
+        goto _test_eof;
+
+    _test_eof : {}
+        if (p == eof) {
+            switch (cs) {
+                case 12:
+#line 12 "ragel/string-parser.rl"
+                {
+                    push_back_uniesc(ret, uniesc, p);
+                } break;
+                case 11:
+#line 15 "ragel/string-parser.rl"
+                {
+                    push_back_esc(ret, esc, p);
+                } break;
+                case 10:
+#line 18 "ragel/string-parser.rl"
+                {
+                    push_back_cp(ret, cp, p);
+                } break;
+#line 453 "ron/string-parser.cc"
+            }
+        }
+
+    _out : {}
+    }
+
+#line 109 "ragel/string-parser.rl"
+
+    // The string was already pre-parsed by Cursor::Next()
+    assert(cs != 0);
+
+    return ret;
+}
+
+}  // namespace ron

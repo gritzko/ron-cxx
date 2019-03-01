@@ -12,7 +12,7 @@ Status TextFrame::Cursor::Next () {
     Atoms& atoms = op_.atoms_;
 
     int line=1;
-
+    typedef const unsigned char* iterator;
 
     switch (cs) {
         case RON_error:
@@ -36,16 +36,16 @@ Status TextFrame::Cursor::Next () {
     }
 
     slice_t body{data()};
-    const char* pb = body.buf_;
-    const char* p = pb + off_;
-    const char* pe = pb + body.size();
-    const char* eof = pe;
-    const char* lineb = pb;
+    iterator pb = (iterator)body.buf_;
+    iterator p = pb + off_;
+    iterator pe = pb + body.size();
+    iterator eof = pe;
+    iterator lineb = pb;
     slice_t intb{p,0};
     slice_t floatb{p,0};
     slice_t strb{p,0};
     slice_t uuidb{p,0};
-    const char* lastintb{0};
+    iterator lastintb{0};
     char term{0};
     slice_t value, origin;
     char variety, version;

@@ -158,6 +158,19 @@ void test_syntax_errors () {
     assert(ok.comment()=="syntax error at line 2 col 5 (offset 13)");
 }
 
+void test_utf16 () {
+    string utf8 = "'пикачу ピカチュウ'!";
+    assert(utf8.size()==31);
+    Frame frame{utf8};
+    Cursor cur = frame.cursor();
+    assert(cur.valid());
+    assert(cur.has(2, STRING));
+    Atom str = cur.atom(2);
+    auto parsed = frame.utf16string(str);
+    assert(parsed==u"пикачу ピカチュウ");
+    assert(parsed.size()==12);
+}
+
 int main (int argn, char** args) {
     test_basic_cycle();
     test_optional_chars();
@@ -169,5 +182,6 @@ int main (int argn, char** args) {
     test_string_metrics();
     test_span_spread();
     test_syntax_errors();
+    test_utf16();
     return 0;
 }

@@ -125,6 +125,7 @@ add_library(ron STATIC
     ron/op.cc
     ron/text.cc
     ron/text-parser.cc
+    ron/string-parser.cc
     ron/text-builder.cc
     ron/hash.cc
     ron/inc_stack.hpp

@@ -219,6 +219,10 @@ class TextFrame {
     inline void swap(std::string& str) { std::swap(data_, str); }
 
     Status Split(std::vector<TextFrame>& to);
+
+    // V A L U E  D E C O D E R S
+
+    std::u16string utf16string(Atom range) const;
 };
 
 }  // namespace ron

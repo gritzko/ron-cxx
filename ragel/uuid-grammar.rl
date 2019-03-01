@@ -1,6 +1,7 @@
 %%{
 
     machine UUID;
+    alphtype unsigned char;
 
     action begin_uuid { 
         variety='0'; 

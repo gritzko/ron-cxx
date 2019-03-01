@@ -1,0 +1,118 @@
+#include <string>
+#include <iostream>
+#include "text.hpp"
+
+%%{
+    machine UTF8ESC;
+    alphtype unsigned char;
+
+    include TEXT_FRAME "./text-grammar.rl";
+
+    action begin_uniesc { uniesc = p; }
+    action end_uniesc   { push_back_uniesc(ret, uniesc, p); }
+
+    action begin_esc { esc = p; }
+    action end_esc   { push_back_esc(ret, esc, p); }
+
+    action begin_cp { cp = p; }
+    action end_cp   { push_back_cp(ret, cp, p); }
+
+    UTF8ESC = (
+          UNIESC >begin_uniesc %end_uniesc
+        | ESC    >begin_esc %end_esc
+        | CHAR   >begin_cp %end_cp
+        )*;
+}%%
+
+namespace ron {
+
+    using namespace std;
+
+    using iterator = const unsigned char *;
+
+    void push_back_uniesc (u16string& res, iterator b, iterator e) {
+        cerr<<"uni\n";
+    }
+
+    void push_back_esc (u16string& res, iterator b, iterator e) {
+        assert(*b=='\\');
+        switch (*(b+1)) {
+            case 'b': return res.push_back('\b');
+            case 'f': return res.push_back('\f');
+            case 'n': return res.push_back('\n');
+            case 'r': return res.push_back('\r');
+            case 't': return res.push_back('\t');
+            default:  return res.push_back(*(b+1));
+        }
+    }
+
+    void push_back_cp (u16string& res, iterator b, iterator e) {
+        // deserialize
+        const unsigned int sz = e-b;
+        assert(sz && sz<=4);
+        static uint8_t MASK[5] = {0, 127, 31, 15, 7};
+        uint32_t codepoint{static_cast<uint32_t>(*b & MASK[sz])};
+        switch (sz) {
+            case 4:
+               codepoint <<= 6;
+               codepoint |= *(++b) & 63;
+            case 3:
+               codepoint <<= 6;
+               codepoint |= *(++b) & 63;
+            case 2:
+               codepoint <<= 6;
+               codepoint |= *(++b) & 63;
+            case 1:
+               break;
+            default:
+                assert(false);
+        }
+        // serialized
+        if (codepoint<0xd800) {
+            res.push_back((char16_t)codepoint);
+        } else if (codepoint>=0xe000 && codepoint<0x10000) {
+            res.push_back((char16_t)codepoint);
+        } else {
+            res.push_back(0xd800+(codepoint>>10));
+            res.push_back(0xdc00+(codepoint&1023));
+        }
+    }
+
+
+    u16string TextFrame::utf16string(Atom str_atom) const {
+
+        assert(str_atom.origin().flags()==STRING_ATOM);
+
+        frange_t range = str_atom.origin().range();
+        fsize_t offset = range.first, size = range.second;
+
+        u16string ret;
+        ret.reserve(size);
+
+        iterator pb = (iterator)data_.data() + offset;
+        auto pe = pb + size;
+        auto p = pb;
+        auto eof = pe;
+        int cs = 0;
+
+        iterator uniesc, esc, cp;
+
+        %% machine UTF8ESC;
+        %% write data;
+        %% write init;
+
+        %%{
+
+            main := UTF8ESC;
+            write exec;
+
+        }%%
+
+        // The string was already pre-parsed by Cursor::Next()
+        assert(cs!=0);
+
+        return ret;
+
+    }
+
+}

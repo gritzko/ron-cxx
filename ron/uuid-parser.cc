@@ -4,51 +4,49 @@
 
 namespace ron {
 
-void report(const char* pb, const char* p, const char* event) {
-    std::cerr << "at " << (p - pb) << " '" << *p << "' " << event << "\n";
-}
-
 Uuid::Uuid(slice_t data) {
-#line 11 "ragel/uuid-parser.rl"
+    using iterator = const unsigned char *;
 
-#line 16 "ron/uuid-parser.cc"
+#line 8 "ragel/uuid-parser.rl"
+
+#line 13 "ron/uuid-parser.cc"
     static const int UUID_start = 1;
     static const int UUID_first_final = 4;
     static const int UUID_error = 0;
 
     static const int UUID_en_main = 1;
 
-#line 12 "ragel/uuid-parser.rl"
+#line 9 "ragel/uuid-parser.rl"
 
-    const char* pb = data.buf_;
-    const char* pe = data.buf_ + data.size_;
-    const char* p = data.buf_;
-    const char* eof = pe;
+    iterator pb = (iterator)data.buf_;
+    iterator pe = pb + data.size_;
+    iterator p = pb;
+    iterator eof = pe;
     int cs = 0;
 
     slice_t value{}, origin{}, uuidb;
     char variety{'0'}, version{'$'};
 
-#line 36 "ron/uuid-parser.cc"
+#line 33 "ron/uuid-parser.cc"
     { cs = UUID_start; }
 
-#line 41 "ron/uuid-parser.cc"
+#line 38 "ron/uuid-parser.cc"
     {
         if (p == pe) goto _test_eof;
         switch (cs) {
             case 1:
                 switch ((*p)) {
-                    case 95:
+                    case 95u:
                         goto tr2;
-                    case 126:
+                    case 126u:
                         goto tr2;
                 }
-                if ((*p) < 65) {
-                    if (48 <= (*p) && (*p) <= 57) goto tr0;
-                } else if ((*p) > 70) {
-                    if ((*p) > 90) {
-                        if (97 <= (*p) && (*p) <= 122) goto tr2;
-                    } else if ((*p) >= 71)
+                if ((*p) < 65u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto tr0;
+                } else if ((*p) > 70u) {
+                    if ((*p) > 90u) {
+                        if (97u <= (*p) && (*p) <= 122u) goto tr2;
+                    } else if ((*p) >= 71u)
                         goto tr2;
                 } else
                     goto tr0;
@@ -57,69 +55,69 @@ Uuid::Uuid(slice_t data) {
                 cs = 0;
                 goto _out;
             tr0 :
-#line 5 "ragel/./uuid-grammar.rl"
+#line 6 "ragel/./uuid-grammar.rl"
             {
                 variety = '0';
                 version = '$';
                 origin = slice_t{};
                 uuidb.begin(p);
             }
-#line 12 "ragel/./uuid-grammar.rl"
+#line 13 "ragel/./uuid-grammar.rl"
                 { value.begin(p); }
                 goto st4;
             st4:
                 if (++p == pe) goto _test_eof4;
             case 4:
-#line 82 "ron/uuid-parser.cc"
+#line 79 "ron/uuid-parser.cc"
                 switch ((*p)) {
-                    case 43:
+                    case 43u:
                         goto tr5;
-                    case 45:
+                    case 45u:
                         goto tr5;
-                    case 47:
+                    case 47u:
                         goto tr6;
-                    case 95:
+                    case 95u:
                         goto st6;
-                    case 126:
+                    case 126u:
                         goto st6;
                 }
-                if ((*p) < 48) {
-                    if (36 <= (*p) && (*p) <= 37) goto tr5;
-                } else if ((*p) > 57) {
-                    if ((*p) > 90) {
-                        if (97 <= (*p) && (*p) <= 122) goto st6;
-                    } else if ((*p) >= 65)
+                if ((*p) < 48u) {
+                    if (36u <= (*p) && (*p) <= 37u) goto tr5;
+                } else if ((*p) > 57u) {
+                    if ((*p) > 90u) {
+                        if (97u <= (*p) && (*p) <= 122u) goto st6;
+                    } else if ((*p) >= 65u)
                         goto st6;
                 } else
                     goto st6;
                 goto st0;
             tr5 :
-#line 13 "ragel/./uuid-grammar.rl"
+#line 14 "ragel/./uuid-grammar.rl"
             {
                 value.end(p);
             }
-#line 14 "ragel/./uuid-grammar.rl"
+#line 15 "ragel/./uuid-grammar.rl"
                 { version = (*p); }
                 goto st2;
             st2:
                 if (++p == pe) goto _test_eof2;
             case 2:
-#line 112 "ron/uuid-parser.cc"
+#line 109 "ron/uuid-parser.cc"
                 switch ((*p)) {
-                    case 95:
+                    case 95u:
                         goto tr3;
-                    case 126:
+                    case 126u:
                         goto tr3;
                 }
-                if ((*p) < 65) {
-                    if (48 <= (*p) && (*p) <= 57) goto tr3;
-                } else if ((*p) > 90) {
-                    if (97 <= (*p) && (*p) <= 122) goto tr3;
+                if ((*p) < 65u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto tr3;
+                } else if ((*p) > 90u) {
+                    if (97u <= (*p) && (*p) <= 122u) goto tr3;
                 } else
                     goto tr3;
                 goto st0;
             tr3 :
-#line 15 "ragel/./uuid-grammar.rl"
+#line 16 "ragel/./uuid-grammar.rl"
             {
                 origin.begin(p);
             }
@@ -127,22 +125,22 @@ Uuid::Uuid(slice_t data) {
             st5:
                 if (++p == pe) goto _test_eof5;
             case 5:
-#line 134 "ron/uuid-parser.cc"
+#line 131 "ron/uuid-parser.cc"
                 switch ((*p)) {
-                    case 95:
+                    case 95u:
                         goto st5;
-                    case 126:
+                    case 126u:
                         goto st5;
                 }
-                if ((*p) < 65) {
-                    if (48 <= (*p) && (*p) <= 57) goto st5;
-                } else if ((*p) > 90) {
-                    if (97 <= (*p) && (*p) <= 122) goto st5;
+                if ((*p) < 65u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto st5;
+                } else if ((*p) > 90u) {
+                    if (97u <= (*p) && (*p) <= 122u) goto st5;
                 } else
                     goto st5;
                 goto st0;
             tr6 :
-#line 11 "ragel/./uuid-grammar.rl"
+#line 12 "ragel/./uuid-grammar.rl"
             {
                 variety = *(p - 1);
             }
@@ -150,33 +148,33 @@ Uuid::Uuid(slice_t data) {
             st3:
                 if (++p == pe) goto _test_eof3;
             case 3:
-#line 156 "ron/uuid-parser.cc"
+#line 153 "ron/uuid-parser.cc"
                 switch ((*p)) {
-                    case 95:
+                    case 95u:
                         goto tr4;
-                    case 126:
+                    case 126u:
                         goto tr4;
                 }
-                if ((*p) < 65) {
-                    if (48 <= (*p) && (*p) <= 57) goto tr4;
-                } else if ((*p) > 90) {
-                    if (97 <= (*p) && (*p) <= 122) goto tr4;
+                if ((*p) < 65u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto tr4;
+                } else if ((*p) > 90u) {
+                    if (97u <= (*p) && (*p) <= 122u) goto tr4;
                 } else
                     goto tr4;
                 goto st0;
             tr2 :
-#line 5 "ragel/./uuid-grammar.rl"
+#line 6 "ragel/./uuid-grammar.rl"
             {
                 variety = '0';
                 version = '$';
                 origin = slice_t{};
                 uuidb.begin(p);
             }
-#line 12 "ragel/./uuid-grammar.rl"
+#line 13 "ragel/./uuid-grammar.rl"
                 { value.begin(p); }
                 goto st6;
             tr4 :
-#line 12 "ragel/./uuid-grammar.rl"
+#line 13 "ragel/./uuid-grammar.rl"
             {
                 value.begin(p);
             }
@@ -184,23 +182,23 @@ Uuid::Uuid(slice_t data) {
             st6:
                 if (++p == pe) goto _test_eof6;
             case 6:
-#line 189 "ron/uuid-parser.cc"
+#line 186 "ron/uuid-parser.cc"
                 switch ((*p)) {
-                    case 43:
+                    case 43u:
                         goto tr5;
-                    case 45:
+                    case 45u:
                         goto tr5;
-                    case 95:
+                    case 95u:
                         goto st6;
-                    case 126:
+                    case 126u:
                         goto st6;
                 }
-                if ((*p) < 48) {
-                    if (36 <= (*p) && (*p) <= 37) goto tr5;
-                } else if ((*p) > 57) {
-                    if ((*p) > 90) {
-                        if (97 <= (*p) && (*p) <= 122) goto st6;
-                    } else if ((*p) >= 65)
+                if ((*p) < 48u) {
+                    if (36u <= (*p) && (*p) <= 37u) goto tr5;
+                } else if ((*p) > 57u) {
+                    if ((*p) > 90u) {
+                        if (97u <= (*p) && (*p) <= 122u) goto st6;
+                    } else if ((*p) >= 65u)
                         goto st6;
                 } else
                     goto st6;
@@ -227,29 +225,29 @@ Uuid::Uuid(slice_t data) {
             switch (cs) {
                 case 4:
                 case 6:
-#line 13 "ragel/./uuid-grammar.rl"
+#line 14 "ragel/./uuid-grammar.rl"
                 {
                     value.end(p);
                 }
-#line 17 "ragel/./uuid-grammar.rl"
+#line 18 "ragel/./uuid-grammar.rl"
                     { uuidb.end(p); }
                     break;
                 case 5:
-#line 16 "ragel/./uuid-grammar.rl"
+#line 17 "ragel/./uuid-grammar.rl"
                 {
                     origin.end(p);
                 }
-#line 17 "ragel/./uuid-grammar.rl"
+#line 18 "ragel/./uuid-grammar.rl"
                     { uuidb.end(p); }
                     break;
-#line 236 "ron/uuid-parser.cc"
+#line 233 "ron/uuid-parser.cc"
             }
         }
 
     _out : {}
     }
 
-#line 29 "ragel/uuid-parser.rl"
+#line 26 "ragel/uuid-parser.rl"
 
     if (cs && value.size() <= Word::MAX_BASE64_SIZE &&
         origin.size() <= Word::MAX_BASE64_SIZE) {

@@ -1,6 +1,8 @@
 %%{
 
     machine TEXT_FRAME;
+    alphtype unsigned char;
+
     include UUID "./uuid-grammar.rl";
     include UTF8 "./utf8-grammar.rl";
 
@@ -13,9 +15,9 @@
     action begin_int { intb.begin(p); }
     action end_int {
         intb.end(p);
-        if (int_too_big(intb)) { cs = 0; fbreak; }
+        if (intb.size()>=19 && int_too_big(intb)) { cs = 0; fbreak; }
         op_.AddAtom(Atom::Integer(parse_int(intb), body.range_of(intb))); 
-        lastintb = intb.buf_;
+        lastintb = (iterator)intb.buf_;
     }
     action begin_string { strb.begin(p); }
     action end_string { 

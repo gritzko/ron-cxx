@@ -26,11 +26,11 @@ class LastWriteWinsRDT {
     // Either way, the latest/winning value will go first.
     // May use Frame::unescape() and/or Op unesc flag.
     Status GC(Builder &output, const Frame &input) const {
-        std::unordered_map<slice_t, Uuid> last;
+        std::unordered_map<Slice, Uuid> last;
         auto scan = input.cursor();
         do {
             if (scan.op().size() < 3) continue;
-            slice_t key{input.data(), scan.op().atom(2).origin().range()};
+            Slice key{input.data(), scan.op().atom(2).origin().range()};
             last[key] = scan.op().id();
         } while (scan.Next());
 
@@ -40,7 +40,7 @@ class LastWriteWinsRDT {
         }
         do {  // TODO maybe check op pattern here
             if (filter.op().size() < 3) continue;
-            slice_t key{input.data(), filter.op().atom(2).origin().range()};
+            Slice key{input.data(), filter.op().atom(2).origin().range()};
             if (last[key] == filter.op().id()) {
                 output.AppendOp(filter);
             }

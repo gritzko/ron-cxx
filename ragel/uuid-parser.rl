@@ -2,7 +2,7 @@
 
 namespace ron {
 
-    Uuid::Uuid (slice_t data) {
+    Uuid::Uuid (Slice data) {
         using iterator = const unsigned char *;
         %% machine UUID;
         %% write data;
@@ -13,7 +13,7 @@ namespace ron {
         iterator eof = pe;
         int cs = 0;
 
-        slice_t value{}, origin{}, uuidb;
+        Slice value{}, origin{}, uuidb;
         char variety{'0'}, version{'$'};
 
         %%{ 

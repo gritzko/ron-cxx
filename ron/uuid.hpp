@@ -14,7 +14,7 @@ union Word {
     uint8_t _8[8];
 
     Word(uint64_t value = 0) : _64{value} {}
-    Word(uint8_t flags, const slice_t& data) {
+    Word(uint8_t flags, const Slice& data) {
         _64 = flags & 0xfU;
         int i = 0;
         while (i < data.size()) {
@@ -27,9 +27,9 @@ union Word {
             i++;
         }
     }
-    Word(const std::string& word) : Word{0, slice_t{word}} {}
+    Word(const std::string& word) : Word{0, Slice{word}} {}
     explicit Word(const char* word)
-        : Word{0, slice_t{word, (fsize_t)strlen(word)}} {}
+        : Word{0, Slice{word, (fsize_t)strlen(word)}} {}
     Word(ATOM atype, fsize_t offset, fsize_t length) {
         _64 = atype;
         _64 <<= 30U;
@@ -161,14 +161,13 @@ struct Atom {
 struct Uuid : public Atom {
     Uuid() : Atom{0, 0} {}
     Uuid(Word value, Word origin) : Atom{value, origin} {}
-    Uuid(slice_t data);
+    Uuid(Slice data);
     // pre-parsed Uuid, got hints and correctness guarantee
-    Uuid(char variety, const slice_t& value, char version,
-         const slice_t& origin)
+    Uuid(char variety, const Slice& value, char version, const Slice& origin)
         : Uuid{Word{ABC[variety], value}, Word{ABC[version], origin}} {}
-    explicit Uuid(const std::string& buf) : Uuid{slice_t{buf}} {}
+    explicit Uuid(const std::string& buf) : Uuid{Slice{buf}} {}
     explicit Uuid(const char* buf)
-        : Uuid{slice_t{buf, static_cast<fsize_t>(strlen(buf))}} {}
+        : Uuid{Slice{buf, static_cast<fsize_t>(strlen(buf))}} {}
     inline enum UUID version() const { return (enum UUID)(ofb() & 3U); }
     inline uint8_t variety() const { return vfb(); }
     inline Word& word(int a, int i) { return Atom::word(i); }
@@ -207,8 +206,8 @@ struct Uuid : public Atom {
     static const Uuid NIL;
     static const Uuid FATAL;
 
-    inline static Uuid Parse(char variety, const slice_t& value, char version,
-                             const slice_t& origin) {
+    inline static Uuid Parse(char variety, const Slice& value, char version,
+                             const Slice& origin) {
         return Uuid{Word{ABC[variety], value}, Word{ABC[version], origin}};
     }
 

@@ -22,7 +22,7 @@ class TextFrame {
 
     class Cursor {
         /** Frame data; the cursor does not own the memory */
-        slice_t data_;
+        Slice data_;
         Op op_;
         int pos_;
         int off_;
@@ -32,11 +32,11 @@ class TextFrame {
         static constexpr int RON_FULL_STOP = 255;
         static constexpr int SPEC_SIZE = 2;  // open RON
 
-        static int64_t parse_int(slice_t data);
-        static double parse_float(slice_t data);
+        static int64_t parse_int(Slice data);
+        static double parse_float(Slice data);
 
        public:
-        explicit Cursor(const slice_t& data, bool advance = true)
+        explicit Cursor(const Slice& data, bool advance = true)
             : data_{data},
               op_{TERM::RAW},
               off_{0},
@@ -45,7 +45,7 @@ class TextFrame {
               prev_id_{} {
             if (advance) Next();
         }
-        explicit Cursor(const std::string& str) : Cursor{slice_t{str}} {}
+        explicit Cursor(const std::string& str) : Cursor{Slice{str}} {}
         explicit Cursor(const TextFrame& host) : Cursor{host.data_} {}
         const Op& op() const { return op_; }
         Status Next();
@@ -56,10 +56,8 @@ class TextFrame {
         inline bool is(fsize_t idx, const Uuid& id) const {
             return has(idx, UUID) && uuid(idx) == id;
         }
-        const slice_t data() const { return data_; }
-        inline slice_t slice(frange_t range) const {
-            return data().slice(range);
-        }
+        const Slice data() const { return data_; }
+        inline Slice slice(frange_t range) const { return data().slice(range); }
         inline const Uuid& id() const { return op_.id(); }
         inline const Uuid& ref() const { return op_.ref(); }
         inline fsize_t size() const { return op_.size(); }
@@ -68,11 +66,11 @@ class TextFrame {
             return op_.type(idx);
         }
         inline TERM term() const { return op_.term(); }
-        static std::string unescape(const slice_t& data);
+        static std::string unescape(const Slice& data);
         std::string string(fsize_t idx) const {
             assert(type(idx) == STRING);
             // FIXME check metrics
-            slice_t esc = data_.slice(op_.atom(idx).origin().range());
+            Slice esc = data_.slice(op_.atom(idx).origin().range());
             return unescape(esc);
         }
         int64_t integer(fsize_t idx) const {
@@ -91,8 +89,8 @@ class TextFrame {
             assert(size() > idx);
             return op_.atom(idx);
         }
-        static bool int_too_big(const slice_t& data);
-        static inline bool word_too_big(const slice_t data) {
+        static bool int_too_big(const Slice& data);
+        static inline bool word_too_big(const Slice data) {
             return data.size() > Word::MAX_BASE64_SIZE;
         }
     };
@@ -104,13 +102,13 @@ class TextFrame {
         std::string data_;
 
         inline void Write(char c) { data_.push_back(c); }
-        inline void Write(slice_t data) { data_.append(data.buf_, data.size_); }
+        inline void Write(Slice data) { data_.append(data.buf_, data.size_); }
         void WriteInt(int64_t value);
         void WriteFloat(double value);
         void WriteUuid(const Uuid value);
         void WriteString(const std::string& value);
 
-        void escape(std::string& escaped, const slice_t& unescaped);
+        void escape(std::string& escaped, const Slice& unescaped);
 
         // terminates the op
         void WriteAtoms() { Write(TERM_PUNCT[term_]); }

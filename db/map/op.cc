@@ -8,7 +8,7 @@ namespace ron {
         if (ref.version()!=TIME) return Status::BADARGS.comment("need an op id");
         std::unique_ptr<rocksdb::Iterator> i{host_->FindChain(ref)};
         if (i==nullptr) return Status::NOT_FOUND.comment("no such chain");
-        slice_t chain{slice(i->value())};
+        Slice chain{slice(i->value())};
         Cursor cc{chain};
         while (cc.valid()) {
             if (cc.id()==ref) {

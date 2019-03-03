@@ -159,8 +159,8 @@ void test_syntax_errors () {
 }
 
 void test_utf16 () {
-    string utf8 = "'пикачу ピカチュウ'!";
-    assert(utf8.size()==31);
+    string utf8 = "'пикачу\\u0020ピカチュウ'!";
+    assert(utf8.size()==36);
     Frame frame{utf8};
     Cursor cur = frame.cursor();
     assert(cur.valid());

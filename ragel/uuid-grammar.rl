@@ -6,7 +6,7 @@
     action begin_uuid { 
         variety='0'; 
         version='$'; 
-        origin=slice_t{}; 
+        origin=Slice{}; 
         uuidb.begin(p);
     }
     action variety { variety = *(p-1); }

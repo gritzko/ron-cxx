@@ -188,9 +188,11 @@ Status CommandDump(RonReplica& replica, const string& what) {
         k[l++] = '#';
         l += key.id().write_base64(k + l);
         k[l++] = '\n';
-        write(STDOUT_FILENO, k, l);
+        int wok = write(STDOUT_FILENO, k, l);
+        if (wok != l) return Status::IOFAIL;
         rocksdb::Slice val = i->value();
-        write(STDOUT_FILENO, val.data(), val.size());
+        wok = write(STDOUT_FILENO, val.data(), val.size());
+        if (wok != val.size()) return Status::IOFAIL;
     }
     delete i;
     return Status::OK;

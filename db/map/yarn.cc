@@ -9,7 +9,7 @@ namespace ron {
         std::unique_ptr<rocksdb::Iterator> i{host_->FindYarn(ref)};
         if (i==nullptr) return Status::NOT_FOUND.comment("no such yarn");
         while (i->Valid()) {
-            slice_t chain{slice(i->value())};
+            Slice chain{slice(i->value())};
             Cursor cc{chain};
             while (cc.valid()) { // TODO range
                 response.AppendOp(cc); // TODO TERM

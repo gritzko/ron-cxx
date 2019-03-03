@@ -4,7 +4,7 @@ using namespace std;
 
 namespace ron {
 
-int64_t TextFrame::Cursor::parse_int(slice_t range) {
+int64_t TextFrame::Cursor::parse_int(Slice range) {
     const char* i = range.begin();
     bool neg = false;
     if (*i == '-') {
@@ -23,7 +23,7 @@ int64_t TextFrame::Cursor::parse_int(slice_t range) {
     return ret;
 }
 
-double TextFrame::Cursor::parse_float(slice_t range) {
+double TextFrame::Cursor::parse_float(Slice range) {
     char fs[32];  // FIXME size limits
     strncpy(fs, range.buf_, range.size_);
     fs[range.size_] = 0;
@@ -31,7 +31,7 @@ double TextFrame::Cursor::parse_float(slice_t range) {
     return ret;
 }
 
-std::string TextFrame::Cursor::unescape(const slice_t& data) {
+std::string TextFrame::Cursor::unescape(const Slice& data) {
     std::string ret{};
     for (auto c = data.begin(); c < data.end(); c++) {
         if (*c != ESC) {
@@ -82,7 +82,7 @@ Status TextFrame::Split(std::vector<TextFrame>& to) {
     return Status::OK;
 }
 
-bool TextFrame::Cursor::int_too_big(const slice_t& data) {
+bool TextFrame::Cursor::int_too_big(const Slice& data) {
     static const char* MAXINTSTR = "9223372036854775807";
     if (data.size() < 19) {
         return false;

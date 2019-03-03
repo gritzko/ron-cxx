@@ -106,7 +106,7 @@ void TextFrame::Builder::WriteString(const std::string& value) {
     data_.append(esc);
 }
 
-void TextFrame::Builder::escape(std::string& to, const slice_t& buf) {
+void TextFrame::Builder::escape(std::string& to, const Slice& buf) {
     for (char i : buf) {
         switch (i) {
             case '\"':

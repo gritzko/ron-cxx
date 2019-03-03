@@ -21,9 +21,7 @@ struct SHA2 {
     uint32_t known_bits_;
     std::string bits_;
 
-    SHA2() : known_bits_{0}, bits_{} {
-        bits_.resize(SIZE, 0);
-    }
+    SHA2() : known_bits_{0}, bits_{} { bits_.resize(SIZE, 0); }
 
     inline explicit SHA2(const Uuid& uuid);
 
@@ -32,7 +30,7 @@ struct SHA2 {
     template <typename Cursor>
     static SHA2 OpMerkleHash(Cursor& cur, const SHA2& prev, const SHA2& ref);
 
-    static bool valid(slice_t base64) {
+    static bool valid(Slice base64) {
         if (base64.size_ != BASE64_SIZE) return false;
         for (int i = 0; i < BASE64_SIZE; i++)
             if (ABC64[base64[i]] < 0) return false;
@@ -102,23 +100,23 @@ struct Stream {
     sink_t sink_;
     Stream() : sink_{} {}
     Stream(sink_t sink) : sink_{sink} {}
-    Status Write(slice_t data) {
+    Status Write(Slice data) {
         sink_.update((uint8_t*)data.buf_, data.size_);
         return Status::OK;
     }
     inline Status WriteAtom(const Atom& atom) {
         uint64pair tmp{atom.value().be(), atom.origin().be()};
-        return Write(slice_t{(char*)&tmp, sizeof(uint64pair)});
+        return Write(Slice{(char*)&tmp, sizeof(uint64pair)});
     }
     inline Status WriteHash(const SHA2& data) {
-        assert(data.bits_.size()==SHA2::SIZE);
-        return Write(slice_t{data.bits_.data(), SHA2::SIZE});
+        assert(data.bits_.size() == SHA2::SIZE);
+        return Write(Slice{data.bits_.data(), SHA2::SIZE});
     }
     inline Status WriteUuid(const Uuid& uuid) { return WriteAtom(uuid); }
     inline Status WriteAtomRangeless(const Atom& atom) {
         uint64pair tmp{atom.value().be(),
                        htobe64(atom.origin()._64 & Word::FLAG_BITS)};
-        return Write(slice_t{(char*)&tmp, sizeof(uint64pair)});
+        return Write(Slice{(char*)&tmp, sizeof(uint64pair)});
     }
     inline void close(void* result) { sink_.final((uint8_t*)result); }
     inline void close(std::string& result) {

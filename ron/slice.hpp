@@ -8,32 +8,44 @@
 
 namespace ron {
 
+using Codepoint = uint32_t;
+
+using Char = unsigned char;
+
+constexpr Codepoint CP_ERROR{0};
+
+using String = std::basic_string<Char>;
+
+using String16 = std::u16string;
+
 /** Frame size or any other size limited by frame size (e.g. string length) */
-typedef uint32_t fsize_t;
+using fsize_t = uint32_t;
+
 /** Max RON frame size is 1<<30 (a frame is atomically processed, so 1GB max) */
 constexpr fsize_t FSIZE_MAX{1 << 30};
-typedef std::pair<fsize_t, fsize_t> frange_t;
+using frange_t = std::pair<fsize_t, fsize_t>;
 
-struct slice_t {
+/***/
+struct Slice {
     const char* buf_;
     fsize_t size_;
 
-    explicit slice_t(const char* buf, fsize_t size = 0)
+    explicit Slice(const char* buf, fsize_t size = 0)
         : buf_{buf}, size_{size} {}
-    explicit slice_t(const uint8_t* buf, size_t size = 0)
+    explicit Slice(const uint8_t* buf, size_t size = 0)
         : buf_{(const char*)buf}, size_{static_cast<fsize_t>(size)} {
         assert(size < FSIZE_MAX);
     }
-    slice_t() : buf_{nullptr}, size_{0} {}
-    slice_t(const slice_t& orig) : buf_{orig.buf_}, size_{orig.size_} {}
-    slice_t(const std::string& data)
-        : slice_t{data.data(), static_cast<fsize_t>(data.size())} {}
-    slice_t(const std::string& str, const frange_t& range)
+    Slice() : buf_{nullptr}, size_{0} {}
+    Slice(const Slice& orig) : buf_{orig.buf_}, size_{orig.size_} {}
+    Slice(const std::string& data)
+        : Slice{data.data(), static_cast<fsize_t>(data.size())} {}
+    Slice(const std::string& str, const frange_t& range)
         : buf_{str.data() + range.first}, size_{range.second} {
         assert(str.size() >= range.first + range.second);
     }
-    slice_t(slice_t host, frange_t range)
-        : slice_t{host.buf_ + range.first, range.second} {
+    Slice(Slice host, frange_t range)
+        : Slice{host.buf_ + range.first, range.second} {
         assert(host.size_ >= range.first + range.second);
     }
 
@@ -48,11 +60,11 @@ struct slice_t {
 
     inline fsize_t size() const { return size_; }
 
-    bool operator==(const slice_t b) const {
+    bool operator==(const Slice b) const {
         return size() == b.size() && strncmp(buf_, b.buf_, size()) == 0;
     }
 
-    bool same(const slice_t b) const {
+    bool same(const Slice b) const {
         return buf_ == b.buf_ && size_ == b.size_;
     }
 
@@ -87,15 +99,15 @@ struct slice_t {
 
     inline std::string str() const { return std::string{buf_, size_}; }
 
-    inline frange_t range_of(slice_t sub) const {
+    inline frange_t range_of(Slice sub) const {
         assert(sub.begin() >= begin());
         assert(end() >= sub.end());
         return frange_t{sub.buf_ - buf_, sub.size_};
     }
 
-    inline slice_t slice(frange_t range) const {
+    inline Slice slice(frange_t range) const {
         assert(size_ >= range.second + range.first);
-        return slice_t{buf_ + range.first, range.second};
+        return Slice{buf_ + range.first, range.second};
     }
 };
 
@@ -104,8 +116,8 @@ struct slice_t {
 namespace std {
 
 template <>
-struct hash<ron::slice_t> {
-    size_t operator()(ron::slice_t const& s) const noexcept { return s.hash(); }
+struct hash<ron::Slice> {
+    size_t operator()(ron::Slice const& s) const noexcept { return s.hash(); }
 };
 
 }  // namespace std

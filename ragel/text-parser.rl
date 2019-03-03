@@ -35,19 +35,19 @@ Status TextFrame::Cursor::Next () {
         return Status::ENDOFFRAME;
     }
 
-    slice_t body{data()};
+    Slice body{data()};
     iterator pb = (iterator)body.buf_;
     iterator p = pb + off_;
     iterator pe = pb + body.size();
     iterator eof = pe;
     iterator lineb = pb;
-    slice_t intb{p,0};
-    slice_t floatb{p,0};
-    slice_t strb{p,0};
-    slice_t uuidb{p,0};
+    Slice intb{p,0};
+    Slice floatb{p,0};
+    Slice strb{p,0};
+    Slice uuidb{p,0};
     iterator lastintb{0};
     char term{0};
-    slice_t value, origin;
+    Slice value, origin;
     char variety, version;
 
     atoms.clear();

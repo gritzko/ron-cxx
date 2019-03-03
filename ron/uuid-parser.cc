@@ -4,7 +4,7 @@
 
 namespace ron {
 
-Uuid::Uuid(slice_t data) {
+Uuid::Uuid(Slice data) {
     using iterator = const unsigned char *;
 
 #line 8 "ragel/uuid-parser.rl"
@@ -24,7 +24,7 @@ Uuid::Uuid(slice_t data) {
     iterator eof = pe;
     int cs = 0;
 
-    slice_t value{}, origin{}, uuidb;
+    Slice value{}, origin{}, uuidb;
     char variety{'0'}, version{'$'};
 
 #line 33 "ron/uuid-parser.cc"
@@ -59,7 +59,7 @@ Uuid::Uuid(slice_t data) {
             {
                 variety = '0';
                 version = '$';
-                origin = slice_t{};
+                origin = Slice{};
                 uuidb.begin(p);
             }
 #line 13 "ragel/./uuid-grammar.rl"
@@ -167,7 +167,7 @@ Uuid::Uuid(slice_t data) {
             {
                 variety = '0';
                 version = '$';
-                origin = slice_t{};
+                origin = Slice{};
                 uuidb.begin(p);
             }
 #line 13 "ragel/./uuid-grammar.rl"

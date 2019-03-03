@@ -2,10 +2,11 @@
 #include "db/map/map.hpp"
 #include "db/merge_ops.hpp"
 
-using namespace rocksdb;
-using namespace std;
-
 namespace ron {
+
+using namespace std;
+using namespace rocksdb;
+using Slice = ron::Slice;
 
 template <typename Frame>
 const Uuid Replica<Frame>::NOW_UUID{915334634030497792UL, 0};
@@ -59,20 +60,21 @@ template <typename Frame>
 Status Replica<Frame>::Open(std::string home) {
     if (db_) return Status::BAD_STATE.comment("db open already");
 
-    Options options;
+    rocksdb::Options options;
     options.create_if_missing = false;
     options.error_if_exists = false;
     options.max_total_wal_size = UINT64_MAX;
     options.WAL_size_limit_MB = 1UL << 30U;
     options.WAL_ttl_seconds = UINT64_MAX;
 
-    typedef ColumnFamilyDescriptor CFD;
-    vector<ColumnFamilyDescriptor> families;
-    vector<ColumnFamilyHandle*> handles;
+    typedef rocksdb::ColumnFamilyDescriptor CFD;
+    typedef rocksdb::ColumnFamilyHandle CFH;
+    vector<CFD> families;
+    vector<CFH*> handles;
     families.push_back(CFD{kDefaultColumnFamilyName, CFOptions()});
     // TODO branches
 
-    auto status = DB::Open(options, home, families, &handles, &db_);
+    auto status = rocksdb::DB::Open(options, home, families, &handles, &db_);
     if (!status.ok()) {
         return Status::DB_FAIL.comment(status.ToString());
     }
@@ -215,7 +217,7 @@ Status Replica<Frame>::ReceiveChain(rocksdb::WriteBatch& batch, Uuid branch,
         auto ib = tips_.insert(tipmap_t::value_type{id.origin(), OpMeta{}});
         ti = ib.first;
         if (!FindTipMeta(ti->second, id.origin()))
-            ti->second = OpMeta(id.origin(), SHA2{}); //TODO
+            ti->second = OpMeta(id.origin(), SHA2{});  // TODO
     }
     // the tip should stay in the cache, so we do in-place writes
     OpMeta& tip = ti->second;
@@ -279,7 +281,7 @@ Status Replica<Frame>::Get(Frame& object, Uuid id, Uuid rdt, Uuid branch) {
     if (t == RDT::RDT_COUNT) return Status::NOTYPE;
     string data;
     Key k{id, t};
-    Slice key{k};
+    rocksdb::Slice key{k};
     auto ok = db_->Get(ro_, trunk_, key, &data);
     if (ok.IsNotFound()) return Status::NOT_FOUND;
     if (!ok.ok()) return Status::DB_FAIL.comment(ok.ToString());
@@ -310,7 +312,7 @@ Status Replica<Frame>::ReceiveObjectQuery(Builder& response, Uuid object_store,
     if (t == RDT::RDT_COUNT) return Status::NOTYPE;
     string data;
     Key k{id, t};
-    Slice key{k};
+    rocksdb::Slice key{k};
     auto ok = db_->Get(ro_, trunk_, key, &data);
     if (ok.IsNotFound()) return Status::NOT_FOUND;
     if (!ok.ok()) return Status::DB_FAIL.comment(ok.ToString());

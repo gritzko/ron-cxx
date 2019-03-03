@@ -205,10 +205,10 @@ class Replica {
     rocksdb::ColumnFamilyOptions CFOptions() const;
 };
 
-inline slice_t slice(rocksdb::Slice s) {
-    return slice_t{s.data_, (fsize_t)s.size_};
+inline Slice slice(rocksdb::Slice s) {
+    return Slice{s.data_, (fsize_t)s.size_};
 }
-inline slice_t slice(const rocksdb::Slice* s) { return slice(*s); }
+inline Slice slice(const rocksdb::Slice* s) { return slice(*s); }
 
 }  // namespace ron
 

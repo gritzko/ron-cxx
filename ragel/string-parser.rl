@@ -1,3 +1,4 @@
+#include "stdlib.h"
 #include <string>
 #include <iostream>
 #include "text.hpp"
@@ -30,20 +31,40 @@ namespace ron {
 
     using iterator = const unsigned char *;
 
+    void push_back_codepoint (u16string& res, uint32_t codepoint) {
+        if (codepoint<0xd800) {
+            res.push_back((char16_t)codepoint);
+        } else if (codepoint>=0xe000 && codepoint<0x10000) {
+            res.push_back((char16_t)codepoint);
+        } else {
+            res.push_back(0xd800+(codepoint>>10));
+            res.push_back(0xdc00+(codepoint&1023));
+        }
+    }
+
     void push_back_uniesc (u16string& res, iterator b, iterator e) {
-        cerr<<"uni\n";
+        int sz = e-b;
+        assert(sz==6);
+        char num[5];
+        memcpy(num, b+2, 4);
+        num[4] = 0;
+        uint32_t codepoint = strtol(num, NULL, 16);
+        push_back_codepoint(res, codepoint);
+        // FIXME validity
+        // FIXME surrogates
     }
 
     void push_back_esc (u16string& res, iterator b, iterator e) {
         assert(*b=='\\');
-        switch (*(b+1)) {
-            case 'b': return res.push_back('\b');
-            case 'f': return res.push_back('\f');
-            case 'n': return res.push_back('\n');
-            case 'r': return res.push_back('\r');
-            case 't': return res.push_back('\t');
-            default:  return res.push_back(*(b+1));
+        unsigned char c{*(b+1)};
+        switch (c) {
+            case 'b': c = '\b'; break;
+            case 'f': c = '\f'; break;
+            case 'n': c = '\n'; break;
+            case 'r': c = '\r'; break;
+            case 't': c = '\t'; break;
         }
+        res.push_back(c);
     }
 
     void push_back_cp (u16string& res, iterator b, iterator e) {
@@ -68,14 +89,7 @@ namespace ron {
                 assert(false);
         }
         // serialized
-        if (codepoint<0xd800) {
-            res.push_back((char16_t)codepoint);
-        } else if (codepoint>=0xe000 && codepoint<0x10000) {
-            res.push_back((char16_t)codepoint);
-        } else {
-            res.push_back(0xd800+(codepoint>>10));
-            res.push_back(0xdc00+(codepoint&1023));
-        }
+        push_back_codepoint(res, codepoint);
     }
 
 

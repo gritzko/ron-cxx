@@ -8,15 +8,20 @@
 
 namespace ron {
 
-using Codepoint = uint32_t;
+typedef uint32_t Codepoint;
 
-using Char = unsigned char;
+typedef unsigned char Char;
+
+typedef const Char* CharRef;
+#define CR(id, val) constexpr CharRef id{(CharRef)val};
+#define STR(id, val) static const String id{(CharRef)val};
 
 constexpr Codepoint CP_ERROR{0};
 
-using String = std::basic_string<Char>;
+// typedef std::basic_string<Char> String;
+typedef std::string String;
 
-using String16 = std::u16string;
+typedef std::u16string String16;
 
 /** Frame size or any other size limited by frame size (e.g. string length) */
 using fsize_t = uint32_t;
@@ -25,23 +30,30 @@ using fsize_t = uint32_t;
 constexpr fsize_t FSIZE_MAX{1 << 30};
 using frange_t = std::pair<fsize_t, fsize_t>;
 
-/***/
+/** A reference to a raw memory slice. Same function as rocksdb::Slice.
+ * Can't use an iterator range cause have to reference raw buffers (file
+ * reads, mmaps, whatever the db passes to us...).
+ * A Slice does NOT own the memory! */
 struct Slice {
-    const char* buf_;
+    const Char* buf_;
     fsize_t size_;
 
-    explicit Slice(const char* buf, fsize_t size = 0)
-        : buf_{buf}, size_{size} {}
-    explicit Slice(const uint8_t* buf, size_t size = 0)
-        : buf_{(const char*)buf}, size_{static_cast<fsize_t>(size)} {
-        assert(size < FSIZE_MAX);
+    explicit Slice(const Char* buf, fsize_t size) : buf_{buf}, size_{size} {}
+    explicit Slice(const char* buf, size_t size)
+        : buf_{(const Char*)buf}, size_{static_cast<fsize_t>(size)} {
+        assert(size <= FSIZE_MAX);
+    }
+    Slice(const Char* from, const Char* till)
+        : buf_{from}, size_{static_cast<fsize_t>(till - from)} {
+        assert(till >= from);
+        assert(till - from <= FSIZE_MAX);
     }
     Slice() : buf_{nullptr}, size_{0} {}
     Slice(const Slice& orig) : buf_{orig.buf_}, size_{orig.size_} {}
-    Slice(const std::string& data)
-        : Slice{data.data(), static_cast<fsize_t>(data.size())} {}
-    Slice(const std::string& str, const frange_t& range)
-        : buf_{str.data() + range.first}, size_{range.second} {
+    Slice(const String& data)
+        : Slice{CharRef(data.data()), static_cast<fsize_t>(data.size())} {}
+    Slice(const String& str, const frange_t& range)
+        : buf_{(Char*)str.data() + range.first}, size_{range.second} {
         assert(str.size() >= range.first + range.second);
     }
     Slice(Slice host, frange_t range)
@@ -49,19 +61,30 @@ struct Slice {
         assert(host.size_ >= range.first + range.second);
     }
 
-    inline const char* begin() const { return buf_; }
+    inline const Char* begin() const { return buf_; }
 
-    inline const char* end() const { return buf_ + size_; }
+    inline const Char* end() const { return buf_ + size_; }
 
-    inline char operator[](fsize_t idx) const {
+    inline Char operator[](fsize_t idx) const {
         assert(idx < size_);
         return buf_[idx];
+    }
+
+    inline void operator++() {
+        assert(size_ > 0);
+        ++buf_;
+        --size_;
+    }
+
+    inline Char operator*() const {
+        assert(size_ > 0);
+        return *buf_;
     }
 
     inline fsize_t size() const { return size_; }
 
     bool operator==(const Slice b) const {
-        return size() == b.size() && strncmp(buf_, b.buf_, size()) == 0;
+        return size() == b.size() && memcmp(buf_, b.buf_, size()) == 0;
     }
 
     bool same(const Slice b) const {
@@ -84,20 +107,9 @@ struct Slice {
         return ret;
     }
 
-    inline void begin(const char* to) {
-        buf_ = to;
-        size_ = 0;
+    inline String str() const {
+        return String{(const String::value_type*)buf_, size_};
     }
-    inline void begin(const unsigned char* to) { begin((const char*)to); }
-
-    inline void end(const char* to) {
-        assert(to >= buf_);
-        assert(to - buf_ < (1 << 30));
-        size_ = fsize_t(to - buf_);
-    }
-    inline void end(const unsigned char* to) { end((const char*)to); }
-
-    inline std::string str() const { return std::string{buf_, size_}; }
 
     inline frange_t range_of(Slice sub) const {
         assert(sub.begin() >= begin());

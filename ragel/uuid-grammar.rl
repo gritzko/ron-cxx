@@ -7,16 +7,16 @@
         variety='0'; 
         version='$'; 
         origin=Slice{}; 
-        uuidb.begin(p);
+        uuidb = p;
     }
     action variety { variety = *(p-1); }
-    action begin_value { value.begin(p); }
-    action end_value { value.end(p); }
+    action begin_value { wordb = p; }
+    action end_value { value = Slice{wordb,p}; }
     action version { version = fc; }
-    action begin_origin { origin.begin(p); }
-    action end_origin { origin.end(p); }
+    action begin_origin { wordb = p; }
+    action end_origin { origin = Slice{wordb,p}; }
     action end_uuid { 
-        uuidb.end(p);
+
     }
 
     # digits (base64, hex)

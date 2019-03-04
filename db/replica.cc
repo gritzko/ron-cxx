@@ -8,6 +8,9 @@ using namespace std;
 using namespace rocksdb;
 using Slice = ron::Slice;
 
+#define RSLICE(str) \
+    rocksdb::Slice { (const char*)str.data(), str.size() }
+
 template <typename Frame>
 const Uuid Replica<Frame>::NOW_UUID{915334634030497792UL, 0};
 
@@ -50,7 +53,7 @@ Status Replica<Frame>::Create(std::string home, Word origin) {
     now();
     Builder nowrec;
     nowrec.AppendNewOp(RAW, NOW_UUID, now_);
-    db_->Put(wo(), nil_key(), nowrec.data());
+    db_->Put(wo(), nil_key(), RSLICE(nowrec.data()));
 
     Close();
     return Open(home);
@@ -74,17 +77,17 @@ Status Replica<Frame>::Open(std::string home) {
     families.push_back(CFD{kDefaultColumnFamilyName, CFOptions()});
     // TODO branches
 
-    auto status = rocksdb::DB::Open(options, home, families, &handles, &db_);
-    if (!status.ok()) {
-        return Status::DB_FAIL.comment(status.ToString());
+    auto ok = rocksdb::DB::Open(options, home, families, &handles, &db_);
+    if (!ok.ok()) {
+        return status(ok);
     }
 
     auto i = handles.begin();
     trunk_ = *i;
 
     string meta;
-    auto ok = db_->Get(ro_, nil_key(), &meta);
-    Cursor mc{meta};
+    ok = db_->Get(ro_, nil_key(), &meta);
+    Cursor mc{Slice{meta}};
     do {
         if (mc.id() == NOW_UUID) now_ = mc.ref();
     } while (mc.Next());
@@ -284,7 +287,7 @@ Status Replica<Frame>::Get(Frame& object, Uuid id, Uuid rdt, Uuid branch) {
     rocksdb::Slice key{k};
     auto ok = db_->Get(ro_, trunk_, key, &data);
     if (ok.IsNotFound()) return Status::NOT_FOUND;
-    if (!ok.ok()) return Status::DB_FAIL.comment(ok.ToString());
+    if (!ok.ok()) return status(ok);
     object.swap(data);
     return Status::OK;
 }

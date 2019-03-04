@@ -3,22 +3,23 @@
 #ifndef ron_open_text_hpp
 #define ron_open_text_hpp
 #include "op.hpp"
+#include "slice.hpp"
 #include "status.hpp"
 
 namespace ron {
 
 class TextFrame {
-    std::string data_;
+    String data_;
 
    public:
     typedef std::vector<TextFrame> Batch;
 
     TextFrame() : data_{} {}
-    explicit TextFrame(std::string data) : data_{std::move(data)} {}
-    // explicit TextFrame(const std::string&& data) : data_{data} {}
+    explicit TextFrame(String data) : data_{std::move(data)} {}
+    // explicit TextFrame(const String&& data) : data_{data} {}
     TextFrame& operator=(const TextFrame& orig) = default;
 
-    const std::string& data() const { return data_; }
+    const String& data() const { return data_; }
 
     class Cursor {
         /** Frame data; the cursor does not own the memory */
@@ -45,7 +46,7 @@ class TextFrame {
               prev_id_{} {
             if (advance) Next();
         }
-        explicit Cursor(const std::string& str) : Cursor{Slice{str}} {}
+        explicit Cursor(const String& str) : Cursor{Slice{str}} {}
         explicit Cursor(const TextFrame& host) : Cursor{host.data_} {}
         const Op& op() const { return op_; }
         Status Next();
@@ -66,8 +67,8 @@ class TextFrame {
             return op_.type(idx);
         }
         inline TERM term() const { return op_.term(); }
-        static std::string unescape(const Slice& data);
-        std::string string(fsize_t idx) const {
+        static String unescape(const Slice& data);
+        String string(fsize_t idx) const {
             assert(type(idx) == STRING);
             // FIXME check metrics
             Slice esc = data_.slice(op_.atom(idx).origin().range());
@@ -99,16 +100,18 @@ class TextFrame {
         TERM term_;
         Uuid prev_;
         /** Frame data (builder owns the memory) */
-        std::string data_;
+        String data_;
 
         inline void Write(char c) { data_.push_back(c); }
-        inline void Write(Slice data) { data_.append(data.buf_, data.size_); }
+        inline void Write(Slice data) {
+            data_.append((String::value_type*)data.buf_, data.size());
+        }
         void WriteInt(int64_t value);
         void WriteFloat(double value);
         void WriteUuid(const Uuid value);
-        void WriteString(const std::string& value);
+        void WriteString(const String& value);
 
-        void escape(std::string& escaped, const Slice& unescaped);
+        void escape(String& escaped, const Slice& unescaped);
 
         // terminates the op
         void WriteAtoms() { Write(TERM_PUNCT[term_]); }
@@ -135,7 +138,7 @@ class TextFrame {
         }
 
         template <typename... Ts>
-        void WriteAtoms(const std::string& value, Ts... args) {
+        void WriteAtoms(const String& value, Ts... args) {
             Write(ATOM_PUNCT[STRING]);
             WriteString(value);
             Write(ATOM_PUNCT[STRING]);
@@ -177,7 +180,7 @@ class TextFrame {
 
         const TextFrame frame() const { return TextFrame{data_}; }
 
-        const std::string& data() const { return data_; }
+        const String& data() const { return data_; }
 
         bool empty() const { return data_.empty(); }
 
@@ -214,7 +217,7 @@ class TextFrame {
 
     typedef std::vector<Cursor> Cursors;
 
-    inline void swap(std::string& str) { std::swap(data_, str); }
+    inline void swap(String& str) { std::swap(data_, str); }
 
     Status Split(std::vector<TextFrame>& to);
 
@@ -227,11 +230,11 @@ class TextFrame {
 
 namespace std {
 
-inline void swap(ron::TextFrame::Builder& builder, std::string& str) {
+inline void swap(ron::TextFrame::Builder& builder, ron::String& str) {
     swap(builder.data_, str);
 }
 
-inline void swap(ron::TextFrame& f, std::string& str) { f.swap(str); }
+inline void swap(ron::TextFrame& f, ron::String& str) { f.swap(str); }
 
 }  // namespace std
 

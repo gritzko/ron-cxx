@@ -27,7 +27,7 @@ union Word {
             i++;
         }
     }
-    Word(const std::string& word) : Word{0, Slice{word}} {}
+    Word(const String& word) : Word{0, Slice{word}} {}
     explicit Word(const char* word)
         : Word{0, Slice{word, (fsize_t)strlen(word)}} {}
     Word(ATOM atype, fsize_t offset, fsize_t length) {
@@ -80,7 +80,7 @@ union Word {
     inline fsize_t lower() const { return _64 & (PAYLOAD_BITS >> 30); }
     inline uint8_t flags() const { return _8[7] >> 4U; }
     inline void zero() { _64 = 0U; }
-    size_t write_base64(char* to) const;
+    void write_base64(String& to) const;
     inline uint64_t payload() const { return _64 & MAX_VALUE; }
     inline bool is_zero() const { return _64 == 0U; }
     inline Word inc(uint64_t by = 1UL) const { return Word{_64 + by}; }
@@ -98,9 +98,11 @@ union Word {
         return _64_hash_fn(_64);
     }
     inline uint64_t be() const { return htobe64(_64); }
-    std::string str() const {
-        char letters[BASE64_WORD_LEN];
-        return std::string(letters, write_base64(letters));
+    String str() const {
+        String letters{};
+        letters.reserve(BASE64_WORD_LEN);
+        write_base64(letters);
+        return letters;
     }
     bool is_all_digits() const;
     inline frange_t range() const {
@@ -165,14 +167,14 @@ struct Uuid : public Atom {
     // pre-parsed Uuid, got hints and correctness guarantee
     Uuid(char variety, const Slice& value, char version, const Slice& origin)
         : Uuid{Word{ABC[variety], value}, Word{ABC[version], origin}} {}
-    explicit Uuid(const std::string& buf) : Uuid{Slice{buf}} {}
+    explicit Uuid(const ron::String& buf) : Uuid{Slice{buf}} {}
     explicit Uuid(const char* buf)
         : Uuid{Slice{buf, static_cast<fsize_t>(strlen(buf))}} {}
     inline enum UUID version() const { return (enum UUID)(ofb() & 3U); }
     inline uint8_t variety() const { return vfb(); }
     inline Word& word(int a, int i) { return Atom::word(i); }
-    size_t write_base64(char* to) const;
-    std::string str() const;
+    void write_base64(ron::String& to) const;
+    ron::String str() const;
     inline bool zero() const { return value() == 0; }
     inline bool is_ambiguous() const {
         return origin().is_zero() && value().is_all_digits();
@@ -200,6 +202,9 @@ struct Uuid : public Atom {
     inline bool operator>=(const Uuid& b) const { return words_ >= b.words_; }
     inline Uuid operator+(uint64_t i) const {
         return Uuid{value() + i, origin()};
+    }
+    inline bool operator==(const ron::String& str) const {
+        return *this == Uuid{str};
     }
 
     /** Nil UUID as per RFC4122 */
@@ -239,6 +244,10 @@ struct hash<ron::Uuid> {
         return uuid.value().hash() ^ (uuid.origin().hash() << 1U);
     }
 };
+
+inline ostream& operator<<(ostream& to, ron::Uuid uuid) {
+    return to << uuid.str();
+}
 
 }  // namespace std
 

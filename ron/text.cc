@@ -5,7 +5,7 @@ using namespace std;
 namespace ron {
 
 int64_t TextFrame::Cursor::parse_int(Slice range) {
-    const char* i = range.begin();
+    CharRef i = range.begin();
     bool neg = false;
     if (*i == '-') {
         neg = true;
@@ -25,14 +25,14 @@ int64_t TextFrame::Cursor::parse_int(Slice range) {
 
 double TextFrame::Cursor::parse_float(Slice range) {
     char fs[32];  // FIXME size limits
-    strncpy(fs, range.buf_, range.size_);
+    memcpy(fs, range.buf_, range.size_);
     fs[range.size_] = 0;
     double ret = strtod(fs, nullptr);
     return ret;
 }
 
-std::string TextFrame::Cursor::unescape(const Slice& data) {
-    std::string ret{};
+String TextFrame::Cursor::unescape(const Slice& data) {
+    String ret{};
     for (auto c = data.begin(); c < data.end(); c++) {
         if (*c != ESC) {
             ret.push_back(*c);
@@ -65,12 +65,12 @@ std::string TextFrame::Cursor::unescape(const Slice& data) {
 }
 
 Status TextFrame::Split(std::vector<TextFrame>& to) {
-    const string& d = data_;
+    const String& d = data_;
     const size_t s = d.size();
     size_t pos = 0;
     do {
-        size_t at = d.find(".\n", pos);
-        if (at == string::npos) {
+        size_t at = d.find(FRAME_TERM, pos);
+        if (at == String::npos) {
             at = s;
         } else {
             at += 2;
@@ -87,7 +87,7 @@ bool TextFrame::Cursor::int_too_big(const Slice& data) {
     if (data.size() < 19) {
         return false;
     }
-    const char* mem = data.begin();
+    CharRef mem = data.begin();
     size_t sz = data.size();
     if (*mem == '-' || *mem == '+') {
         ++mem;

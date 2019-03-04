@@ -22,11 +22,12 @@ string despace (string& orig) {
 }
 
 void test_chain_merge () {
-    string abc = "@1+A :rga! 'a', 'b', 'c',";
+    string abc = "@1+A :rga! 'a', 'b', 'c', ";
     string def = "@1000000004+B :1000000003+A 'D', 'E', 'F', ";
     string abcdef;
-    assert(Merge<TextFrame>(abcdef, RGA_RDT, {abc, def}));
-    string correct = "@1+A :rga! 'a', 'b', 'c', @1000000004+B 'D', 'E', 'F',";
+    Status ok = Merge<TextFrame>(abcdef, RGA_RDT, {abc, def});
+    assert(ok);
+    string correct = "@1+A :rga! 'a', 'b', 'c', @1000000004+B 'D', 'E', 'F', ";
     assert(despace(abcdef)==despace(correct));
 }
 
@@ -41,8 +42,8 @@ void test_sibling_merge () {
 }
 
 void test_multitree () {
-    string childA = "@1a+B :1+A 'b';";
-    string childB = "@1b+C :1+A 'a';";
+    String childA{"@1a+B :1+A 'b';"};
+    String childB{"@1b+C :1+A 'a';"};
     RGArrayRDT<TextFrame> reducer{};
     TextFrame::Builder b;
     TextFrame::Cursors c{};
@@ -55,9 +56,9 @@ void test_ct_scan_all0 () {
     //  !
     //    a   c
     //      b   d
-    Frame frame{"@1i08e4+path :rga! 'a', @1i08z+path 'b', @1i08k+path :1i08e4+path 'c', 'd',"};
+    String SIMPLE{"@1i08e4+path :rga! 'a', @1i08z+path 'b', @1i08k+path :1i08e4+path 'c', 'd',"};
     vector<bool> tombs{};
-    assert(ScanRGA<Frame>(tombs, frame));
+    assert(ScanRGA<Frame>(tombs, Frame{SIMPLE}));
     assert( tombs[0]);
     assert(!tombs[1]);
     assert(!tombs[2]);
@@ -71,9 +72,9 @@ void test_ct_scan_rm () {
     //    a
     //      b
     //        rm d
-    Frame frame{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, @1i08e40003+path :1i08e40002+path 'd',"};
+    String RM{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, @1i08e40003+path :1i08e40002+path 'd',"};
     vector<bool> tombs{};
-    assert(ScanRGA<Frame>(tombs, frame));
+    assert(ScanRGA<Frame>(tombs, Frame{RM}));
     assert( tombs[0]);
     assert(!tombs[1]);
     assert( tombs[2]);
@@ -87,9 +88,9 @@ void test_ct_scan_rm2 () {
     //      b
     //        rm    d
     //           rm
-    Frame frame{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, rm, @1i08e40003+path :1i08e40002+path 'd',"};
+    String RMRM{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, rm, @1i08e40003+path :1i08e40002+path 'd',"};
     vector<bool> tombs{};
-    assert(ScanRGA<Frame>(tombs, frame));
+    assert(ScanRGA<Frame>(tombs, Frame{RMRM}));
     assert( tombs[0]);
     assert( tombs[1]);
     assert( tombs[2]);
@@ -106,9 +107,9 @@ void test_ct_scan_rm_un () {
     //        rm       d
     //           rm
     //              un
-    Frame frame{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, rm, un, @1i08e40003+path :1i08e40002+path 'd',"};
+    String RMUN{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, rm, un, @1i08e40003+path :1i08e40002+path 'd',"};
     vector<bool> tombs{};
-    assert(ScanRGA<Frame>(tombs, frame));
+    assert(ScanRGA<Frame>(tombs, Frame{RMUN}));
     assert( tombs[0]);
     assert(!tombs[1]);
     assert( tombs[2]);
@@ -126,9 +127,9 @@ void test_ct_scan_trash () {
     //           rm      un
     //              c       rm
     //                         rm
-    Frame frame{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, rm, 'c', @1i08e40003+path :1i08e40002+path 'd', un, rm, rm,"};
+    String ITSCOMPLEX{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, rm, 'c', @1i08e40003+path :1i08e40002+path 'd', un, rm, rm,"};
     vector<bool> tombs{};
-    assert(ScanRGA<Frame>(tombs, frame));
+    assert(ScanRGA<Frame>(tombs, Frame{ITSCOMPLEX}));
     assert( tombs[0]);
     assert( tombs[1]);
     assert( tombs[2]);

@@ -9,20 +9,19 @@ namespace ron {
  *  The OK status is 0 (aka "nil UUID"). */
 class Status {
     Uuid code_;
-    std::string comment_;
+    String comment_;
 
    public:
     Status() : code_{0, 0} {}
     explicit Status(uint64_t err_code) : code_{err_code, Word::PAYLOAD_BITS} {}
-    Status(Uuid code, const std::string& comment)
-        : code_{code}, comment_{comment} {}
+    Status(Uuid code, const String& comment) : code_{code}, comment_{comment} {}
 
     inline explicit operator Uuid() const { return code_; }
 
     inline Uuid code() const { return code_; }
-    inline const std::string& comment() const { return comment_; }
+    inline const String& comment() const { return comment_; }
 
-    inline Status comment(const std::string& add_comment) const {
+    inline Status comment(const String& add_comment) const {
         return Status{code_, add_comment};
     }
 
@@ -32,7 +31,7 @@ class Status {
 
     bool operator==(const Status& b) const { return code() == b.code(); }
 
-    std::string str() const { return code().value().str() + '\t' + comment(); }
+    String str() const { return code().value().str() + "\t" + comment(); }
 
     static const Status OK;
     static const Status ENDOFFRAME;

@@ -12,30 +12,30 @@
     action end_ref {
         op_.SetRef(Uuid{variety, value, version, origin});
     }
-    action begin_int { intb.begin(p); }
+    action begin_int { intb = p; }
     action end_int {
-        intb.end(p);
-        if (intb.size()>=19 && int_too_big(intb)) { cs = 0; fbreak; }
-        op_.AddAtom(Atom::Integer(parse_int(intb), body.range_of(intb))); 
-        lastintb = (iterator)intb.buf_;
+        Slice the_int(intb, p);
+        if (the_int.size()>=19 && int_too_big(the_int)) { cs = 0; fbreak; }
+        op_.AddAtom(Atom::Integer(parse_int(the_int), body.range_of(the_int))); 
+        uuidb = nullptr; // sabotage uuid
     }
-    action begin_string { strb.begin(p); }
+    action begin_string { strb = p; }
     action end_string { 
-        strb.end(p);
-        op_.AddAtom(Atom::String(body.range_of(strb))); 
+        Slice the_str{strb,p};
+        op_.AddAtom(Atom::String(body.range_of(the_str))); 
     }
-    action begin_float { floatb.begin(p); }
+    action begin_float { floatb = p; }
     action end_float { 
-        floatb.end(p);
-        if (floatb.size() > 24) { cs = 0; fbreak; }
-        op_.AddAtom(Atom::Float(parse_float(floatb), body.range_of(floatb))); 
+        Slice the_float{floatb,p};
+        if (the_float.size() > 24) { cs = 0; fbreak; }
+        op_.AddAtom(Atom::Float(parse_float(the_float), body.range_of(the_float))); 
     }
     action end_quoted_uuid {
         if (word_too_big(value) || word_too_big(origin)) { cs = 0; fbreak; }
         op_.AddAtom(Uuid{variety, value, version, origin}); 
     }
     action end_bare_uuid { 
-        if (!intb.same(uuidb)) {
+        if (uuidb!=nullptr) { // " 123 " is an int, not an UUID
             if (word_too_big(value) || word_too_big(origin)) { cs = 0; fbreak; }
             op_.AddAtom(Uuid{variety, value, version, origin}); 
         }

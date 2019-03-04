@@ -19,7 +19,7 @@ struct SHA2 {
 
     /** the number of meaningful *bits* */
     uint32_t known_bits_;
-    std::string bits_;
+    String bits_;
 
     SHA2() : known_bits_{0}, bits_{} { bits_.resize(SIZE, 0); }
 
@@ -54,29 +54,29 @@ struct SHA2 {
         }
         return true;
     }
-    std::string hex() const {
-        std::string data;
+    String hex() const {
+        String data;
         data.reserve(HEX_SIZE);
-        encode<4, HEX_PUNCT>(data, (const uint8_t*)bits_.data(), known_bits_);
+        encode<4, HEX_PUNCT>(data, bits_, known_bits_);
         return data;
     }
 
-    static SHA2 ParseHex(const std::string& hash) {
+    static SHA2 ParseHex(const String& hash) {
         SHA2 ret;
         assert(hash.size() <= HEX_SIZE);
         uint32_t b = uint32_t(hash.size()) << 2;
         if (b > BIT_SIZE) b = BIT_SIZE;
-        if (decode<4, ABC16>(ret.bits_, hash.data(), ret.known_bits_))
+        if (decode<4, ABC16>(ret.bits_, hash, ret.known_bits_))
             ret.known_bits_ = b;
         return ret;
     }
 
-    static SHA2 ParseBase64(const std::string& hash) {
+    static SHA2 ParseBase64(const String& hash) {
         SHA2 ret;
         assert(hash.size() <= BASE64_SIZE);
         uint32_t b = uint32_t(hash.size()) * 6;
         if (b > BIT_SIZE) b = BIT_SIZE;
-        if (decode<6, ABC64>(ret.bits_, hash.data(), ret.known_bits_))
+        if (decode<6, ABC64>(ret.bits_, hash, ret.known_bits_))
             ret.known_bits_ = b;
         return ret;
     }
@@ -84,10 +84,10 @@ struct SHA2 {
     /** my motivation for using Base64: Base64 is less clutter.
      * noone is going to spell hashes on the phone anyway.
      * @author gritzko  */
-    std::string base64() const {
-        std::string data;
+    String base64() const {
+        String data;
         data.reserve(BASE64_SIZE);
-        encode<6, BASE_PUNCT>(data, (const uint8_t*)bits_.data(), known_bits_);
+        encode<6, BASE_PUNCT>(data, bits_, known_bits_);
         return data;
     }
 
@@ -119,7 +119,7 @@ struct Stream {
         return Write(Slice{(char*)&tmp, sizeof(uint64pair)});
     }
     inline void close(void* result) { sink_.final((uint8_t*)result); }
-    inline void close(std::string& result) {
+    inline void close(String& result) {
         result.resize(sink_.output_length());
         sink_.final((uint8_t*)result.data());
     }

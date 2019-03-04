@@ -1,6 +1,7 @@
 #ifndef RON_CONST_HPP
 #define RON_CONST_HPP
 #include <stdint.h>
+#include "slice.hpp"
 
 namespace ron {
 
@@ -18,15 +19,15 @@ enum RON : uint8_t {
     // and so on
 };
 
-constexpr char SPEC_PUNCT[] = "*#@:";
+constexpr Char SPEC_PUNCT[] = "*#@:";
 enum SPEC : uint8_t { TYPE = 0, OBJECT = 1, EVENT = 2, REF = 3 };
 
 enum VARIANT { RON_UUID = 0, RON_ATOM = 1, RFC4122_UUID = 2, RESERVED = 3 };
 
-constexpr char UUID_PUNCT[] = "$%+-";
+constexpr Char UUID_PUNCT[] = "$%+-";
 enum UUID : uint8_t { NAME = 0, HASH = 1, TIME = 2, DERIVED = 3 };
 
-constexpr char ATOM_PUNCT[] = ">='^";
+constexpr Char ATOM_PUNCT[] = ">='^";
 enum ATOM : uint8_t { UUID = 0, BUF = 0, INT = 1, STRING = 2, FLOAT = 3 };
 
 enum FLAGS : uint8_t {
@@ -39,15 +40,30 @@ enum FLAGS : uint8_t {
     DERIVED_UUID = (RON_UUID << 2U) | DERIVED
 };
 
-constexpr char HEX_PUNCT[] = "0123456789abcdef";
+constexpr Char HEX_PUNCT[] = "0123456789abcdef";
 
-constexpr char TERM_PUNCT[] = ";,!?";
+constexpr Char TERM_PUNCT[] = ";,!?";
 enum TERM : uint8_t { RAW = 0, REDUCED = 1, HEADER = 2, QUERY = 3 };
 
-constexpr char BASE_PUNCT[] =
+inline TERM chr2term(Char c) {
+    switch (c) {
+        case TERM_PUNCT[RAW]:
+            return RAW;
+        case TERM_PUNCT[REDUCED]:
+            return REDUCED;
+        case TERM_PUNCT[HEADER]:
+            return HEADER;
+        case TERM_PUNCT[QUERY]:
+            return QUERY;
+        default:
+            assert(false);
+    }
+}
+
+constexpr Char BASE_PUNCT[] =
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~";
 
-constexpr char FRAME_PUNCT[] = ".";
+constexpr Char FRAME_PUNCT[] = ".";
 enum FRAME : uint8_t { END = 0 };
 
 void init();
@@ -73,6 +89,13 @@ enum ACID : uint8_t {
     ACD = COMMUTATIVE | AD,
     FULL = ASSOCIATIVE | CID
 };
+
+constexpr Char TAB{'\t'};
+constexpr Char NL{'\n'};
+constexpr Char SPACE{' '};
+constexpr Char DOT{'.'};
+
+const String FRAME_TERM{{DOT, NL}};
 
 }  // namespace ron
 

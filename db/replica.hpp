@@ -203,6 +203,11 @@ class Replica {
     //  U T I L
 
     rocksdb::ColumnFamilyOptions CFOptions() const;
+
+    inline static Status status(const rocksdb::Status& orig) {
+        return orig.ok() ? Status::OK
+                         : Status::DB_FAIL.comment(orig.ToString());
+    }
 };
 
 inline Slice slice(rocksdb::Slice s) {

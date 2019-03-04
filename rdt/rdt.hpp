@@ -100,7 +100,8 @@ Status Merge(std::string &ret, RDT rdt,
     using Cursor = typename Frame::Cursor;
     using Cursors = typename Frame::Cursors;
     Cursors curs{};
-    for (const auto &input : inputs) curs.push_back(Cursor{input});
+    for (int i = 0; i < inputs.size(); ++i)
+        curs.push_back(Cursor{Slice{inputs[i]}});
     return MergeCursors<Frame>(ret, rdt, curs);
 }
 

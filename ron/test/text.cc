@@ -27,33 +27,40 @@ string pattern (const Frame& frame) {
 
 void test_basic_cycle () {
     Builder builder;
-    builder.AppendNewOp(HEADER, Uuid{"1+src"}, Uuid{"lww"});
-    builder.AppendNewOp(REDUCED, Uuid{"2+orig"}, Uuid{"1+src"}, "key", "value");
+    String TIME1{"1+src"};
+    String TIME2{"2+orig"};
+    String LWW{"lww"};
+    String KEY{"key"};
+    String VALUE{"value"};
+    builder.AppendNewOp(HEADER, Uuid{TIME1}, Uuid{LWW});
+    builder.AppendNewOp(REDUCED, Uuid{TIME2}, Uuid{TIME1}, KEY, VALUE);
     // TODO escaping
     // TODO coverage: uuid, float, int
     TextFrame frame = builder.frame();
-    const string &data = frame.data();
-    assert(data.find("1+src")!=string::npos);
-    assert(data.find("key")!=string::npos);
-    assert(data.find("value")!=string::npos);
+    const String &data = frame.data();
+    assert(data.find(TIME1)!=string::npos);
+    assert(data.find(KEY)!=string::npos);
+    assert(data.find(VALUE)!=string::npos);
 
     TextFrame::Cursor cursor = frame.cursor();
     const Op& op = cursor.op();
     assert(op.size()==2);
-    assert(op.ref()==Uuid{"lww"});
-    assert(op.id()=="1+src");
+    assert(op.ref()==Uuid{LWW});
+    assert(op.id().str()==TIME1);
     assert(cursor.term()==HEADER);
     assert(cursor.Next());
     assert(cursor.term()==REDUCED);
-    assert(op.ref()=="1+src");
-    assert(op.id()=="2+orig");
-    assert(cursor.string(2)=="key");
-    assert(cursor.string(3)=="value");
+    assert(op.ref()==TIME1);
+    assert(op.id()==TIME2);
+    assert(cursor.string(2)==KEY);
+    assert(cursor.string(3)==VALUE);
     assert(!cursor.Next());
 }
 
 void test_optional_chars () {
-    Frame opt{"@1A 234 56K;+9223372036854775807'abc' 3, @id 3.1415 >uuid;"};
+    String TANGLED{"@1A 234 56K;+9223372036854775807'abc' 3, @id 3.1415 >uuid;"};
+    String ABC{"abc"};
+    Frame opt{TANGLED};
     Cursor copt = opt.cursor();
     assert(copt.valid());
     assert(copt.op().size()==4);
@@ -69,7 +76,7 @@ void test_optional_chars () {
     assert(copt.op().ref()=="1A");
     assert(copt.has(2, INT));
     assert(copt.integer(2)==9223372036854775807L);
-    assert(copt.string(3)=="abc");
+    assert(copt.string(3)==ABC);
     assert(copt.integer(4)==3);
 
     assert(copt.Next());
@@ -80,7 +87,8 @@ void test_optional_chars () {
 }
 
 void test_signs () {
-    Frame signs{"@2:1 -1 ,-1.2, +1.23,-1e+2, -2.0e+1,"};
+    String SIGNS{"@2:1 -1 ,-1.2, +1.23,-1e+2, -2.0e+1,"};
+    Frame signs{SIGNS};
     Cursor cur = signs.cursor();
     assert(cur.integer(2)==-1);
     assert(cur.Next());
@@ -95,7 +103,8 @@ void test_signs () {
 }
 
 void test_size_limits () {
-    Frame toolong{"=1,=1000000000000000000001,"};
+    String OVERLIMIT{"=1,=1000000000000000000001,"};
+    Frame toolong{OVERLIMIT};
     Cursor cur = toolong.cursor();
     assert(cur.valid());
     assert(!cur.Next());
@@ -103,8 +112,8 @@ void test_size_limits () {
 
 void test_string_escapes () {
     Builder builder;
-    string STR1 = "'esc'";
-    string STR2 = "=\r\n\t\\=";
+    String STR1{"'esc'"};
+    String STR2{"=\r\n\t\\="};
     builder.AppendNewOp(RAW, Uuid{"1+a"}, Uuid{"2+b"}, STR1, STR2);
     Frame cycle = builder.frame();
     Cursor cc = cycle.cursor();
@@ -118,14 +127,14 @@ void test_string_escapes () {
 }
 
 void test_string_metrics () {
-    string bad_utf8 = "@id :ref 'bad string \x80';";
-    Cursor bad{bad_utf8};
+    String BADUTF8{"@id :ref 'bad string \x80';"};
+    Cursor bad{BADUTF8};
     assert(!bad.valid());
 }
 
 void test_terms() {
-    Frame commas{"@1+A:2+B 1,2 ,\n,\t4   ,,"};
-    auto c = commas.cursor();
+    String COMMAS{"@1+A:2+B 1,2 ,\n,\t4   ,,"};
+    Cursor c{COMMAS};
     int i = 1;
     while (c.Next()) i++;
     assert(i==5);
@@ -133,10 +142,11 @@ void test_terms() {
 
 void test_defaults () {
     Frame::Builder b;
-    Frame raw{"@12345+test :lww; @1234500001+test :12345+test 'key' 'value';"};
-    b.AppendFrame(raw);
+    String RAW{"@12345+test :lww; @1234500001+test :12345+test 'key' 'value';"};
+    b.AppendFrame(Frame{RAW});
     Frame nice = b.frame();
-    assert(nice.data()=="@12345+test :lww;\n 'key' 'value';\n");
+    String CORRECT{"@12345+test :lww;\n 'key' 'value';\n"};
+    assert(nice.data()==CORRECT);
     Cursor nc = nice.cursor();
     assert(nc.op().id()==Uuid{"12345+test"});
     assert(nc.op().ref()==Uuid{"lww"});
@@ -146,22 +156,23 @@ void test_defaults () {
 }
 
 void test_span_spread () {
-    Frame raw{"@1iDEKK+gYpLcnUnF6 :1iDEKA+gYpLcnUnF6 ('abcd' 4);"};
-    Cursor c = raw.cursor();
+    String RAW{"@1iDEKK+gYpLcnUnF6 :1iDEKA+gYpLcnUnF6 ('abcd' 4);"};
+    Cursor c{RAW};
     assert(c.valid());
 }
 
 void test_syntax_errors () {
-    string invalid{"@line+ok\n:bad/"};
-    Cursor cur{invalid, false};
+    String INVALID{"@line+ok\n:bad/"};
+    Cursor cur{Slice{INVALID}, false};
     Status ok = cur.Next();
-    assert(ok.comment()=="syntax error at line 2 col 5 (offset 13)");
+    String MSG{"syntax error at line 2 col 5 (offset 13)"};
+    assert(ok.comment()==MSG);
 }
 
 void test_utf16 () {
-    string utf8 = "'пикачу\\u0020ピカチュウ'!";
-    assert(utf8.size()==36);
-    Frame frame{utf8};
+    String PIKACHU{"'пикачу\\u0020ピカチュウ'!"};
+    assert(PIKACHU.size()==36);
+    Frame frame{PIKACHU};
     Cursor cur = frame.cursor();
     assert(cur.valid());
     assert(cur.has(2, STRING));

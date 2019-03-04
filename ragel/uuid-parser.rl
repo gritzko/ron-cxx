@@ -3,17 +3,17 @@
 namespace ron {
 
     Uuid::Uuid (Slice data) {
-        using iterator = const unsigned char *;
+
         %% machine UUID;
         %% write data;
 
-        iterator pb = (iterator)data.buf_;
-        iterator pe = pb+data.size_;
-        iterator p = pb;
-        iterator eof = pe;
+        CharRef pb = data.buf_;
+        CharRef pe = pb+data.size_;
+        CharRef p = pb;
+        CharRef eof = pe;
+        CharRef uuidb{p}, wordb{p};
         int cs = 0;
-
-        Slice value{}, origin{}, uuidb;
+        Slice value{}, origin{};
         char variety{'0'}, version{'$'};
 
         %%{ 

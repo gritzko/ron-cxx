@@ -5,8 +5,6 @@
 namespace ron {
 
 Uuid::Uuid(Slice data) {
-    using iterator = const unsigned char *;
-
 #line 8 "ragel/uuid-parser.rl"
 
 #line 13 "ron/uuid-parser.cc"
@@ -18,13 +16,13 @@ Uuid::Uuid(Slice data) {
 
 #line 9 "ragel/uuid-parser.rl"
 
-    iterator pb = (iterator)data.buf_;
-    iterator pe = pb + data.size_;
-    iterator p = pb;
-    iterator eof = pe;
+    CharRef pb = data.buf_;
+    CharRef pe = pb + data.size_;
+    CharRef p = pb;
+    CharRef eof = pe;
+    CharRef uuidb{p}, wordb{p};
     int cs = 0;
-
-    Slice value{}, origin{}, uuidb;
+    Slice value{}, origin{};
     char variety{'0'}, version{'$'};
 
 #line 33 "ron/uuid-parser.cc"
@@ -60,10 +58,10 @@ Uuid::Uuid(Slice data) {
                 variety = '0';
                 version = '$';
                 origin = Slice{};
-                uuidb.begin(p);
+                uuidb = p;
             }
 #line 13 "ragel/./uuid-grammar.rl"
-                { value.begin(p); }
+                { wordb = p; }
                 goto st4;
             st4:
                 if (++p == pe) goto _test_eof4;
@@ -94,7 +92,7 @@ Uuid::Uuid(Slice data) {
             tr5 :
 #line 14 "ragel/./uuid-grammar.rl"
             {
-                value.end(p);
+                value = Slice{wordb, p};
             }
 #line 15 "ragel/./uuid-grammar.rl"
                 { version = (*p); }
@@ -119,7 +117,7 @@ Uuid::Uuid(Slice data) {
             tr3 :
 #line 16 "ragel/./uuid-grammar.rl"
             {
-                origin.begin(p);
+                wordb = p;
             }
                 goto st5;
             st5:
@@ -168,15 +166,15 @@ Uuid::Uuid(Slice data) {
                 variety = '0';
                 version = '$';
                 origin = Slice{};
-                uuidb.begin(p);
+                uuidb = p;
             }
 #line 13 "ragel/./uuid-grammar.rl"
-                { value.begin(p); }
+                { wordb = p; }
                 goto st6;
             tr4 :
 #line 13 "ragel/./uuid-grammar.rl"
             {
-                value.begin(p);
+                wordb = p;
             }
                 goto st6;
             st6:
@@ -227,18 +225,18 @@ Uuid::Uuid(Slice data) {
                 case 6:
 #line 14 "ragel/./uuid-grammar.rl"
                 {
-                    value.end(p);
+                    value = Slice{wordb, p};
                 }
 #line 18 "ragel/./uuid-grammar.rl"
-                    { uuidb.end(p); }
+                    {}
                     break;
                 case 5:
 #line 17 "ragel/./uuid-grammar.rl"
                 {
-                    origin.end(p);
+                    origin = Slice{wordb, p};
                 }
 #line 18 "ragel/./uuid-grammar.rl"
-                    { uuidb.end(p); }
+                    {}
                     break;
 #line 233 "ron/uuid-parser.cc"
             }

@@ -180,16 +180,16 @@ Status CommandDump(RonReplica& replica, const string& what) {
     for (i->SeekToFirst(); i->Valid(); i->Next()) {
         Key key{i->key()};
         if (rdt != RDT_COUNT && key.rdt() != rdt) continue;
-        char k[64];
-        size_t l = 0;
-        k[l++] = '\n';
-        k[l++] = '*';
-        l += rdt2uuid(key.rdt()).write_base64(k + l);
-        k[l++] = '#';
-        l += key.id().write_base64(k + l);
-        k[l++] = '\n';
-        int wok = write(STDOUT_FILENO, k, l);
-        if (wok != l) return Status::IOFAIL;
+        String k;
+        k.reserve(64);
+        k.push_back('\n');
+        k.push_back('*');
+        rdt2uuid(key.rdt()).write_base64(k);
+        k.push_back('#');
+        key.id().write_base64(k);
+        k.push_back('\n');
+        int wok = write(STDOUT_FILENO, k.data(), k.size());
+        if (wok != k.size()) return Status::IOFAIL;
         rocksdb::Slice val = i->value();
         wok = write(STDOUT_FILENO, val.data(), val.size());
         if (wok != val.size()) return Status::IOFAIL;

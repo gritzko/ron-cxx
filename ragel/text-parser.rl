@@ -12,7 +12,7 @@ Status TextFrame::Cursor::Next () {
     Atoms& atoms = op_.atoms_;
 
     int line=1;
-    typedef const unsigned char* iterator;
+
 
     switch (cs) {
         case RON_error:
@@ -36,16 +36,16 @@ Status TextFrame::Cursor::Next () {
     }
 
     Slice body{data()};
-    iterator pb = (iterator)body.buf_;
-    iterator p = pb + off_;
-    iterator pe = pb + body.size();
-    iterator eof = pe;
-    iterator lineb = pb;
-    Slice intb{p,0};
-    Slice floatb{p,0};
-    Slice strb{p,0};
-    Slice uuidb{p,0};
-    iterator lastintb{0};
+    CharRef pb = body.buf_;
+    CharRef p = pb + off_;
+    CharRef pe = pb + body.size();
+    CharRef eof = pe;
+    CharRef lineb = pb;
+    CharRef intb{p};
+    CharRef floatb{p};
+    CharRef strb{p};
+    CharRef uuidb{p};
+    CharRef wordb{p};
     char term{0};
     Slice value, origin;
     char variety, version;
@@ -69,13 +69,13 @@ Status TextFrame::Cursor::Next () {
     //std::cerr << "ending with [" <<p<<"] state "<<cs<<" "<<op_.size()<<" atoms "<<(pe-p)<<" bytes left, prev_id_ "<<prev_id_.str()<<'\n';
 
     if (term && cs!=RON_error) {
-        op_.term_ = TERM(strchr(TERM_PUNCT, term) - TERM_PUNCT); // FIXME gen a fn
+        op_.term_ = chr2term(term); // FIXME gen a fn
         return Status::OK;
     } else {
         cs = RON_error;
         char msg[64];
-        size_t msglen = sprintf(msg, "syntax error at line %d col %d (offset %d)", line, (int)(p-lineb), (int)(p-pb));
-        return Status::BAD_STATE.comment(std::string{msg, msglen});
+        size_t msglen = sprintf((char*)msg, "syntax error at line %d col %d (offset %d)", line, (int)(p-lineb), (int)(p-pb));
+        return Status::BAD_STATE.comment(msg);
     }
 
 }

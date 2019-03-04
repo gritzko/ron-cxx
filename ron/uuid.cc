@@ -9,44 +9,44 @@ const Word Word::NEVER{Word::MAX_VALUE};
 const Uuid Uuid::NIL{0, 0};
 const Uuid Uuid::FATAL{Word::MAX_VALUE, Word::MAX_VALUE};
 
-size_t Word::write_base64(char* to) const {
-    uint64_t val = _64;
+void Word::write_base64(String& to) const {
     size_t len = 0;
     do {
-        to[len] = BASE_PUNCT[0x3fU & (val >> OFFSET6[len])];
+        to.push_back(BASE_PUNCT[0x3fU & (_64 >> OFFSET6[len])]);
         len++;
-    } while (val & LOWER6[len]);
-    return len;
+    } while (_64 & LOWER6[len]);
 }
 
 bool Word::is_all_digits() const {
-    char letters[BASE64_WORD_LEN];
-    size_t len = write_base64(letters);
-    for (int i = 0; i < len; i++)
-        if (!std::isdigit(letters[i])) return false;
+    size_t len = 0;
+    do {
+        Char next = BASE_PUNCT[0x3fU & (_64 >> OFFSET6[len])];
+        if (!isdigit(next)) return false;
+        len++;
+    } while (_64 & LOWER6[len]);
     return true;
 }
 
-size_t Uuid::write_base64(char* ret) const {
+void Uuid::write_base64(ron::String& ret) const {
     size_t len = 0;
     int vrt = variety();
     if (vrt) {
-        ret[len++] = BASE_PUNCT[vrt];
-        ret[len++] = '/';
+        ret.push_back(BASE_PUNCT[vrt]);
+        ret.push_back('/');
     }
-    len += words_.first.write_base64(ret + len);
+    words_.first.write_base64(ret);
     int schm = version();
     if (schm != 0 || !origin().is_zero()) {
-        ret[len++] = UUID_PUNCT[schm];
-        len += words_.second.write_base64(ret + len);
+        ret.push_back(UUID_PUNCT[schm]);
+        words_.second.write_base64(ret);
     }
-    return len;
 }
 
-std::string Uuid::str() const {
-    char ret[Word::BASE64_WORD_LEN * 2 + 2 + 1];
-    size_t len = write_base64(ret);
-    return std::string(ret, len);
+String Uuid::str() const {
+    ron::String ret;
+    ret.reserve(Word::BASE64_WORD_LEN * 2 + 2 + 1);
+    write_base64(ret);
+    return ret;
 }
 
 Word Uuid::HybridTime(time_t seconds, long int nanos) {

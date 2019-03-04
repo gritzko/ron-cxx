@@ -6,8 +6,8 @@
 
 namespace ron {
 
-template <uint8_t bit_width, const char* coding>
-void encode(std::string& coded, const uint8_t* raw, int bit_size) {
+template <uint8_t bit_width, CharRef coding>
+void encode(String& coded, Slice raw, int bit_size) {
     uint32_t bits = 0;
     uint32_t bc = 0;
     static constexpr uint32_t MASK = (1U << bit_width) - 1U;
@@ -29,7 +29,7 @@ void encode(std::string& coded, const uint8_t* raw, int bit_size) {
 }
 
 template <int bit_width, const int8_t table[256]>
-bool decode(std::string& raw, const char* coded, uint32_t bit_size) {
+bool decode(String& raw, Slice coded, uint32_t bit_size) {
     uint32_t bits = 0;
     uint32_t bc = 0;
     while (bit_size >= bit_width) {
@@ -72,7 +72,7 @@ that much of code. We don't care how letters look typographically; we only care
 about the bits.
 */
 
-inline void utf8append(std::string& to, Codepoint cp) {
+inline void utf8append(String& to, Codepoint cp) {
     if (cp < 128) {
         to.push_back(static_cast<Char>(cp));
     } else if (cp < 2048) {
@@ -99,8 +99,8 @@ inline void utf16append(std::u16string& to, Codepoint cp) {
     }
 }
 
-inline Codepoint utf8read(std::string::const_iterator& at,
-                          std::string::const_iterator end) {  // TODO known-size
+inline Codepoint utf8read(String::const_iterator& at,
+                          String::const_iterator end) {  // TODO known-size
     uint8_t head = *at;
     ++at;
     if (head < 128) {  // latin fast path
@@ -162,7 +162,7 @@ inline Codepoint utf16read(std::u16string::const_iterator& at,
     return ret;
 }
 
-void utf8utf16(std::u16string& to, const std::string& from);
+void utf8utf16(std::u16string& to, const String& from);
 
 }  // namespace ron
 #endif

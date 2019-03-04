@@ -13,7 +13,7 @@ namespace ron {
         vector<bool> tombs;
         ScanRGA<Frame>(tombs, state);
         // now, walk em both
-        string text;
+        String text;
         Cursor c = state.cursor();
         fsize_t pos = 0;
         while (c.valid()) {

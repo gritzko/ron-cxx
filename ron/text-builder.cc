@@ -33,7 +33,7 @@ void TextFrame::Builder::AppendOp(const Cursor& cur) {
     WriteSpec(op.id(), op.ref());
     WriteValues(cur);
     Write(TERM_PUNCT[op.term_]);
-    Write('\n');
+    Write(NL);
 }
 
 template <typename Cursor2>
@@ -71,7 +71,7 @@ void TextFrame::Builder::AppendAmendedOp(const Cursor& cur, TERM newterm,
     WriteSpec(newid, newref);
     WriteValues(cur);
     Write(TERM_PUNCT[newterm]);
-    Write('\n');
+    Write(NL);
 }
 
 template <typename Cursor2>
@@ -80,12 +80,12 @@ void TextFrame::Builder::AppendOp(const Cursor& cur) {
     WriteSpec(op.id(), op.ref());
     WriteValues(cur);
     Write(TERM_PUNCT[op.term()]);
-    Write('\n');
+    Write(NL);
 }
 
 void TextFrame::Builder::WriteInt(int64_t value) {
     char tmp[20];
-    int len = sprintf(tmp, "%" PRId64, value);
+    int len = sprintf((char*)tmp, "%" PRId64, value);
     data_.append(tmp, static_cast<size_t>(len));
 }
 
@@ -96,17 +96,17 @@ void TextFrame::Builder::WriteUuid(const Uuid value) {
 
 void TextFrame::Builder::WriteFloat(double value) {
     char tmp[20];
-    int len = sprintf(tmp, "%le", value);
+    int len = sprintf((char*)tmp, "%le", value);
     data_.append(tmp, static_cast<size_t>(len));
 }
 
-void TextFrame::Builder::WriteString(const std::string& value) {
-    std::string esc;
+void TextFrame::Builder::WriteString(const String& value) {
+    String esc;
     escape(esc, value);
     data_.append(esc);
 }
 
-void TextFrame::Builder::escape(std::string& to, const Slice& buf) {
+void TextFrame::Builder::escape(String& to, const Slice& buf) {
     for (char i : buf) {
         switch (i) {
             case '\"':

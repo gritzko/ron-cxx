@@ -2,6 +2,7 @@
 #define CPP_OPMETA_HPP
 
 #include "hash.hpp"
+#include "slice.hpp"
 #include "status.hpp"
 
 namespace ron {
@@ -77,10 +78,12 @@ struct OpMeta {
     template <typename Cursor>
     Status ReadAnnotation(Cursor& cur) {
         const Uuid& name = cur.id();
-        if (name.version() != NAME)
+        if (name.version() != NAME) {
             return Status::BAD_STATE.comment("not an annotation");
-        if (cur.ref() != id)
+        }
+        if (cur.ref() != id) {
             return Status::BAD_STATE.comment("annotation for a wrong op");
+        }
         if (name == SHA2_UUID && cur.has(2, STRING)) {
             SHA2 annhash =
                 SHA2::ParseBase64(cur.string(2));  // TODO format check

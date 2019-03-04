@@ -5,6 +5,7 @@
 #include <cstring>
 #include <functional>
 #include <utility>
+#include <string>
 
 namespace ron {
 

@@ -64,7 +64,7 @@ add_dependencies(snappy snappy_lib)
 
 ExternalProject_Add(rocksdblib
     GIT_REPOSITORY https://github.com/facebook/rocksdb.git
-    GIT_TAG 7e1f37eb4fc711dbf3ecc9610178931f00754de8
+    GIT_TAG v5.15.10
     GIT_PROGRESS true
     UPDATE_COMMAND ""
     PREFIX ${ROCKSDB_PREFIX}

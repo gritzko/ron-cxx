@@ -1,1 +1,5 @@
-build
+/build/
+/deps/bin/
+/deps/build/
+/deps/include/
+/deps/lib/

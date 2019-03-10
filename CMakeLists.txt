@@ -21,6 +21,8 @@ include_directories(".")
 include_directories(${DEPS_PREFIX}/include/)
 link_directories(${DEPS_PREFIX}/lib/)
 
+file(MAKE_DIRECTORY ${DEPS_PREFIX}/include/ ${DEPS_PREFIX}/lib/)
+
 include(ProcessorCount)
 ProcessorCount(CORES)
 if(CORES EQUAL 0)
@@ -246,3 +248,6 @@ IF(DOXYGEN_FOUND)
 ELSE(DOXYGEN_FOUND)
     MESSAGE(STATUS "WARNING: Doxygen not found - Reference manual will not be created")
 ENDIF(DOXYGEN_FOUND)
+
+#  I N S T A L L
+install(TARGETS swarmdb swarmdb-bin LIBRARY DESTINATION lib RUNTIME DESTINATION bin)

@@ -33,7 +33,7 @@ set(MAKE_FLAGS "-j${CORES}")
 #  D E P E N D E N C I E S
 
 ExternalProject_Add(
-    gflags_lib
+    gflags_pro
     PREFIX ${GFLAGS_PREFIX}
     GIT_REPOSITORY git@github.com:gflags/gflags.git
     GIT_TAG 28f50e0
@@ -41,14 +41,14 @@ ExternalProject_Add(
     CMAKE_GENERATOR "Unix Makefiles"
     BUILD_COMMAND $(MAKE) ${MAKE_FLAGS}
     BUILD_IN_SOURCE 1
-    INSTALL_COMMAND make install
+    INSTALL_COMMAND $(MAKE) ${MAKE_FLAGS} install
 )
-add_library(gflags STATIC IMPORTED)
-set_property(TARGET gflags PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/libgflags.a)
-add_dependencies(gflags gflags_lib)
+add_library(gflags_static STATIC IMPORTED)
+set_property(TARGET gflags_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/libgflags.a)
+add_dependencies(gflags_static gflags_pro)
 
 ExternalProject_Add(
-    snappy_lib
+    snappy_pro
     PREFIX ${snappy_PREFIX}
     GIT_REPOSITORY https://github.com/google/snappy.git
     GIT_TAG d4be414dd66026d6736a3741e8a85779ba4ea949
@@ -57,56 +57,57 @@ ExternalProject_Add(
     BUILD_COMMAND $(MAKE) ${MAKE_FLAGS}
 
     BUILD_IN_SOURCE 1
-    INSTALL_COMMAND make install
+    INSTALL_COMMAND $(MAKE) ${MAKE_FLAGS} install
 )
 #include_directories(${snappy_PREFIX}/include)
-add_library(snappy STATIC IMPORTED)
-set_property(TARGET snappy PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/libsnappy.a)
-add_dependencies(snappy snappy_lib)
+add_library(snappy_static STATIC IMPORTED)
+set_property(TARGET snappy_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/libsnappy.a)
+add_dependencies(snappy_static snappy_pro)
 
-ExternalProject_Add(rocksdblib
+ExternalProject_Add(rocksdb_pro
     URL https://github.com/facebook/rocksdb/archive/v5.15.10.tar.gz
     URL_HASH SHA1=452f5a5e7d735f26bd30b837207b4b4527610dba
     UPDATE_COMMAND ""
     PREFIX ${ROCKSDB_PREFIX}
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
     CMAKE_GENERATOR "Unix Makefiles"
-    BUILD_COMMAND make rocksdb ${MAKE_FLAGS}
-    INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdblib/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
+    BUILD_COMMAND $(MAKE) ${MAKE_FLAGS} rocksdb
+    INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdb_pro/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
 )
-add_library(rocksdb STATIC IMPORTED)
-set_property(TARGET rocksdb PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/librocksdb.a)
-add_dependencies(rocksdb rocksdblib)
+add_library(rocksdb_static STATIC IMPORTED)
+set_property(TARGET rocksdb_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/librocksdb.a)
+add_dependencies(rocksdb_static rocksdb_pro)
+add_dependencies(rocksdb_pro snappy_pro)
 
-ExternalProject_Add(botan-project
+ExternalProject_Add(botan_pro
     GIT_REPOSITORY https://github.com/randombit/botan.git
     GIT_TAG a792728e8941b62761052f5e0d288ba13a016c77
     PREFIX ${CRYPTO_PREFIX}
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ./configure.py --cxxflags=${CMAKE_CXX_FLAGS} --ldflags=${CMAKE_EXE_LINKER_FLAGS} --cc-bin=${CMAKE_CXX_COMPILER} --prefix=${DEPS_PREFIX} --minimized-build --enable-modules=sha3,sha2_64
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND make ${MAKE_FLAGS} libbotan-2.a
+    BUILD_COMMAND $(MAKE) ${MAKE_FLAGS} libbotan-2.a
     INSTALL_COMMAND cp -RL build/include/botan ${DEPS_PREFIX}/include && cp libbotan-2.a ${DEPS_PREFIX}/lib
     )
-ExternalProject_Get_Property(botan-project install_dir)
-add_library(botan STATIC IMPORTED db/test/chains.cc)
-set_property(TARGET botan PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}botan-2${CMAKE_STATIC_LIBRARY_SUFFIX})
+ExternalProject_Get_Property(botan_pro install_dir)
+add_library(botan_static STATIC IMPORTED db/test/chains.cc)
+set_property(TARGET botan_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}botan-2${CMAKE_STATIC_LIBRARY_SUFFIX})
 include_directories(${DEPS_PREFIX}/include/botan-2)
 
 ExternalProject_Add(
-    dmp_diff_lib
+    dmp_diff_header
     PREFIX ${DMP_PREFIX}
     GIT_REPOSITORY git@github.com:gritzko/myers-diff.git
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     BUILD_IN_SOURCE 1
-    INSTALL_COMMAND cp ${DMP_PREFIX}/src/dmp_diff_lib/dmp_diff.hpp ${DEPS_PREFIX}/include/
+    INSTALL_COMMAND cp ${DMP_PREFIX}/src/dmp_diff_header/dmp_diff.hpp ${DEPS_PREFIX}/include/
 )
 
 
 #  L I B R O N
 
-add_library(ron STATIC
+add_library(ron_static STATIC
     ron/const.hpp
     ron/encdec.hpp
     ron/uuid.hpp
@@ -131,48 +132,48 @@ add_library(ron STATIC
     ron/hash.cc
     ron/inc_stack.hpp
         )
-add_dependencies(ron botan-project)
-set_property(TARGET ron PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+add_dependencies(ron_static botan_pro)
+set_property(TARGET ron_static PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 #  L I B R O N  U N I T  T E S T S
 
 add_executable(test01-uuid ron/test/uuid.cc)
-target_link_libraries(test01-uuid ron)
+target_link_libraries(test01-uuid ron_static)
 add_test(UUID test01-uuid)
 
 add_executable(test02-text ron/test/text.cc)
-target_link_libraries(test02-text ron)
+target_link_libraries(test02-text ron_static)
 add_test(TEXT test02-text)
 
 add_executable(test03-hash ron/test/hash.cc)
-target_link_libraries(test03-hash ron botan)
+target_link_libraries(test03-hash ron_static botan_static)
 add_test(HASH test03-hash)
 
 add_executable(test04-meta ron/test/meta.cc)
-target_link_libraries(test04-meta ron botan)
+target_link_libraries(test04-meta ron_static botan_static)
 add_test(HASH test04-meta)
 
 #  L I B R D T  ( H E A D E R  O N L Y )
 
-add_library(rdt INTERFACE)
-target_include_directories(rdt INTERFACE rdt/)
+add_library(rdt_headers INTERFACE)
+target_include_directories(rdt_headers INTERFACE rdt/)
 
 #  R D T  U N I T  T E S T S
 
 add_executable(test10-lww rdt/test/lww.cc)
-target_link_libraries(test10-lww ron rdt)
+target_link_libraries(test10-lww ron_static rdt_headers)
 add_test(LWW test10-lww)
 
-add_executable(test11-metardt rdt/test/meta.cc)
-target_link_libraries(test11-metardt ron rdt)
+add_executable(test11-metardt_headers rdt/test/meta.cc)
+target_link_libraries(test11-metardt_headers ron_static rdt_headers)
 add_test(META test11-metardt)
 
 add_executable(test12-mx rdt/test/mx.cc)
-target_link_libraries(test12-mx ron rdt)
+target_link_libraries(test12-mx ron_static rdt_headers)
 add_test(LWW test12-mx)
 
 add_executable(test14-rga rdt/test/rga.cc)
-target_link_libraries(test14-rga ron rdt)
+target_link_libraries(test14-rga ron_static rdt_headers)
 add_test(RGA test14-rga)
 
 #  S W A R M D B
@@ -190,40 +191,40 @@ set(SWARMDB_SOURCES
         db/map/txt.cc
     )
 
-add_library(swarmdb SHARED
+add_library(swarmdb_shared SHARED
     ${SWARMDB_SOURCES}
         )
-add_dependencies(swarmdb rocksdb)
-add_dependencies(swarmdb dmp_diff_lib)
-target_link_libraries(swarmdb pthread z bz2 snappy botan ron rocksdb)
-set_property(TARGET swarmdb PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+add_dependencies(swarmdb_shared rocksdb_static)
+add_dependencies(swarmdb_shared dmp_diff_header)
+target_link_libraries(swarmdb_shared pthread z bz2 snappy_static botan_static ron_static rocksdb)
+set_property(TARGET swarmdb_shared PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 #  S W A R M D B  U N I T  T E S T S
 
 add_executable(test20-chains db/test/chains.cc)
-add_dependencies(test20-chains swarmdb)
-target_link_libraries(test20-chains swarmdb)
+add_dependencies(test20-chains swarmdb_shared)
+target_link_libraries(test20-chains swarmdb_shared)
 add_test(CHAINS test20-chains)
 
 add_executable(test21-mappers db/test/mappers.cc)
-add_dependencies(test21-mappers swarmdb)
-target_link_libraries(test21-mappers swarmdb)
+add_dependencies(test21-mappers swarmdb_shared)
+target_link_libraries(test21-mappers swarmdb_shared)
 add_test(MAPPERS test21-mappers)
 
 #  S W A R M D B  C L I
 
-add_executable(swarmdb-bin
+add_executable(swarmdb_bin
     ${SWARMDB_SOURCES}
     db/fs.cc
     db/main.cc
     )
-add_dependencies(swarmdb-bin rocksdb)
-target_link_libraries(swarmdb-bin pthread z bz2 snappy gflags botan ron rocksdb)
-SET_TARGET_PROPERTIES(swarmdb-bin PROPERTIES OUTPUT_NAME swarmdb)
-add_dependencies(swarmdb-bin dmp_diff_lib)
+add_dependencies(swarmdb_bin rocksdb_static)
+target_link_libraries(swarmdb_bin pthread z bz2 snappy_static gflags_static botan_static ron_static rocksdb_static)
+SET_TARGET_PROPERTIES(swarmdb_bin PROPERTIES OUTPUT_NAME swarmdb_shared)
+add_dependencies(swarmdb_bin dmp_diff_header)
 
-add_test(bb-lww swarmdb --test ${CMAKE_SOURCE_DIR}/test/rdt/lww.ron)
-add_test(bb-rga swarmdb --test ${CMAKE_SOURCE_DIR}/test/rdt/rga.ron)
+add_test(bb-lww swarmdb_shared --test ${CMAKE_SOURCE_DIR}/test/rdt/lww.ron)
+add_test(bb-rga swarmdb_shared --test ${CMAKE_SOURCE_DIR}/test/rdt/rga.ron)
 
 add_custom_target(
         format
@@ -249,4 +250,4 @@ ELSE(DOXYGEN_FOUND)
 ENDIF(DOXYGEN_FOUND)
 
 #  I N S T A L L
-install(TARGETS swarmdb swarmdb-bin LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
+install(TARGETS swarmdb_shared swarmdb_bin LIBRARY DESTINATION lib RUNTIME DESTINATION bin)

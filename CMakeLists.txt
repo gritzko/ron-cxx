@@ -199,6 +199,7 @@ add_dependencies(swarmdb_shared rocksdb_static)
 add_dependencies(swarmdb_shared dmp_diff_header)
 target_link_libraries(swarmdb_shared pthread z bz2 snappy_static botan_static ron_static rocksdb)
 set_property(TARGET swarmdb_shared PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+SET_TARGET_PROPERTIES(swarmdb_shared PROPERTIES OUTPUT_NAME swarmdb)
 
 #  S W A R M D B  U N I T  T E S T S
 
@@ -221,11 +222,11 @@ add_executable(swarmdb_bin
     )
 add_dependencies(swarmdb_bin rocksdb_static)
 target_link_libraries(swarmdb_bin pthread z bz2 snappy_static gflags_static botan_static ron_static rocksdb_static)
-SET_TARGET_PROPERTIES(swarmdb_bin PROPERTIES OUTPUT_NAME swarmdb_shared)
+SET_TARGET_PROPERTIES(swarmdb_bin PROPERTIES OUTPUT_NAME swarmdb)
 add_dependencies(swarmdb_bin dmp_diff_header)
 
-add_test(bb-lww swarmdb_shared --test ${CMAKE_SOURCE_DIR}/test/rdt/lww.ron)
-add_test(bb-rga swarmdb_shared --test ${CMAKE_SOURCE_DIR}/test/rdt/rga.ron)
+add_test(bb-lww swarmdb --test ${CMAKE_SOURCE_DIR}/test/rdt/lww.ron)
+add_test(bb-rga swarmdb --test ${CMAKE_SOURCE_DIR}/test/rdt/rga.ron)
 
 add_custom_target(
         format

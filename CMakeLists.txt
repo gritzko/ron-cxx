@@ -73,7 +73,6 @@ ExternalProject_Add(rocksdb_pro
     CMAKE_CACHE_ARGS -DWITH_TESTS:BOOL=FALSE
     CMAKE_GENERATOR "Unix Makefiles"
     BUILD_COMMAND $(MAKE) ${MAKE_FLAGS} rocksdb
-    INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdb_pro/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
 )
 add_library(rocksdb_static STATIC IMPORTED)
 set_property(TARGET rocksdb_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/librocksdb.a)

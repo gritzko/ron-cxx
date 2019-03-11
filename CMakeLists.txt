@@ -37,7 +37,7 @@ ExternalProject_Add(
     PREFIX ${GFLAGS_PREFIX}
     GIT_REPOSITORY git@github.com:gflags/gflags.git
     GIT_TAG 28f50e0
-    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX} 
+    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
     CMAKE_GENERATOR "Unix Makefiles"
     BUILD_COMMAND $(MAKE) ${MAKE_FLAGS}
     BUILD_IN_SOURCE 1
@@ -65,9 +65,8 @@ set_property(TARGET snappy_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/
 add_dependencies(snappy_static snappy_pro)
 
 ExternalProject_Add(rocksdb_pro
-    GIT_REPOSITORY https://github.com/facebook/rocksdb.git
-    GIT_TAG 7e1f37eb4fc711dbf3ecc9610178931f00754de8
-    GIT_PROGRESS true
+    URL https://github.com/facebook/rocksdb/archive/v5.15.10.tar.gz
+    URL_HASH SHA1=452f5a5e7d735f26bd30b837207b4b4527610dba
     UPDATE_COMMAND ""
     PREFIX ${ROCKSDB_PREFIX}
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
@@ -102,7 +101,7 @@ ExternalProject_Add(
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     BUILD_IN_SOURCE 1
-    INSTALL_COMMAND cp ${DMP_PREFIX}/src/dmp_diff_lib/dmp_diff.hpp ${DEPS_PREFIX}/include/
+    INSTALL_COMMAND cp ${DMP_PREFIX}/src/dmp_diff_header/dmp_diff.hpp ${DEPS_PREFIX}/include/
 )
 
 

@@ -3,7 +3,7 @@ project(cpp)
 include(ExternalProject)
 enable_testing()
 
-#  S E T T I N G S}
+#  S E T T I N G S
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 11)
@@ -43,6 +43,7 @@ ExternalProject_Add(
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND $(MAKE) ${MAKE_FLAGS} install
 )
+
 add_library(gflags_static STATIC IMPORTED)
 set_property(TARGET gflags_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/libgflags.a)
 add_dependencies(gflags_static gflags_pro)
@@ -165,8 +166,8 @@ add_executable(test10-lww rdt/test/lww.cc)
 target_link_libraries(test10-lww ron_static rdt_headers)
 add_test(LWW test10-lww)
 
-add_executable(test11-metardt_headers rdt/test/meta.cc)
-target_link_libraries(test11-metardt_headers ron_static rdt_headers)
+add_executable(test11-metardt rdt/test/meta.cc)
+target_link_libraries(test11-metardt ron_static rdt_headers)
 add_test(META test11-metardt)
 
 add_executable(test12-mx rdt/test/mx.cc)

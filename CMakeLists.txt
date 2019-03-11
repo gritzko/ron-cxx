@@ -41,7 +41,7 @@ ExternalProject_Add(
     CMAKE_GENERATOR "Unix Makefiles"
     BUILD_COMMAND $(MAKE) ${MAKE_FLAGS}
     BUILD_IN_SOURCE 1
-    INSTALL_COMMAND make install
+    INSTALL_COMMAND $(MAKE) ${MAKE_FLAGS} install
 )
 add_library(gflags STATIC IMPORTED)
 set_property(TARGET gflags PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/libgflags.a)
@@ -57,7 +57,7 @@ ExternalProject_Add(
     BUILD_COMMAND $(MAKE) ${MAKE_FLAGS}
 
     BUILD_IN_SOURCE 1
-    INSTALL_COMMAND make install
+    INSTALL_COMMAND $(MAKE) ${MAKE_FLAGS} install
 )
 #include_directories(${snappy_PREFIX}/include)
 add_library(snappy STATIC IMPORTED)
@@ -72,7 +72,7 @@ ExternalProject_Add(rocksdblib
     PREFIX ${ROCKSDB_PREFIX}
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
     CMAKE_GENERATOR "Unix Makefiles"
-    BUILD_COMMAND make rocksdb ${MAKE_FLAGS}
+    BUILD_COMMAND $(MAKE) ${MAKE_FLAGS} rocksdb
     INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdblib/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
 )
 add_library(rocksdb STATIC IMPORTED)
@@ -86,7 +86,7 @@ ExternalProject_Add(botan-project
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ./configure.py --cxxflags=${CMAKE_CXX_FLAGS} --ldflags=${CMAKE_EXE_LINKER_FLAGS} --cc-bin=${CMAKE_CXX_COMPILER} --prefix=${DEPS_PREFIX} --minimized-build --enable-modules=sha3,sha2_64
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND make ${MAKE_FLAGS} libbotan-2.a
+    BUILD_COMMAND $(MAKE) ${MAKE_FLAGS} libbotan-2.a
     INSTALL_COMMAND cp -RL build/include/botan ${DEPS_PREFIX}/include && cp libbotan-2.a ${DEPS_PREFIX}/lib
     )
 ExternalProject_Get_Property(botan-project install_dir)

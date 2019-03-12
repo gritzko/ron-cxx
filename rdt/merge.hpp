@@ -1,15 +1,15 @@
-#ifndef rdt_merge_hpp
-#define rdt_merge_hpp
+#ifndef RON_RDT_MERGE_HPP
+#define RON_RDT_MERGE_HPP
 
 #include "ron/op.hpp"
 #include "ron/status.hpp"
 
 namespace ron {
 
-typedef bool (*less_t)(const Op& a, const Op& b);
+using less_t = bool (*)(const Op& a, const Op& b);
 
 // asc-sorting iterator heap
-template <typename Frame, less_t less_fn>
+template <typename Frame, less_t Less>
 class MergeCursor {
     using Cursor = typename Frame::Cursor;
     using Frames = std::vector<Frame>;
@@ -19,7 +19,7 @@ class MergeCursor {
     std::vector<PCursor> cursors_;
 
    public:
-    MergeCursor() : cursors_{} {}
+    MergeCursor() = default;
 
     explicit MergeCursor(Cursors& inputs) : MergeCursor{} {
         for (auto i = inputs.begin(); i != inputs.end(); i++) Add(i);
@@ -48,14 +48,18 @@ class MergeCursor {
 
     inline int size() const { return (int)cursors_.size(); }
 
-    inline bool less_than(int a, int b) const { return less_fn(op(a), op(b)); }
+    inline bool less_than(int a, int b) const { return Less(op(a), op(b)); }
 
     inline void swap(int a, int b) { std::swap(cursors_[a], cursors_[b]); }
 
     void pop(int idx) {
-        if (!idx) return;
+        if (idx == 0) {
+            return;
+        }
         int u = up(idx);
-        if (less_than(u, idx)) return;
+        if (less_than(u, idx)) {
+            return;
+        }
         swap(idx, u);
         pop(u);
     }
@@ -78,7 +82,9 @@ class MergeCursor {
     }
 
     void eject() {
-        if (!size()) return;
+        if (!size()) {
+            return;
+        }
         cursors_[0] = cursors_.back();
         cursors_.pop_back();
         push(0);

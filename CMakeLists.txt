@@ -94,7 +94,6 @@ ExternalProject_Add(botan_pro
 ExternalProject_Get_Property(botan_pro install_dir)
 add_library(botan_static STATIC IMPORTED db/test/chains.cc)
 set_property(TARGET botan_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}botan-2${CMAKE_STATIC_LIBRARY_SUFFIX})
-include_directories(${DEPS_PREFIX}/include/botan-2)
 
 ExternalProject_Add(
     dmp_diff_header

@@ -1,5 +1,5 @@
-#ifndef rdt_rdt_hpp
-#define rdt_rdt_hpp
+#ifndef RON_RDT_HPP
+#define RON_RDT_HPP
 
 #include "rdt/chain.hpp"
 #include "rdt/const.hpp"
@@ -23,10 +23,10 @@ class MasterRDT {
    public:
     using Builder = typename Frame::Builder;
     using Cursor = typename Frame::Cursor;
-    typedef std::vector<Frame> Frames;
-    typedef std::vector<Cursor> Cursors;
+    using Frames = std::vector<Frame>;
+    using Cursors = std::vector<Cursor>;
 
-    MasterRDT() : lww_{}, chain_{}, meta_{}, mx_{}, rga_{} {}
+    MasterRDT() = default;
 
     /**
      * @param{inputs} cursors to consume */
@@ -84,7 +84,7 @@ class MasterRDT {
 
 template <typename Frame>
 Status MergeCursors(Frame &ret, RDT rdt, typename Frame::Cursors &inputs) {
-    typedef MasterRDT<Frame> Reducer;
+    using Reducer = MasterRDT<Frame>;
     Reducer reducer;
     using Cursor = typename Reducer::Cursor;
     typename Reducer::Builder builder;
@@ -99,7 +99,7 @@ Status SplitIntoChains(const Frame input, typename Frame::Cursors &chains) {
     Cursor cur = input.cursor();
     Cursor nxt = cur;
     Status ok;
-    while (ok = cur.SkipChain()) {
+    while ((ok = cur.SkipChain())) {
         nxt.Trim(cur);
         chains.push_back(nxt);
         nxt = cur;

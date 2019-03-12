@@ -11,7 +11,7 @@ template <typename Frame>
 class OpChain {
     static bool less_than(const Op &a, const Op &b) { return a.id() < b.id(); }
 
-    typedef MergeCursor<Frame, less_than> MCursor;
+    using MCursor = MergeCursor<Frame, less_than>;
     using Builder = typename Frame::Builder;
     using Cursor = typename Frame::Cursor;
     using Cursors = typename Frame::Cursors;

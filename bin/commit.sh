@@ -30,7 +30,7 @@ cd $DIR
 cmake .. || exit 3
 
 make || exit 5
-
+export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH:/lib:/usr/lib:/usr/local/lib
 make test || exit 7
 
 make format

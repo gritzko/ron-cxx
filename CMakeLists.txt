@@ -109,7 +109,7 @@ ExternalProject_Add(
 
 #  L I B R O N
 
-add_library(ron_static STATIC
+list(APPEND RON_HEADERS
     ron/const.hpp
     ron/encdec.hpp
     ron/uuid.hpp
@@ -123,6 +123,11 @@ add_library(ron_static STATIC
     ron/portable_endian.hpp
     ron/vv.hpp
     ron/opmeta.hpp
+    ron/inc_stack.hpp
+)
+
+add_library(ron_static STATIC
+    ${RON_HEADERS}
     ron/status.cc
     ron/uuid.cc
     ron/uuid-parser.cc
@@ -132,7 +137,6 @@ add_library(ron_static STATIC
     ron/string-parser.cc
     ron/text-builder.cc
     ron/hash.cc
-    ron/inc_stack.hpp
         )
 add_dependencies(ron_static botan_pro)
 set_property(TARGET ron_static PROPERTY POSITION_INDEPENDENT_CODE TRUE)
@@ -157,6 +161,16 @@ add_test(HASH test04-meta)
 
 #  L I B R D T  ( H E A D E R  O N L Y )
 
+list(APPEND RDT_HEADERS
+    rdt/chain.hpp
+    rdt/const.hpp
+    rdt/lww.hpp
+    rdt/merge.hpp
+    rdt/meta.hpp
+    rdt/mx.hpp
+    rdt/rdt.hpp
+    rdt/rga.hpp
+)
 add_library(rdt_headers INTERFACE)
 target_include_directories(rdt_headers INTERFACE rdt/)
 
@@ -180,15 +194,19 @@ add_test(RGA test14-rga)
 
 #  S W A R M D B
 
-set(SWARMDB_SOURCES
-        db/replica.hpp
-        db/replica.cc
+list(APPEND SWARMDB_HEADERS
         db/map/const.hpp
+        db/replica.hpp
+        db/map/map.hpp
+)
+
+set(SWARMDB_SOURCES
+        ${SWARMDB_HEADERS}
+        db/replica.cc
         db/map/chain.cc
         db/map/op.cc
         db/map/yarn.cc
         db/map/meta.cc
-        db/map/map.hpp
         db/map/csv.cc
         db/map/txt.cc
     )
@@ -199,6 +217,7 @@ add_library(swarmdb_shared SHARED
 add_dependencies(swarmdb_shared rocksdb_static)
 add_dependencies(swarmdb_shared dmp_diff_header)
 target_link_libraries(swarmdb_shared pthread z bz2 snappy_static botan_static ron_static rocksdb)
+target_include_directories(swarmdb_shared PUBLIC ${CMAKE_SOURCE_DIR})
 set_property(TARGET swarmdb_shared PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 SET_TARGET_PROPERTIES(swarmdb_shared PROPERTIES OUTPUT_NAME swarmdb)
 
@@ -253,4 +272,10 @@ ELSE(DOXYGEN_FOUND)
 ENDIF(DOXYGEN_FOUND)
 
 #  I N S T A L L
-install(TARGETS swarmdb_shared swarmdb_bin LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
+install(TARGETS swarmdb_shared swarmdb_bin 
+    LIBRARY DESTINATION lib 
+    RUNTIME DESTINATION bin
+    )
+install(FILES ${RON_HEADERS} DESTINATION include/swarmdb/ron)
+install(FILES ${RDT_HEADERS} DESTINATION include/swarmdb/rdt)
+install(FILES ${SWARMDB_HEADERS} DESTINATION include/swarmdb/db)

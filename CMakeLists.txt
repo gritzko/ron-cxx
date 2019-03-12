@@ -276,6 +276,6 @@ install(TARGETS swarmdb_shared swarmdb_bin
     LIBRARY DESTINATION lib 
     RUNTIME DESTINATION bin
     )
-install(FILES ${RON_HEADERS} DESTINATION include/swarmdb/ron)
-install(FILES ${RDT_HEADERS} DESTINATION include/swarmdb/rdt)
-install(FILES ${SWARMDB_HEADERS} DESTINATION include/swarmdb/db)
+install(FILES ${RON_HEADERS} DESTINATION include/swarm/ron)
+install(FILES ${RDT_HEADERS} DESTINATION include/swarm/rdt)
+install(FILES ${SWARMDB_HEADERS} DESTINATION include/swarm/db)

@@ -1,5 +1,5 @@
-#ifndef CPP_SLICE_H
-#define CPP_SLICE_H
+#ifndef RON_SLICE_HPP
+#define RON_SLICE_HPP
 #include <cassert>
 #include <cstdint>
 #include <cstring>
@@ -9,20 +9,27 @@
 
 namespace ron {
 
-typedef uint32_t Codepoint;
+/** An Unicode codepoint. */
+using Codepoint = uint32_t;
 
-typedef unsigned char Char;
+using Char = unsigned char;
 
-typedef const Char* CharRef;
-#define CR(id, val) constexpr CharRef id{(CharRef)val};
-#define STR(id, val) static const String id{(CharRef)val};
+using CharRef = const Char*;
 
 constexpr Codepoint CP_ERROR{0};
 
-// typedef std::basic_string<Char> String;
-typedef std::string String;
+/** A byte string .ON strings are valid canonic UTF-8, but we treat them
+    as byte buffers most of the time. For symbol-level work, use String16. */
+using String = std::string;
 
-typedef std::u16string String16;
+/** It would be nice to use unsigned chars everywhere. It is quite a footgun
+    that C chars are either signed or unsigned. Unfortunately, std::string
+    appears in many APIs, so it is more work than it's worth. Use Slice
+    for safe unsigned chars. */
+// typedef std::basic_string<Char> String;
+
+/** An UTF-16 string. Necessary for symbol-level operations. */
+using String16 = std::u16string;
 
 /** Frame size or any other size limited by frame size (e.g. string length) */
 using fsize_t = uint32_t;
@@ -41,7 +48,8 @@ struct Slice {
 
     explicit Slice(const Char* buf, fsize_t size) : buf_{buf}, size_{size} {}
     explicit Slice(const char* buf, size_t size)
-        : buf_{(const Char*)buf}, size_{static_cast<fsize_t>(size)} {
+        : buf_{reinterpret_cast<const Char*>(buf)},
+          size_{static_cast<fsize_t>(size)} {
         assert(size <= FSIZE_MAX);
     }
     Slice(const Char* from, const Char* till)
@@ -50,11 +58,12 @@ struct Slice {
         assert(till - from <= FSIZE_MAX);
     }
     Slice() : buf_{nullptr}, size_{0} {}
-    Slice(const Slice& orig) : buf_{orig.buf_}, size_{orig.size_} {}
+    Slice(const Slice& orig) = default;
     Slice(const String& data)
         : Slice{CharRef(data.data()), static_cast<fsize_t>(data.size())} {}
     Slice(const String& str, const frange_t& range)
-        : buf_{(Char*)str.data() + range.first}, size_{range.second} {
+        : buf_{reinterpret_cast<CharRef>(str.data()) + range.first},
+          size_{range.second} {
         assert(str.size() >= range.first + range.second);
     }
     Slice(Slice host, frange_t range)
@@ -93,23 +102,23 @@ struct Slice {
     }
 
     size_t hash() const {
-        static constexpr int shift = sizeof(size_t) == 8 ? 3 : 2;
-        static constexpr auto sz_hash_fn = std::hash<size_t>{};
-        static constexpr auto char_hash_fn = std::hash<char>{};
+        static constexpr int SHIFT = sizeof(size_t) == 8 ? 3 : 2;
+        static constexpr auto SZ_HASH_FN = std::hash<size_t>{};
+        static constexpr auto CHAR_HASH_FN = std::hash<char>{};
         size_t ret = 0;
-        int c = size_ >> shift;
-        auto* szbuf = (size_t*)buf_;
-        for (int i = 0; i < c; i++) {
-            ret ^= sz_hash_fn(szbuf[i]);
+        fsize_t c = size_ >> SHIFT;
+        auto szbuf = reinterpret_cast<const size_t*>(buf_);
+        for (fsize_t i = 0; i < c; i++) {
+            ret ^= SZ_HASH_FN(szbuf[i]);
         }
-        for (int i = c << shift; i < size_; i++) {
-            ret ^= char_hash_fn(buf_[i]);
+        for (fsize_t i = c << SHIFT; i < size_; i++) {
+            ret ^= CHAR_HASH_FN(buf_[i]);
         }
         return ret;
     }
 
     inline String str() const {
-        return String{(const String::value_type*)buf_, size_};
+        return String{reinterpret_cast<const String::value_type*>(buf_), size_};
     }
 
     inline frange_t range_of(Slice sub) const {

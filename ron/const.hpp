@@ -1,6 +1,7 @@
 #ifndef RON_CONST_HPP
 #define RON_CONST_HPP
-#include <stdint.h>
+#include <cassert>
+#include <cstdint>
 #include "slice.hpp"
 
 namespace ron {

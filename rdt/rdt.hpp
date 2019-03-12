@@ -83,26 +83,40 @@ class MasterRDT {
 };
 
 template <typename Frame>
-Status MergeCursors(std::string &ret, RDT rdt,
-                    typename Frame::Cursors &inputs) {
+Status MergeCursors(Frame &ret, RDT rdt, typename Frame::Cursors &inputs) {
     typedef MasterRDT<Frame> Reducer;
     Reducer reducer;
     using Cursor = typename Reducer::Cursor;
     typename Reducer::Builder builder;
     Status ok = reducer.Merge(builder, rdt, inputs);
-    swap(builder, ret);
+    ret = builder.frame();
     return ok;
 }
 
 template <typename Frame>
-Status Merge(std::string &ret, RDT rdt,
-             const std::vector<std::string> &inputs) {
+Status SplitIntoChains(const Frame input, typename Frame::Cursors &chains) {
+    using Cursor = typename Frame::Cursor;
+    Cursor cur = input.cursor();
+    Cursor nxt = cur;
+    Status ok;
+    while (ok = cur.SkipChain()) {
+        nxt.Trim(cur);
+        chains.push_back(nxt);
+        nxt = cur;
+    }
+    if (ok != Status::ENDOFFRAME) return ok;
+    chains.push_back(nxt);
+    return Status::OK;
+}
+
+template <typename Frame>
+Status ObjectLog2State(Frame &ret, RDT rdt, const Frame input) {
     using Cursor = typename Frame::Cursor;
     using Cursors = typename Frame::Cursors;
-    Cursors curs{};
-    for (int i = 0; i < inputs.size(); ++i)
-        curs.push_back(Cursor{Slice{inputs[i]}});
-    return MergeCursors<Frame>(ret, rdt, curs);
+    Cursors chains;
+    Status ok = SplitIntoChains<Frame>(input, chains);
+    if (!ok) return ok;
+    return MergeCursors(ret, rdt, chains);
 }
 
 }  // namespace ron

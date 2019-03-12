@@ -8,7 +8,7 @@ using namespace ron;
 using namespace std;
 
 typedef MetaRDT<typename ron::TextFrame> TextMeta;
-
+using Frame = TextFrame;
 
 int main (int argn, char** args) {
     TextMeta reducer;
@@ -22,7 +22,7 @@ int main (int argn, char** args) {
         Cursor{f2},
         Cursor{f3},
     };
-    string now;
-    assert(MergeCursors<TextFrame>(now, META_RDT, inputs));
-    assert(now=="@now :34567+origin;\n@pubkey 'ABCDEF...';\n");
+    Frame now;
+    assert(MergeCursors<Frame>(now, META_RDT, inputs));
+    assert(now.data()=="@now :34567+origin;\n@pubkey 'ABCDEF...';\n");
 }

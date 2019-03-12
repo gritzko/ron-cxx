@@ -4604,6 +4604,7 @@ Status TextFrame::Cursor::Next() {
 
 #line 63 "ragel/text-parser.rl"
 
+    at_ = off_;
     off_ = p - pb;
 
     if (op_.size()) prev_id_ = op_.id();

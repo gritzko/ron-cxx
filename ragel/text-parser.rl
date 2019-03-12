@@ -61,7 +61,7 @@ Status TextFrame::Cursor::Next () {
     main := TEXT_FRAME ;
     write exec;
     }%%
-
+    at_ = off_;
     off_ = p-pb;
 
     if (op_.size()) prev_id_ = op_.id();

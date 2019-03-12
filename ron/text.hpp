@@ -26,6 +26,7 @@ class TextFrame {
         Slice data_;
         Op op_;
         int pos_;
+        int at_;
         int off_;
         int cs;
         Uuid prev_id_;
@@ -40,6 +41,7 @@ class TextFrame {
         explicit Cursor(const Slice& data, bool advance = true)
             : data_{data},
               op_{TERM::RAW},
+              at_{0},
               off_{0},
               pos_{-1},
               cs{0},
@@ -50,6 +52,19 @@ class TextFrame {
         explicit Cursor(const TextFrame& host) : Cursor{host.data_} {}
         const Op& op() const { return op_; }
         Status Next();
+        void Trim(const Cursor& b) {
+            assert(b.at_ <= data_.size());
+            data_.size_ = (fsize_t)b.at_;
+        }
+        Status SkipChain() {
+            Uuid i;
+            Status ok;
+            do {
+                i = id();
+                ok = Next();
+            } while (ok && ref() == i);
+            return ok;
+        }
         inline bool valid() const { return cs != 0; }
         inline bool has(fsize_t idx, ATOM atype) const {
             return size() > idx && type(idx) == atype;

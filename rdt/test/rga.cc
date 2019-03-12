@@ -10,8 +10,9 @@ using namespace std;
 using Frame = TextFrame;
 typedef typename Frame::Cursor Cursor;
 typedef RGArrayRDT<typename ron::TextFrame> RGA;
+using Cursors = typename Frame::Cursors;
 
-string despace (string& orig) {
+string despace (string orig) {
     string ret;
     bool ows{false};
     for (char &i : orig) {
@@ -24,21 +25,23 @@ string despace (string& orig) {
 void test_chain_merge () {
     string abc = "@1+A :rga! 'a', 'b', 'c', ";
     string def = "@1000000004+B :1000000003+A 'D', 'E', 'F', ";
-    string abcdef;
-    Status ok = Merge<TextFrame>(abcdef, RGA_RDT, {abc, def});
+    Cursors pieces{Cursor{abc}, Cursor{def}};
+    Frame abcdef;
+    Status ok = MergeCursors<Frame>(abcdef, RGA_RDT, pieces);
     assert(ok);
     string correct = "@1+A :rga! 'a', 'b', 'c', @1000000004+B 'D', 'E', 'F', ";
-    assert(despace(abcdef)==despace(correct));
+    assert(despace(abcdef.data())==despace(correct));
 }
 
 void test_sibling_merge () {
     string parent = "@1+A :rga!";
     string childA = "@1a+B :1+A 'b';";
     string childB = "@1b+C :1+A 'a';";
-    string ab;
-    assert(Merge<TextFrame>(ab, RGA_RDT, {parent, childA, childB}));
+    Frame ab;
+    Cursors pieces{Cursor{parent}, Cursor{childA}, Cursor{childB}};
+    assert(MergeCursors<Frame>(ab, RGA_RDT, pieces));
     string correct = "@1+A :rga! @1b+C 'a', @1a+B :1+A 'b', ";
-    assert(despace(ab)==despace(correct));
+    assert(despace(ab.data())==despace(correct));
 }
 
 void test_multitree () {
@@ -142,6 +145,21 @@ void test_ct_scan_trash () {
     assert( tombs[9]);
 }
 
+void test_ct_log2state () {
+    String LOG{"@1000000001+A :rga, 't', 'e', 's', 't', @1000000007+A :1000000004+A rm, @1000000008+A :1000000004+A 'x';"};
+    vector<bool> tombs{};
+    Frame state;
+    assert(ObjectLog2State<Frame>(state, RGA_RDT, Frame{LOG}));
+    assert(ScanRGA<Frame>(tombs, Frame{state}));
+    assert( tombs[0]);
+    assert(!tombs[1]);
+    assert(!tombs[2]);
+    assert( tombs[3]);
+    assert(!tombs[4]);
+    assert( tombs[5]);
+    assert(!tombs[6]);
+}
+
 int main (int argn, char** args) {
     test_chain_merge();
     test_sibling_merge();
@@ -151,5 +169,6 @@ int main (int argn, char** args) {
     test_ct_scan_rm2();
     test_ct_scan_rm_un();
     test_ct_scan_trash();
+    test_ct_log2state();
     return 0;
 }

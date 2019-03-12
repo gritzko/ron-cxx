@@ -180,18 +180,22 @@ add_test(RGA test14-rga)
 
 #  S W A R M D B
 
+set(SWARMDB_HEADERS
+    db/replica.hpp
+    db/map/const.hpp
+    db/map/map.hpp
+)
+
 set(SWARMDB_SOURCES
-        db/replica.hpp
-        db/replica.cc
-        db/map/const.hpp
-        db/map/chain.cc
-        db/map/op.cc
-        db/map/yarn.cc
-        db/map/meta.cc
-        db/map/map.hpp
-        db/map/csv.cc
-        db/map/txt.cc
-    )
+    ${SWARMDB_HEADERS}
+    db/replica.cc
+    db/map/chain.cc
+    db/map/op.cc
+    db/map/yarn.cc
+    db/map/meta.cc
+    db/map/csv.cc
+    db/map/txt.cc
+)
 
 add_library(swarmdb_shared SHARED
     ${SWARMDB_SOURCES}
@@ -200,7 +204,12 @@ add_dependencies(swarmdb_shared rocksdb_static)
 add_dependencies(swarmdb_shared dmp_diff_header)
 target_link_libraries(swarmdb_shared pthread z bz2 snappy_static botan_static ron_static rocksdb)
 set_property(TARGET swarmdb_shared PROPERTY POSITION_INDEPENDENT_CODE TRUE)
-SET_TARGET_PROPERTIES(swarmdb_shared PROPERTIES OUTPUT_NAME swarmdb)
+SET_TARGET_PROPERTIES(
+    swarmdb_shared
+    PROPERTIES
+        OUTPUT_NAME swarmdb
+        PUBLIC_HEADER "${SWARMDB_HEADERS}"
+)
 
 #  S W A R M D B  U N I T  T E S T S
 
@@ -253,4 +262,10 @@ ELSE(DOXYGEN_FOUND)
 ENDIF(DOXYGEN_FOUND)
 
 #  I N S T A L L
-install(TARGETS swarmdb_shared swarmdb_bin LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
+
+install(
+    TARGETS swarmdb_shared swarmdb_bin
+    LIBRARY       DESTINATION lib
+    PUBLIC_HEADER DESTINATION include
+    RUNTIME       DESTINATION bin
+)

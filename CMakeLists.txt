@@ -266,6 +266,6 @@ ENDIF(DOXYGEN_FOUND)
 install(
     TARGETS swarmdb_shared swarmdb_bin
     LIBRARY       DESTINATION lib
-    PUBLIC_HEADER DESTINATION include
+    PUBLIC_HEADER DESTINATION include/swarm
     RUNTIME       DESTINATION bin
 )

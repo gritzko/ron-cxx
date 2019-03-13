@@ -194,10 +194,11 @@ add_test(RGA test14-rga)
 #  S W A R M D B
 
 list(APPEND SWARMDB_HEADERS
+        db/key.hpp
         db/map/const.hpp
-        db/replica.hpp
         db/map/map.hpp
         db/mem_store.hpp
+        db/replica.hpp
 )
 
 set(SWARMDB_SOURCES
@@ -277,8 +278,8 @@ ELSE(DOXYGEN_FOUND)
 ENDIF(DOXYGEN_FOUND)
 
 #  I N S T A L L
-install(TARGETS swarmdb_shared swarmdb_bin 
-    LIBRARY DESTINATION lib 
+install(TARGETS swarmdb_shared swarmdb_bin
+    LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin
     )
 install(FILES ${RON_HEADERS} DESTINATION include/swarm/ron)

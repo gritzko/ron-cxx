@@ -1,4 +1,4 @@
-#include "map.hpp"
+#include "../map.hpp"
 #include "rdt/rga.hpp"
 
 using namespace std;

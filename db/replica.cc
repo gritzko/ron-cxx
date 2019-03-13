@@ -1,5 +1,5 @@
 #include "db/replica.hpp"
-#include "db/map/map.hpp"
+#include "db/map.hpp"
 #include "db/merge_ops.hpp"
 
 namespace ron {

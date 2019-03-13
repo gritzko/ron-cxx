@@ -2,7 +2,7 @@
 #define CPP_MAPPERS_HPP
 
 #include "db/replica.hpp"
-#include "db/map/const.hpp"
+#include "db/const.hpp"
 
 namespace ron {
 

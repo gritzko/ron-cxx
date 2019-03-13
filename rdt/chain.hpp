@@ -2,8 +2,8 @@
 #define CPP_CHAIN_HPP
 
 #include "merge.hpp"
-#include "ron/status.hpp"
-#include "ron/uuid.hpp"
+#include "../ron/status.hpp"
+#include "../ron/uuid.hpp"
 
 namespace ron {
 

@@ -1,8 +1,8 @@
 #include <iostream>
 #include <cassert>
 #include <unistd.h>
-#include "ron/ron.hpp"
-#include "ron/hash.hpp"
+#include "../ron.hpp"
+#include "../hash.hpp"
 #define DEBUG 1
 
 using namespace ron;

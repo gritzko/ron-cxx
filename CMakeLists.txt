@@ -17,7 +17,6 @@ set(snappy_PREFIX ${DEPS_PREFIX}/build/snappy)
 set(GFLAGS_PREFIX ${DEPS_PREFIX}/build/gflags)
 set(DMP_PREFIX ${DEPS_PREFIX}/build/dmp)
 
-include_directories(".")
 include_directories(${DEPS_PREFIX}/include/)
 link_directories(${DEPS_PREFIX}/lib/)
 
@@ -219,7 +218,6 @@ add_library(swarmdb_shared SHARED
 add_dependencies(swarmdb_shared rocksdb_static)
 add_dependencies(swarmdb_shared dmp_diff_header)
 target_link_libraries(swarmdb_shared pthread z bz2 snappy_static botan_static ron_static rocksdb)
-target_include_directories(swarmdb_shared PUBLIC ${CMAKE_SOURCE_DIR})
 set_property(TARGET swarmdb_shared PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 SET_TARGET_PROPERTIES(swarmdb_shared PROPERTIES OUTPUT_NAME swarmdb)
 

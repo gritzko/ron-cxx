@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cassert>
-#include "ron/ron.hpp"
-#include "rdt/rdt.hpp"
+#include "../ron/ron.hpp"
+#include "../rdt.hpp"
 #define DEBUG 1
 
 using namespace ron;

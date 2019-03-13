@@ -1,6 +1,6 @@
 #include <unistd.h>
-#include "ron/ron.hpp"
-#include "db/replica.hpp"
+#include "../../ron/ron.hpp"
+#include "../replica.hpp"
 #define DEBUG 1
 
 using namespace ron;

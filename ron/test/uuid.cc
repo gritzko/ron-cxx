@@ -1,8 +1,8 @@
 #include <cstdio>
 #include <iostream>
 #include <cassert>
-#include "ron/uuid.hpp"
-#include "ron/spans.hpp"
+#include "../uuid.hpp"
+#include "../spans.hpp"
 #define DEBUG 1
 
 using namespace ron;
@@ -26,12 +26,12 @@ void test_uuids () {
     assert(ids.size()==2);
     assert(ids.front()==one);
     assert(ids.back()==one.inc());
-    
+
     ids.push_back(Span{two,2});
     assert(ids.size()==3);
     assert(ids.front()==one);
     assert(ids.back()==two);
-    
+
     auto i = ids.begin();
     assert(*i==one);
     ++i;

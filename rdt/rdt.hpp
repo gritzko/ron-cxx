@@ -7,8 +7,8 @@
 #include "meta.hpp"
 #include "mx.hpp"
 #include "rga.hpp"
-#include "ron/op.hpp"
-#include "ron/status.hpp"
+#include "../ron/op.hpp"
+#include "../ron/status.hpp"
 
 namespace ron {
 

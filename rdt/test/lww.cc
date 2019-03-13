@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cassert>
-#include "ron/ron.hpp"
-#include "rdt/rdt.hpp"
+#include "../../ron/ron.hpp"
+#include "../rdt.hpp"
 #define DEBUG 1
 
 using namespace ron;
@@ -35,7 +35,7 @@ int main (int argn, char** args) {
 
     test_rdt_ids();
 
-    TextFrame::Builder ab_builder, c_builder, abc_builder, b2_builder, 
+    TextFrame::Builder ab_builder, c_builder, abc_builder, b2_builder,
     abbc_builder, ab2c_builder, ab2c_builder2;
     vector<TextFrame> inputs;
     TextLWW lww;

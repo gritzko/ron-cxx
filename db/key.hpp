@@ -2,8 +2,8 @@
 #define CPP_KEY_HPP
 
 #include <rocksdb/slice.h>
-#include "rdt/rdt.hpp"
-#include "ron/uuid.hpp"
+#include "../rdt/rdt.hpp"
+#include "../ron/uuid.hpp"
 
 namespace ron {
 

@@ -195,14 +195,15 @@ add_test(RGA test14-rga)
 
 list(APPEND SWARMDB_HEADERS
         db/key.hpp
-        db/map/const.hpp
-        db/map/map.hpp
+        db/const.hpp
+        db/map.hpp
         db/mem_store.hpp
         db/replica.hpp
 )
 
 set(SWARMDB_SOURCES
         ${SWARMDB_HEADERS}
+        db/merge_ops.hpp
         db/replica.cc
         db/map/chain.cc
         db/map/op.cc

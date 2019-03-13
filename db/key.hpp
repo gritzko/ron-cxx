@@ -22,11 +22,15 @@ struct Key {
 
     static constexpr size_t SIZE = sizeof(bits);
 
-    Key(const Uuid& id, RDT rdt)
+    Key(const Uuid id, RDT rdt)
         : bits{
               htobe64((id.origin()._64 << Word::FBS) | id.variety()),
               htobe64((id.value()._64 << Word::FBS) | rdt),
           } {}
+
+    inline bool operator<(const Key& b) const { return bits < b.bits; }
+
+    inline bool operator==(const Key& b) const { return bits == b.bits; }
 
     inline RDT rdt() const { return RDT(be64toh(bits.second) & 0xf); }
 

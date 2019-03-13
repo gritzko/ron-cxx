@@ -197,6 +197,7 @@ list(APPEND SWARMDB_HEADERS
         db/map/const.hpp
         db/replica.hpp
         db/map/map.hpp
+        db/mem_store.hpp
 )
 
 set(SWARMDB_SOURCES
@@ -231,6 +232,11 @@ add_executable(test21-mappers db/test/mappers.cc)
 add_dependencies(test21-mappers swarmdb_shared)
 target_link_libraries(test21-mappers swarmdb_shared)
 add_test(MAPPERS test21-mappers)
+
+add_executable(test22-memstore db/test/memstore.cc)
+add_dependencies(test22-memstore swarmdb_shared)
+target_link_libraries(test22-memstore swarmdb_shared)
+add_test(MEMSTORE test22-memstore)
 
 #  S W A R M D B  C L I
 

@@ -2,7 +2,7 @@
 #define RON_MERGE_OPS_HPP
 
 #include <rocksdb/merge_operator.h>
-#include "db/replica.hpp"
+#include "replica.hpp"
 
 namespace ron {
 

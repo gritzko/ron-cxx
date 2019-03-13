@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cassert>
-#include "ron/ron.hpp"
+#include "../ron.hpp"
 #define DEBUG 1
 
 using namespace ron;

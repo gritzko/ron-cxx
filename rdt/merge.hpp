@@ -1,8 +1,8 @@
 #ifndef RON_RDT_MERGE_HPP
 #define RON_RDT_MERGE_HPP
 
-#include "ron/op.hpp"
-#include "ron/status.hpp"
+#include "../ron/op.hpp"
+#include "../ron/status.hpp"
 
 namespace ron {
 

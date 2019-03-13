@@ -3,10 +3,10 @@
 #include <unistd.h>
 #include <ctime>
 #include <unordered_map>
-#include "db/replica.hpp"
-#include "rdt/rdt.hpp"
+#include "replica.hpp"
+#include "../rdt/rdt.hpp"
 #include "rocksdb/db.h"
-#include "ron/ron.hpp"
+#include "../ron/ron.hpp"
 
 using namespace ron;
 using namespace std;

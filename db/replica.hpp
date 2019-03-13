@@ -3,9 +3,8 @@
 
 #include <string>
 #include <unordered_map>
-#include "db/const.hpp"
-#include "db/key.hpp"
-#include "db/map/const.hpp"
+#include "const.hpp"
+#include "key.hpp"
 #include "rdt/lww.hpp"
 #include "rdt/rdt.hpp"
 #include "rocksdb/db.h"
@@ -42,7 +41,7 @@ class Replica {
     Key nil_key() const { return Key{Uuid::NIL, META_RDT}; }
 
    public:
-    Replica() : db_{nullptr}, trunk_{nullptr}, objects_{}, wo_{}, ro_{} {}
+    Replica() = default;
 
     //  L I F E C Y C L E
 

@@ -2,7 +2,7 @@
 #define rdt_lww_hpp
 
 #include <unordered_map>
-#include "rdt/merge.hpp"
+#include "merge.hpp"
 
 namespace ron {
 

@@ -3,8 +3,8 @@
 
 #include <algorithm>
 #include <unordered_map>
-#include "rdt/const.hpp"
-#include "rdt/merge.hpp"
+#include "const.hpp"
+#include "merge.hpp"
 #include "ron/ron.hpp"
 
 namespace ron {

@@ -1,7 +1,7 @@
 #ifndef CPP_CHAIN_HPP
 #define CPP_CHAIN_HPP
 
-#include "rdt/merge.hpp"
+#include "merge.hpp"
 #include "ron/status.hpp"
 #include "ron/uuid.hpp"
 

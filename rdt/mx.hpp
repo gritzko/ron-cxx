@@ -2,7 +2,7 @@
 #define rdt_mx_hpp
 
 #include <unordered_map>
-#include "rdt/merge.hpp"
+#include "merge.hpp"
 #include "ron/status.hpp"
 
 namespace ron {

@@ -1,12 +1,12 @@
 #ifndef RON_RDT_HPP
 #define RON_RDT_HPP
 
-#include "rdt/chain.hpp"
-#include "rdt/const.hpp"
-#include "rdt/lww.hpp"
-#include "rdt/meta.hpp"
-#include "rdt/mx.hpp"
-#include "rdt/rga.hpp"
+#include "chain.hpp"
+#include "const.hpp"
+#include "lww.hpp"
+#include "meta.hpp"
+#include "mx.hpp"
+#include "rga.hpp"
 #include "ron/op.hpp"
 #include "ron/status.hpp"
 

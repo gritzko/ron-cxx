@@ -28,6 +28,8 @@ struct Key {
               htobe64((id.value()._64 << Word::FBS) | rdt),
           } {}
 
+    Key() : bits{0, 0} {}
+
     inline bool operator<(const Key& b) const { return bits < b.bits; }
 
     inline bool operator==(const Key& b) const { return bits == b.bits; }

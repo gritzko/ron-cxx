@@ -265,6 +265,7 @@ add_custom_target(
         ${CMAKE_SOURCE_DIR}/rdt/*.hpp
         ${CMAKE_SOURCE_DIR}/db/*.cc
         ${CMAKE_SOURCE_DIR}/db/*.hpp
+        ${CMAKE_SOURCE_DIR}/db/map/*.cc
 )
 
 #  D O C S

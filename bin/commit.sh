@@ -16,8 +16,8 @@ pause
 git add $@ || exit 4
 
 git stash push --keep-index -m "$DIR" | grep WIP
-STASH=$?
-if [ $STASH ]; then
+NOSTASH=$?
+if [ ! $NOSTASH ]; then
     echo stashed $DIR
     git stash show
     pause
@@ -43,7 +43,7 @@ git commit -S || exit 6
 
 #git push || exit 8
 
-if [ $STASH ]; then
+if [ ! $NOSTASH ]; then
     git stash pop
 fi
 

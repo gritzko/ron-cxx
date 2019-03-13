@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include "ron/ron.hpp"
 #include "db/replica.hpp"
-#include "db/map/map.hpp"
+#include "db/map.hpp"
 #define DEBUG 1
 
 using namespace ron;

@@ -54,7 +54,7 @@ class InMemoryStore {
         }
         void scroll() {
             len_ = 0;
-            while (e_ != store_.end() && e_.first == b_.first) {
+            while (e_ != store_.end() && e_->first == b_->first) {
                 ++e_;
                 ++len_;
             }
@@ -64,11 +64,12 @@ class InMemoryStore {
         const Record& operator*() {
             assert(b_ != e_);
             if (len_ == 1) {
-                return *b_;
+                merged_ = *b_;
             } else {
                 merged_.first = b_->first;
-                merged_.second = Merge(b_, e_);
+                Merge(merged_.second, b_, e_);
             }
+            return merged_;
         }
         void operator++() {
             if (len_ > 1) {
@@ -78,13 +79,14 @@ class InMemoryStore {
             b_ = e_;
             scroll();
         }
+        inline bool operator==(const const_iterator& b) const {
+            return b_ == b.b_;
+        }
     };
 
-    const_iterator begin() const {
-        return const_iterator{state_, state_.begin()};
-    }
+    const_iterator begin() { return const_iterator{state_, state_.begin()}; }
 
-    const_iterator end() const { return const_iterator{state_, state_.end()}; }
+    const_iterator end() { return const_iterator{state_, state_.end()}; }
 
     InMemoryStore() : state_{} {}
 
@@ -119,8 +121,8 @@ class InMemoryStore {
             return Status::OK;
         }
         Status ok = Merge(result, range.first, range.second);
-        state_.insert(Record{key, result});
         state_.erase(range.first, range.second);
+        state_.insert(Record{key, result});
         return ok;
     }
 

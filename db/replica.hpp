@@ -3,6 +3,7 @@
 
 #include <string>
 #include <unordered_map>
+#include "db/const.hpp"
 #include "db/key.hpp"
 #include "db/map/const.hpp"
 #include "rdt/lww.hpp"

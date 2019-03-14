@@ -1,17 +1,48 @@
 # RON 2.1 reference implementation in C++
 
 Replicated Object Notation (RON) is a format for distributed live data.
-This Ragel/C++ implementation aims to be used as a rocksdb-based storage
-engine, also as a library in higher-level languages, using bindings.
 See http://replicated.cc for the protocol spec.
+
+This is a Ragel/C++ implementation of:
+
+* Replicated Object Notation (parsers/builders),
+* Replicated Data Types (RON based CRDTs),
+* libswarmdb.so, an embedded syncable database (RocksDB-based),
+* swarmdb, a standalone RON-native database.
+
+Stil in the works:
+
+* libswarmdb bindings for higher-level languages
+    - [ ] Java
+    - [ ] node.js
+    - [ ] Python
+    - [ ] Go
+    - [ ] ?Haskell
+- [ ] WebAssembly (in-memory) lib,
+- [ ] other backends.
 
 ## Building
 
-* ensure you have a C++ compiler, make, CMake
-* mkdir build && cd build && cmake .. && make
+* ensure you have
+    * a C++ compiler,
+    * make,
+    * CMake,
+    * git
+* mkdir build && cd build
+* cmake ..
+* make
 
-SwarmDB depends on rocksdb, gflags, botan-2, snappy, but it downloads
-and builds them on its own. zlib, libbz2 are taken from the system.
+Static dependencies are fetched from the net and built by cmake:
+
+* rocksdb,
+* gflags,
+* botan-2,
+* snappy.
+
+Dymanic dependencies are taken from the system:
+
+* zlib,
+* libbz2.
 
 ## New 2.1 features
 

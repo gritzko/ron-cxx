@@ -112,18 +112,19 @@ ExternalProject_Add(
 list(APPEND RON_HEADERS
     ron/const.hpp
     ron/encdec.hpp
-    ron/uuid.hpp
-    ron/op.hpp
-    ron/text.hpp
     ron/frames.hpp
-    ron/status.hpp
+    ron/hash.hpp
+    ron/inc_stack.hpp
+    ron/op.hpp
+    ron/opmeta.hpp
+    ron/portable_endian.hpp
     ron/ron.hpp
     ron/slice.hpp
-    ron/hash.hpp
-    ron/portable_endian.hpp
+    ron/spans.hpp
+    ron/status.hpp
+    ron/text.hpp
+    ron/uuid.hpp
     ron/vv.hpp
-    ron/opmeta.hpp
-    ron/inc_stack.hpp
 )
 
 add_library(ron_static STATIC

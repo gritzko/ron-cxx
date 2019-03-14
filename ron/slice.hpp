@@ -91,6 +91,7 @@ struct Slice {
         return *buf_;
     }
 
+    inline const Char* data() const { return buf_; }
     inline fsize_t size() const { return size_; }
 
     bool operator==(const Slice b) const {

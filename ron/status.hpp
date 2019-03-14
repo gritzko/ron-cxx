@@ -35,6 +35,7 @@ class Status {
 
     static const Status OK;
     static const Status ENDOFFRAME;
+    static const Status ENDOFINPUT;
     static const Status NOT_IMPLEMENTED;
     static const Status NOT_FOUND;
     static const Status BAD_STATE;

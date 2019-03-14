@@ -16,7 +16,9 @@ class TextFrame {
 
     TextFrame() : data_{} {}
     explicit TextFrame(String data) : data_{std::move(data)} {}
-    // explicit TextFrame(const String&& data) : data_{data} {}
+    explicit TextFrame(Slice data)
+        : data_{(const char*)data.data(), data.size()} {}
+
     TextFrame& operator=(const TextFrame& orig) = default;
 
     const String& data() const { return data_; }
@@ -38,7 +40,7 @@ class TextFrame {
         static double parse_float(Slice data);
 
        public:
-        explicit Cursor(const Slice& data, bool advance = true)
+        explicit Cursor(const Slice data, bool advance = true)
             : data_{data},
               op_{TERM::RAW},
               at_{0},

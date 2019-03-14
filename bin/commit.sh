@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIR=`date +%H:%M:%S_%d-%m-%Y`
+DIR=`date +%Y%m%d_%H%M%S`
 
 if [ ! -d .git ]; then
     echo please launch from the project\'s root

@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 11)
 set(LLVM_ENABLE_RTTI ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frtti -fPIC")
-set(DEPS_PREFIX ${CMAKE_SOURCE_DIR}/deps)
+set(DEPS_PREFIX ${CMAKE_BINARY_DIR}/deps)
 set(ROCKSDB_PREFIX ${DEPS_PREFIX}/build/rocksdb)
 #set(CXXOPTS_PREFIX ${DEPS_PREFIX}/build/cxxopts)
 set(CRYPTO_PREFIX ${DEPS_PREFIX}/build/botan)
@@ -204,6 +204,7 @@ set(SWARMDB_SOURCES
         ${SWARMDB_HEADERS}
         db/merge_ops.hpp
         db/replica.cc
+        db/rocks_store.cc
         db/map/chain.cc
         db/map/op.cc
         db/map/yarn.cc
@@ -237,6 +238,11 @@ add_executable(test22-memstore db/test/memstore.cc)
 add_dependencies(test22-memstore swarmdb_shared)
 target_link_libraries(test22-memstore swarmdb_shared)
 add_test(MEMSTORE test22-memstore)
+
+add_executable(test23-rocks_store db/test/rocks.cc)
+add_dependencies(test23-rocks_store swarmdb_shared)
+target_link_libraries(test23-rocks_store swarmdb_shared rocksdb_static)
+add_test(ROCKSTORE test23-rocks_store)
 
 #  S W A R M D B  C L I
 

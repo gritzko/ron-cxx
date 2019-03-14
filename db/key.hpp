@@ -30,6 +30,16 @@ struct Key {
 
     Key() : bits{0, 0} {}
 
+    Key(uint64pair b) : bits{b} {}
+
+    inline uint64pair be() const { return bits; }  // TODO comparable
+
+    static Key be(Slice data) {
+        assert(data.size() == sizeof(bits));
+        auto* b = reinterpret_cast<const uint64pair*>(data.data());
+        return Key{*b};
+    }
+
     inline bool operator<(const Key& b) const { return bits < b.bits; }
 
     inline bool operator==(const Key& b) const { return bits == b.bits; }

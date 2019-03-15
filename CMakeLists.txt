@@ -34,8 +34,8 @@ set(MAKE_FLAGS "-j${CORES}")
 ExternalProject_Add(
     gflags_pro
     PREFIX ${GFLAGS_PREFIX}
-    GIT_REPOSITORY git@github.com:gflags/gflags.git
-    GIT_TAG 28f50e0
+    URL https://github.com/gflags/gflags/archive/v2.2.2.tar.gz
+    URL_HASH SHA1=4d42470afb7236fb0cf90f8bbb0cec588073c17c
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
     CMAKE_GENERATOR "Unix Makefiles"
     BUILD_COMMAND $(MAKE) ${MAKE_FLAGS}
@@ -50,8 +50,8 @@ add_dependencies(gflags_static gflags_pro)
 ExternalProject_Add(
     snappy_pro
     PREFIX ${snappy_PREFIX}
-    GIT_REPOSITORY https://github.com/google/snappy.git
-    GIT_TAG d4be414dd66026d6736a3741e8a85779ba4ea949
+    URL https://github.com/google/snappy/archive/1.1.7.tar.gz
+    URL_HASH SHA1=1ec676b842fc96fd8a95b03c12758935e7f257b0
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
     CMAKE_GENERATOR "Unix Makefiles"
     BUILD_COMMAND $(MAKE) ${MAKE_FLAGS}
@@ -64,7 +64,8 @@ add_library(snappy_static STATIC IMPORTED)
 set_property(TARGET snappy_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/libsnappy.a)
 add_dependencies(snappy_static snappy_pro)
 
-ExternalProject_Add(rocksdb_pro
+ExternalProject_Add(
+    rocksdb_pro
     URL https://github.com/facebook/rocksdb/archive/v5.15.10.tar.gz
     URL_HASH SHA1=452f5a5e7d735f26bd30b837207b4b4527610dba
     UPDATE_COMMAND ""
@@ -80,12 +81,13 @@ set_property(TARGET rocksdb_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib
 add_dependencies(rocksdb_static rocksdb_pro)
 add_dependencies(rocksdb_pro snappy_pro)
 
-ExternalProject_Add(botan_pro
-    GIT_REPOSITORY https://github.com/randombit/botan.git
-    GIT_TAG a792728e8941b62761052f5e0d288ba13a016c77
+ExternalProject_Add(
+    botan_pro
+    URL https://botan.randombit.net/releases/Botan-2.9.0.tgz
+    URL_HASH SHA1=e6876bc30a1301f56107ac3dc6d395810df08899
     PREFIX ${CRYPTO_PREFIX}
     UPDATE_COMMAND ""
-    CONFIGURE_COMMAND ./configure.py --cxxflags=${CMAKE_CXX_FLAGS} --ldflags=${CMAKE_EXE_LINKER_FLAGS} --cc-bin=${CMAKE_CXX_COMPILER} --prefix=${DEPS_PREFIX} --minimized-build --enable-modules=sha3,sha2_64
+    CONFIGURE_COMMAND ./configure.py --cxxflags=${CMAKE_CXX_FLAGS} --ldflags=${CMAKE_EXE_LINKER_FLAGS} --prefix=${DEPS_PREFIX} --minimized-build --enable-modules=sha3,sha2_64
     BUILD_IN_SOURCE 1
     BUILD_COMMAND $(MAKE) ${MAKE_FLAGS} libbotan-2.a
     INSTALL_COMMAND cp -RL build/include/botan ${DEPS_PREFIX}/include && cp libbotan-2.a ${DEPS_PREFIX}/lib

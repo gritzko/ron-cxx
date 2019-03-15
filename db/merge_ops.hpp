@@ -31,7 +31,7 @@ class RDTMergeOperator : public rocksdb::MergeOperator {
         RDT rdt = key.rdt();
 
         if (merge_in.existing_value) {
-            inputs.push_back(Cursor{slice(merge_in.existing_value)});
+            inputs.push_back(Cursor{slice(*merge_in.existing_value)});
         }
         for (auto s : merge_in.operand_list) {
             inputs.push_back(Cursor{slice(s)});

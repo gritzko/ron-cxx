@@ -3,9 +3,9 @@
 
 #include <algorithm>
 #include <unordered_map>
+#include "../ron/ron.hpp"
 #include "const.hpp"
 #include "merge.hpp"
-#include "../ron/ron.hpp"
 
 namespace ron {
 
@@ -92,7 +92,7 @@ class RGArrayRDT {
 };
 
 enum RGA_ENTRY : uint8_t {
-    ZERO = 0,
+    META_ENTRY = 0,
     ENTRY = 1,
     REMOVE = 2,
     UNDO = 3,
@@ -127,7 +127,7 @@ template <class Frame>
 Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
     using Cursor = typename Frame::Cursor;
     tombstones.clear();
-    RGA_ENTRY state{ZERO};
+    RGA_ENTRY state{META_ENTRY};
     Cursor cur = frame.cursor();
     const Uuid root = cur.id();
     if (cur.ref() != RGA_RDT_ID || root.version() != TIME)
@@ -154,7 +154,7 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
         } else {
             id = Uuid::Time(NEVER, 0);
             ref = root;
-            et = ZERO;
+            et = META_ENTRY;
         }
         ++pos;
 
@@ -167,7 +167,7 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
         while (path.back() != ref) {
             fsize_t at;
             switch (state) {
-                case ZERO:
+                case META_ENTRY:
                     return Status::CAUSEBREAK.comment("not a CT");
                 case ENTRY:
                     if (!kills.back()) break;
@@ -177,7 +177,7 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
                 case REMOVE:
                     if (kills.back()) break;
                     at = ceiling[REMOVE] - (depth - ceiling[REMOVE]);
-                    if (at > 0) {  // aka ceiling[ZERO]
+                    if (at > 0) {  // aka ceiling[META_ENTRY]
                         kills[at] = true;
                     }
                     break;

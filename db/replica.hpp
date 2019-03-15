@@ -3,14 +3,14 @@
 
 #include <string>
 #include <unordered_map>
-#include "const.hpp"
-#include "key.hpp"
 #include "../rdt/lww.hpp"
 #include "../rdt/rdt.hpp"
-#include "rocksdb/db.h"
 #include "../ron/hash.hpp"
 #include "../ron/opmeta.hpp"
 #include "../ron/ron.hpp"
+#include "const.hpp"
+#include "key.hpp"
+#include "rocksdb/db.h"
 
 namespace ron {
 
@@ -210,10 +210,13 @@ class Replica {
     }
 };
 
-inline Slice slice(rocksdb::Slice s) {
-    return Slice{s.data_, (fsize_t)s.size_};
+static inline rocksdb::Slice slice(ron::Slice slice) {
+    return rocksdb::Slice{(const char*)slice.data(), slice.size()};
 }
-inline Slice slice(const rocksdb::Slice* s) { return slice(*s); }
+
+static inline ron::Slice slice(rocksdb::Slice slice) {
+    return Slice{slice.data(), slice.size()};
+}
 
 }  // namespace ron
 

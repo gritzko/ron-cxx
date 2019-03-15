@@ -1,5 +1,5 @@
 #include "rocks_store.hpp"
-#include "merge_ops.hpp"
+#include <rocksdb/merge_operator.h>
 #include "rocksdb/db.h"
 
 namespace ron {
@@ -17,11 +17,11 @@ using ColumnFamilyDescriptor = rocksdb::ColumnFamilyDescriptor;
 
 //  C O N V E R S I O N S
 
-static inline rocksdb::Slice ronslice2rocks(ron::Slice slice) {
+static inline rocksdb::Slice slice(ron::Slice slice) {
     return rocksdb::Slice{(const char*)slice.data(), slice.size()};
 }
 
-static inline ron::Slice rocksslice2ron(rocksdb::Slice slice) {
+static inline ron::Slice slice(rocksdb::Slice slice) {
     return Slice{slice.data(), slice.size()};
 }
 
@@ -29,9 +29,7 @@ static inline rocksdb::Slice key2slice(const uint64pair& key) {
     return rocksdb::Slice{(const char*)&key, sizeof(key)};
 }
 
-static inline Key slice2key(rocksdb::Slice key) {
-    return Key::be(rocksslice2ron(key));
-}
+static inline Key slice2key(rocksdb::Slice key) { return Key::be(slice(key)); }
 
 inline static Status status(const rocksdb::Status& orig) {
     return orig.ok() ? Status::OK : Status::DB_FAIL.comment(orig.ToString());
@@ -40,6 +38,68 @@ inline static Status status(const rocksdb::Status& orig) {
 inline rocksdb::WriteOptions wo() { return rocksdb::WriteOptions{}; }
 
 inline rocksdb::ReadOptions ro() { return rocksdb::ReadOptions{}; }
+
+//  M E R G E  O P E R A T O R
+
+template <typename Frame>
+class RDTMerge : public rocksdb::MergeOperator {
+    MasterRDT<Frame> reducer_;
+
+   public:
+    typedef typename Frame::Batch Batch;
+    typedef typename Frame::Builder Builder;
+    typedef typename Frame::Cursor Cursor;
+    typedef typename Frame::Cursors Cursors;
+
+    RDTMerge() : reducer_{} {}
+
+    Status MergeRDT(Builder& out, const Uuid& rdt, const Cursors& inputs) {
+        return reducer_.Merge(out, rdt, inputs);
+    }
+
+    bool FullMergeV2(const MergeOperationInput& merge_in,
+                     MergeOperationOutput* merge_out) const override {
+        Builder out;
+        Cursors inputs{};
+        Key key{merge_in.key};
+        RDT rdt = key.rdt();
+
+        if (merge_in.existing_value) {
+            inputs.push_back(Cursor{slice(*merge_in.existing_value)});
+        }
+        for (auto s : merge_in.operand_list) {
+            inputs.push_back(Cursor{slice(s)});
+        }
+
+        Status ok = reducer_.Merge(out, rdt, inputs);
+
+        if (!ok) return false;
+        swap(out, merge_out->new_value);
+        return true;
+    }
+
+    bool PartialMergeMulti(const rocksdb::Slice& dbkey,
+                           const std::deque<rocksdb::Slice>& operand_list,
+                           std::string* new_value,
+                           rocksdb::Logger* logger) const override {
+        Key key{dbkey};
+        RDT rdt = key.rdt();
+        Builder out;
+        Cursors inputs{};
+        inputs.reserve(operand_list.size() + 1);
+        for (auto s : operand_list) {
+            inputs.push_back(Cursor{slice(s)});
+        }
+
+        Status ok = reducer_.Merge(out, rdt, inputs);
+
+        if (!ok) return false;
+        swap(out, *new_value);
+        return true;
+    }
+
+    const char* Name() const override { return "rdt"; }
+};
 
 //  S T O R E
 
@@ -55,7 +115,7 @@ Status RocksDBStore<Frame>::Create(std::string home) {
     ColumnFamilyOptions cf_options = ColumnFamilyOptions();
     Options options{db_options, cf_options};
     options.merge_operator =
-        shared_ptr<rocksdb::MergeOperator>{new RDTMergeOperator<Frame>()};
+        shared_ptr<rocksdb::MergeOperator>{new RDTMerge<Frame>()};
 
     rocksdb::DB* db;
     auto status = DB::Open(options, home, &db);
@@ -78,7 +138,7 @@ Status RocksDBStore<Frame>::Open(std::string home) {
     options.WAL_size_limit_MB = 1UL << 30U;
     options.WAL_ttl_seconds = UINT64_MAX;
     options.merge_operator =
-        shared_ptr<rocksdb::MergeOperator>{new RDTMergeOperator<Frame>()};
+        shared_ptr<rocksdb::MergeOperator>{new RDTMerge<Frame>()};
 
     typedef ColumnFamilyDescriptor CFD;
     vector<ColumnFamilyDescriptor> families;
@@ -114,7 +174,7 @@ template <typename Frame>
 Status RocksDBStore<Frame>::Merge(Key key, const Frame& change, Uuid branch) {
     auto be = key.be();
     Slice data{change.data()};
-    auto ok = DB_->Merge(wo(), key2slice(be), ronslice2rocks(data));
+    auto ok = DB_->Merge(wo(), key2slice(be), slice(data));
     return status(ok);
 }
 
@@ -166,7 +226,7 @@ Key RocksDBStore<Frame>::Iterator::key() {
 template <typename Frame>
 ron::Slice RocksDBStore<Frame>::Iterator::value() {
     assert(IT_);
-    return rocksslice2ron(IT_->value());
+    return slice(IT_->value());
 }
 
 template <typename Frame>

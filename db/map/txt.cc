@@ -1,5 +1,5 @@
-#include "../map.hpp"
 #include "../../rdt/rga.hpp"
+#include "../map.hpp"
 
 using namespace std;
 

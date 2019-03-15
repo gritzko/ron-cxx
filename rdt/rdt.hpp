@@ -1,14 +1,14 @@
 #ifndef RON_RDT_HPP
 #define RON_RDT_HPP
 
+#include "../ron/op.hpp"
+#include "../ron/status.hpp"
 #include "chain.hpp"
 #include "const.hpp"
 #include "lww.hpp"
 #include "meta.hpp"
 #include "mx.hpp"
 #include "rga.hpp"
-#include "../ron/op.hpp"
-#include "../ron/status.hpp"
 
 namespace ron {
 

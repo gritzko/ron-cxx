@@ -10,7 +10,7 @@ This is a Ragel/C++ implementation of:
 * libswarmdb.so, an embedded syncable database (RocksDB-based),
 * swarmdb, a standalone RON-native database.
 
-Stil in the works:
+Still in the works / planned / envisioned:
 
 * libswarmdb bindings for higher-level languages
     - [ ] Java

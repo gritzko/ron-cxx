@@ -2,8 +2,8 @@
 #define rdt_meta_hpp
 
 #include <unordered_map>
-#include "merge.hpp"
 #include "../ron/status.hpp"
+#include "merge.hpp"
 
 namespace ron {
 

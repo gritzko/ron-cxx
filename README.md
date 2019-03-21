@@ -61,3 +61,8 @@ Dymanic dependencies are taken from the system:
 * db/ - RocksDB based implementation
 * deps/ - libs, dependencies
 * ...
+
+## Contributing
+
+Code conventions as per [Google Style Guide](https://google.github.io/styleguide/cppguide.html).
+Preferably, use `bin/commit.sh` for commits.

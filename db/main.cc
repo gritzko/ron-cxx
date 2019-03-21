@@ -16,6 +16,7 @@ typedef Replica<Frame> RonReplica;
 typedef Frame::Builder Builder;
 typedef Frame::Cursor Cursor;
 typedef vector<Frame> Frames;
+using StoreIterator = typename RonReplica::Store::Iterator;
 
 // const Uuid COMMENT_UUID{1134907106097364992UL, 0};
 const Uuid OUT_UUID{935024688260710400UL, 0};
@@ -59,7 +60,7 @@ Status RunCommands() {
     string store = FLAGS_store.empty() ? ".swarmdb" : FLAGS_store;
     bool rm_on_exit{0};
     if (!FLAGS_test.empty() && FLAGS_store.empty()) {
-        store = basename(FLAGS_test);
+        store = "test_" + basename(FLAGS_test);
         if (file_exists(store)) {
             ok = rm_dir(store);
             if (!ok) return ok;
@@ -75,7 +76,7 @@ Status RunCommands() {
     if (!ok) return ok;
 
     if (FLAGS_now) {
-        Uuid now = replica.now();
+        Uuid now = replica.Now();
         cout << now.str() << endl;
     } else if (!FLAGS_hash.empty()) {
         ok = CommandHashFrame(FLAGS_hash);
@@ -139,8 +140,8 @@ Status CommandTest(RonReplica& replica, const string& file) {
     ok = tests.Split(io);
     if (!ok) return ok;
     Builder b;
-    static const string OK{"\033[0;32mOK\033[0m"};
-    static const string FAIL{"\033[1;31mFAIL\033[0m"};
+    static const string OK{"\033[0;32mOK\033[0m\t"};
+    static const string FAIL{"\033[1;31mFAIL\033[0m\t"};
     for (int i = 0; ok && i < io.size(); i++) {
         Cursor c = io[i].cursor();
         if (c.id() != COMMENT_UUID)
@@ -150,7 +151,7 @@ Status CommandTest(RonReplica& replica, const string& file) {
         if (c.size() > 2 && c.has(2, STRING)) comment = c.string(2);
         c.Next();
         if (term == QUERY) {
-            Frame re = b.frame();
+            Frame re = b.Release();
             b = Builder{};
             ok = CompareFrames<Frame>(re, io[i]);
             if (!ok) {
@@ -160,8 +161,9 @@ Status CommandTest(RonReplica& replica, const string& file) {
             }
             cerr << "?\t" << comment << '\t' << (ok ? OK : FAIL) << endl;
         } else if (term == HEADER) {
-            ok = replica.Receive(b, Uuid::NIL, c);
-            cerr << "!\t" << comment << '\t' << (ok ? OK : FAIL) << endl;
+            ok = replica.FrameRecv(b, io[i]);
+            cerr << "!\t" << comment << '\t' << (ok ? OK : FAIL + ok.str())
+                 << endl;
         } else {
             return Status::BADFRAME.comment("bad in/out header");
         }
@@ -170,31 +172,33 @@ Status CommandTest(RonReplica& replica, const string& file) {
 }
 
 Status CommandDump(RonReplica& replica, const string& what) {
-    RDT rdt = RDT_COUNT;
+    FORM rdt = ZERO_RAW_FORM;
     if (what.size() > 1) {
-        rdt = uuid2rdt(Uuid{what});
-        if (rdt == RDT_COUNT) return Status::BADARGS.comment("unknown RDT");
+        rdt = uuid2form(Uuid{what});
+        if (rdt == ZERO_RAW_FORM) return Status::BADARGS.comment("unknown RDT");
     }
-    rocksdb::Iterator* i = replica.db().NewIterator(replica.ro());
-    if (!i) return Status::BAD_STATE.comment("db is not open?");
-    for (i->SeekToFirst(); i->Valid(); i->Next()) {
-        Key key{i->key()};
-        if (rdt != RDT_COUNT && key.rdt() != rdt) continue;
+    if (!replica.open()) return Status::BAD_STATE.comment("db is not open?");
+    StoreIterator i{replica.db()};
+    i.SeekTo(Key{});
+    while (i.status()) {
+        Key key{i.key()};
+        // if (rdt != RDT_COUNT && key.rdt() != rdt) continue;
         String k;
         k.reserve(64);
         k.push_back('\n');
         k.push_back('*');
-        rdt2uuid(key.rdt()).write_base64(k);
+        form2uuid(key.form()).write_base64(k);
         k.push_back('#');
         key.id().write_base64(k);
         k.push_back('\n');
         int wok = write(STDOUT_FILENO, k.data(), k.size());
         if (wok != k.size()) return Status::IOFAIL;
-        rocksdb::Slice val = i->value();
+        Slice val = i.value();
         wok = write(STDOUT_FILENO, val.data(), val.size());
         if (wok != val.size()) return Status::IOFAIL;
+        i.Next();
     }
-    delete i;
+    i.Close();
     return Status::OK;
 }
 
@@ -211,7 +215,7 @@ Status CommandQuery(RonReplica& replica, const string& name) {
     if (id == Uuid::FATAL || rdt == Uuid::FATAL)
         return Status::BADARGS.comment("not an UUID");
     Builder result;
-    Status ok = replica.ReceiveQuery(result, Uuid::NIL, cur);
+    Status ok = replica.Recv(result, cur);
     if (ok) cout << result.data() << '\n';
     return ok;
 }
@@ -235,7 +239,7 @@ Status CommandGetFrame(RonReplica& replica, const string& name) {
     }
     if (id == Uuid::FATAL || rdt == Uuid::FATAL) return Status::BADARGS;
     Frame result;
-    Status ok = id.version() == TIME ? replica.Get(result, id, rdt)
+    Status ok = id.version() == TIME ? replica.GetFrame(result, id, rdt)
                                      : replica.GetMap(result, rdt, id);
     if (!ok) return ok;
     if (!FLAGS_clean) {
@@ -250,7 +254,7 @@ Status CommandGetFrame(RonReplica& replica, const string& name) {
 }
 
 Status CommandWriteNewFrame(RonReplica& replica, const string& filename) {
-    Uuid now = replica.now();
+    Uuid now = replica.Now();
     Frame unstamped;
     LoadFrame(unstamped, filename);
     Builder stamp;
@@ -267,20 +271,20 @@ Status CommandWriteNewFrame(RonReplica& replica, const string& filename) {
         stamp.AppendAmendedOp(uc, RAW, id, ref);
         uc.Next();
     }
-    Frame stamped = stamp.frame();
+    Frame stamped = stamp.Release();
 
     cout << stamped.data() << '\n';
 
     Cursor cur = stamped.cursor();
     Status ok = Status::OK;
-    rocksdb::WriteBatch batch;
+    RonReplica::Records batch;
 
     while (cur.valid() && ok) {
-        ok = replica.ReceiveChain(batch, Uuid::NIL, cur);
+        ok = replica.WriteNewChain(batch, cur);
     }
 
     if (ok) {
-        replica.db().Write(replica.wo(), &batch);
+        replica.db().Write(batch);
     }
 
     return ok;

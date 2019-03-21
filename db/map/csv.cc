@@ -3,16 +3,15 @@
 namespace ron {
 
 template <typename Frame>
-Status CSVMapper<Frame>::Map(Builder& response, Cursor& query,
-                             const VV& hili) const {
+Status CSVMapper<Frame>::Read(Builder& response, Cursor& query, Uuid branch) {
     if (query.id() != CSV_MAP_ID) return Status::BAD_STATE;
     Uuid obj = query.ref();  // TODO version - Replica API
     Frame mx;
-    Status ok = host_->Get(mx, obj, MX_RDT_ID);
+    Status ok = store_.Get(Key{obj, MX_RDT_FORM}, mx);
     if (!ok) return ok;
     // output, comma-separated, check strings
     Cursor i = mx.cursor();
-    if (!i.valid() || i.ref() != MX_RDT_ID)
+    if (!i.valid() || i.ref() != MX_FORM_UUID)
         return Status::NOT_FOUND.comment("not a mx object");
     mx_t values;
     fsize_t maxcol{0}, maxrow{0};
@@ -46,14 +45,12 @@ Status CSVMapper<Frame>::Map(Builder& response, Cursor& query,
 }
 
 template <typename Frame>
-Status CSVMapper<Frame>::Write(Builder& patch, Cursor& query) const {
+Status CSVMapper<Frame>::Write(Records& save, Cursor& query, Uuid branch) {
     mx_t values{}, changes{};
     // fetch the state
     // scan, write changes (cancel too)
     // now(), write the patch
     return Status::NOT_IMPLEMENTED;
 }
-
-template class CSVMapper<TextFrame>;  // TODO automate?
 
 }  // namespace ron

@@ -10,9 +10,8 @@ using namespace std;
 using Frame = TextFrame;
 typedef typename Frame::Cursor Cursor;
 typedef RGArrayRDT<typename ron::TextFrame> RGA;
-using Cursors = typename Frame::Cursors;
 
-string despace (string orig) {
+string despace (string& orig) {
     string ret;
     bool ows{false};
     for (char &i : orig) {
@@ -25,23 +24,21 @@ string despace (string orig) {
 void test_chain_merge () {
     string abc = "@1+A :rga! 'a', 'b', 'c', ";
     string def = "@1000000004+B :1000000003+A 'D', 'E', 'F', ";
-    Cursors pieces{Cursor{abc}, Cursor{def}};
-    Frame abcdef;
-    Status ok = MergeCursors<Frame>(abcdef, RGA_RDT, pieces);
+    string abcdef;
+    Status ok = MergeStrings<TextFrame>(abcdef, RGA_RDT_FORM, Strings{abc, def});
     assert(ok);
     string correct = "@1+A :rga! 'a', 'b', 'c', @1000000004+B 'D', 'E', 'F', ";
-    assert(despace(abcdef.data())==despace(correct));
+    assert(despace(abcdef)==despace(correct));
 }
 
 void test_sibling_merge () {
     string parent = "@1+A :rga!";
     string childA = "@1a+B :1+A 'b';";
     string childB = "@1b+C :1+A 'a';";
-    Frame ab;
-    Cursors pieces{Cursor{parent}, Cursor{childA}, Cursor{childB}};
-    assert(MergeCursors<Frame>(ab, RGA_RDT, pieces));
+    string ab;
+    assert(MergeStrings<TextFrame>(ab, RGA_RDT_FORM, Strings{parent, childA, childB}));
     string correct = "@1+A :rga! @1b+C 'a', @1a+B :1+A 'b', ";
-    assert(despace(ab.data())==despace(correct));
+    assert(despace(ab)==despace(correct));
 }
 
 void test_multitree () {
@@ -149,7 +146,10 @@ void test_ct_log2state () {
     String LOG{"@1000000001+A :rga, 't', 'e', 's', 't', @1000000007+A :1000000004+A rm, @1000000008+A :1000000004+A 'x';"};
     vector<bool> tombs{};
     Frame state;
-    assert(ObjectLog2State<Frame>(state, RGA_RDT, Frame{LOG}));
+    Status ok = ObjectLogToState<Frame>(state, Frame{LOG});
+    cerr<<ok.str();
+    assert(ok);
+    cerr<<state.data();
     assert(ScanRGA<Frame>(tombs, Frame{state}));
     assert( tombs[0]);
     assert(!tombs[1]);

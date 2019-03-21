@@ -53,7 +53,7 @@ class LastWriteWinsRDT {
         Builder unclean;
         Status ok = Merge(unclean, inputs);
         if (!ok) return ok;
-        Frame uc = unclean.frame();
+        Frame uc = unclean.Release();
         ok = GC(output, uc);
         return ok;
     }

@@ -2,6 +2,7 @@
 #define ron_ron_hpp
 
 #include "const.hpp"
+#include "form.hpp"
 #include "frames.hpp"
 #include "inc_stack.hpp"
 #include "spans.hpp"

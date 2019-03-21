@@ -35,9 +35,9 @@ class InMemoryStore {
             ++from;
         }
         Builder out;
-        Status ok = rdt_.Merge(out, key.rdt(), inputs);
+        Status ok = rdt_.Merge(out, key.form(), inputs);
         if (ok) {
-            merged = out.frame();
+            merged = out.Release();
         }
         return ok;
     }

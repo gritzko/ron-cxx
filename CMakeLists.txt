@@ -104,6 +104,7 @@ ExternalProject_Add(
     BUILD_COMMAND ""
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND cp ${DMP_PREFIX}/src/dmp_diff_header/dmp_diff.hpp ${DEPS_PREFIX}/include/
+    UPDATE_DISCONNECTED 1
 )
 
 
@@ -137,7 +138,8 @@ add_library(ron_static STATIC
     ron/string-parser.cc
     ron/text-builder.cc
     ron/hash.cc
-        )
+    ron/form.hpp
+)
 add_dependencies(ron_static botan_pro)
 set_property(TARGET ron_static PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
@@ -163,7 +165,7 @@ add_test(HASH test04-meta)
 
 list(APPEND RDT_HEADERS
     rdt/chain.hpp
-    rdt/const.hpp
+    rdt/log.hpp
     rdt/lww.hpp
     rdt/merge.hpp
     rdt/meta.hpp
@@ -180,9 +182,9 @@ add_executable(test10-lww rdt/test/lww.cc)
 target_link_libraries(test10-lww ron_static rdt_headers)
 add_test(LWW test10-lww)
 
-add_executable(test11-metardt rdt/test/meta.cc)
-target_link_libraries(test11-metardt ron_static rdt_headers)
-add_test(META test11-metardt)
+#add_executable(test11-metardt rdt/test/meta.cc)
+#target_link_libraries(test11-metardt ron_static rdt_headers)
+#add_test(META test11-metardt)
 
 add_executable(test12-mx rdt/test/mx.cc)
 target_link_libraries(test12-mx ron_static rdt_headers)
@@ -197,20 +199,15 @@ add_test(RGA test14-rga)
 list(APPEND SWARMDB_HEADERS
         db/key.hpp
         db/const.hpp
+        db/replica.hpp
         db/map.hpp
         db/mem_store.hpp
-        db/replica.hpp
 )
 
 set(SWARMDB_SOURCES
         ${SWARMDB_HEADERS}
-        db/merge_ops.hpp
         db/replica.cc
         db/rocks_store.cc
-        db/map/chain.cc
-        db/map/op.cc
-        db/map/yarn.cc
-        db/map/meta.cc
         db/map/csv.cc
         db/map/txt.cc
     )

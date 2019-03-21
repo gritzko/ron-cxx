@@ -6,11 +6,10 @@ using namespace std;
 namespace ron {
 
 template <typename Frame>
-Status TxtMapper<Frame>::Map(Builder& response, Cursor& query,
-                             const VV& hili) const {
+Status TxtMapper<Frame>::Read(Builder& response, Cursor& query, Uuid branch) {
     Uuid id = query.id().event();
     Frame state;
-    Status ok = host_->Get(state, id, RGA_RDT_ID);
+    Status ok = store_.Get(Key{id, RGA_RDT_FORM}, state);
     vector<bool> tombs;
     ScanRGA<Frame>(tombs, state);
     // now, walk em both
@@ -26,6 +25,11 @@ Status TxtMapper<Frame>::Map(Builder& response, Cursor& query,
     }
     response.AppendNewOp(RAW, id, TXT_MAP_ID, text);
     return Status::OK;
+}
+
+template <typename Frame>
+Status TxtMapper<Frame>::Write(Records& save, Cursor& query, Uuid branch) {
+    return Status::NOT_IMPLEMENTED;
 }
 
 template class TxtMapper<TextFrame>;

@@ -25,7 +25,7 @@ void test_serialization () {
     Builder builder;
     builder.AppendNewOp(HEADER, Uuid{"1+src"}, Uuid{"lww"});
     builder.AppendNewOp(REDUCED, Uuid{"2+orig"}, Uuid{"1+src"}, "key", "value");
-    TextFrame frame = builder.frame();
+    TextFrame frame = builder.Release();
     const string &data = frame.data();
     Cursor cur = frame.cursor();
     SHA2 SRC_HASH{Uuid{"0+src"}};

@@ -131,6 +131,7 @@ struct Atom {
     std::pair<Word, Word> words_;
     Atom() : words_{0, 0} {}
     Atom(Word value, Word origin) : words_{value, origin} {}
+    Atom(uint64_t value, uint64_t origin) : words_{Word{value}, Word{origin}} {}
     inline Word value() const { return words_.first; }
     inline Word origin() const { return words_.second; }
     // value flag bits

@@ -61,8 +61,7 @@ class RDTMerge : public rocksdb::MergeOperator {
                      MergeOperationOutput* merge_out) const override {
         Builder out;
         Cursors inputs{};
-        Key key{merge_in.key};
-        RDT rdt = key.rdt();
+        Key key = slice2key(merge_in.key);
 
         if (merge_in.existing_value) {
             inputs.push_back(Cursor{slice(*merge_in.existing_value)});
@@ -71,7 +70,7 @@ class RDTMerge : public rocksdb::MergeOperator {
             inputs.push_back(Cursor{slice(s)});
         }
 
-        Status ok = reducer_.Merge(out, rdt, inputs);
+        Status ok = reducer_.Merge(out, key.form(), inputs);
 
         if (!ok) return false;
         swap(out, merge_out->new_value);
@@ -82,8 +81,7 @@ class RDTMerge : public rocksdb::MergeOperator {
                            const std::deque<rocksdb::Slice>& operand_list,
                            std::string* new_value,
                            rocksdb::Logger* logger) const override {
-        Key key{dbkey};
-        RDT rdt = key.rdt();
+        Key key = slice2key(dbkey);
         Builder out;
         Cursors inputs{};
         inputs.reserve(operand_list.size() + 1);
@@ -91,7 +89,7 @@ class RDTMerge : public rocksdb::MergeOperator {
             inputs.push_back(Cursor{slice(s)});
         }
 
-        Status ok = reducer_.Merge(out, rdt, inputs);
+        Status ok = reducer_.Merge(out, key.form(), inputs);
 
         if (!ok) return false;
         swap(out, *new_value);
@@ -166,7 +164,9 @@ Status RocksDBStore<Frame>::Close() {
 
 template <typename Frame>
 Status RocksDBStore<Frame>::Put(Key key, const Frame& state, Uuid branch) {
-    auto ok = DB_->Put(wo(), key, state.data());
+    uint64pair be = key.be();
+    rocksdb::Slice k = key2slice(be);
+    auto ok = DB_->Put(wo(), k, state.data());
     return status(ok);
 }
 
@@ -183,12 +183,31 @@ Status RocksDBStore<Frame>::Get(Key key, Frame& result, Uuid branch) {
     uint64pair k = key.be();
     String ret;
     auto ok = DB_->Get(ro(), key2slice(k), &ret);
-    result = Frame{ret};
-    return status(ok);
+    if (ok.IsNotFound()) return Status::NOT_FOUND;
+    if (ok.ok()) {
+        result.swap(ret);
+        return Status::OK;
+    } else {
+        return status(ok);
+    }
 }
 
 template <typename Frame>
-Status RocksDBStore<Frame>::Write(const Records& batch) {
+Status RocksDBStore<Frame>::Read(Key key, Builder& to, Uuid branch) {
+    uint64pair k = key.be();
+    String ret;
+    auto ok = DB_->Get(ro(), key2slice(k), &ret);
+    if (ok.IsNotFound()) return Status::NOT_FOUND;
+    if (!ok.ok()) {
+        return status(ok);
+    }
+    Cursor c{ret};
+    to.AppendAll(c);  // TODO optimize
+    return Status::OK;
+}
+
+template <typename Frame>
+Status RocksDBStore<Frame>::Write(const Records& batch, Uuid branch) {
     rocksdb::WriteBatch b;
     for (auto i = batch.begin(); i != batch.end(); ++i) {
         uint64pair k = i->first.be();

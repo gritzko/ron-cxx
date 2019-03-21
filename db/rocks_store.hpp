@@ -10,12 +10,16 @@ namespace ron {
 
 template <class Frame>
 class RocksDBStore {
+   public:
+    using Cursor = typename Frame::Cursor;
     using Builder = typename Frame::Builder;
     using Record = std::pair<Key, Frame>;
     using Records = std::vector<Record>;
 
+   private:
+    /** rocksdb::DB*, but we hide rocksdb types inside the implementation
+     * because that is the entire point of this class */
     void* db_;
-    friend class Iterator;
 
    public:
     RocksDBStore() : db_{nullptr} {}
@@ -33,6 +37,7 @@ class RocksDBStore {
         Status Close();
         ~Iterator() { Close(); }
     };
+    friend class Iterator;
 
     inline bool open() const { return db_ != nullptr; }
 
@@ -46,7 +51,9 @@ class RocksDBStore {
 
     Status Get(Key key, Frame& result, Uuid branch = Uuid::NIL);
 
-    Status Write(const Records& batch);
+    Status Read(Key key, Builder& to, Uuid branch = Uuid::NIL);
+
+    Status Write(const Records& batch, Uuid branch = Uuid::NIL);
 
     Status Close();
 };

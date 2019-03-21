@@ -195,7 +195,7 @@ class TextFrame {
         void AppendAmendedOp(const Cursor& cur, TERM newterm, const Uuid& newid,
                              const Uuid& newref);
 
-        const TextFrame frame() const { return TextFrame{data_}; }
+        const TextFrame Release() { return TextFrame{std::move(data_)}; }
 
         const String& data() const { return data_; }
 

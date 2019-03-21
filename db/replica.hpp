@@ -10,38 +10,45 @@
 #include "../ron/ron.hpp"
 #include "const.hpp"
 #include "key.hpp"
-#include "rocksdb/db.h"
+#include "map.hpp"
+#include "rocks_store.hpp"
 
 namespace ron {
+
+enum replica_modes_t : uint64_t {
+    KEEP_STATES = 1UL << 0,
+    KEEP_OBJECT_LOGS = 1UL << 1,
+    KEEP_YARNS = 1UL << 2,
+    KEEP_HASHES = 1UL << 3,
+    CONSISTENT_MODE = KEEP_STATES | KEEP_OBJECT_LOGS | KEEP_YARNS | KEEP_HASHES,
+};
 
 template <typename Frame>
 class Replica {
    public:
+    using Record = std::pair<Key, Frame>;
+    using Records = std::vector<Record>;
+    using Store = RocksDBStore<Frame>;
+    using StoreIterator = typename Store::Iterator;
     using Batch = typename Frame::Batch;
     using Builder = typename Frame::Builder;
     using Cursor = typename Frame::Cursor;
-    using CFHandle = rocksdb::ColumnFamilyHandle;
     using tipmap_t = std::unordered_map<Word, OpMeta>;
 
     static const Uuid NOW_UUID;
 
    private:
-    rocksdb::DB* db_;
-    rocksdb::WriteOptions wo_;
-    rocksdb::ReadOptions ro_;
-    CFHandle* trunk_;
-
+    Store db_;
     Uuid now_;
-
-    std::unordered_map<Uuid, CFHandle*> objects_;
+    replica_modes_t mode_{CONSISTENT_MODE};
 
     // chain cache - skip db reads for ongoing op chains
     tipmap_t tips_;
 
-    Key nil_key() const { return Key{Uuid::NIL, META_RDT}; }
+    TxtMapper<Frame> txt_;
 
    public:
-    Replica() = default;
+    Replica() : db_{}, now_{}, tips_{}, txt_{db_} {}
 
     //  L I F E C Y C L E
 
@@ -55,168 +62,174 @@ class Replica {
 
     ~Replica();
 
-    Uuid now();
-    Status See(Uuid timestamp) {
-        if (timestamp < now_) return Status::OK;
-        // TODO sanity/plausibility check
-        now_ = Uuid{timestamp.value(), now_.origin()};
-        return Status::OK;
+    Uuid Now();
+    Status See(Uuid timestamp, Records& save);
+
+    Store& db() { return db_; }
+    inline bool open() const { return db_.open(); }
+
+    //  B R A N C H E S / Y A R N S
+
+    Status CreateBranch(Word branch);
+
+    Status SplitBranch(Uuid mark);
+    Status MergeBranch(Uuid mark);
+    Status DropBranch(Word branch);
+
+    //  L O W  L E V E L
+
+    Status GetFrame(Frame& object, Uuid id, Uuid rdt, Uuid branch = Uuid::NIL);
+
+    //  O B J E C T  L O G S
+
+    Status FindYarn(StoreIterator& i, Uuid start, Word branch = ZERO);
+
+    inline Status GetChain(Frame& chain, Uuid chain_id);
+
+    //  O B J E C T  S T A T E S
+
+    Status FillAllStates(Uuid branch);
+
+    Status GetObject(Frame& frame, Uuid id, Uuid rdt, Uuid branch = Uuid::NIL);
+
+    inline Status GetObjectLog(Frame& frame, Uuid id, Uuid branch = Uuid::NIL) {
+        return GetFrame(frame, id, LOG_FORM_UUID, branch);
     }
 
-    rocksdb::DB& db() { return *db_; }
-    const rocksdb::ReadOptions& ro() const { return ro_; }
-    const rocksdb::WriteOptions& wo() const { return wo_; }
-    inline bool open() const { return db_ != nullptr; }
-    inline CFHandle* trunk() const { return trunk_; }
+    Status FindObject(Frame& frame, Uuid key, Uuid branch = Uuid::NIL);
 
-    //  C H A I N  S T O R E
-
-    rocksdb::Iterator* FindYarn(Uuid replica);
-    rocksdb::Iterator* FindChain(Uuid op_id);
-
-    //  O B J E C T  S T O R E
-
-    Status CreateBranch(Uuid store);
-
-    Status FillBranch(Uuid store, VV version);
-
-    Status SplitBranch(Uuid store, Uuid new_store, VV version);
-
-    Status DropBranch(Uuid store);
-
-    Status GetObject(Frame& frame, Uuid key, Uuid store = Uuid::NIL) {
-        return Status::NOT_IMPLEMENTED;
-    }
-
-    Status Get(Frame& object, Uuid id, Uuid rdt = Uuid::NIL,
-               Uuid branch = Uuid::NIL);
-
-    Status GetMap(Frame& result, Uuid id, Uuid map = Uuid::NIL,
-                  Uuid branch = Uuid::NIL);
-
-    inline Status GetChain(Frame& chain, Uuid chain_id) {
-        return Get(chain, chain_id, CHAIN_MAP_ID);
-    }
+    //  O P  M E T A
 
     /** If we don't know the exact chain id, we have to scan the table to
      *  find the chain. Then, we scan the chain to find the op. */
-    Status FindOpMeta(OpMeta& meta, Uuid target_id);
+    Status FindOpMeta(OpMeta& meta, Uuid op_id, Uuid branch = Uuid::NIL);
 
     /** Fetches the op metadata for the chain head op.
      * @param meta - the op meta object with op id set to the chain id */
-    Status GetHeadMeta(OpMeta& meta) {
-        Frame raw;
-        Uuid chain_id = meta.id;
-        Status ok = Get(raw, chain_id, META_MAP_ID);
-        if (!ok) return ok;
-        for (Cursor c = raw.cursor(); ok && c.valid(); c.Next()) {
-            ok = meta.ReadAnnotation(c);
-        }
-        return ok;
+    Status FindHeadMeta(OpMeta& meta, Uuid op_id, Uuid branch = Uuid::NIL);
+
+    /** The last op in the yarn.
+     * Must be something; the first op in a yarn is a meta-record
+     * @time+yarnid :yarn pubkey 'ABCDEF' name 'Victor' ...
+     * @param{yarn} yarn id
+     * @return a reference to the OpMeta entry (id==0 if none)
+     * */
+    OpMeta& GetYarnTipMeta(Word yarn, Uuid branch = Uuid::NIL);
+
+    //  E V E N T  Q U E R I E S
+
+    /** @object+id :xxx ? */
+    Status FrameQuery(Builder& response, Cursor& query,
+                      Uuid branch = Uuid::NIL);
+
+    /** @object+id :lww ? */
+    Status ObjectQuery(Builder& response, Cursor& query,
+                       Uuid branch = Uuid::NIL);
+
+    /** @head+id :span ? */
+    Status OpChainQuery(Builder& response, Cursor& query,
+                        Uuid branch = Uuid::NIL);
+
+    /** @object+id :log ?   @version+id :log ?   @version+id :log till versn+id
+     * ? */
+    Status ObjectLogQuery(Builder& response, Cursor& query,
+                          Uuid branch = Uuid::NIL);
+
+    /** @version+id :tail ? */
+    Status ObjectLogTailQuery(Builder& response, Cursor& query,
+                              Uuid branch = Uuid::NIL);
+
+    /** @version+id :patch ? */
+    Status ObjectPatchQuery(Builder& response, Cursor& query,
+                            Uuid branch = Uuid::NIL);
+
+    /** @version+id :version+id ?
+    Status ObjectLogSegmentQuery(Builder& response, Cursor& query, Uuid
+    branch=Uuid::NIL); */
+
+    /** @op+id :meta ?  @op+id :sha3 ?  @op+id :prev ?  @op+id :obj ?  */
+    Status OpMetaQuery(Builder& response, Cursor& query,
+                       Uuid branch = Uuid::NIL);
+
+    /** @time+yarn :vv ?  @~+yarn :vv ? */
+    Status YarnVVQuery(Builder& response, Cursor& query,
+                       Uuid branch = Uuid::NIL);
+
+    /** @time+yarn :yarn ? */
+    Status YarnQuery(Builder& response, Cursor& query, Uuid branch = Uuid::NIL);
+
+    //  M A P P E R  Q U E R I E S
+
+    /**
+        @object+id :map ?
+        @version+id :map ?
+        @object-id :dtxt,
+            @version-till :version-from ?
+    */
+    Status MapperQuery(Builder& response, Cursor& query,
+                       Uuid branch = Uuid::NIL);
+
+    Status GetMap(Frame& result, Uuid id, Uuid map, Uuid branch = Uuid::NIL);
+
+    //  S U B S C R I P T I O N S
+
+    /**
+        @object-id :dtxt ?
+        @version-id :dtxt ?
+    */
+    // Status MapperSub (Builder& response, Cursor& query, Uuid
+    // branch=Uuid::NIL);
+
+    /**
+        @object+id ?
+        @object+id :lww ?
+        @version+id ?
+        @version+id :lww ?
+    */
+    Status ObjectSub(Builder& response, Cursor& query, Uuid branch = Uuid::NIL);
+
+    //  W R I T E S
+
+    Status ReadChainlet(Builder& to, OpMeta& meta, Cursor& from);
+
+    // feed a causally ordered log - checks causality, updates the chain cache
+    Status WriteNewChain(Records& save, Cursor& chain, Uuid branch = Uuid::NIL);
+
+    Status WriteNewObject(Records& save, Cursor& chain,
+                          Uuid branch = Uuid::NIL);
+
+    Status WriteNewYarn(Records& save, Cursor& yroot, Uuid branch = Uuid::NIL);
+
+    /**
+        @version-id :txt 'text' !
+
+        @object-id :dtxt,
+            @version-to :version-from 2 -1 2 'x' !
+    */
+    Status MapWrite(Records& save, Cursor& write, Uuid branch = Uuid::NIL) {
+        return Status::NOT_IMPLEMENTED;
     }
-
-    inline Status FindTipMeta(OpMeta& meta, Word origin) {
-        return FindOpMeta(meta, Uuid{NEVER, origin});
-    }
-
-    // Q U E R I E S
-
-    Status DataQuery(Builder& response, Uuid id);
-
-    //  @object+id :type ?
-    //  @last+version ?
-    //  @from+version :till+version ?
-    //
-    //  @object+id :type !
-    //  @diffop1 'value'
-    //  @diffop2 'value'
-    //  ...
-    Status DiffQuery(Builder& response, Uuid id);
-
-    //  @queried-id :vv ?
-    //
-    //  @queried-id :vv !
-    //  @time1-origin1 ,
-    //  @time2-origin2 ,
-    //  ...
-    Status VVQuery(Builder& response, Uuid id);
-
-    //  @queried-id :sha3 ?
-    //
-    //  @queried-id :sha3 'sha3hash' !
-    Status SHA3Query(Builder& response, Uuid id);
 
     //  R E C E I V E S
+
+    Status Recv(Builder& response, Cursor& c, Uuid branch = Uuid::NIL);
+    inline Status FrameRecv(Builder& response, Frame frame,
+                            Uuid branch = Uuid::NIL) {
+        Cursor c{frame};
+        return Recv(response, c, branch);
+    }
+    Status DispatchRecv(Builder& resp, Records& save, Cursor& c, Uuid branch);
 
     // the entry point: recoder, normalizer, access control
     // converts any-coded incoming frame into internal-coded chains, queries,
     // hash checks
     template <class FrameB>
-    Status Receive(Uuid conn_id, const FrameB& frame) {
+    Status AnyFrameRecv(Uuid conn_id, const FrameB& frame) {
         return Status::NOT_IMPLEMENTED;
     }
 
-    // feed a causally ordered log - checks causality, updates the chain cache
-    Status ReceiveChain(rocksdb::WriteBatch& batch, Uuid object_store,
-                        Cursor& chain);
-
-    Status ReceiveMap(rocksdb::WriteBatch& batch, Uuid object_store,
-                      Cursor& chain) {
-        return Status::NOT_IMPLEMENTED;
-    }
-
-    Status ReceiveCheck(Uuid branch, Cursor& check) {
-        return Status::NOT_IMPLEMENTED;
-    }
-
-    // a hash check MUST follow its op in the frame => the hash must be cached
-    Status ReceiveSHA2Check(Uuid id, const SHA2& check) {
-        return Status::NOT_IMPLEMENTED;
-    }
-
-    Status ReceiveQuery(Builder& response, Uuid object_store, Cursor& query) {
-        Uuid ref = query.ref();
-        RDT rdt = uuid2rdt(ref);
-        if (rdt != RDT_COUNT) {
-            return ReceiveObjectQuery(response, object_store, query);
-        }
-        MAP mapper = uuid2map(ref);
-        if (mapper != MAP_COUNT) {
-            return ReceiveMapQuery(response, object_store, query);
-        }
-        return Status::NOT_IMPLEMENTED.comment("unknown RDT/mapper " +
-                                               ref.str());
-    }
-
-    Status ReceiveObjectQuery(Builder& response, Uuid object_store,
-                              Cursor& query);
-
-    Status ReceiveMapQuery(Builder& response, Uuid object_store, Cursor& query);
-
-    Status RecvData(Builder& response, Cursor& query) {
-        return Status::NOT_IMPLEMENTED;
-    }
-
-    Status Receive(Builder& response, Uuid branch, Cursor& c);
-
-   private:
-    //  U T I L
-
-    rocksdb::ColumnFamilyOptions CFOptions() const;
-
-    inline static Status status(const rocksdb::Status& orig) {
-        return orig.ok() ? Status::OK
-                         : Status::DB_FAIL.comment(orig.ToString());
-    }
+    void cerr_batch(Records& save);
 };
-
-static inline rocksdb::Slice slice(ron::Slice slice) {
-    return rocksdb::Slice{(const char*)slice.data(), slice.size()};
-}
-
-static inline ron::Slice slice(rocksdb::Slice slice) {
-    return Slice{slice.data(), slice.size()};
-}
 
 }  // namespace ron
 

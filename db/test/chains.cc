@@ -12,33 +12,6 @@ typedef Replica<Frame> TextReplica;
 void test_db_yarn_root () {
 }
 
-void test_db_chain_merge () {
-    TextReplica db{};
-    string path = Uuid::Now().str();
-    assert(db.Create(path));
-    rocksdb::WriteBatch batch;
-    Key key{Uuid{"1gHHUW+test"}, CHAIN_RDT};
-    string op1 = "@1gHHUW+test :lww ;";
-    string op2 = "@1gHHUW0001+test :1gHHUW+test 'key' 'value' ;";
-    Cursor c1{op1};
-    Cursor c2{op2};
-    assert(db.ReceiveChain(batch, Uuid::NIL, c1));
-    assert(db.ReceiveChain(batch, Uuid::NIL, c2));
-    db.db().Write(db.wo(), &batch);
-    //db.db().Merge(db.wo(), db.trunk_, key, op1);
-    //db.db().Merge(db.wo(), db.trunk_, key, op2);
-    string merged;
-    db.db().Get(db.ro(), db.trunk(), key, &merged); // FIXME hash?
-    assert(merged=="@1gHHUW+test :lww;\n 'key' 'value';\n");
-    Frame got;
-    assert(db.Get(got, Uuid{"1gHHUW+test"}, LWW_RDT_ID));
-    assert(got.data()==merged);
-    Frame chain;
-    assert(db.GetChain(chain, Uuid{"1gHHUW+test"}));
-    assert(chain.data()==merged);
-    assert(db.Close());
-    rmdir(path.c_str());
-}
 
 /*   FIXME   >>>> RecvChain !!!!
 void test_chain_breaks () {
@@ -64,12 +37,12 @@ void test_chain_breaks () {
 void test_keys () {
     string idstr = "1gA9cz+gritzko";
     Uuid id{idstr};
-    Key chain{id, CHAIN_RDT};
-    assert(chain.rdt()==CHAIN_RDT);
+    Key chain{id, CHAIN_RAW_FORM};
+    assert(chain.form()==CHAIN_RAW_FORM);
     Uuid id2 = chain.id();
     assert(id2==id);
     assert(id2.str()==idstr);
-    Key derived{id.derived(), CHAIN_RDT};
+    Key derived{id.derived(), CHAIN_RAW_FORM};
     assert(derived.id()==id);
 }
 
@@ -77,5 +50,4 @@ int main (int argc, const char** args) {
     test_keys();
     //test_chain_breaks();
     test_db_yarn_root();
-    test_db_chain_merge();
 }

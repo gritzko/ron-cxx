@@ -26,14 +26,7 @@ string scan (const TextFrame& frame) {
     return ret;
 }
 
-void test_rdt_ids () {
-    assert(uuid2rdt(Uuid{"lww"})==LWW_RDT);
-    assert(rdt2uuid(LWW_RDT).str()=="lww");
-}
-
 int main (int argn, char** args) {
-
-    test_rdt_ids();
 
     TextFrame::Builder ab_builder, c_builder, abc_builder, b2_builder,
     abbc_builder, ab2c_builder, ab2c_builder2;
@@ -46,28 +39,28 @@ int main (int argn, char** args) {
     c_builder.AppendNewOp(RAW, Uuid{"3+xyz"}, Uuid{"2+src"}, "c", "C");
     b2_builder.AppendNewOp(RAW, Uuid{"4+xyz"}, Uuid{"3+src"}, "b", "B2");
 
-    inputs.push_back(ab_builder.frame());
-    inputs.push_back(c_builder.frame());
+    inputs.push_back(ab_builder.Release());
+    inputs.push_back(c_builder.Release());
 
     Cursors i1 = cursors(inputs);
     lww.Merge(abc_builder, i1);
-    TextFrame abc = abc_builder.frame();
+    TextFrame abc = abc_builder.Release();
     assert(scan(abc)=="_,a,b,c");
 
-    inputs.push_back(b2_builder.frame());
+    inputs.push_back(b2_builder.Release());
 
     Cursors i2 = cursors(inputs);
     lww.Merge(abbc_builder, i2);
-    TextFrame abbc = abbc_builder.frame();
+    TextFrame abbc = abbc_builder.Release();
     assert(scan(abbc)=="_,a,b,c,b");
 
     lww.GC(ab2c_builder, abbc);
-    TextFrame ab2c = ab2c_builder.frame();
+    TextFrame ab2c = ab2c_builder.Release();
     assert(scan(ab2c)=="_,a,c,b");
 
     Cursors i3 = cursors(inputs);
     lww.MergeGC(ab2c_builder2, i3);
-    TextFrame ab2c2 = ab2c_builder2.frame();
+    TextFrame ab2c2 = ab2c_builder2.Release();
     assert(scan(ab2c2)=="_,a,c,b");
     assert(ab2c.data()==ab2c2.data());
 

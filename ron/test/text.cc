@@ -36,7 +36,7 @@ void test_basic_cycle () {
     builder.AppendNewOp(REDUCED, Uuid{TIME2}, Uuid{TIME1}, KEY, VALUE);
     // TODO escaping
     // TODO coverage: uuid, float, int
-    TextFrame frame = builder.frame();
+    TextFrame frame = builder.Release();
     const String &data = frame.data();
     assert(data.find(TIME1)!=string::npos);
     assert(data.find(KEY)!=string::npos);
@@ -115,7 +115,7 @@ void test_string_escapes () {
     String STR1{"'esc'"};
     String STR2{"=\r\n\t\\="};
     builder.AppendNewOp(RAW, Uuid{"1+a"}, Uuid{"2+b"}, STR1, STR2);
-    Frame cycle = builder.frame();
+    Frame cycle = builder.Release();
     Cursor cc = cycle.cursor();
     assert(cc.valid());
     assert(cc.string(2)==STR1);
@@ -144,7 +144,7 @@ void test_defaults () {
     Frame::Builder b;
     String RAW{"@12345+test :lww; @1234500001+test :12345+test 'key' 'value';"};
     b.AppendFrame(Frame{RAW});
-    Frame nice = b.frame();
+    Frame nice = b.Release();
     String CORRECT{"@12345+test :lww;\n 'key' 'value';\n"};
     assert(nice.data()==CORRECT);
     Cursor nc = nice.cursor();

@@ -23,6 +23,6 @@ int main (int argn, char** args) {
         Cursor{f3},
     };
     Frame now;
-    assert(MergeCursors<Frame>(now, META_RDT, inputs));
+    assert(MergeCursors<Frame>(now, META_META_FORM, inputs));
     assert(now.data()=="@now :34567+origin;\n@pubkey 'ABCDEF...';\n");
 }

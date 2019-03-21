@@ -13,7 +13,7 @@ void test_range_merge () {
     String M{"@1+A :lww 'int' 1, @2+A 'string' 'str';"};
     MemStore store;
     Frame a{A}, b{B}, m{M};
-    Key key{Uuid{"1+A"}, LWW_RDT};
+    Key key{Uuid{"1+A"}, LWW_FORM_UUID};
     assert(store.Merge(key, a));
     assert(store.Merge(key, b));
     Frame _m;
@@ -29,7 +29,7 @@ void test_iter () {
     String M{"@1+A :lww 'int' 1, @2+A 'string' 'str';"};
     MemStore store;
     Frame a{A}, b{B}, m{M};
-    Key key{Uuid{"1+A"}, LWW_RDT};
+    Key key{Uuid{"1+A"}, LWW_FORM_UUID};
     assert(store.Merge(key, a));
     assert(store.Merge(key, b));
     auto i = store.begin();

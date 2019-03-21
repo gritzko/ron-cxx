@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <unordered_map>
 #include "../ron/ron.hpp"
-#include "const.hpp"
 #include "merge.hpp"
 
 namespace ron {
@@ -130,7 +129,7 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
     RGA_ENTRY state{META_ENTRY};
     Cursor cur = frame.cursor();
     const Uuid root = cur.id();
-    if (cur.ref() != RGA_RDT_ID || root.version() != TIME)
+    if (cur.ref() != RGA_FORM_UUID || root.version() != TIME)
         return Status::BADARGS.comment("not an RGA/CT frame");
     inc_stack<Uuid> path{};
     inc_stack<fsize_t> positions{};

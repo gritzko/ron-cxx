@@ -1,8 +1,7 @@
 #ifndef CPP_KEY_HPP
 #define CPP_KEY_HPP
 
-#include <rocksdb/slice.h>
-#include "../rdt/rdt.hpp"
+#include "../ron/form.hpp"
 #include "../ron/uuid.hpp"
 
 namespace ron {
@@ -22,49 +21,46 @@ struct Key {
 
     static constexpr size_t SIZE = sizeof(bits);
 
-    Key(const Uuid id, RDT rdt)
-        : bits{
-              htobe64((id.origin()._64 << Word::FBS) | id.variety()),
-              htobe64((id.value()._64 << Word::FBS) | rdt),
-          } {}
+    Key() = default;
 
-    Key() : bits{0, 0} {}
+    Key(const Key& b) = default;
 
-    Key(uint64pair b) : bits{b} {}
+    explicit Key(uint64pair b) : bits{b} {}  // NOLINT
 
-    inline uint64pair be() const { return bits; }  // TODO comparable
+    Key(Uuid id, FORM form) {
+        bits.second = id.origin()._64 & Word::PAYLOAD_BITS;
+        bits.first = id.value()._64 & Word::PAYLOAD_BITS;
+        bits.second |= bits.first << 60;
+        bits.first >>= 4;
+        bits.first |= uint64_t(form) << 56;
+    }
+
+    Key(Uuid id, Uuid form) : Key{id, uuid2form(form)} {}
+
+    inline uint64pair be() const {
+        return uint64pair{htobe64(bits.first), htobe64(bits.second)};
+    }
 
     static Key be(Slice data) {
         assert(data.size() == sizeof(bits));
-        auto* b = reinterpret_cast<const uint64pair*>(data.data());
-        return Key{*b};
+        auto b = *reinterpret_cast<const uint64pair*>(data.data());
+        return Key{uint64pair{be64toh(b.first), be64toh(b.second)}};
     }
 
     inline bool operator<(const Key& b) const { return bits < b.bits; }
 
     inline bool operator==(const Key& b) const { return bits == b.bits; }
 
-    inline RDT rdt() const { return RDT(be64toh(bits.second) & 0xf); }
+    inline FORM form() const { return FORM(bits.first >> 56); }
 
-    inline Uuid id() const {
-        uint64pair h{be64toh(bits.first), be64toh(bits.second)};
+    inline Uuid id(enum UUID uuid_flags = TIME) const {
         return Uuid{
-            (h.second >> Word::FBS) | ((h.first & 0xf) << Word::PBS),
-            (h.first >> Word::FBS) | (uint64_t(FLAGS::TIME_UUID) << Word::PBS)};
-    }
-
-    Key(rocksdb::Slice data)
-        : bits{*(uint64_t*)data.data_,
-               *(uint64_t*)(data.data_ + sizeof(uint64_t))} {
-        assert(data.size() == sizeof(Key));
-    }
-
-    operator rocksdb::Slice() const {
-        return rocksdb::Slice{(char*)this, sizeof(Key)};
+            ((bits.first << 4) & Word::PAYLOAD_BITS) | (bits.second >> 60),
+            (bits.second & Word::PAYLOAD_BITS) | (uint64_t(uuid_flags) << 60)};
     }
 
     String str() const {
-        return '*' + rdt2uuid(rdt()).str() + '#' + id().str();
+        return '*' + form2uuid(form()).str() + '#' + id().str();
     }
 };
 

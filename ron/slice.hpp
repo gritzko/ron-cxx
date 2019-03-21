@@ -6,6 +6,7 @@
 #include <functional>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace ron {
 
@@ -21,6 +22,7 @@ constexpr Codepoint CP_ERROR{0};
 /** A byte string .ON strings are valid canonic UTF-8, but we treat them
     as byte buffers most of the time. For symbol-level work, use String16. */
 using String = std::string;
+using Strings = std::vector<String>;
 
 /** It would be nice to use unsigned chars everywhere. It is quite a footgun
     that C chars are either signed or unsigned. Unfortunately, std::string
@@ -30,6 +32,7 @@ using String = std::string;
 
 /** An UTF-16 string. Necessary for symbol-level operations. */
 using String16 = std::u16string;
+using Strings16 = std::vector<String16>;
 
 /** Frame size or any other size limited by frame size (e.g. string length) */
 using fsize_t = uint32_t;

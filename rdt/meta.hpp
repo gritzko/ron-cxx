@@ -7,6 +7,8 @@
 
 namespace ron {
 
+// FIXME(gritzko) do we need to merge meta records at all?
+// maybe to update span lengths? chain-based records are likely more efficient
 template <class Frame>
 class MetaRDT {
     static bool less_than(const Op &a, const Op &b) {

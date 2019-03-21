@@ -5,6 +5,7 @@ filename="ron/forms.txt"
 INDICES=""
 LONGS=""
 UUIDS=""
+PAIRS=""
 I=0
 NL="\\n"
 TAB="\\t"
@@ -18,6 +19,7 @@ while read -r LINE ; do
     NAMEUC=${NAME^^}
 
     IDX_NAME="$NAMEUC""_""$TYPE""_FORM"
+    UUID="$NAMEUC""_FORM_UUID"
     
     INDICES+="$NL"
     INDICES+="$TAB"
@@ -35,19 +37,26 @@ while read -r LINE ; do
     LONGS+="UL, // $NAME"
     LONGS+="$NL"
 
-    UUIDS+="const Uuid $NAMEUC""_FORM_UUID{FORMS[$IDX_NAME],0UL}; // NOLINT$NL"
+    UUIDS+="const Uuid $UUID{FORMS[$IDX_NAME],0UL}; // NOLINT$NL"
+
+    PAIRS+="$TAB""{ $UUID, $IDX_NAME },"
+    PAIRS+="$NL"
 
     I=$((I+1))
 
 done < $filename
 
-echo "enum form_idx_t : uint8_t {"
+echo "const uint64_t FORMS[] {"
+echo -e $LONGS
+echo "};"
+
+echo "enum FORM : uint8_t {"
 echo -e $INDICES
 echo -e "\tRESERVED_ANY_FORM = 200\n"
 echo "};"
-
-echo "const uint64_t FORMS[] {"
-echo -e $LONGS
+echo
+echo "const std::unordered_map<Uuid,FORM> UUID2FORM = {"
+echo -e $PAIRS
 echo "};"
 
 echo -e $UUIDS

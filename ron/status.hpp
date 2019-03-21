@@ -30,6 +30,7 @@ class Status {
     }
 
     bool operator==(const Status& b) const { return code() == b.code(); }
+    bool operator!=(const Status& b) const { return code() != b.code(); }
 
     String str() const { return code().value().str() + "\t" + comment(); }
 

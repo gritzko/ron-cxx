@@ -273,6 +273,7 @@ add_custom_target(
 
 #  D O C S
 
+if (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
 FIND_PACKAGE(Doxygen)
 IF(DOXYGEN_FOUND)
     SET(DOXYGEN_INPUT ${CMAKE_SOURCE_DIR})
@@ -281,6 +282,7 @@ IF(DOXYGEN_FOUND)
 ELSE(DOXYGEN_FOUND)
     MESSAGE(STATUS "WARNING: Doxygen not found - Reference manual will not be created")
 ENDIF(DOXYGEN_FOUND)
+endif()
 
 #  I N S T A L L
 install(TARGETS swarmdb_shared swarmdb_bin

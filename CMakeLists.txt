@@ -16,6 +16,7 @@ set(CRYPTO_PREFIX ${DEPS_PREFIX}/build/botan)
 set(snappy_PREFIX ${DEPS_PREFIX}/build/snappy)
 set(GFLAGS_PREFIX ${DEPS_PREFIX}/build/gflags)
 set(DMP_PREFIX ${DEPS_PREFIX}/build/dmp)
+set(BTREE_PREFIX ${DEPS_PREFIX}/build/btree)
 
 include_directories(${DEPS_PREFIX}/include/)
 link_directories(${DEPS_PREFIX}/lib/)
@@ -107,6 +108,24 @@ ExternalProject_Add(
     UPDATE_DISCONNECTED 1
 )
 
+set(BTREE_SRC ${BTREE_PREFIX}/src/cpp_btree_header/)
+set(BTREE_HEADERS
+    ${BTREE_SRC}/btree.h
+    ${BTREE_SRC}/btree_container.h
+    ${BTREE_SRC}/btree_map.h
+    ${BTREE_SRC}/btree_set.h
+)
+ExternalProject_Add(
+    cpp_btree_header
+    PREFIX ${BTREE_PREFIX}
+    URL https://github.com/swarmdb/cpp-btree/archive/1.0.1b.tar.gz
+    URL_HASH SHA1=a3bad7c27643351733309adecc624307ae86a653
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    BUILD_IN_SOURCE 1
+    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ${BTREE_HEADERS} ${DEPS_PREFIX}/include/
+    )
+add_dependencies(cpp_btree_header gflags_pro)
 
 #  L I B R O N
 
@@ -249,7 +268,7 @@ add_executable(swarmdb_bin
     ${SWARMDB_SOURCES}
     db/fs.cc
     db/main.cc
-    )
+)
 add_dependencies(swarmdb_bin rocksdb_static)
 target_link_libraries(swarmdb_bin pthread z bz2 snappy_static gflags_static botan_static ron_static rocksdb_static)
 SET_TARGET_PROPERTIES(swarmdb_bin PROPERTIES OUTPUT_NAME swarmdb)

@@ -64,6 +64,8 @@ struct Key {
     }
 };
 
+static Key END_KEY{FATAL, ERROR_NO_FORM};
+
 }  // namespace ron
 
 #endif  // CPP_KEY_HPP

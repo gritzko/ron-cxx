@@ -52,11 +52,13 @@ echo "};"
 
 echo "enum FORM : uint8_t {"
 echo -e $INDICES
-echo -e "\tRESERVED_ANY_FORM = 200\n"
+echo -e "\tRESERVED_ANY_FORM = 200,"
+echo -e "\tERROR_NO_FORM = 255"
 echo "};"
 echo
 echo "const std::unordered_map<Uuid,FORM> UUID2FORM = {"
 echo -e $PAIRS
+echo -e "{FATAL, ERROR_NO_FORM}"
 echo "};"
 
 echo -e $UUIDS

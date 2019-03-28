@@ -19,7 +19,9 @@ class TextFrame {
     explicit TextFrame(Slice data)
         : data_{(const char*)data.data(), data.size()} {}
 
-    TextFrame& operator=(const TextFrame& orig) = default;
+    void operator = (const TextFrame& orig) {
+        data_ = orig.data_;
+    }
 
     const String& data() const { return data_; }
 

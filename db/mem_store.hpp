@@ -70,7 +70,7 @@ class InMemoryStore {
             : store_{host.state_}, b_{}, e_{}, merged_{}, len_{0} {}
 
         Cursor Value() {
-            assert(b_ != e_);
+            if (b_==store_.end()) { return Cursor{std::string{}}; }
             if (len_ == 1) {
                 return Cursor{b_->second};
             }
@@ -80,16 +80,20 @@ class InMemoryStore {
             return Cursor{merged_};
         }
 
-        inline ron::Key Key() const { return b_->first; }
+        inline ron::Key Key() const {
+            return b_==store_.end() ? END_KEY : b_->first;
+        }
 
         Status Next() {
             if (len_ > 1 && !merged_.empty()) {
-                store_.insert(b_, Record{Key(), merged_});
                 store_.erase(b_, e_);
+                e_ = store_.insert(Record{Key(), std::move(merged_)});
+                ++e_;
             }
-            merged_.Clear();
             b_ = e_;
+            merged_.Clear();
             scroll();
+            return Status::OK;
         }
 
         Status SeekTo(ron::Key key, bool prev = false) {

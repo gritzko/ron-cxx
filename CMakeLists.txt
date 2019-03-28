@@ -221,6 +221,8 @@ list(APPEND SWARMDB_HEADERS
         db/replica.hpp
         db/map.hpp
         db/mem_store.hpp
+        db/rocks_store.hpp
+        db/joined_store.hpp
 )
 
 set(SWARMDB_SOURCES
@@ -261,6 +263,11 @@ add_executable(test23-rocks_store db/test/rocks.cc)
 add_dependencies(test23-rocks_store swarmdb_shared)
 target_link_libraries(test23-rocks_store swarmdb_shared rocksdb_static)
 add_test(ROCKSTORE test23-rocks_store)
+
+add_executable(test24-joinstore db/test/joinstore.cc)
+add_dependencies(test24-joinstore swarmdb_shared)
+target_link_libraries(test24-joinstore swarmdb_shared)
+add_test(JOINSTORE test24-joinstore)
 
 #  S W A R M D B  C L I
 

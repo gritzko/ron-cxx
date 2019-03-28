@@ -92,27 +92,47 @@ Status MergeCursorsInto(typename Frame::Builder &into, FORM rdt,
                         typename Frame::Cursors &inputs) {
     using Reducer = MasterRDT<Frame>;
     Reducer reducer;
-    using Cursor = typename Reducer::Cursor;
     return reducer.Merge(into, rdt, inputs);
+}
+
+template <class Frame>
+Status GetForm(FORM &ret, const typename Frame::Cursors &inputs) {
+    Uuid form{};
+    for (auto &i : inputs) {
+        if (!i.valid() || i.ref().version() != NAME) continue;
+        if (form.zero()) {
+            form = i.ref();
+        } else if (form != i.ref()) {
+            return Status::BADARGS.comment("merge fails: form id mismatch");
+        }
+    }
+    ret = uuid2form(form);  // if nothing found, 0-form, merge==concatenation
+    return Status::OK;
 }
 
 template <typename Frame>
 Status MergeCursors(Frame &ret, FORM rdt, typename Frame::Cursors &inputs) {
-    using Cursor = typename Frame::Cursor;
     using Builder = typename Frame::Builder;
-    using Reducer = MasterRDT<Frame>;
-    Reducer reducer;
     Builder builder;
     Status ok = MergeCursorsInto<Frame>(builder, rdt, inputs);
     if (ok) {
-        ret = builder.Release();
+        builder.Release(ret);
     }
     return ok;
 }
 
 template <typename Frame>
+Status MergeCursors(Frame &ret, typename Frame::Cursors &inputs) {
+    FORM form;
+    Status ok = GetForm(form, inputs);
+    if (!ok) {
+        return ok;
+    }
+    return MergeCursors(ret, form, inputs);
+}
+
+template <typename Frame>
 Status MergeStrings(String &ret, FORM rdt, Strings inputs) {
-    using Cursor = typename Frame::Cursor;
     using Cursors = typename Frame::Cursors;
     Frame frame;
     Cursors cursors;
@@ -122,6 +142,23 @@ Status MergeStrings(String &ret, FORM rdt, Strings inputs) {
         return ok;
     }
     std::swap(frame, ret);
+    return Status::OK;
+}
+
+template <typename Frame>
+Status MergeFrames(Frame &ret, std::vector<Frame> inputs) {
+    using Cursors = typename Frame::Cursors;
+    Cursors cursors;
+    for (int i = 0; i < inputs.size(); ++i) cursors.emplace_back(inputs[i]);
+    FORM rdt;
+    Status ok = GetForm<Frame>(rdt, cursors);
+    if (!ok) {
+        return ok;
+    }
+    ok = MergeCursors(ret, rdt, cursors);
+    if (!ok) {
+        return ok;
+    }
     return Status::OK;
 }
 
@@ -143,7 +180,6 @@ Status SplitFrame(const Frame input, typename Frame::Cursors &chains) {
 
 template <typename Frame>
 Status ObjectLogIntoState(typename Frame::Builder &into, const Frame input) {
-    using Cursor = typename Frame::Cursor;
     using Cursors = typename Frame::Cursors;
     Cursors chains;
     Status ok = SplitFrame<Frame>(input, chains);

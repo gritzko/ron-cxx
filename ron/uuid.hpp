@@ -168,7 +168,8 @@ struct Uuid : public Atom {
     Uuid(Slice data);
     // pre-parsed Uuid, got hints and correctness guarantee
     Uuid(char variety, const Slice& value, char version, const Slice& origin)
-        : Uuid{Word{ABC[variety], value}, Word{ABC[version], origin}} {}
+        : Uuid{Word{ABC[(int)variety], value},
+               Word{ABC[(int)version], origin}} {}
     explicit Uuid(const ron::String& buf) : Uuid{Slice{buf}} {}
     explicit Uuid(const char* buf)
         : Uuid{Slice{buf, static_cast<fsize_t>(strlen(buf))}} {}
@@ -215,7 +216,8 @@ struct Uuid : public Atom {
 
     inline static Uuid Parse(char variety, const Slice& value, char version,
                              const Slice& origin) {
-        return Uuid{Word{ABC[variety], value}, Word{ABC[version], origin}};
+        return Uuid{Word{ABC[(int)variety], value},
+                    Word{ABC[(int)version], origin}};
     }
 
     static Word HybridTime(time_t seconds, long int nanos = 0);

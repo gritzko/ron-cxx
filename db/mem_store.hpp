@@ -1,31 +1,31 @@
 #ifndef RON_INMEM_STORE_HPP
 #define RON_INMEM_STORE_HPP
-#include <map>
+#include <btree_map.h>
 #include <string>
 #include <vector>
 #include "../rdt/rdt.hpp"
 #include "../ron/ron.hpp"
 #include "key.hpp"
 
+using namespace btree;
+
 namespace ron {
 
-template <class Frame>
+template <class FrameP>
 class InMemoryStore {
+   public:
+    using Frame = FrameP;
     using Cursor = typename Frame::Cursor;
     using Builder = typename Frame::Builder;
     using Cursors = typename Frame::Cursors;
 
-    // TODO try https://github.com/JGRennison/cpp-btree
-    using Store = std::multimap<Key, Frame>;
-    using StoreIter = typename Store::const_iterator;
+   private:
+    using Map = btree_multimap<Key, Frame>;
+    using MapIter = typename Map::iterator;
 
-    Store state_;
+    Map state_;
 
-   public:
-    using Record = std::pair<Key, Frame>;
-    using Records = std::vector<Record>;
-
-    static Status Merge(Frame& merged, StoreIter from, StoreIter till) {
+    static Status Merge(Frame& merged, MapIter from, MapIter till) {
         static MasterRDT<Frame> rdt_{};
         Key key = from->first;
         Cursors inputs;
@@ -42,16 +42,21 @@ class InMemoryStore {
         return ok;
     }
 
-    class const_iterator {
-        Store& store_;
-        StoreIter b_, e_;
-        Record merged_;
+   public:
+    using Record = std::pair<Key, Frame>;
+    using Records = std::vector<Record>;
+
+    InMemoryStore() : state_{} {}
+
+    Status Open(std::string path, bool create = false) { return Status::OK; }
+
+    class Iterator {
+        Map& store_;
+        MapIter b_, e_;
+        Frame merged_;
         fsize_t len_;
         friend class InMemoryStore;
-        const_iterator(Store& store, StoreIter at)
-            : store_{store}, b_{at}, e_{at}, merged_{}, len_{0} {
-            scroll();
-        }
+
         void scroll() {
             len_ = 0;
             while (e_ != store_.end() && e_->first == b_->first) {
@@ -61,53 +66,53 @@ class InMemoryStore {
         }
 
        public:
-        const Record& operator*() {
+        Iterator(InMemoryStore& host)
+            : store_{host.state_}, b_{}, e_{}, merged_{}, len_{0} {}
+
+        Cursor Value() {
             assert(b_ != e_);
             if (len_ == 1) {
-                merged_ = *b_;
-            } else {
-                merged_.first = b_->first;
-                Merge(merged_.second, b_, e_);
+                return Cursor{b_->second};
             }
-            return merged_;
+            Cursors ins;
+            for (auto i = b_; i != e_; ++i) ins.push_back(Cursor{i->second});
+            Status ok = MergeCursors(merged_, Key().form(), ins);
+            return Cursor{merged_};
         }
-        void operator++() {
-            if (len_ > 1) {
-                store_.insert(b_, merged_);
+
+        inline ron::Key Key() const { return b_->first; }
+
+        Status Next() {
+            if (len_ > 1 && !merged_.empty()) {
+                store_.insert(b_, Record{Key(), merged_});
                 store_.erase(b_, e_);
             }
+            merged_.Clear();
             b_ = e_;
             scroll();
         }
-        inline bool operator==(const const_iterator& b) const {
-            return b_ == b.b_;
+
+        Status SeekTo(ron::Key key, bool prev = false) {
+            b_ = store_.lower_bound(key);
+            if (prev && b_->first != key) {
+                if (b_ != store_.begin()) {
+                    --b_;
+                } else {
+                    b_ = store_.end();
+                }
+            }
+            e_ = b_;
+            scroll();
+            return Status::OK;  //?! FIXME contract
         }
     };
 
-    const_iterator begin() { return const_iterator{state_, state_.begin()}; }
-
-    const_iterator end() { return const_iterator{state_, state_.end()}; }
-
-    InMemoryStore() : state_{} {}
-
-    Status Create(std::string path) { return Status::OK; }
-
-    Status Open(std::string path) { return Status::OK; }
-
-    Status Put(Key key, const Frame& state, Uuid branch = Uuid::NIL) {
-        auto r = state_.equal_range(key);
-        if (r.first != r.second) {
-            state_.erase(r.first, r.second);
-        }
-        return Merge(key, state, branch);
-    }
-
-    Status Merge(Key key, const Frame& change, Uuid branch = Uuid::NIL) {
+    Status Write(Key key, const Frame& change) {
         state_.insert(Record{key, change});
         return Status::OK;
     }
 
-    Status Get(Key key, Frame& result, Uuid branch = Uuid::NIL) {
+    Status Read(Key key, Frame& result) {
         Cursors inputs{};
         auto range = state_.equal_range(key);
         if (range.first == range.second) {
@@ -129,7 +134,7 @@ class InMemoryStore {
     Status Write(const Records& batch) {
         Status ok = Status::OK;
         for (auto i = batch.begin(); ok && i != batch.end(); ++i) {
-            ok = Merge(i->first, i->second);
+            ok = Write(i->first, i->second);
         }
         return ok;
     }

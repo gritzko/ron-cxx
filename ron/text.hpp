@@ -43,9 +43,9 @@ class TextFrame {
         explicit Cursor(const Slice data, bool advance = true)
             : data_{data},
               op_{TERM::RAW},
+              pos_{-1},
               at_{0},
               off_{0},
-              pos_{-1},
               cs{0},
               prev_id_{} {
             if (advance) Next();
@@ -195,7 +195,12 @@ class TextFrame {
         void AppendAmendedOp(const Cursor& cur, TERM newterm, const Uuid& newid,
                              const Uuid& newref);
 
-        const TextFrame Release() { return TextFrame{std::move(data_)}; }
+        TextFrame Release() { return TextFrame{std::move(data_)}; }
+
+        void Release(TextFrame& to) {
+            std::swap(data_, to.data_);
+            data_.clear();
+        }
 
         const String& data() const { return data_; }
 
@@ -237,6 +242,10 @@ class TextFrame {
     inline void swap(String& str) { std::swap(data_, str); }
 
     Status Split(std::vector<TextFrame>& to);
+
+    inline void Clear() { data_.clear(); }
+
+    inline bool empty() const { return data_.empty(); }
 
     // V A L U E  D E C O D E R S
 

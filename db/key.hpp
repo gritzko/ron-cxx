@@ -50,6 +50,7 @@ struct Key {
     inline bool operator<(const Key& b) const { return bits < b.bits; }
 
     inline bool operator==(const Key& b) const { return bits == b.bits; }
+    inline bool operator!=(const Key& b) const { return bits != b.bits; }
 
     inline FORM form() const { return FORM(bits.first >> 56); }
 

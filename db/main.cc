@@ -42,6 +42,16 @@ DEFINE_bool(h, false, "Show help");
 DECLARE_bool(help);
 DECLARE_string(helpmatch);
 
+/**
+
+    swarmdb test 'test/rdt/rga.ron'
+    swarmdb mount @todo$gritzko:txt as todo.md
+    swarmdb mount list
+    swarmdb peer ws://1.2.3.4/lj3Fhtc43
+    swarmdb see todo.md, push;
+
+ */
+
 Status CommandHashFrame(const string& filename);
 Status CommandWriteNewFrame(RonReplica& replica, const string& filename);
 Status CommandGetFrame(RonReplica& replica, const string& name);

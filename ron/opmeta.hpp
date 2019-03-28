@@ -14,12 +14,12 @@ namespace ron {
 struct OpMeta {
     /** op id */
     Uuid id;
-    /** op Merkle hash */
-    SHA2 hash;
-    /** the object (the causal tree the op is attached to) */
-    Uuid object;
     /** the type of the object */
     Uuid rdt;
+    /** the object (the causal tree the op is attached to) */
+    Uuid object;
+    /** op Merkle hash */
+    SHA2 hash;
     /** yarn-previous op id */
     Word prev;
     /** chain id */

@@ -258,7 +258,7 @@ Status Replica<Frame>::WriteNewObject(Records& save, Cursor& root,
     if (tip_meta.id.zero()) {
         return Status::CAUSEBREAK.comment("yarn unknown: " + ref.str());
     }
-    Uuid& prev = tip_meta.id;
+    // Uuid& prev = tip_meta.id;
     Builder chainlet;
     Status ok = ReadChainlet(chainlet, tip_meta, root);
     if (!ok) {
@@ -505,7 +505,6 @@ Status Replica<Frame>::Recv(Builder& resp, Cursor& c, Uuid branch) {
     Status ok = Status::OK;
 
     while (c.valid() && ok) {
-        const Uuid& id = c.id();
         if (c.id() == COMMENT_UUID) {
             ok = c.Next();
             continue;

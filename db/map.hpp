@@ -12,7 +12,8 @@ template <class Frame>
 class Replica;
 
 template <typename Frame>
-struct CSVMapper {
+class CSVMapper {
+   public:
     using Cursor = typename Frame::Cursor;
     using Builder = typename Frame::Builder;
     using HostReplica = Replica<Frame>;
@@ -30,7 +31,8 @@ struct CSVMapper {
 };
 
 template <typename Frame>
-struct TxtMapper {
+class TxtMapper {
+   public:
     using Cursor = typename Frame::Cursor;
     using Builder = typename Frame::Builder;
     using HostReplica = Replica<Frame>;

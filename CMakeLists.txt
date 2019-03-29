@@ -39,9 +39,7 @@ ExternalProject_Add(
     URL_HASH SHA1=4d42470afb7236fb0cf90f8bbb0cec588073c17c
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
     CMAKE_GENERATOR "Unix Makefiles"
-    BUILD_COMMAND $(MAKE) ${MAKE_FLAGS}
     BUILD_IN_SOURCE 1
-    INSTALL_COMMAND $(MAKE) ${MAKE_FLAGS} install
 )
 
 add_library(gflags_static STATIC IMPORTED)
@@ -55,10 +53,7 @@ ExternalProject_Add(
     URL_HASH SHA1=1ec676b842fc96fd8a95b03c12758935e7f257b0
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
     CMAKE_GENERATOR "Unix Makefiles"
-    BUILD_COMMAND $(MAKE) ${MAKE_FLAGS}
-
     BUILD_IN_SOURCE 1
-    INSTALL_COMMAND $(MAKE) ${MAKE_FLAGS} install
 )
 #include_directories(${snappy_PREFIX}/include)
 add_library(snappy_static STATIC IMPORTED)
@@ -74,7 +69,7 @@ ExternalProject_Add(
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
     CMAKE_CACHE_ARGS -DWITH_TESTS:BOOL=FALSE
     CMAKE_GENERATOR "Unix Makefiles"
-    BUILD_COMMAND $(MAKE) ${MAKE_FLAGS} rocksdb
+    BUILD_COMMAND ${CMAKE_COMMAND} ${CMAKE_ARGS} --build . --target rocksdb
     INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdb_pro/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
 )
 add_library(rocksdb_static STATIC IMPORTED)
@@ -90,7 +85,7 @@ ExternalProject_Add(
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ./configure.py --cxxflags=${CMAKE_CXX_FLAGS} --ldflags=${CMAKE_EXE_LINKER_FLAGS} --prefix=${DEPS_PREFIX} --minimized-build --enable-modules=sha3,sha2_64
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND $(MAKE) ${MAKE_FLAGS} libbotan-2.a
+    BUILD_COMMAND make ${MAKE_FLAGS} libbotan-2.a
     INSTALL_COMMAND cp -RL build/include/botan ${DEPS_PREFIX}/include && cp libbotan-2.a ${DEPS_PREFIX}/lib
     )
 ExternalProject_Get_Property(botan_pro install_dir)

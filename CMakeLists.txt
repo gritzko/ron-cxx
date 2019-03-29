@@ -40,6 +40,7 @@ ExternalProject_Add(
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
     CMAKE_GENERATOR "Unix Makefiles"
     BUILD_IN_SOURCE 1
+    BUILD_BYPRODUCTS ${DEPS_PREFIX}/lib/libgflags.a
 )
 
 add_library(gflags_static STATIC IMPORTED)
@@ -54,6 +55,7 @@ ExternalProject_Add(
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
     CMAKE_GENERATOR "Unix Makefiles"
     BUILD_IN_SOURCE 1
+    BUILD_BYPRODUCTS ${DEPS_PREFIX}/lib/libsnappy.a
 )
 #include_directories(${snappy_PREFIX}/include)
 add_library(snappy_static STATIC IMPORTED)
@@ -71,6 +73,7 @@ ExternalProject_Add(
     CMAKE_GENERATOR "Unix Makefiles"
     BUILD_COMMAND ${CMAKE_COMMAND} ${CMAKE_ARGS} --build . --target rocksdb
     INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdb_pro/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
+    BUILD_BYPRODUCTS ${DEPS_PREFIX}/lib/librocksdb.a
 )
 add_library(rocksdb_static STATIC IMPORTED)
 set_property(TARGET rocksdb_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/librocksdb.a)
@@ -87,6 +90,7 @@ ExternalProject_Add(
     BUILD_IN_SOURCE 1
     BUILD_COMMAND make ${MAKE_FLAGS} libbotan-2.a
     INSTALL_COMMAND cp -RL build/include/botan ${DEPS_PREFIX}/include && cp libbotan-2.a ${DEPS_PREFIX}/lib
+    BUILD_BYPRODUCTS ${DEPS_PREFIX}/lib/libbotan-2.a
     )
 ExternalProject_Get_Property(botan_pro install_dir)
 add_library(botan_static STATIC IMPORTED db/test/chains.cc)

@@ -26,7 +26,6 @@ class InMemoryStore {
     Map state_;
 
     static Status Merge(Frame& merged, MapIter from, MapIter till) {
-        static MasterRDT<Frame> rdt_{};
         Key key = from->first;
         Cursors inputs;
         while (from != till) {
@@ -34,12 +33,7 @@ class InMemoryStore {
             inputs.push_back(from->second.cursor());
             ++from;
         }
-        Builder out;
-        Status ok = rdt_.Merge(out, key.form(), inputs);
-        if (ok) {
-            merged = out.Release();
-        }
-        return ok;
+        return MergeCursors(merged, key.form(), inputs);
     }
 
    public:
@@ -69,25 +63,27 @@ class InMemoryStore {
         Iterator(InMemoryStore& host)
             : store_{host.state_}, b_{}, e_{}, merged_{}, len_{0} {}
 
-        Cursor Value() {
-            if (b_==store_.end()) { return Cursor{std::string{}}; }
+        Cursor value() {
+            if (b_ == store_.end()) {
+                return Cursor{std::string{}};
+            }
             if (len_ == 1) {
                 return Cursor{b_->second};
             }
             Cursors ins;
             for (auto i = b_; i != e_; ++i) ins.push_back(Cursor{i->second});
-            Status ok = MergeCursors(merged_, Key().form(), ins);
+            Status ok = MergeCursors(merged_, key().form(), ins);
             return Cursor{merged_};
         }
 
-        inline ron::Key Key() const {
-            return b_==store_.end() ? END_KEY : b_->first;
+        inline ron::Key key() const {
+            return b_ == store_.end() ? END_KEY : b_->first;
         }
 
         Status Next() {
             if (len_ > 1 && !merged_.empty()) {
                 store_.erase(b_, e_);
-                e_ = store_.insert(Record{Key(), std::move(merged_)});
+                e_ = store_.insert(Record{key(), std::move(merged_)});
                 ++e_;
             }
             b_ = e_;

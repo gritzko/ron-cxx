@@ -136,7 +136,9 @@ Status MergeStrings(String &ret, FORM rdt, Strings inputs) {
     using Cursors = typename Frame::Cursors;
     Frame frame;
     Cursors cursors;
-    for (int i = 0; i < inputs.size(); ++i) cursors.emplace_back(inputs[i]);
+    for (auto &i : inputs) {
+        cursors.emplace_back(i);
+    }
     Status ok = MergeCursors(frame, rdt, cursors);
     if (!ok) {
         return ok;

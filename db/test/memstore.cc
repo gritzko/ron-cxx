@@ -34,9 +34,9 @@ void test_iter () {
     assert(store.Write(key, b));
     MemStore::Iterator i{store};
     i.SeekTo(Key{});
-    auto c = i.Value();
+    auto c = i.value();
     i.Next();
-    assert(i.Key()==END_KEY);
+    assert(i.key()==END_KEY);
     auto mc = m.cursor();
     assert(CompareWithCursors(mc, c));
     //auto j = store.begin();

@@ -14,6 +14,7 @@ using ColumnFamilyHandle = rocksdb::ColumnFamilyHandle;
 using ColumnFamilyDescriptor = rocksdb::ColumnFamilyDescriptor;
 
 #define DB_ reinterpret_cast<rocksdb::DB*>(db_)
+#define IT_ reinterpret_cast<rocksdb::Iterator*>(i_)
 
 //  C O N V E R S I O N S
 
@@ -46,10 +47,10 @@ class RDTMerge : public rocksdb::MergeOperator {
     MasterRDT<Frame> reducer_;
 
    public:
-    typedef typename Frame::Batch Batch;
-    typedef typename Frame::Builder Builder;
-    typedef typename Frame::Cursor Cursor;
-    typedef typename Frame::Cursors Cursors;
+    using Batch = typename Frame::Batch;
+    using Builder = typename Frame::Builder;
+    using Cursor = typename Frame::Cursor;
+    using Cursors = typename Frame::Cursors;
 
     RDTMerge() : reducer_{} {}
 
@@ -102,7 +103,7 @@ class RDTMerge : public rocksdb::MergeOperator {
 //  S T O R E
 
 template <typename Frame>
-Status RocksDBStore<Frame>::Create(std::string home) {
+Status RocksDBStore<Frame>::Create(const String& home) {
     DBOptions db_options;
     db_options.create_if_missing = true;
     db_options.error_if_exists = true;
@@ -121,12 +122,13 @@ Status RocksDBStore<Frame>::Create(std::string home) {
         return Status::DB_FAIL.comment(status.ToString());
     }
     db_ = db;
+    // TODO it makes sense to name CFs by UUIDs, use CF 0 for metadata
 
     return Status::OK;
 }
 
 template <typename Frame>
-Status RocksDBStore<Frame>::Open(std::string home) {
+Status RocksDBStore<Frame>::Open(const String& home) {
     if (db_) return Status::BAD_STATE.comment("db open already");
 
     Options options;
@@ -138,12 +140,12 @@ Status RocksDBStore<Frame>::Open(std::string home) {
     options.merge_operator =
         shared_ptr<rocksdb::MergeOperator>{new RDTMerge<Frame>()};
 
-    typedef ColumnFamilyDescriptor CFD;
+    using CFD = ColumnFamilyDescriptor;
     vector<ColumnFamilyDescriptor> families;
     vector<ColumnFamilyHandle*> handles;
     ColumnFamilyOptions cfo{};
     families.push_back(CFD{rocksdb::kDefaultColumnFamilyName, cfo});
-    // TODO branches
+    // TODO list/load branches
 
     rocksdb::DB* db;
     auto ok = DB::Open(options, home, families, &handles, &db);
@@ -162,16 +164,16 @@ Status RocksDBStore<Frame>::Close() {
     return Status::OK;
 }
 
-template <typename Frame>
+/*template <typename Frame>
 Status RocksDBStore<Frame>::Put(Key key, const Frame& state, Uuid branch) {
     uint64pair be = key.be();
     rocksdb::Slice k = key2slice(be);
     auto ok = DB_->Put(wo(), k, state.data());
     return status(ok);
-}
+}*/
 
 template <typename Frame>
-Status RocksDBStore<Frame>::Merge(Key key, const Frame& change, Uuid branch) {
+Status RocksDBStore<Frame>::Write(Key key, const Frame& change) {
     auto be = key.be();
     Slice data{change.data()};
     auto ok = DB_->Merge(wo(), key2slice(be), slice(data));
@@ -179,20 +181,21 @@ Status RocksDBStore<Frame>::Merge(Key key, const Frame& change, Uuid branch) {
 }
 
 template <typename Frame>
-Status RocksDBStore<Frame>::Get(Key key, Frame& result, Uuid branch) {
+Status RocksDBStore<Frame>::Read(Key key, Frame& result) {
     uint64pair k = key.be();
     String ret;
     auto ok = DB_->Get(ro(), key2slice(k), &ret);
-    if (ok.IsNotFound()) return Status::NOT_FOUND;
-    if (ok.ok()) {
-        result.swap(ret);
-        return Status::OK;
-    } else {
+    if (ok.IsNotFound()) {
+        return Status::NOT_FOUND;
+    }
+    if (!ok.ok()) {
         return status(ok);
     }
+    result.swap(ret);
+    return Status::OK;
 }
 
-template <typename Frame>
+/*template <typename Frame>
 Status RocksDBStore<Frame>::Read(Key key, Builder& to, Uuid branch) {
     uint64pair k = key.be();
     String ret;
@@ -204,10 +207,10 @@ Status RocksDBStore<Frame>::Read(Key key, Builder& to, Uuid branch) {
     Cursor c{ret};
     to.AppendAll(c);  // TODO optimize
     return Status::OK;
-}
+}*/
 
 template <typename Frame>
-Status RocksDBStore<Frame>::Write(const Records& batch, Uuid branch) {
+Status RocksDBStore<Frame>::Write(const Records& batch) {
     rocksdb::WriteBatch b;
     for (auto i = batch.begin(); i != batch.end(); ++i) {
         uint64pair k = i->first.be();
@@ -221,43 +224,48 @@ Status RocksDBStore<Frame>::Write(const Records& batch, Uuid branch) {
 
 //  I T E R A T O R
 
-#define IT_ reinterpret_cast<rocksdb::Iterator*>(i_)
-
 template <typename Frame>
 RocksDBStore<Frame>::Iterator::Iterator(RocksDBStore& host) {
     void* db_ = host.db_;
     i_ = DB_->NewIterator(ro());
 }
 
-template <typename Frame>
+/*template <typename Frame>
 Status RocksDBStore<Frame>::Iterator::status() {
     rocksdb::Status ok = IT_->status();
     if (ok.ok() && !IT_->Valid()) return Status::ENDOFINPUT;
     return ron::status(ok);
-}
+}*/
 
 template <typename Frame>
-Key RocksDBStore<Frame>::Iterator::key() {
-    assert(IT_);
+Key RocksDBStore<Frame>::Iterator::key() const {
+    if (!IT_) {
+        return END_KEY;
+    }
     return slice2key(IT_->key());
 }
 
 template <typename Frame>
-ron::Slice RocksDBStore<Frame>::Iterator::value() {
-    assert(IT_);
-    return slice(IT_->value());
+typename Frame::Cursor RocksDBStore<Frame>::Iterator::value() {
+    if (!IT_) {
+        return typename Frame::Cursor{""};
+    }
+    return Cursor{slice(IT_->value())};
 }
 
 template <typename Frame>
 Status RocksDBStore<Frame>::Iterator::Next() {
-    assert(IT_);
+    if (!IT_) {
+        return Status::BAD_STATE.comment("closed");
+    }
     IT_->Next();
-    Status ok = status();
-    if (!ok) {
+    rocksdb::Status ok = IT_->status();
+    if (!ok.ok()) {
         delete IT_;
         i_ = nullptr;
+        return ron::status(ok);
     }
-    return ok;
+    return Status::OK;
 }
 
 template <typename Frame>
@@ -265,7 +273,7 @@ Status RocksDBStore<Frame>::Iterator::SeekTo(Key key, bool prev) {
     auto be = key.be();
     auto k = key2slice(be);
     prev ? IT_->SeekForPrev(k) : IT_->Seek(k);
-    return status();
+    return status(IT_->status());
 }
 
 template <typename Frame>
@@ -276,6 +284,9 @@ Status RocksDBStore<Frame>::Iterator::Close() {
     }
     return Status::OK;
 }
+
+template <class Frame>
+Status RocksDBStore<Frame>::OpenAll(Branches& branches, const String& path) {}
 
 template class RocksDBStore<TextFrame>;
 

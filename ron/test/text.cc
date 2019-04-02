@@ -32,8 +32,8 @@ void test_basic_cycle () {
     String LWW{"lww"};
     String KEY{"key"};
     String VALUE{"value"};
-    builder.AppendNewOp(HEADER, Uuid{TIME1}, Uuid{LWW});
-    builder.AppendNewOp(REDUCED, Uuid{TIME2}, Uuid{TIME1}, KEY, VALUE);
+    builder.AppendNewOp(Uuid{TIME1}, Uuid{LWW});
+    builder.AppendNewOp(Uuid{TIME2}, Uuid{TIME1}, KEY, VALUE);
     // TODO escaping
     // TODO coverage: uuid, float, int
     TextFrame frame = builder.Release();
@@ -47,9 +47,9 @@ void test_basic_cycle () {
     assert(op.size()==2);
     assert(op.ref()==Uuid{LWW});
     assert(op.id().str()==TIME1);
-    assert(cursor.term()==HEADER);
-    assert(cursor.Next());
     assert(cursor.term()==REDUCED);
+    assert(cursor.Next());
+    assert(cursor.term()==RAW);
     assert(op.ref()==TIME1);
     assert(op.id()==TIME2);
     assert(cursor.string(2)==KEY);
@@ -114,7 +114,7 @@ void test_string_escapes () {
     Builder builder;
     String STR1{"'esc'"};
     String STR2{"=\r\n\t\\="};
-    builder.AppendNewOp(RAW, Uuid{"1+a"}, Uuid{"2+b"}, STR1, STR2);
+    builder.AppendNewOp(Uuid{"1+a"}, Uuid{"2+b"}, STR1, STR2);
     Frame cycle = builder.Release();
     Cursor cc = cycle.cursor();
     assert(cc.valid());

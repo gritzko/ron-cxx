@@ -5,11 +5,11 @@ using namespace std;
 
 namespace ron {
 
-template <typename Frame>
-Status TxtMapper<Frame>::Read(Builder& response, Cursor& query, Uuid branch) {
+template <typename Commit>
+Status TxtMapper<Commit>::Read(Builder& response, Cursor& query, Commit& branch) {
     Uuid id = query.id().event();
     Frame state;
-    Status ok = store_.Get(Key{id, RGA_RDT_FORM}, state);
+    IFOK( branch.Read(Key{id, RGA_RDT_FORM}, state) );
     vector<bool> tombs;
     ScanRGA<Frame>(tombs, state);
     // now, walk em both
@@ -23,15 +23,14 @@ Status TxtMapper<Frame>::Read(Builder& response, Cursor& query, Uuid branch) {
         c.Next();
         pos++;
     }
-    response.AppendNewOp(RAW, id, TXT_MAP_ID, text);
+    response.AppendNewOp(id, TXT_MAP_ID, text);
     return Status::OK;
 }
 
-template <typename Frame>
-Status TxtMapper<Frame>::Write(Records& save, Cursor& query, Uuid branch) {
+template <typename Commit>
+Status TxtMapper<Commit>::Write(Builder& response, Cursor& query, Commit& branch) {
     return Status::NOT_IMPLEMENTED;
 }
 
-template class TxtMapper<TextFrame>;
 
 }  // namespace ron

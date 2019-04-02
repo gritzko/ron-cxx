@@ -60,11 +60,11 @@ class InMemoryStore {
         }
 
        public:
-        Iterator(InMemoryStore& host)
+        explicit Iterator(InMemoryStore& host)
             : store_{host.state_}, b_{}, e_{}, merged_{}, len_{0} {}
 
         Cursor value() {
-            if (b_ == store_.end()) {
+            if (len_ == 0) {
                 return Cursor{std::string{}};
             }
             if (len_ == 1) {
@@ -76,11 +76,12 @@ class InMemoryStore {
             return Cursor{merged_};
         }
 
-        inline ron::Key key() const {
-            return b_ == store_.end() ? END_KEY : b_->first;
-        }
+        inline ron::Key key() const { return len_ == 0 ? END_KEY : b_->first; }
 
         Status Next() {
+            if (len_ == 0) {
+                return Status::BAD_STATE.comment("invalid iterator");
+            }
             if (len_ > 1 && !merged_.empty()) {
                 store_.erase(b_, e_);
                 e_ = store_.insert(Record{key(), std::move(merged_)});
@@ -89,6 +90,7 @@ class InMemoryStore {
             b_ = e_;
             merged_.Clear();
             scroll();
+            // TODO merge'em here - kill merged_, len_, make val()/key() const
             return Status::OK;
         }
 
@@ -104,6 +106,11 @@ class InMemoryStore {
             e_ = b_;
             scroll();
             return Status::OK;  //?! FIXME contract
+        }
+
+        Status Close() {
+            b_ = e_ = store_.end();
+            len_ = 0;
         }
     };
 
@@ -140,6 +147,18 @@ class InMemoryStore {
     }
 
     Status Compact() { return Status::NOT_IMPLEMENTED; }
+
+    bool Release(Records& data) {
+        if (state_.empty()) {
+            return false;
+        }
+        auto i = state_.begin();
+        while (i != state_.end()) {
+            data.push_back(*i);
+            ++i;
+        }
+        return true;
+    }
 
     Status Close() {
         state_.clear();

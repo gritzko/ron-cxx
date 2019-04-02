@@ -17,7 +17,7 @@ std::vector<typename Frame::Cursor> cursors(const std::vector<Frame>& frames) {
 }
 
 template <typename Cursor>
-Status CompareWithCursors(Cursor& a, Cursor& b) {
+Status CompareWithCursors(Cursor a, Cursor b) {
     while (a.valid() && b.valid()) {
         while (a.valid() && a.id() == COMMENT_UUID) a.Next();
         while (b.valid() && b.id() == COMMENT_UUID) b.Next();

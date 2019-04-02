@@ -222,14 +222,14 @@ list(APPEND SWARMDB_HEADERS
         db/mem_store.hpp
         db/rocks_store.hpp
         db/joined_store.hpp
+        db/map/csv.hpp
+        db/map/txt.hpp
 )
 
 set(SWARMDB_SOURCES
         ${SWARMDB_HEADERS}
         db/replica.cc
         db/rocks_store.cc
-        db/map/csv.cc
-        db/map/txt.cc
     )
 
 add_library(swarmdb_shared SHARED

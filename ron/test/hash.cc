@@ -23,8 +23,8 @@ typedef Stream<IOSink> IOStream;
 
 void test_serialization () {
     Builder builder;
-    builder.AppendNewOp(HEADER, Uuid{"1+src"}, Uuid{"lww"});
-    builder.AppendNewOp(REDUCED, Uuid{"2+orig"}, Uuid{"1+src"}, "key", "value");
+    builder.AppendNewOp(Uuid{"1+src"}, Uuid{"lww"});
+    builder.AppendNewOp(Uuid{"2+orig"}, Uuid{"1+src"}, "key", "value");
     TextFrame frame = builder.Release();
     const string &data = frame.data();
     Cursor cur = frame.cursor();

@@ -32,8 +32,6 @@ void TextFrame::Builder::AppendOp(const Cursor& cur) {
     const Op& op = cur.op();
     WriteSpec(op.id(), op.ref());
     WriteValues(cur);
-    Write(TERM_PUNCT[op.term_]);
-    Write(NL);
 }
 
 template <typename Cursor2>
@@ -70,8 +68,7 @@ void TextFrame::Builder::AppendAmendedOp(const Cursor& cur, TERM newterm,
     const Op& op = cur.op();
     WriteSpec(newid, newref);
     WriteValues(cur);
-    Write(TERM_PUNCT[newterm]);
-    Write(NL);
+    WriteTerm(newterm);
 }
 
 template <typename Cursor2>
@@ -79,8 +76,6 @@ void TextFrame::Builder::AppendOp(const Cursor& cur) {
     const Op& op = cur.op();
     WriteSpec(op.id(), op.ref());
     WriteValues(cur);
-    Write(TERM_PUNCT[op.term()]);
-    Write(NL);
 }
 
 void TextFrame::Builder::WriteInt(int64_t value) {

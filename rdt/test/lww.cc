@@ -33,11 +33,11 @@ int main (int argn, char** args) {
     vector<TextFrame> inputs;
     TextLWW lww;
 
-    ab_builder.AppendNewOp(HEADER, Uuid{"1+src"}, Uuid{"lww"});
-    ab_builder.AppendNewOp(REDUCED, Uuid{"2+src"}, Uuid{"1+src"}, "a", "A");
-    ab_builder.AppendNewOp(REDUCED, Uuid{"3+src"}, Uuid{"2+src"}, "b", "B");
-    c_builder.AppendNewOp(RAW, Uuid{"3+xyz"}, Uuid{"2+src"}, "c", "C");
-    b2_builder.AppendNewOp(RAW, Uuid{"4+xyz"}, Uuid{"3+src"}, "b", "B2");
+    ab_builder.AppendNewOp(Uuid{"1+src"}, Uuid{"lww"});
+    ab_builder.AppendNewOp(Uuid{"2+src"}, Uuid{"1+src"}, "a", "A");
+    ab_builder.AppendNewOp(Uuid{"3+src"}, Uuid{"2+src"}, "b", "B");
+    c_builder.AppendNewOp(Uuid{"3+xyz"}, Uuid{"2+src"}, "c", "C");
+    b2_builder.AppendNewOp(Uuid{"4+xyz"}, Uuid{"3+src"}, "b", "B2");
 
     inputs.push_back(ab_builder.Release());
     inputs.push_back(c_builder.Release());

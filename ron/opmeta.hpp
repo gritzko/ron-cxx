@@ -121,7 +121,7 @@ struct OpMeta {
 
     template <class Builder>
     void Save(Builder& save) {
-        save.AppendNewOp(RAW, id, META_FORM_UUID, object, rdt, hash.base64());
+        save.AppendNewOp(id, META_FORM_UUID, object, rdt, hash.base64());
     }
 
     template <class Cursor>
@@ -141,7 +141,7 @@ struct OpMeta {
             return Status::BADSYNTAX.comment("no rdt id");
         }
         rdt = load.uuid(3);
-        hash;
+        // hash;
         return Status::OK;
     }
 

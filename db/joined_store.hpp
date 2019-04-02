@@ -90,7 +90,7 @@ class JoinedStore {
             return Status::OK;
         }
 
-        Cursor value() const {
+        Cursor value() {
             if (ai_.key() != at_) {
                 return bi_.value();
             }
@@ -99,8 +99,8 @@ class JoinedStore {
             }
             // have to merge then
             Cursors inputs;
-            inputs.push_back(ai_.Value());
-            inputs.push_back(bi_.Value());
+            inputs.push_back(ai_.value());
+            inputs.push_back(bi_.value());
             Status ok = MergeCursors<Frame>(merged_, inputs);
             // errors?!
             return Cursor{merged_};

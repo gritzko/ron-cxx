@@ -23,6 +23,8 @@ class TextFrame {
 
     const String& data() const { return data_; }
 
+    //  P A R S I N G
+
     class Cursor {
         /** Frame data; the cursor does not own the memory */
         Slice data_;
@@ -48,7 +50,9 @@ class TextFrame {
               off_{0},
               cs{0},
               prev_id_{} {
-            if (advance) Next();
+            if (advance) {
+                Next();
+            }
         }
         explicit Cursor(const String& str) : Cursor{Slice{str}} {}
         explicit Cursor(const TextFrame& host) : Cursor{host.data_} {}
@@ -113,9 +117,11 @@ class TextFrame {
         }
     };
 
-    struct Builder {
-        TERM term_;
+    //  S E R I A L I Z A T I O N
+
+    class Builder {
         Uuid prev_;
+        bool unterm_;
         /** Frame data (builder owns the memory) */
         String data_;
 
@@ -131,7 +137,7 @@ class TextFrame {
         void escape(String& escaped, const Slice& unescaped);
 
         // terminates the op
-        void WriteAtoms() { Write(TERM_PUNCT[term_]); }
+        void WriteAtoms() {}
 
         template <typename... Ts>
         void WriteAtoms(int64_t value, Ts... args) {
@@ -162,7 +168,17 @@ class TextFrame {
             WriteAtoms(args...);
         }
 
+        inline void WriteTerm(TERM term = REDUCED) {
+            if (unterm_) {
+                Write(TERM_PUNCT[term]);
+                Write(NL);
+                unterm_ = false;
+            }
+        }
+
         void WriteSpec(Uuid id, Uuid ref) {
+            WriteTerm();
+            unterm_ = true;
             bool seq_id = id == prev_.inc();
             if (!seq_id) {
                 Write(SPEC_PUNCT[EVENT]);
@@ -182,7 +198,7 @@ class TextFrame {
         void WriteValues(const Cursor2& cur);
 
        public:
-        Builder() : term_{RAW}, prev_{Uuid::NIL}, data_{} {}
+        Builder() : prev_{Uuid::NIL}, unterm_{false}, data_{} {}
 
         /** A shortcut method, avoids re-serialization of atoms. */
         void AppendOp(const Cursor& cur);
@@ -195,11 +211,27 @@ class TextFrame {
         void AppendAmendedOp(const Cursor& cur, TERM newterm, const Uuid& newid,
                              const Uuid& newref);
 
-        TextFrame Release() { return TextFrame{std::move(data_)}; }
+        /**  */
+        inline void EndChunk(TERM term = RAW) {
+            assert(term != REDUCED);
+            unterm_ = true;  // empty chunks are OK
+            WriteTerm(term);
+        }
 
-        void Release(TextFrame& to) {
-            std::swap(data_, to.data_);
+        void Release(String& to) {
+            if (unterm_) {
+                EndChunk();
+            }
+            std::swap(data_, to);
             data_.clear();
+        }
+
+        void Release(TextFrame& to) { Release(to.data_); }
+
+        TextFrame Release() {
+            TextFrame ret;
+            Release(ret);
+            return ret;
         }
 
         const String& data() const { return data_; }
@@ -208,20 +240,21 @@ class TextFrame {
 
         /** A convenience API method to add an op with any number of atoms. */
         template <typename... Ts>
-        void AppendNewOp(TERM term, Uuid id, Uuid ref, Ts... args) {
-            term_ = term;
+        void AppendNewOp(Uuid id, Uuid ref, Ts... args) {
             WriteSpec(id, ref);
             Write(' ');
             WriteAtoms(args...);
-            Write('\n');
         }
 
         /** A convenience method to add all ops from the cursor. */
         template <typename Cur>
         void AppendAll(Cur& cur) {
-            if (!cur.valid()) return;
+            if (!cur.valid()) {
+                return;
+            }
             do {
                 AppendOp(cur);
+                WriteTerm(cur.term());
             } while (cur.Next());
         }
 
@@ -237,7 +270,7 @@ class TextFrame {
 
     static constexpr char ESC = '\\';
 
-    typedef std::vector<Cursor> Cursors;
+    using Cursors = std::vector<Cursor>;
 
     inline void swap(String& str) { std::swap(data_, str); }
 
@@ -257,7 +290,7 @@ class TextFrame {
 namespace std {
 
 inline void swap(ron::TextFrame::Builder& builder, ron::String& str) {
-    swap(builder.data_, str);
+    builder.Release(str);
 }
 
 inline void swap(ron::TextFrame& f, ron::String& str) { f.swap(str); }

@@ -1,6 +1,7 @@
-#ifndef RON_INMEM_STORE_HPP
-#define RON_INMEM_STORE_HPP
+#ifndef RON_ROCKS_STORE_HPP
+#define RON_ROCKS_STORE_HPP
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "../rdt/rdt.hpp"
 #include "../ron/ron.hpp"
@@ -8,13 +9,15 @@
 
 namespace ron {
 
-template <class Frame>
+template <class FrameP>
 class RocksDBStore {
    public:
+    using Frame = FrameP;
     using Cursor = typename Frame::Cursor;
     using Builder = typename Frame::Builder;
     using Record = std::pair<Key, Frame>;
     using Records = std::vector<Record>;
+    using Branches = std::unordered_map<Uuid, RocksDBStore<Frame>>;
 
    private:
     /** rocksdb::DB*, but we hide rocksdb types inside the implementation
@@ -29,9 +32,8 @@ class RocksDBStore {
 
        public:
         explicit Iterator(RocksDBStore& host);
-        Status status();
-        Key key();
-        ron::Slice value();
+        Key key() const;
+        Cursor value();
         Status Next();
         Status SeekTo(Key key, bool prev = false);
         Status Close();
@@ -41,19 +43,17 @@ class RocksDBStore {
 
     inline bool open() const { return db_ != nullptr; }
 
-    Status Create(std::string path);
+    Status Create(const String& path);
 
-    Status Open(std::string path);
+    Status Open(const String& path);
 
-    Status Put(Key key, const Frame& state, Uuid branch = Uuid::NIL);
+    static Status OpenAll(Branches& branches, const String& path);
 
-    Status Merge(Key key, const Frame& change, Uuid branch = Uuid::NIL);
+    Status Write(Key key, const Frame& change);
 
-    Status Get(Key key, Frame& result, Uuid branch = Uuid::NIL);
+    Status Read(Key key, Frame& result);
 
-    Status Read(Key key, Builder& to, Uuid branch = Uuid::NIL);
-
-    Status Write(const Records& batch, Uuid branch = Uuid::NIL);
+    Status Write(const Records& batch);
 
     Status Close();
 };

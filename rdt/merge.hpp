@@ -116,6 +116,7 @@ class MergeCursor {
         do {
             output.AppendOp(*cursors_.front());
         } while (Next());
+        output.EndChunk();
         return Status::OK;
     }
 };

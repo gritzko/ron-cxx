@@ -124,7 +124,7 @@ Status MergeCursors(Frame &ret, FORM rdt, typename Frame::Cursors &inputs) {
 template <typename Frame>
 Status MergeCursors(Frame &ret, typename Frame::Cursors &inputs) {
     FORM form;
-    Status ok = GetForm(form, inputs);
+    Status ok = GetForm<Frame>(form, inputs);
     if (!ok) {
         return ok;
     }

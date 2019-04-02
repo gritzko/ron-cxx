@@ -16,7 +16,7 @@ typedef Replica<Frame> RonReplica;
 typedef Frame::Builder Builder;
 typedef Frame::Cursor Cursor;
 typedef vector<Frame> Frames;
-using StoreIterator = typename RonReplica::Store::Iterator;
+using StoreIterator = typename RonReplica::RocksStore::Iterator;
 
 // const Uuid COMMENT_UUID{1134907106097364992UL, 0};
 const Uuid OUT_UUID{935024688260710400UL, 0};
@@ -188,9 +188,9 @@ Status CommandDump(RonReplica& replica, const string& what) {
         if (rdt == ZERO_RAW_FORM) return Status::BADARGS.comment("unknown RDT");
     }
     if (!replica.open()) return Status::BAD_STATE.comment("db is not open?");
-    StoreIterator i{replica.db()};
-    i.SeekTo(Key{});
-    while (i.status()) {
+    StoreIterator i{replica.GetBranch(Uuid::NIL)};
+    IFOK(i.SeekTo(Key{}));
+    do {
         Key key{i.key()};
         // if (rdt != RDT_COUNT && key.rdt() != rdt) continue;
         String k;
@@ -203,11 +203,11 @@ Status CommandDump(RonReplica& replica, const string& what) {
         k.push_back('\n');
         int wok = write(STDOUT_FILENO, k.data(), k.size());
         if (wok != k.size()) return Status::IOFAIL;
-        Slice val = i.value();
-        wok = write(STDOUT_FILENO, val.data(), val.size());
+        Cursor val = i.value();
+        wok = write(STDOUT_FILENO, val.data().data(), val.size());
         if (wok != val.size()) return Status::IOFAIL;
         i.Next();
-    }
+    } while (i.Next());
     i.Close();
     return Status::OK;
 }
@@ -271,8 +271,9 @@ Status CommandWriteNewFrame(RonReplica& replica, const string& filename) {
     Cursor uc = unstamped.cursor();
     constexpr uint64_t MAXSEQ = 1 << 30;
     while (uc.valid()) {
-        if (uc.id().origin() != 0)
+        if (uc.id().origin() != ZERO) {
             return Status::BAD_STATE.comment("stamped already");
+        }
         Uuid id{now.value()._64 + uc.id().value()._64, now.origin()};
         Uuid ref{uc.ref()};
         if (ref.origin() == 0 && ref.value() < MAXSEQ) {
@@ -287,14 +288,20 @@ Status CommandWriteNewFrame(RonReplica& replica, const string& filename) {
 
     Cursor cur = stamped.cursor();
     Status ok = Status::OK;
-    RonReplica::Records batch;
+
+    typename RonReplica::RocksStore& branch = replica.GetBranch(Uuid::NIL);
+    typename RonReplica::MemStore mem{};
+    RonReplica::Commit batch{branch, mem};
+    Builder none;
 
     while (cur.valid() && ok) {
-        ok = replica.WriteNewChain(batch, cur);
+        ok = replica.WriteNewChain(none, cur, batch);
     }
 
     if (ok) {
-        replica.db().Write(batch);
+        typename RonReplica::Records writes;
+        mem.Release(writes);
+        branch.Write(writes);
     }
 
     return ok;
@@ -334,7 +341,7 @@ Status CommandHashFrame(const string& filename) {
             hash_op<Frame>(cur, sha2, sha2prev, sha2ref);
             tips[id.origin()] = id.value();  // TODO causality checks
             hashes[id] = sha2;
-            report.AppendNewOp(RAW, OpMeta::SHA2_UUID, id, sha2.base64());
+            report.AppendNewOp(OpMeta::SHA2_UUID, id, sha2.base64());
         } else if (id == OpMeta::SHA2_UUID && cur.size() > 2 &&
                    cur.type(2) == STRING) {
             string base64 = cur.string(2);

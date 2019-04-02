@@ -8,44 +8,35 @@
 
 namespace ron {
 
-template <class Frame>
-class Replica;
-
-template <typename Frame>
+template <typename Commit>
 class CSVMapper {
    public:
+    using Frame = typename Commit::Frame;
     using Cursor = typename Frame::Cursor;
     using Builder = typename Frame::Builder;
-    using HostReplica = Replica<Frame>;
     using mx_t = typename MatrixRDT<Frame>::mx_t;
-    using Store = RocksDBStore<Frame>;
-    using Records = typename Store::Records;
+    using Records = typename Commit::Records;
 
-    Store store_;
+    CSVMapper() = default;
 
-    explicit CSVMapper(RocksDBStore<Frame> store) : store_{store} {}
+    Status Read(Builder& response, Cursor& query, Commit& branch);
 
-    Status Read(Builder& response, Cursor& query, Uuid branch = Uuid::NIL);
-
-    Status Write(Records& save, Cursor& query, Uuid branch = Uuid::NIL);
+    Status Write(Builder& response, Cursor& query, Commit& branch);
 };
 
-template <typename Frame>
+template <typename Commit>
 class TxtMapper {
    public:
+    using Frame = typename Commit::Frame;
     using Cursor = typename Frame::Cursor;
     using Builder = typename Frame::Builder;
-    using HostReplica = Replica<Frame>;
-    using Store = RocksDBStore<Frame>;
-    using Records = typename Store::Records;
+    using Records = typename Commit::Records;
 
-    Store store_;
+    TxtMapper() = default;
 
-    explicit TxtMapper(RocksDBStore<Frame> store) : store_{store} {}
+    Status Read(Builder& response, Cursor& query, Commit& branch);
 
-    Status Read(Builder& response, Cursor& query, Uuid branch = Uuid::NIL);
-
-    Status Write(Records& save, Cursor& query, Uuid branch = Uuid::NIL);
+    Status Write(Builder& response, Cursor& query, Commit& branch);
 };
 
 }  // namespace ron

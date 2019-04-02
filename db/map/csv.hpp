@@ -2,12 +2,12 @@
 
 namespace ron {
 
-template <typename Frame>
-Status CSVMapper<Frame>::Read(Builder& response, Cursor& query, Uuid branch) {
+template <typename Commit>
+Status CSVMapper<Commit>::Read(Builder& response, Cursor& query, Commit& commit) {
     if (query.id() != CSV_MAP_ID) return Status::BAD_STATE;
     Uuid obj = query.ref();  // TODO version - Replica API
     Frame mx;
-    Status ok = store_.Get(Key{obj, MX_RDT_FORM}, mx);
+    Status ok = commit.Get(Key{obj, MX_RDT_FORM}, mx);
     if (!ok) return ok;
     // output, comma-separated, check strings
     Cursor i = mx.cursor();
@@ -44,8 +44,8 @@ Status CSVMapper<Frame>::Read(Builder& response, Cursor& query, Uuid branch) {
     return Status::OK;
 }
 
-template <typename Frame>
-Status CSVMapper<Frame>::Write(Records& save, Cursor& query, Uuid branch) {
+template <typename Commit>
+Status CSVMapper<Commit>::Write(Builder& response, Cursor& query, Commit &branch) {
     mx_t values{}, changes{};
     // fetch the state
     // scan, write changes (cancel too)

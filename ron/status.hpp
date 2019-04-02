@@ -64,6 +64,14 @@ class Status {
     static const Status REORDER;
 };
 
+#define IFOK(x)          \
+    {                    \
+        Status ok = (x); \
+        if (!ok) {       \
+            return ok;   \
+        }                \
+    }
+
 }  // namespace ron
 
 #endif

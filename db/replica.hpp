@@ -41,7 +41,7 @@ class Replica {
     Key nil_key() const { return Key{Uuid::NIL, META_RDT}; }
 
    public:
-    Replica() = default;
+    Replica(): db_(nullptr), trunk_(nullptr) {}
 
     //  L I F E C Y C L E
 

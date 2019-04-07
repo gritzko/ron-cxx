@@ -40,8 +40,8 @@ Status Replica<Frame>::Create(std::string home, Word origin) {
     ColumnFamilyOptions cf_options = CFOptions();
     Options options{db_options, cf_options};
 
-    auto status = DB::Open(options, home, &db_);
-    if (!status.ok()) return Status::DB_FAIL;
+    auto result = DB::Open(options, home, &db_);
+    if (!result.ok()) return status(result);
 
     trunk_ = nullptr;  // db_->DefaultColumnFamily();
 

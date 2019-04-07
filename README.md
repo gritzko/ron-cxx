@@ -8,12 +8,13 @@ This is a Ragel/C++ implementation of:
 * Replicated Object Notation (parsers/builders),
 * Replicated Data Types (RON based CRDTs),
 * libswarmdb.so, an embedded syncable database (RocksDB-based),
-* swarmdb, a standalone RON-native database.
+* swarmdb, a standalone RON key-value db (a CLI to the lib).
 
 Still in the works / planned / envisioned:
 
 * libswarmdb bindings for higher-level languages
     - [ ] Java
+    - [ ] Rust
     - [ ] node.js
     - [ ] Python
     - [ ] Go
@@ -24,20 +25,24 @@ Still in the works / planned / envisioned:
 ## Building
 
 * ensure you have
-    * a C++ compiler,
+    * a C++ compiler (a recent clang is preferred),
     * make,
-    * CMake,
+    * CMake (3.9.4 and up),
     * git
-* mkdir build && cd build
-* cmake ..
-* make
+* `mkdir build && cd build`
+* `cmake ..`
+* `make`
+
+(ninja and xcode builds are supported too, e.g. `cmake .. -G ninja && ninja`)
 
 Static dependencies are fetched from the net and built by cmake:
 
 * rocksdb,
 * gflags,
 * botan-2,
-* snappy.
+* snappy,
+* myers-diff,
+* cpp-btree.
 
 Dymanic dependencies are taken from the system:
 

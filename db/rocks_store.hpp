@@ -18,18 +18,24 @@ class RocksDBStore {
     using Record = std::pair<Key, Frame>;
     using Records = std::vector<Record>;
     using Branches = std::unordered_map<Uuid, RocksDBStore<Frame>>;
+    using SharedPtr = std::shared_ptr<void>;
 
    private:
     /** rocksdb::DB*, but we hide rocksdb types inside the implementation
-     * because that is the entire point of this class */
-    void* db_;
-    std::vector<void*> cfs_;
+     * because that is the entire point of this class. */
+    SharedPtr db_;
+
+    /** rocksdb::ColumnFamilyHandle*, the column family to use.
+     * shared_ptr<void> works, thanks to type erasure.  */
+    SharedPtr cf_;
+
+    RocksDBStore(SharedPtr db, SharedPtr cf) : db_{db}, cf_{cf} {}
 
    public:
-    RocksDBStore() : db_{nullptr} {}
+    RocksDBStore() : db_{nullptr}, cf_{nullptr} {}
 
     class Iterator {
-        void* i_;
+        SharedPtr i_;
 
        public:
         explicit Iterator(RocksDBStore& host);

@@ -13,8 +13,6 @@ using ColumnFamilyOptions = rocksdb::ColumnFamilyOptions;
 using ColumnFamilyHandle = rocksdb::ColumnFamilyHandle;
 using ColumnFamilyDescriptor = rocksdb::ColumnFamilyDescriptor;
 
-#define DB_ reinterpret_cast<rocksdb::DB*>(db_)
-#define IT_ reinterpret_cast<rocksdb::Iterator*>(i_)
 
 //  C O N V E R S I O N S
 
@@ -121,10 +119,21 @@ Status RocksDBStore<Frame>::Create(const String& home) {
     if (!status.ok()) {
         return Status::DB_FAIL.comment(status.ToString());
     }
+    // TODO init meta records here
     delete db;
 
     // TODO it makes sense to name CFs by UUIDs, use CF 0 for metadata
     return Open(home);
+}
+
+template <class Frame>
+void init_options(rocksdb::Options& options) {
+    options.create_if_missing = false;
+    options.error_if_exists = false;
+    options.max_total_wal_size = UINT64_MAX;
+    options.WAL_size_limit_MB = 1UL << 30U;
+    options.WAL_ttl_seconds = UINT64_MAX;
+    options.merge_operator = make_shared<RDTMerge<Frame>>();
 }
 
 template <typename Frame>
@@ -132,43 +141,23 @@ Status RocksDBStore<Frame>::Open(const String& home) {
     if (db_) return Status::BAD_STATE.comment("db open already");
 
     Options options;
-    options.create_if_missing = false;
-    options.error_if_exists = false;
-    options.max_total_wal_size = UINT64_MAX;
-    options.WAL_size_limit_MB = 1UL << 30U;
-    options.WAL_ttl_seconds = UINT64_MAX;
-    options.merge_operator = make_shared<RDTMerge<Frame>>();
-
-    using CFD = ColumnFamilyDescriptor;
-    vector<ColumnFamilyDescriptor> families;
-    vector<ColumnFamilyHandle*> handles;
-    ColumnFamilyOptions cfo{};
-    cfo.merge_operator = make_shared<RDTMerge<Frame>>();
-    families.push_back(CFD{rocksdb::kDefaultColumnFamilyName, cfo});
-    // TODO list/load branches
+    init_options<Frame>(options);
 
     rocksdb::DB* db;
-    auto ok = DB::Open(options, home, families, &handles, &db);
-    if (ok.ok()) {
-        db_ = db;
-        for (auto* cf : handles) {
-            cfs_.push_back((void*)cf);
-        }
+    auto ok = DB::Open(options, home, &db);
+    if (!ok.ok()) {
+        return status(ok);
     }
-    return status(ok);
+    db_.reset(db);
+    // cf_.reset(db->DefaultColumnFamily());
+    return Status::OK;
 }
 
 template <typename Frame>
 Status RocksDBStore<Frame>::Close() {
-    if (db_) {
-        for (auto* cf : cfs_) {
-            auto c = (ColumnFamilyHandle*)cf;
-            delete c;
-        }
-        cfs_.clear();
-        delete DB_;
-        db_ = nullptr;
-    }
+    if (!db_.use_count()) return Status::BAD_STATE.comment("already closed");
+    cf_.reset();
+    db_.reset();
     return Status::OK;
 }
 
@@ -183,8 +172,9 @@ Status RocksDBStore<Frame>::Put(Key key, const Frame& state, Uuid branch) {
 template <typename Frame>
 Status RocksDBStore<Frame>::Write(Key key, const Frame& change) {
     auto be = key.be();
+    auto db = static_pointer_cast<rocksdb::DB>(db_);
     Slice data{change.data()};
-    auto ok = DB_->Merge(wo(), key2slice(be), slice(data));
+    auto ok = db->Merge(wo(), key2slice(be), slice(data));
     return status(ok);
 }
 
@@ -192,7 +182,8 @@ template <typename Frame>
 Status RocksDBStore<Frame>::Read(Key key, Frame& result) {
     uint64pair k = key.be();
     String ret;
-    auto ok = DB_->Get(ro(), key2slice(k), &ret);
+    auto db = static_pointer_cast<rocksdb::DB>(db_);
+    auto ok = db->Get(ro(), key2slice(k), &ret);
     if (ok.IsNotFound()) {
         return Status::NOT_FOUND;
     }
@@ -226,7 +217,8 @@ Status RocksDBStore<Frame>::Write(const Records& batch) {
         rocksdb::Slice slice{data};
         b.Merge(key2slice(k), slice);
     }
-    auto ok = DB_->Write(wo(), &b);
+    auto db = static_pointer_cast<rocksdb::DB>(db_);
+    auto ok = db->Write(wo(), &b);
     return status(ok);
 }
 
@@ -234,8 +226,9 @@ Status RocksDBStore<Frame>::Write(const Records& batch) {
 
 template <typename Frame>
 RocksDBStore<Frame>::Iterator::Iterator(RocksDBStore& host) {
-    void* db_ = host.db_;
-    i_ = DB_->NewIterator(ro());
+    auto db = static_pointer_cast<rocksdb::DB>(host.db_);
+    auto i = db->NewIterator(ro());
+    i_ = shared_ptr<rocksdb::Iterator>(i);
 }
 
 /*template <typename Frame>
@@ -247,30 +240,32 @@ Status RocksDBStore<Frame>::Iterator::status() {
 
 template <typename Frame>
 Key RocksDBStore<Frame>::Iterator::key() const {
-    if (!IT_) {
+    if (!i_) {
         return END_KEY;
     }
-    return slice2key(IT_->key());
+    auto i = static_pointer_cast<const rocksdb::Iterator>(i_);
+    return slice2key(i->key());
 }
 
 template <typename Frame>
 typename Frame::Cursor RocksDBStore<Frame>::Iterator::value() {
-    if (!IT_) {
+    if (!i_) {
         return typename Frame::Cursor{""};
     }
-    return Cursor{slice(IT_->value())};
+    auto i = static_pointer_cast<const rocksdb::Iterator>(i_);
+    return Cursor{slice(i->value())};
 }
 
 template <typename Frame>
 Status RocksDBStore<Frame>::Iterator::Next() {
-    if (!IT_) {
+    if (!i_) {
         return Status::BAD_STATE.comment("closed");
     }
-    IT_->Next();
-    rocksdb::Status ok = IT_->status();
+    auto i = static_pointer_cast<rocksdb::Iterator>(i_);
+    i->Next();
+    rocksdb::Status ok = i->status();
     if (!ok.ok()) {
-        delete IT_;
-        i_ = nullptr;
+        Close();
         return ron::status(ok);
     }
     return Status::OK;
@@ -278,23 +273,67 @@ Status RocksDBStore<Frame>::Iterator::Next() {
 
 template <typename Frame>
 Status RocksDBStore<Frame>::Iterator::SeekTo(Key key, bool prev) {
+    if (!i_) {
+        return Status::BAD_STATE.comment("closed");
+    }
+    auto i = static_pointer_cast<rocksdb::Iterator>(i_);
     auto be = key.be();
     auto k = key2slice(be);
-    prev ? IT_->SeekForPrev(k) : IT_->Seek(k);
-    return status(IT_->status());
-}
-
-template <typename Frame>
-Status RocksDBStore<Frame>::Iterator::Close() {
-    if (i_) {
-        delete IT_;
-        i_ = nullptr;
+    prev ? i->SeekForPrev(k) : i->Seek(k);
+    auto ok = i->status();
+    if (!ok.ok()) {
+        Close();
+        return ron::status(ok);
     }
     return Status::OK;
 }
 
+template <typename Frame>
+Status RocksDBStore<Frame>::Iterator::Close() {
+    i_.reset();
+    return Status::OK;
+}
+
 template <class Frame>
-Status RocksDBStore<Frame>::OpenAll(Branches& branches, const String& path) {}
+Status RocksDBStore<Frame>::OpenAll(Branches& branches, const String& path) {
+    Options options;
+    using CFD = ColumnFamilyDescriptor;
+    vector<ColumnFamilyDescriptor> families;
+    vector<ColumnFamilyHandle*> handles;
+    ColumnFamilyOptions cfo{};
+    cfo.merge_operator = make_shared<RDTMerge<Frame>>();
+
+    init_options<Frame>(options);
+
+    vector<std::string> cfnames;
+    auto ok = rocksdb::DB::ListColumnFamilies(options, path, &cfnames);
+    if (!ok.ok()) {
+        return status(ok);
+    }
+    for (auto& name : cfnames) {
+        families.push_back(CFD{name, cfo});
+    }
+
+    rocksdb::DB* db;
+    ok = DB::Open(options, path, families, &handles, &db);
+    if (!ok.ok()) {
+        return status(ok);
+    }
+
+    branches.clear();
+    branches.reserve(families.size());
+
+    SharedPtr dbsh{db};
+    for (auto* cf : handles) {
+        SharedPtr cfsh{cf};
+        auto name = cf->GetName();
+        Uuid id{name};
+        RocksDBStore<Frame> next{dbsh, cfsh};
+        branches.emplace(id, next);
+    }
+
+    return Status::OK;
+}
 
 template class RocksDBStore<TextFrame>;
 

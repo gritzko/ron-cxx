@@ -33,7 +33,7 @@ TEST (Store, range_merge) {
     ASSERT_TRUE(store.Create("test23_range_"+now.str()));
     ASSERT_TRUE(store.open());
     Frame a{frame_a}, b{frame_b}, correct{frame_merged};
-    Key key{Uuid{"1+frame_a"}, LWW_FORM_UUID};
+    Key key{Uuid{"1+A"}, LWW_FORM_UUID};
     ASSERT_TRUE(IsOK(store.Write(key, a)));
     ASSERT_TRUE(store.Write(key, b));
     Frame rocks_merged;
@@ -41,7 +41,7 @@ TEST (Store, range_merge) {
     ASSERT_TRUE(CompareFrames(correct, rocks_merged));
     ASSERT_TRUE(store.Read(key, rocks_merged));
     ASSERT_TRUE(CompareFrames(correct, rocks_merged));
-    store.Close();
+    //store.Close();
 }
 
 TEST (Store, iterator) {
@@ -52,7 +52,7 @@ TEST (Store, iterator) {
     auto now = Uuid::Now();
     ASSERT_TRUE(store.Create("test23_iter_"+now.str()));
     Frame a{frame_a}, b{frame_b}, correct{frame_merged};
-    Key key{Uuid{"1+frame_a"}, LWW_FORM_UUID};
+    Key key{Uuid{"1+A"}, LWW_FORM_UUID};
     ASSERT_TRUE(store.Write(key, a));
     ASSERT_TRUE(store.Write(key, b));
     Store::Iterator i{store};

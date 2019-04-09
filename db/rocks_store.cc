@@ -121,10 +121,10 @@ Status RocksDBStore<Frame>::Create(const String& home) {
     if (!status.ok()) {
         return Status::DB_FAIL.comment(status.ToString());
     }
-    db_ = db;
-    // TODO it makes sense to name CFs by UUIDs, use CF 0 for metadata
+    delete db;
 
-    return Status::OK;
+    // TODO it makes sense to name CFs by UUIDs, use CF 0 for metadata
+    return Open(home);
 }
 
 template <typename Frame>
@@ -137,13 +137,13 @@ Status RocksDBStore<Frame>::Open(const String& home) {
     options.max_total_wal_size = UINT64_MAX;
     options.WAL_size_limit_MB = 1UL << 30U;
     options.WAL_ttl_seconds = UINT64_MAX;
-    options.merge_operator =
-        shared_ptr<rocksdb::MergeOperator>{new RDTMerge<Frame>()};
+    options.merge_operator = make_shared<RDTMerge<Frame>>();
 
     using CFD = ColumnFamilyDescriptor;
     vector<ColumnFamilyDescriptor> families;
     vector<ColumnFamilyHandle*> handles;
     ColumnFamilyOptions cfo{};
+    cfo.merge_operator = make_shared<RDTMerge<Frame>>();
     families.push_back(CFD{rocksdb::kDefaultColumnFamilyName, cfo});
     // TODO list/load branches
 
@@ -151,6 +151,9 @@ Status RocksDBStore<Frame>::Open(const String& home) {
     auto ok = DB::Open(options, home, families, &handles, &db);
     if (ok.ok()) {
         db_ = db;
+        for (auto* cf : handles) {
+            cfs_.push_back((void*)cf);
+        }
     }
     return status(ok);
 }
@@ -158,6 +161,11 @@ Status RocksDBStore<Frame>::Open(const String& home) {
 template <typename Frame>
 Status RocksDBStore<Frame>::Close() {
     if (db_) {
+        for (auto* cf : cfs_) {
+            auto c = (ColumnFamilyHandle*)cf;
+            delete c;
+        }
+        cfs_.clear();
         delete DB_;
         db_ = nullptr;
     }

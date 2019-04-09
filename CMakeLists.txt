@@ -17,6 +17,7 @@ set(snappy_PREFIX ${DEPS_PREFIX}/build/snappy)
 set(GFLAGS_PREFIX ${DEPS_PREFIX}/build/gflags)
 set(DMP_PREFIX ${DEPS_PREFIX}/build/dmp)
 set(BTREE_PREFIX ${DEPS_PREFIX}/build/btree)
+set(GTEST_PREFIX ${DEPS_PREFIX}/build/gtest)
 
 include_directories(${DEPS_PREFIX}/include/)
 link_directories(${DEPS_PREFIX}/lib/)
@@ -125,6 +126,20 @@ ExternalProject_Add(
     INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ${BTREE_HEADERS} ${DEPS_PREFIX}/include/
     )
 add_dependencies(cpp_btree_header gflags_pro)
+
+ExternalProject_Add(
+    gtest_pro
+    PREFIX ${GTEST_PREFIX}
+    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
+    CMAKE_GENERATOR "Unix Makefiles"
+    URL https://github.com/google/googletest/archive/release-1.8.1.tar.gz
+    URL_HASH SHA1=152b849610d91a9dfa1401293f43230c2e0c33f8
+    BUILD_IN_SOURCE 1
+    BUILD_BYPRODUCTS ${DEPS_PREFIX}/lib/libgtest.a
+)
+add_library(gtest_static STATIC IMPORTED)
+set_property(TARGET gtest_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/libgtest.a)
+add_dependencies(gtest_static gtest_pro)
 
 #  L I B R O N
 
@@ -261,7 +276,7 @@ add_test(MEMSTORE test22-memstore)
 
 add_executable(test23-rocks_store db/test/rocks.cc)
 add_dependencies(test23-rocks_store swarmdb_shared)
-target_link_libraries(test23-rocks_store swarmdb_shared rocksdb_static)
+target_link_libraries(test23-rocks_store swarmdb_shared rocksdb_static gtest_static)
 add_test(ROCKSTORE test23-rocks_store)
 
 add_executable(test24-joinstore db/test/joinstore.cc)

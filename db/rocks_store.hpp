@@ -23,6 +23,7 @@ class RocksDBStore {
     /** rocksdb::DB*, but we hide rocksdb types inside the implementation
      * because that is the entire point of this class */
     void* db_;
+    std::vector<void*> cfs_;
 
    public:
     RocksDBStore() : db_{nullptr} {}
@@ -56,6 +57,8 @@ class RocksDBStore {
     Status Write(const Records& batch);
 
     Status Close();
+
+    ~RocksDBStore() { Close(); }
 };
 
 }  // namespace ron

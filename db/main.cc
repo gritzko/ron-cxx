@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "../rdt/rdt.hpp"
 #include "../ron/ron.hpp"
+#include "fs.hpp"
 #include "replica.hpp"
 #include "rocksdb/db.h"
 
@@ -58,10 +59,6 @@ Status CommandGetFrame(RonReplica& replica, const string& name);
 Status CommandQuery(RonReplica& replica, const string& name);
 Status CommandDump(RonReplica& replica, const string& prefix);
 Status CommandTest(RonReplica& replica, const string& file);
-
-string basename(string const& pathname);
-Status rm_dir(string path);
-bool file_exists(const std::string& name);
 Status CompareFrames(const Frame& a, const Frame& b);
 
 Status RunCommands() {
@@ -72,7 +69,7 @@ Status RunCommands() {
     if (!FLAGS_test.empty() && FLAGS_store.empty()) {
         store = "test_" + basename(FLAGS_test);
         if (file_exists(store)) {
-            ok = rm_dir(store);
+            ok = rm_dir(store.c_str());
             if (!ok) return ok;
         }
         rm_on_exit = true;
@@ -104,7 +101,7 @@ Status RunCommands() {
     }
 
     if (replica.open()) replica.Close();
-    if (rm_on_exit && ok) ok = rm_dir(store);
+    if (rm_on_exit && ok) ok = rm_dir(store.c_str());
 
     return ok;
 }

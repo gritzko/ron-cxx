@@ -186,6 +186,7 @@ Status RocksDBStore<Frame>::Put(Key key, const Frame& state, Uuid branch) {
 
 template <typename Frame>
 Status RocksDBStore<Frame>::Write(Key key, const Frame& change) {
+    if (!db_) return Status::BAD_STATE.comment("closed");
     auto be = key.be();
     auto db = static_pointer_cast<rocksdb::DB>(db_);
     auto cf = static_pointer_cast<rocksdb::ColumnFamilyHandle>(cf_);
@@ -197,6 +198,7 @@ Status RocksDBStore<Frame>::Write(Key key, const Frame& change) {
 
 template <typename Frame>
 Status RocksDBStore<Frame>::Read(Key key, Frame& result) {
+    if (!db_) return Status::BAD_STATE.comment("closed");
     uint64pair k = key.be();
     String ret;
     auto db = static_pointer_cast<rocksdb::DB>(db_);

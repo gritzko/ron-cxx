@@ -27,9 +27,9 @@ static int rmFiles(const char* pathname, const struct stat* sbuf, int type,
 }
 #include <ftw.h>
 
-Status rm_dir(string path) {
-    if (nftw(path.c_str(), rmFiles, 10, FTW_DEPTH | FTW_MOUNT | FTW_PHYS) < 0) {
-        return Status::IOFAIL.comment("can't rmdir");
+Status rm_dir(const char* path) {
+    if (nftw(path, rmFiles, 10, FTW_DEPTH | FTW_MOUNT | FTW_PHYS) < 0) {
+        return Status::IOFAIL.comment(strerror(errno));
     }
     return Status::OK;
 }
@@ -39,9 +39,27 @@ bool file_exists(const std::string& name) {
     return (stat(name.c_str(), &buffer) == 0);
 }
 
-Status cdtmp() {
-    const char* tmp = std::tmpnam(nullptr);
-    mkdir(tmp, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    chdir(tmp);
-    return Status::OK;  // yeah
-}
+class TmpDir {
+    String cwd_;
+    String tmp_;
+    static constexpr size_t MAX_PATH_LEN{1024};
+
+   public:
+    TmpDir(String name = "test") {
+        char dir[MAX_PATH_LEN];
+        getcwd(dir, MAX_PATH_LEN);
+        cwd_ = String{dir};
+        sprintf(dir, "/tmp/%s.XXXXXX", name.c_str());
+        assert(mkdtemp(dir));
+        tmp_ = String{dir};
+        assert(chdir(dir) == 0);
+    }
+    ~TmpDir() {
+        if (!cwd_.empty()) {
+            chdir(cwd_.c_str());
+        }
+        if (!tmp_.empty()) {
+            rm_dir(tmp_.c_str());
+        }
+    }
+};

@@ -65,5 +65,13 @@ Status CompareFrames(const Frame& frame_a, const Frame& frame_b) {
     return CompareWithCursors(a, b);
 }
 
+template <typename Frame>
+Frame OneOp(Uuid id, Uuid ref) {
+    using Builder = typename Frame::Builder;
+    Builder b;
+    b.AppendNewOp(id, ref);
+    return b.Release();
+}
+
 }  // namespace ron
 #endif

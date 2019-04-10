@@ -13,7 +13,6 @@ using ColumnFamilyOptions = rocksdb::ColumnFamilyOptions;
 using ColumnFamilyHandle = rocksdb::ColumnFamilyHandle;
 using ColumnFamilyDescriptor = rocksdb::ColumnFamilyDescriptor;
 
-
 //  C O N V E R S I O N S
 
 static inline rocksdb::Slice slice(ron::Slice slice) {
@@ -98,34 +97,6 @@ class RDTMerge : public rocksdb::MergeOperator {
     const char* Name() const override { return "rdt"; }
 };
 
-//  S T O R E
-
-template <typename Frame>
-Status RocksDBStore<Frame>::Create(const String& home) {
-    DBOptions db_options;
-    db_options.create_if_missing = true;
-    db_options.error_if_exists = true;
-    db_options.max_total_wal_size = UINT64_MAX;
-    db_options.WAL_size_limit_MB = 1UL << 30U;
-    db_options.WAL_ttl_seconds = UINT64_MAX;
-
-    ColumnFamilyOptions cf_options = ColumnFamilyOptions();
-    Options options{db_options, cf_options};
-    options.merge_operator =
-        shared_ptr<rocksdb::MergeOperator>{new RDTMerge<Frame>()};
-
-    rocksdb::DB* db;
-    auto status = DB::Open(options, home, &db);
-    if (!status.ok()) {
-        return Status::DB_FAIL.comment(status.ToString());
-    }
-    // TODO init meta records here
-    delete db;
-
-    // TODO it makes sense to name CFs by UUIDs, use CF 0 for metadata
-    return Open(home);
-}
-
 template <class Frame>
 void init_options(rocksdb::Options& options) {
     options.create_if_missing = false;
@@ -136,20 +107,64 @@ void init_options(rocksdb::Options& options) {
     options.merge_operator = make_shared<RDTMerge<Frame>>();
 }
 
+//  S T O R E
+static const string HOME = ".swarmdb";
+
 template <typename Frame>
-Status RocksDBStore<Frame>::Open(const String& home) {
+Status RocksDBStore<Frame>::Create(Uuid id) {
+    Options options{};
+    init_options<Frame>(options);
+    options.create_if_missing = true;
+    options.error_if_exists = false;
+
+    if (!db_) {
+        rocksdb::DB* db;
+        auto rok = DB::Open(options, HOME, &db);
+        if (!rok.ok()) {
+            return status(rok);
+        }
+        db_ = SharedPtr{db};
+    }
+
+    Frame yarn_root;
+    Uuid cfid{};
+    Status ok = Read(Key{}, yarn_root);
+    if (ok && !yarn_root.empty()) {
+        ColumnFamilyHandle* cfh;
+        auto db = static_pointer_cast<rocksdb::DB>(db_);
+        auto rok = db->CreateColumnFamily(options, id.str(), &cfh);
+        if (!rok.ok()) {
+            return status(rok);
+        }
+        cf_ = SharedPtr{cfh};
+        cfid = id;
+    }
+
+    Frame new_yarn_root = OneOp<Frame>(id, YARN_FORM_UUID);
+    Write(Key{}, new_yarn_root);
+
+    return Status::OK;
+}
+
+template <typename Frame>
+Status RocksDBStore<Frame>::Open(Uuid id) {
     if (db_) return Status::BAD_STATE.comment("db open already");
 
     Options options;
     init_options<Frame>(options);
 
     rocksdb::DB* db;
-    auto ok = DB::Open(options, home, &db);
+    auto ok = DB::Open(options, HOME, &db);
     if (!ok.ok()) {
         return status(ok);
     }
     db_.reset(db);
+
+    if (!id.zero()) {
+        return Status::NOT_IMPLEMENTED.comment("use OpenAll for now");
+    }
     // cf_.reset(db->DefaultColumnFamily());
+
     return Status::OK;
 }
 
@@ -173,8 +188,10 @@ template <typename Frame>
 Status RocksDBStore<Frame>::Write(Key key, const Frame& change) {
     auto be = key.be();
     auto db = static_pointer_cast<rocksdb::DB>(db_);
+    auto cf = static_pointer_cast<rocksdb::ColumnFamilyHandle>(cf_);
     Slice data{change.data()};
-    auto ok = db->Merge(wo(), key2slice(be), slice(data));
+    auto ok = cf ? db->Merge(wo(), cf.get(), key2slice(be), slice(data))
+                 : db->Merge(wo(), key2slice(be), slice(data));
     return status(ok);
 }
 
@@ -183,7 +200,9 @@ Status RocksDBStore<Frame>::Read(Key key, Frame& result) {
     uint64pair k = key.be();
     String ret;
     auto db = static_pointer_cast<rocksdb::DB>(db_);
-    auto ok = db->Get(ro(), key2slice(k), &ret);
+    auto cf = static_pointer_cast<rocksdb::ColumnFamilyHandle>(cf_);
+    auto ok = cf ? db->Get(ro(), cf.get(), key2slice(k), &ret)
+                 : db->Get(ro(), key2slice(k), &ret);
     if (ok.IsNotFound()) {
         return Status::NOT_FOUND;
     }
@@ -295,7 +314,7 @@ Status RocksDBStore<Frame>::Iterator::Close() {
 }
 
 template <class Frame>
-Status RocksDBStore<Frame>::OpenAll(Branches& branches, const String& path) {
+Status RocksDBStore<Frame>::OpenAll(Branches& branches) {
     Options options;
     using CFD = ColumnFamilyDescriptor;
     vector<ColumnFamilyDescriptor> families;
@@ -306,7 +325,7 @@ Status RocksDBStore<Frame>::OpenAll(Branches& branches, const String& path) {
     init_options<Frame>(options);
 
     vector<std::string> cfnames;
-    auto ok = rocksdb::DB::ListColumnFamilies(options, path, &cfnames);
+    auto ok = rocksdb::DB::ListColumnFamilies(options, HOME, &cfnames);
     if (!ok.ok()) {
         return status(ok);
     }
@@ -315,7 +334,7 @@ Status RocksDBStore<Frame>::OpenAll(Branches& branches, const String& path) {
     }
 
     rocksdb::DB* db;
-    ok = DB::Open(options, path, families, &handles, &db);
+    ok = DB::Open(options, HOME, families, &handles, &db);
     if (!ok.ok()) {
         return status(ok);
     }

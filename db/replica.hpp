@@ -69,9 +69,9 @@ class Replica {
 
     //  L I F E C Y C L E
 
-    static Status Create(const String& home, Word origin = 0);
+    static Status Create(Word origin = 0);
 
-    Status Open(const String& home, Word origin = 0);
+    Status Open(Word origin = 0);
 
     Status CreateBranch(Word branch);
 

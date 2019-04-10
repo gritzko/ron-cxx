@@ -50,11 +50,17 @@ class RocksDBStore {
 
     inline bool open() const { return db_ != nullptr; }
 
-    Status Create(const String& path);
+    /**
+     *  Creates and opens a new store. If already open, or if
+     *  ./.swarmdb already exists, creates a new column family
+     *  in the database. Otherwise, creates a new database in
+     *  ./.swarmdb and opens the default CF.
+     */
+    Status Create(Uuid id);
 
-    Status Open(const String& path);
+    Status Open(Uuid id);
 
-    static Status OpenAll(Branches& branches, const String& path);
+    static Status OpenAll(Branches& branches);
 
     Status Write(Key key, const Frame& change);
 

@@ -20,9 +20,10 @@ void Replica<Frame>::cerr_batch(Records& save) {
 }
 
 template <typename Frame>
-Status Replica<Frame>::Create(const String& home, Word origin) {
+Status Replica<Frame>::Create(Word origin) {
     RocksStore db;
-    Status ok = db.Create(home);
+    Uuid now = Uuid{Uuid::Now(), origin};
+    Status ok = db.Create(now);
     if (!ok) {
         return ok;
     }
@@ -30,7 +31,6 @@ Status Replica<Frame>::Create(const String& home, Word origin) {
 
     // 1. the yarn object
     Builder yarn_obj_builder;
-    Uuid now = Uuid{Uuid::Now(), origin};
     yarn_obj_builder.AppendNewOp(now, YARN_FORM_UUID);
     Frame yarn_object{yarn_obj_builder.Release()};
     initials.emplace_back(Key{now, YARN_RAW_FORM}, yarn_object);
@@ -51,12 +51,12 @@ Status Replica<Frame>::Create(const String& home, Word origin) {
 }
 
 template <typename Frame>
-Status Replica<Frame>::Open(const String& home, Word origin) {
+Status Replica<Frame>::Open(Word origin) {
     if (open()) {
         return Status::BAD_STATE.comment("already open");
     }
 
-    Status ok = RocksStore::OpenAll(branches_, home);
+    Status ok = RocksStore::OpenAll(branches_);
     if (!ok) {
         return ok;
     }
@@ -506,8 +506,8 @@ template <typename Frame>
 Status Replica<Frame>::Recv(Builder& resp, Cursor& c, Uuid branch_id) {
     Status ok = Status::OK;
     if (!HasBranch(branch_id)) {
-        return Status::NOT_FOUND.comment(
-            "branch unknown");  // TODO 1 such check
+        // TODO 1 such check
+        return Status::NOT_FOUND.comment("unknown branch");
     }
     RocksStore branch_store = GetBranch(branch_id);
     MemStore changes{};

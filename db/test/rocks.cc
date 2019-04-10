@@ -23,6 +23,7 @@ Status Compare(const Frame& a, const Frame& b) {
     else
         return ::testing::AssertionFailure() << ok.str();
 }
+#include "../fs.cc"
 
 TEST (Store, range_merge) {
     String frame_a{"@1+A :lww 'int' 1;"};
@@ -30,7 +31,9 @@ TEST (Store, range_merge) {
     String frame_merged{"@1+A :lww 'int' 1, @2+A 'string' 'str';"};
     Store store;
     auto now = Uuid::Now();
-    ASSERT_TRUE(store.Create("test23_range_"+now.str()));
+    Uuid id{now, Word::random()};
+    ASSERT_TRUE(cdtmp());
+    ASSERT_TRUE(IsOK(store.Create(id)));
     ASSERT_TRUE(store.open());
     Frame a{frame_a}, b{frame_b}, correct{frame_merged};
     Key key{Uuid{"1+A"}, LWW_FORM_UUID};
@@ -44,13 +47,16 @@ TEST (Store, range_merge) {
     //store.Close();
 }
 
+
 TEST (Store, iterator) {
     String frame_a{"@1+A :lww 'int' 1;"};
     String frame_b{"@2+A :1+A 'string' 'str';"};
     String frame_merged{"@1+A :lww 'int' 1, @2+A 'string' 'str';"};
     Store store;
     auto now = Uuid::Now();
-    ASSERT_TRUE(store.Create("test23_iter_"+now.str()));
+    Uuid id{now, Word::random()};
+    ASSERT_TRUE(cdtmp());
+    ASSERT_TRUE(store.Create(id));
     Frame a{frame_a}, b{frame_b}, correct{frame_merged};
     Key key{Uuid{"1+A"}, LWW_FORM_UUID};
     ASSERT_TRUE(store.Write(key, a));
@@ -62,6 +68,32 @@ TEST (Store, iterator) {
     i.Close();
     //ASSERT_TRUE(i.Next()==Status::ENDOFINPUT);
     store.Close();
+}
+
+TEST (Store, Branches) {
+    String frame_a{"@1+A :lww 'int' 1;"};
+    String frame_b{"@2+A :1+A 'string' 'str';"};
+    String frame_merged{"@1+A :lww 'int' 1, @2+A 'string' 'str';"};
+    Frame a{frame_a}, b{frame_b}, correct{frame_merged};
+    Store store;
+    auto now = Uuid::Now();
+    ASSERT_TRUE(cdtmp());
+    Uuid id{now, Word::random()};
+    ASSERT_TRUE(IsOK(store.Create(id)));
+    Uuid branch_id{"0+branchB"};
+    Key key{Uuid{"1+A"}, LWW_FORM_UUID};
+    Store branch = store;
+    ASSERT_TRUE(IsOK(branch.Create(branch_id)));
+    ASSERT_TRUE(store.Write(key, a));
+    ASSERT_TRUE(store.Write(key, b));
+    ASSERT_TRUE(IsOK(branch.Write(key, a)));
+
+    Frame merged, unmerged;
+    ASSERT_TRUE(store.Read(key, merged));
+    ASSERT_TRUE(CompareFrames(correct, merged));
+    ASSERT_TRUE(branch.Read(key, unmerged));
+    ASSERT_TRUE(CompareFrames(a, unmerged));
+
 }
 
 /*

@@ -1,7 +1,9 @@
 #include <fcntl.h>
 #include <gflags/gflags.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <algorithm>
+#include <cstdio>
 #include <ctime>
 #include "../ron/ron.hpp"
 
@@ -35,4 +37,11 @@ Status rm_dir(string path) {
 bool file_exists(const std::string& name) {
     struct stat buffer;
     return (stat(name.c_str(), &buffer) == 0);
+}
+
+Status cdtmp() {
+    const char* tmp = std::tmpnam(nullptr);
+    mkdir(tmp, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    chdir(tmp);
+    return Status::OK;  // yeah
 }

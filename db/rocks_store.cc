@@ -136,7 +136,7 @@ Status RocksDBStore<Frame>::Create(Uuid id) {
         if (!rok.ok()) {
             return status(rok);
         }
-        cf_ = SharedPtr{cfh};
+        cf_.reset(cfh);
         cfid = id;
     }
 
@@ -346,7 +346,8 @@ Status RocksDBStore<Frame>::OpenAll(Branches& branches) {
     for (auto* cf : handles) {
         SharedPtr cfsh{cf};
         auto name = cf->GetName();
-        Uuid id{name};
+        Uuid id =
+            name == rocksdb::kDefaultColumnFamilyName ? Uuid::NIL : Uuid{name};
         RocksDBStore<Frame> next{dbsh, cfsh};
         branches.emplace(id, next);
     }

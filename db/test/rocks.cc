@@ -93,7 +93,24 @@ TEST (Store, Branches) {
     ASSERT_TRUE(CompareFrames(correct, merged));
     ASSERT_TRUE(branch.Read(key, unmerged));
     ASSERT_TRUE(CompareFrames(a, unmerged));
+    
+    branch.Close();
+    store.Close();
+    ASSERT_FALSE(store.open());
+    ASSERT_FALSE(branch.open());
 
+    typename Store::Branches branches;
+    ASSERT_TRUE(IsOK(Store::OpenAll(branches)));
+    ASSERT_EQ(branches.size(), 2);
+    Store store2 = branches[Uuid::NIL];
+    Store branch2 = branches[branch_id];
+    ASSERT_TRUE(store2.open());
+    ASSERT_TRUE(branch2.open());
+
+    ASSERT_TRUE(store.Read(key, merged));
+    ASSERT_TRUE(CompareFrames(correct, merged));
+    ASSERT_TRUE(branch.Read(key, unmerged));
+    ASSERT_TRUE(CompareFrames(a, unmerged));
 }
 
 /*

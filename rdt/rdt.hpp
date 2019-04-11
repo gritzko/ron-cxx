@@ -43,6 +43,11 @@ class MasterRDT {
                 return mx_.Merge(output, inputs);
             case RGA_RDT_FORM:
                 return rga_.Merge(output, inputs);
+            case ERROR_NO_FORM:
+                if (!inputs.empty()) {
+                    output.AppendAll(inputs.back());
+                }
+                return Status::OK;
             default:
                 return Status::NOT_IMPLEMENTED;
         }
@@ -62,6 +67,11 @@ class MasterRDT {
                 return mx_.GC(output, input);
             case RGA_RDT_FORM:
                 return rga_.GC(output, input);
+            case ERROR_NO_FORM:
+                if (!input.empty()) {
+                    output.AppendAll(input.cursor());
+                }
+                return Status::OK;
             default:
                 return Status::NOT_IMPLEMENTED;
         }
@@ -81,6 +91,11 @@ class MasterRDT {
                 return mx_.MergeGC(output, inputs);
             case RGA_RDT_FORM:
                 return rga_.MergeGC(output, inputs);
+            case ERROR_NO_FORM:
+                if (!inputs.empty()) {
+                    output.AppendAll(inputs.back());
+                }
+                return Status::OK;
             default:
                 return Status::NOT_IMPLEMENTED;
         }

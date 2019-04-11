@@ -2,6 +2,7 @@
 
 ## 1 hour (must be separate commits)
 
+- [ ] Replica metadata tests (now, origin, sig)
 - [ ] kill merged\_ in MemStore
 - [ ] only one template instantiation, in libswarmdb.so
 - [x] ninja build

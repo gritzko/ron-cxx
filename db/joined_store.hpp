@@ -57,7 +57,8 @@ class JoinedStore {
         }
 
        public:
-        Iterator(JoinedStore& host) : ai_{host.a_}, bi_{host.b_} {}
+        Iterator(JoinedStore& host)
+            : ai_{host.a_}, bi_{host.b_}, at_{END_KEY}, merged_{} {}
 
         Status Next() {
             if (ai_.key() == at_) {

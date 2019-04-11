@@ -1,0 +1,16 @@
+@~ 'chain meta records'!
+
+@chainhead+yarnid :meta sha2 'hash' obj objid+orig;
+
+
+@~ 'object op log records' !
+
+@objid-orig :log, @objid+orig :rdt, ,,, ;
+
+
+@~ 'object state records' !
+
+@yarnstart+yarnid :yarn 
+    uuid_key 'lww-reduced yarn metadata';
+@objid+orig :lww, 
+    'key' 'value' ;

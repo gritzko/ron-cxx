@@ -42,7 +42,15 @@ class InMemoryStore {
 
     InMemoryStore() : state_{} {}
 
-    Status Open(std::string path, bool create = false) { return Status::OK; }
+    Status Open(Uuid id) {
+        Frame meta = OneOp<Frame>(id, YARN_FORM_UUID);
+        Key zero{};
+        state_.insert(Record{zero, meta});
+        state_.insert(Record{END_KEY, Frame{}});
+        return Status::OK;
+    }
+
+    Status Create(Uuid id) { return Status::OK; }
 
     class Iterator {
         Map& store_;
@@ -60,6 +68,7 @@ class InMemoryStore {
         }
 
        public:
+        /** Creates a new iterator positioned at 0 */
         explicit Iterator(InMemoryStore& host)
             : store_{host.state_}, b_{}, e_{}, merged_{}, len_{0} {}
 
@@ -78,6 +87,11 @@ class InMemoryStore {
 
         inline ron::Key key() const { return len_ == 0 ? END_KEY : b_->first; }
 
+        /**
+         * Moves to the next record in the store.
+         * If already at the END_KEY then does nothing.
+         * @return OK or error
+         */
         Status Next() {
             if (len_ == 0) {
                 return Status::BAD_STATE.comment("invalid iterator");
@@ -94,8 +108,20 @@ class InMemoryStore {
             return Status::OK;
         }
 
+        /**
+         * Moves to the given key. If none found, moves to the nearest
+         * greater key (if prev==true then nearest lesser key).
+         * May end up on zero or END_KEY (which are always present).
+         * @return OK or error if something really bad happened
+         */
         Status SeekTo(ron::Key key, bool prev = false) {
             b_ = store_.lower_bound(key);
+            if (b_ == store_.end() && prev && !store_.empty()) {
+                --b_;
+            }
+            if (b_ == store_.end()) {
+                return Status::ENDOFINPUT;
+            }
             if (prev && b_->first != key) {
                 if (b_ != store_.begin()) {
                     --b_;
@@ -115,6 +141,8 @@ class InMemoryStore {
     };
 
     Status Write(Key key, const Frame& change) {
+        if (key == END_KEY)
+            return Status::BADARGS.comment("can't write at END_KEY");
         state_.insert(Record{key, change});
         return Status::OK;
     }

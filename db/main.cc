@@ -62,25 +62,25 @@ Status CommandTest(RonReplica& replica, const string& file);
 Status CompareFrames(const Frame& a, const Frame& b);
 
 Status RunCommands() {
+    TmpDir tmp;
     RonReplica replica{};
     Status ok;
-    string store = FLAGS_store.empty() ? ".swarmdb" : FLAGS_store;
-    bool rm_on_exit{0};
-    if (!FLAGS_test.empty() && FLAGS_store.empty()) {
-        store = "test_" + basename(FLAGS_test);
-        if (file_exists(store)) {
-            ok = rm_dir(store.c_str());
-            if (!ok) return ok;
-        }
-        rm_on_exit = true;
-    }
+
+    Uuid store{Uuid::NIL};
 
     if (FLAGS_create || !FLAGS_test.empty()) {
-        ok = replica.Create(store);
-    } else {
-        ok = replica.Open(store);
+        if (FLAGS_store.empty()) {
+            ok = tmp.cd("swarmdb_test_" + basename(FLAGS_test));
+            if (!ok) return ok;
+        }
+        ok = replica.Create(Word::random());
+        if (!ok) return ok;
     }
+
+    ok = replica.Open();
     if (!ok) return ok;
+
+    tmp.back();
 
     if (FLAGS_now) {
         Uuid now = replica.Now();
@@ -101,7 +101,6 @@ Status RunCommands() {
     }
 
     if (replica.open()) replica.Close();
-    if (rm_on_exit && ok) ok = rm_dir(store.c_str());
 
     return ok;
 }
@@ -128,14 +127,18 @@ Status LoadFrame(Frame& target, int fd) {
     char buf[BLOCK];
     ssize_t s;
     while ((s = read(fd, buf, BLOCK)) > 0) tmp.append(buf, size_t(s));
-    if (s < 0) return Status::IOFAIL;
+    if (s < 0) {
+        return Status::IOFAIL.comment(strerror(errno));
+    }
     target = Frame{tmp};
     return Status::OK;
 }
 
 Status LoadFrame(Frame& target, const string& filename) {
     int fd = filename.empty() ? STDIN_FILENO : open(filename.c_str(), O_RDONLY);
-    if (fd < 0) return Status::IOFAIL;
+    if (fd < 0) {
+        return Status::IOFAIL.comment(strerror(errno));
+    }
     return LoadFrame(target, fd);
 }
 
@@ -199,10 +202,11 @@ Status CommandDump(RonReplica& replica, const string& what) {
         key.id().write_base64(k);
         k.push_back('\n');
         int wok = write(STDOUT_FILENO, k.data(), k.size());
-        if (wok != k.size()) return Status::IOFAIL;
+        if (wok != k.size()) return Status::IOFAIL.comment("dump: write fails");
         Cursor val = i.value();
         wok = write(STDOUT_FILENO, val.data().data(), val.size());
-        if (wok != val.size()) return Status::IOFAIL;
+        if (wok != val.size())
+            return Status::IOFAIL.comment("dump: incomplete write");
         i.Next();
     } while (i.Next());
     i.Close();

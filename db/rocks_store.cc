@@ -141,7 +141,8 @@ Status RocksDBStore<Frame>::Create(Uuid id) {
     }
 
     Frame new_yarn_root = OneOp<Frame>(id, YARN_FORM_UUID);
-    Write(Key{}, new_yarn_root);
+    IFOK(Write(Key{}, new_yarn_root));
+    IFOK(Write(END_KEY, Frame{}));
 
     return Status::OK;
 }
@@ -187,6 +188,9 @@ Status RocksDBStore<Frame>::Put(Key key, const Frame& state, Uuid branch) {
 template <typename Frame>
 Status RocksDBStore<Frame>::Write(Key key, const Frame& change) {
     if (!db_) return Status::BAD_STATE.comment("closed");
+    if (key == END_KEY && !change.empty()) {
+        return Status::BADARGS.comment("can't write to END_KEY");
+    }
     auto be = key.be();
     auto db = static_pointer_cast<rocksdb::DB>(db_);
     auto cf = static_pointer_cast<rocksdb::ColumnFamilyHandle>(cf_);
@@ -199,6 +203,10 @@ Status RocksDBStore<Frame>::Write(Key key, const Frame& change) {
 template <typename Frame>
 Status RocksDBStore<Frame>::Read(Key key, Frame& result) {
     if (!db_) return Status::BAD_STATE.comment("closed");
+    if (key == END_KEY) {
+        result.Clear();
+        return Status::OK;
+    }
     uint64pair k = key.be();
     String ret;
     auto db = static_pointer_cast<rocksdb::DB>(db_);
@@ -261,19 +269,19 @@ Status RocksDBStore<Frame>::Iterator::status() {
 
 template <typename Frame>
 Key RocksDBStore<Frame>::Iterator::key() const {
-    if (!i_) {
+    auto i = static_pointer_cast<const rocksdb::Iterator>(i_);
+    if (!i || !i->Valid()) {
         return END_KEY;
     }
-    auto i = static_pointer_cast<const rocksdb::Iterator>(i_);
     return slice2key(i->key());
 }
 
 template <typename Frame>
 typename Frame::Cursor RocksDBStore<Frame>::Iterator::value() {
-    if (!i_) {
+    auto i = static_pointer_cast<const rocksdb::Iterator>(i_);
+    if (!i || !i->Valid()) {
         return typename Frame::Cursor{""};
     }
-    auto i = static_pointer_cast<const rocksdb::Iterator>(i_);
     return Cursor{slice(i->value())};
 }
 

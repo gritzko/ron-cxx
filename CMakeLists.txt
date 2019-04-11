@@ -271,7 +271,7 @@ add_test(MAPPERS test21-mappers)
 
 add_executable(test22-memstore db/test/memstore.cc)
 add_dependencies(test22-memstore swarmdb_shared)
-target_link_libraries(test22-memstore swarmdb_shared)
+target_link_libraries(test22-memstore swarmdb_shared gtest_static)
 add_test(MEMSTORE test22-memstore)
 
 add_executable(test23-rocks_store db/test/rocks.cc)
@@ -281,7 +281,7 @@ add_test(ROCKSTORE test23-rocks_store)
 
 add_executable(test24-joinstore db/test/joinstore.cc)
 add_dependencies(test24-joinstore swarmdb_shared)
-target_link_libraries(test24-joinstore swarmdb_shared)
+target_link_libraries(test24-joinstore swarmdb_shared gtest_static)
 add_test(JOINSTORE test24-joinstore)
 
 #  S W A R M D B  C L I

@@ -69,9 +69,9 @@ class Replica {
 
     //  L I F E C Y C L E
 
-    static Status Create(Word origin = 0);
+    static Status Create(Word origin);
 
-    Status Open(Word origin = 0);
+    Status Open();
 
     Status CreateBranch(Word branch);
 
@@ -97,6 +97,10 @@ class Replica {
     //  H I G H  L E V E L  A C C E S S O R S
 
     inline bool HasBranch(Uuid branch) {
+        cerr << "need branch " << branch.str() << endl;
+        for (auto& kv : branches_) {
+            cerr << "\t" << kv.first.str() << endl;
+        }
         return branches_.find(branch) != branches_.end();
     }
 
@@ -212,10 +216,6 @@ class Replica {
     // feed a causally ordered log - checks causality, updates the chain cache
     Status WriteNewChain(Builder&, Cursor& chain, Commit& commit);
 
-    Status WriteNewObject(Builder&, Cursor& chain, Commit& commit);
-
-    Status WriteNewYarn(Builder&, Cursor& yroot, Commit& commit);
-
     /**
         @version-id :txt 'text' !
 
@@ -223,7 +223,7 @@ class Replica {
             @version-to :version-from 2 -1 2 'x' !
     */
     Status MapWrite(Cursor& write, Commit& commit) {
-        return Status::NOT_IMPLEMENTED;
+        return Status::NOT_IMPLEMENTED.comment("MapWrite");
     }
 
     //  R E C E I V E S
@@ -231,8 +231,9 @@ class Replica {
     Status Recv(Builder& response, Cursor& c, Uuid branch = Uuid::NIL);
 
     inline Status FrameRecv(Builder& response, Frame frame,
-                            Uuid branch = Uuid::Uuid::NIL) {
+                            Uuid branch = Uuid::NIL) {
         Cursor c{frame};
+        cerr << "Recv on " << branch.str() << endl;
         return Recv(response, c, branch);
     }
     Status DispatchRecv(Builder& resp, Cursor& c, Commit& commit);
@@ -242,7 +243,7 @@ class Replica {
     // hash checks
     template <class FrameB>
     Status AnyFrameRecv(Uuid conn_id, const FrameB& frame) {
-        return Status::NOT_IMPLEMENTED;
+        return Status::NOT_IMPLEMENTED.comment("AnyFrameRecv");
     }
 
     void cerr_batch(Records& save);

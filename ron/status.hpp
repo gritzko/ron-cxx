@@ -62,6 +62,7 @@ class Status {
 
     static const Status REPEAT;
     static const Status REORDER;
+    static const Status CONFLICT;
 };
 
 #define IFOK(x)          \

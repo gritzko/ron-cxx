@@ -45,21 +45,32 @@ class TmpDir {
     static constexpr size_t MAX_PATH_LEN{1024};
 
    public:
-    TmpDir(String name = "test") {
+    TmpDir() = default;
+
+    Status cd(String name = "test") {
         char dir[MAX_PATH_LEN];
         getcwd(dir, MAX_PATH_LEN);
         cwd_ = String{dir};
         sprintf(dir, "/tmp/%s.XXXXXX", name.c_str());
-        assert(mkdtemp(dir));
+        if (!mkdtemp(dir)) {
+            return Status::IOFAIL.comment(strerror(errno));
+        }
         tmp_ = String{dir};
-        assert(chdir(dir) == 0);
+        if (chdir(dir)) {
+            return Status::IOFAIL.comment(strerror(errno));
+        }
+        return Status::OK;
     }
-    ~TmpDir() {
+
+    Status back() {
         if (!cwd_.empty()) {
             chdir(cwd_.c_str());
         }
         if (!tmp_.empty()) {
             rm_dir(tmp_.c_str());
         }
+        return Status::OK;
     }
+
+    ~TmpDir() { back(); }
 };

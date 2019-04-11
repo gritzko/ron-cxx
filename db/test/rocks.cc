@@ -1,32 +1,60 @@
 #include "../rocks_store.hpp"
-#include "gtest/gtest.h"
-#include "../fs.hpp"
-#define DEBUG 1
+#include "testutil.hpp"
 
 using namespace ron;
 using namespace std;
 
 using Frame = TextFrame;
 using Store = RocksDBStore<TextFrame>;
+using Iterator = typename Store::Iterator;
 
-Status Compare(const Frame& a, const Frame& b) {
-    Status ok = CompareFrames(a, b);
-    if (!ok) {
-        cerr<<"FRAME A:\n"<<a.data()<<".\n";
-        cerr<<"FRAME B:\n"<<b.data()<<".\n";
-    }
-    return ok;
-}
+TEST(Store, Ends) {
+    TmpDir tmp;
+    tmp.cd("Ends");
+    Store store;
+    auto now = Uuid::Now();
+    Uuid id{now, Word::random()};
+    ASSERT_TRUE(IsOK(store.Create(id)));
+    Frame frame;
+    ASSERT_TRUE(IsOK(store.Read(Key{}, frame)));
+    ASSERT_FALSE(frame.empty());
+    ASSERT_TRUE(IsOK(store.Read(END_KEY, frame)));
+    ASSERT_TRUE(frame.empty());
+    ASSERT_FALSE(IsOK(store.Read(Key{id,LWW_RDT_FORM}, frame)));
+    Iterator i{store};
+    ASSERT_EQ(i.key(), END_KEY);
+    ASSERT_FALSE(i.value().valid());
 
-::testing::AssertionResult IsOK(Status ok) {
-    if (ok)
-        return ::testing::AssertionSuccess();
-    else
-        return ::testing::AssertionFailure() << ok.str();
+    ASSERT_TRUE(IsOK(i.SeekTo(END_KEY, false)));
+    ASSERT_EQ(i.key(), END_KEY);
+    ASSERT_FALSE(i.value().valid());
+    ASSERT_TRUE(IsOK(i.SeekTo(END_KEY, true)));
+    ASSERT_EQ(i.key(), END_KEY);
+    ASSERT_FALSE(i.value().valid());
+
+    ASSERT_TRUE(IsOK(i.SeekTo(Key{}, true)));
+    ASSERT_EQ(i.key(), Key{});
+    ASSERT_TRUE(i.value().valid());
+    ASSERT_TRUE(IsOK(i.SeekTo(Key{}, false)));
+    ASSERT_EQ(i.key(), Key{});
+    ASSERT_TRUE(i.value().valid());
+
+    // empty store, 2 records: zero and end
+    ASSERT_TRUE(IsOK(i.Next()));
+    ASSERT_TRUE(IsOK(i.SeekTo(END_KEY, true)));
+    ASSERT_EQ(i.key(), END_KEY);
+    ASSERT_FALSE(i.value().valid());
+
+    // Next() at the end => end, returns ENDOFINPUT
+    ASSERT_FALSE(i.Next()==Status::ENDOFINPUT);
+    ASSERT_TRUE(IsOK(i.SeekTo(END_KEY, true)));
+    ASSERT_EQ(i.key(), END_KEY);
+    ASSERT_FALSE(i.value().valid());
 }
 
 TEST (Store, Merge) {
-    TmpDir tmp{"Merge"};
+    TmpDir tmp;
+    tmp.cd("Merge");
     String frame_a{"@1+A :lww 'int' 1;"};
     String frame_b{"@2+A :1+A 'string' 'str';"};
     String frame_merged{"@1+A :lww 'int' 1, @2+A 'string' 'str';"};
@@ -49,7 +77,8 @@ TEST (Store, Merge) {
 
 
 TEST (Store, Iterator) {
-    TmpDir tmp{"Iterator"};
+    TmpDir tmp;
+    tmp.cd("Iterator");
     String frame_a{"@1+A :lww 'int' 1;"};
     String frame_b{"@2+A :1+A 'string' 'str';"};
     String frame_merged{"@1+A :lww 'int' 1, @2+A 'string' 'str';"};
@@ -71,7 +100,8 @@ TEST (Store, Iterator) {
 }
 
 TEST (Store, Branches) {
-    TmpDir tmp{"Branches"};
+    TmpDir tmp;
+    tmp.cd("Branches");
     String frame_a{"@1+A :lww 'int' 1;"};
     String frame_b{"@2+A :1+A 'string' 'str';"};
     String frame_merged{"@1+A :lww 'int' 1, @2+A 'string' 'str';"};

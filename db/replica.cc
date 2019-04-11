@@ -22,6 +22,7 @@ void Replica<Frame>::cerr_batch(Records& save) {
 template <typename Frame>
 Status Replica<Frame>::Create(Word origin) {
     RocksStore db;
+    // Uuid branch_id{0, origin};
     Uuid now = Uuid{Uuid::Now(), origin};
     Status ok = db.Create(now);
     if (!ok) {
@@ -51,7 +52,7 @@ Status Replica<Frame>::Create(Word origin) {
 }
 
 template <typename Frame>
-Status Replica<Frame>::Open(Word origin) {
+Status Replica<Frame>::Open() {
     if (open()) {
         return Status::BAD_STATE.comment("already open");
     }
@@ -59,11 +60,6 @@ Status Replica<Frame>::Open(Word origin) {
     Status ok = RocksStore::OpenAll(branches_);
     if (!ok) {
         return ok;
-    }
-    // origin == 0 ?!
-    home_ = Uuid{NEVER, origin};
-    if (!HasBranch(home_)) {
-        return Status::NOT_FOUND.comment("no such branch");
     }
 
     RocksStore& meta = GetBranch(Uuid::NIL);
@@ -76,9 +72,9 @@ Status Replica<Frame>::Open(Word origin) {
         return Status::BAD_STATE.comment("no metadata?!");
     }
     Cursor mc{meta_rec};
-    if (!mc.has(2, UUID)) {
-        return Status::DB_FAIL.comment("no timestamp found");
-    }
+    // if (!mc.has(2, UUID)) {
+    //    return Status::DB_FAIL.comment("no timestamp found");
+    //}
     // now_ = mc.uuid(2);
 
     return Status::OK;
@@ -201,31 +197,6 @@ Status Replica<Frame>::See(Uuid timestamp) {
 }
 
 template <class Frame>
-Status Replica<Frame>::WriteNewYarn(Builder&, Cursor& yroot, Commit& commit) {
-    Uuid id = yroot.id();
-    Word yarn_id = id.origin();
-    if (id.version() != TIME) {
-        return Status::BAD_STATE.comment("not an event?!");
-    }
-    OpMeta checkmeta;
-    Status ok = FindYarnTipMeta(checkmeta, yarn_id, commit);
-    if (!ok) {
-        return ok;
-    }
-    if (!checkmeta.id.zero()) {
-        return Status::CAUSEBREAK.comment("the yarn already exists: " +
-                                          yarn_id.str());
-    }
-    Builder crb;
-    OpMeta meta{yroot};
-    meta.Save(crb);
-    Frame meta_record = crb.Release();
-    commit.Write(Key{id, META_FORM_UUID}, meta_record);
-    yroot.Next();
-    return Status::OK;
-}
-
-template <class Frame>
 Status Replica<Frame>::ReadChainlet(Builder& to, OpMeta& meta, Cursor& from) {
     meta.Next(from);
     to.AppendOp(from);
@@ -251,34 +222,6 @@ Status Replica<Frame>::ReadChainlet(Builder& to, OpMeta& meta, Cursor& from) {
     return ok;
 }
 
-template <class Frame>
-Status Replica<Frame>::WriteNewObject(Builder&, Cursor& root, Commit& commit) {
-    assert(root.ref().version() == NAME);
-    Uuid id = root.id();
-    Uuid ref = root.ref();
-    if (id.version() != TIME) {
-        return Status::BAD_STATE.comment("not an event?!");
-    }
-    if (ref.version() != NAME) {
-        return Status::BAD_STATE.comment("expect an RDT id");
-    }
-    OpMeta tip_meta;
-    IFOK(FindYarnTipMeta(tip_meta, id.origin(), commit));
-    if (tip_meta.id.zero()) {
-        return Status::CAUSEBREAK.comment("yarn unknown: " + ref.str());
-    }
-    // Uuid& prev = tip_meta.id;
-    Builder chainlet;
-    IFOK(ReadChainlet(chainlet, tip_meta, root));
-    IFOK(See(tip_meta.id));
-
-    Frame data = chainlet.Release();
-    commit.Write(Key{id, LOG_FORM_UUID}, data);
-    commit.Write(Key{id, tip_meta.rdt}, data);
-
-    return Status::OK;
-}
-
 /** The key lifecycle method: accepts a new chain of ops, checks it
  * against existing ops, checks integrity/consistency/causality,
  * saves the chain, updates object state.
@@ -288,62 +231,85 @@ Status Replica<Frame>::WriteNewObject(Builder&, Cursor& root, Commit& commit) {
  *              will be moved to the first non-chain op (or EOF) */
 template <class Frame>
 Status Replica<Frame>::WriteNewChain(Builder&, Cursor& chain, Commit& commit) {
-    // TODO(gritzko) sanity checks
     Status ok;
     Uuid id = chain.id();
+
+    // sanity checks
     if (id.version() != TIME) {
         return Status::BAD_STATE.comment("not an event?!");
     }
-    Uuid ref = chain.ref();
-    if (ref.version() == TIME) {  // edit object
-        if (ref >= id) {
+    Uuid ref_id = chain.ref();
+    if (ref_id.version() == TIME) {  // edit object
+        if (ref_id >= id) {
             return Status::CAUSEBREAK;
         }
     } else {  // create object
-        if (ref.version() != NAME) {
-            return Status::BAD_STATE.comment(
-                "an event's ref is either TIME or NAME");
+        if (ref_id.version() != NAME) {
+            return Status::BAD_STATE.comment("ref is either TIME or NAME");
         }
-        if (uuid2form(ref) == ZERO_RAW_FORM) {
-            return Status::NOT_IMPLEMENTED;
+        if (uuid2form(ref_id) == ZERO_RAW_FORM) {
+            return Status::NOT_IMPLEMENTED.comment("create zero typed obj?");
         }
     }
-    // may need to read tail meta
-    // PREV: fetch the meta on the prev op
+
+    // find the last op on the yarn (the tip) and its metadata
     OpMeta tip_meta;
-    IFOK(FindYarnTipMeta(tip_meta, ref.origin(), commit));
-    if (tip_meta.id.zero()) {
-        return Status::CAUSEBREAK.comment("yarn unknown: " + ref.str());
+    ok = FindYarnTipMeta(tip_meta, id.origin(), commit);
+    if (chain.ref() ==
+        YARN_FORM_UUID) {  // actually, it is the first op on the yarn
+        if (ok == Status::NOT_FOUND) {
+            tip_meta = OpMeta{chain};
+            ok = Status::OK;
+        }
+        if (!ok) {
+            return ok;
+        } else if (id == tip_meta.id) {
+            // TODO compare
+            return Status::REPEAT;
+        } else {
+            return Status::CONFLICT.comment("can't merge a duplicate-id yarn");
+        }
     }
-    Uuid& prev = tip_meta.id;
-    // REF: fetch the meta on the referenced op (get the object)
+    if (!ok) {
+        return ok;
+    }
+    Uuid& tip_id = tip_meta.id;
+    if (tip_id >= id) {
+        return Status::REPEAT;
+    }
+
+    // find the referenced op and its metadata (hash, object id)
     OpMeta ref_meta;
-    if (ref == prev) {
+    if (ref_id == tip_id) {  // the op refs the tip, we have the meta already
         ref_meta = tip_meta;
-    } else if (ref.version() == NAME) {
+    } else if (ref_id.version() == NAME) {  // tree root, references nothing
+        FORM form = uuid2form(ref_id);
+        if (form == ERROR_NO_FORM) {
+            return Status::NOT_IMPLEMENTED.comment("form unknown: " +
+                                                   ref_id.str());
+        }
+        // TODO check it is an RDT or yarn
         ref_meta = OpMeta{chain, tip_meta};
-    } else {
-        // we enforce referential integrity
-        // but can't run datatype-specific checks, so reducers are on their own
-        // here
-        IFOK(FindOpMeta(ref_meta, id, commit));
+    } else {  // ok, let's check the db
+        // we enforce referential integrity but we
+        // can't run datatype-specific checks here
+        IFOK(FindOpMeta(ref_meta, ref_id, commit));
     }
-    Uuid& obj = ref_meta.object;
-    if (ref != prev) {
-        Frame chain_record;
-        // @head-id :yarn   :obj+id 'HASH?' (the hash is very optional here)
-        // @head-id :yarn   :ref-id 'HASH' (cross-yarn hashes are difficult to
-        // recalculate)
-        commit.Write(Key{id, META_FORM_UUID}, chain_record);
+
+    Uuid& obj_id = ref_meta.object;
+    if (ref_id != tip_id) {
+        Builder chain_record;
+        tip_meta.Save(chain_record);
+        IFOK(commit.Write(Key{id, META_FORM_UUID}, chain_record.Release()));
     }
+
     // walk/check the chainlet
     Builder chainlet;
     IFOK(ReadChainlet(chainlet, tip_meta, chain));
     IFOK(See(tip_meta.id));  // implausible timestamps etc
-
     Frame data = chainlet.Release();
-    commit.Write(Key{obj, LOG_FORM_UUID}, data);
-    commit.Write(Key{obj, tip_meta.rdt}, data);
+    IFOK(commit.Write(Key{obj_id, LOG_FORM_UUID}, data));
+    IFOK(commit.Write(Key{obj_id, tip_meta.rdt}, data));
 
     return ok;
 }
@@ -410,7 +376,7 @@ Status Replica<Frame>::ObjectQuery(Builder& response, Cursor& query,
 template <typename Frame>
 Status Replica<Frame>::YarnQuery(Builder& response, Cursor& query,
                                  Commit& commit) {
-    return Status::NOT_IMPLEMENTED;
+    return Status::NOT_IMPLEMENTED.comment("YarnQuery");
 }
 
 template <typename Frame>
@@ -464,27 +430,18 @@ Status Replica<Frame>::DispatchRecv(Builder& resp, Cursor& c, Commit& commit) {
     // NOTE all incoming chunks MUST specify a form unless they are events
     FORM form = uuid2form(c.ref());
     TERM term = peek_term(c);
-    switch (form) {
+    switch (form) {  // TODO mark forms as rdt/meta/map
         case LWW_RDT_FORM:
         case RGA_RDT_FORM:
         case MX_RDT_FORM:
+        case YARN_RAW_FORM:
             switch (term) {
                 case QUERY:
                     return ObjectQuery(resp, c, commit);
                 case RAW:
-                    return WriteNewObject(resp, c, commit);
+                    return WriteNewChain(resp, c, commit);
                 default:
-                    return Status::NOT_IMPLEMENTED;
-            }
-            break;
-        case YARN_RAW_FORM:
-            switch (term) {
-                case QUERY:
-                    return YarnQuery(resp, c, commit);
-                case RAW:
-                    return WriteNewYarn(resp, c, commit);
-                default:
-                    return Status::NOT_IMPLEMENTED;
+                    return Status::NOT_IMPLEMENTED.comment("RDT unknown");
             }
             break;
         case TXT_MAP_FORM:
@@ -494,7 +451,7 @@ Status Replica<Frame>::DispatchRecv(Builder& resp, Cursor& c, Commit& commit) {
                 case HEADER:
                     return txt_.Write(resp, c, commit);
                 default:
-                    return Status::NOT_IMPLEMENTED;
+                    return Status::NOT_IMPLEMENTED.comment("txt");
             }
         default:
             return Status::NOT_IMPLEMENTED.comment("unknown form: " +

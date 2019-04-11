@@ -24,23 +24,16 @@ class JoinedStore {
 
     Status Read(Key key, Frame& into) {
         Frame a, b;
-        Status ok;
-        ok = a_.Read(key, a);
-        if (!ok) {
-            return ok;
-        }
-        ok = b_.Read(key, b);
-        if (!ok) {
-            return ok;
-        }
+        IFOK(a_.Read(key, a));
+        IFOK(b_.Read(key, b));
         if (a.empty()) {
             std::swap(b, into);
         } else if (b.empty()) {
             std::swap(b, into);
         } else {
-            ok = MergeFrames(into, Frames{a, b});
+            IFOK(MergeFrames(into, Frames{a, b}));
         }
-        return ok;
+        return Status::OK;
     }
 
     Status Write(const Records& batch) { return a_.Write(batch); }
@@ -62,16 +55,10 @@ class JoinedStore {
 
         Status Next() {
             if (ai_.key() == at_) {
-                Status ok = ai_.Next();
-                if (!ok) {
-                    return ok;
-                }
+                IFOK(ai_.Next());
             }
             if (bi_.key() == at_) {
-                Status ok = bi_.Next();
-                if (!ok) {
-                    return ok;
-                }
+                IFOK(bi_.Next());
             }
             pick();
             return Status::OK;
@@ -79,14 +66,8 @@ class JoinedStore {
 
         Status SeekTo(Key key, bool prev = false) {
             Status ok;
-            ok = ai_.SeekTo(key, prev);
-            if (!ok) {
-                return ok;
-            }
-            ok = bi_.SeekTo(key, prev);
-            if (!ok) {
-                return ok;
-            }
+            IFOK(ai_.SeekTo(key, prev));
+            IFOK(bi_.SeekTo(key, prev));
             pick();
             return Status::OK;
         }
@@ -103,8 +84,8 @@ class JoinedStore {
             inputs.push_back(ai_.value());
             inputs.push_back(bi_.value());
             Status ok = MergeCursors<Frame>(merged_, inputs);
-            // errors?!
-            return Cursor{merged_};
+            return ok ? Cursor{merged_}
+                      : OneOp<Frame>(ok.code(), FATAL).cursor();
         }
 
         inline Key key() const { return at_; }

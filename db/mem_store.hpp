@@ -131,7 +131,7 @@ class InMemoryStore {
             }
             e_ = b_;
             scroll();
-            return Status::OK;  //?! FIXME contract
+            return Status::OK;
         }
 
         Status Close() {

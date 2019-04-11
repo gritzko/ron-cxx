@@ -107,6 +107,14 @@ void init_options(rocksdb::Options& options) {
     options.merge_operator = make_shared<RDTMerge<Frame>>();
 }
 
+#define IFROK(x)                   \
+    {                              \
+        rocksdb::Status rok = (x); \
+        if (!rok.ok()) {           \
+            return status(rok);    \
+        }                          \
+    }
+
 //  S T O R E
 static const string HOME = ".swarmdb";
 
@@ -119,10 +127,7 @@ Status RocksDBStore<Frame>::Create(Uuid id) {
 
     if (!db_) {
         rocksdb::DB* db;
-        auto rok = DB::Open(options, HOME, &db);
-        if (!rok.ok()) {
-            return status(rok);
-        }
+        IFROK(DB::Open(options, HOME, &db));
         db_ = SharedPtr{db};
     }
 
@@ -132,10 +137,7 @@ Status RocksDBStore<Frame>::Create(Uuid id) {
     if (ok && !yarn_root.empty()) {
         ColumnFamilyHandle* cfh;
         auto db = static_pointer_cast<rocksdb::DB>(db_);
-        auto rok = db->CreateColumnFamily(options, id.str(), &cfh);
-        if (!rok.ok()) {
-            return status(rok);
-        }
+        IFROK(db->CreateColumnFamily(options, id.str(), &cfh));
         cf_.reset(cfh);
         cfid = id;
     }
@@ -155,10 +157,7 @@ Status RocksDBStore<Frame>::Open(Uuid id) {
     init_options<Frame>(options);
 
     rocksdb::DB* db;
-    auto ok = DB::Open(options, HOME, &db);
-    if (!ok.ok()) {
-        return status(ok);
-    }
+    IFROK(DB::Open(options, HOME, &db));
     db_.reset(db);
 
     if (!id.zero()) {
@@ -195,9 +194,9 @@ Status RocksDBStore<Frame>::Write(Key key, const Frame& change) {
     auto db = static_pointer_cast<rocksdb::DB>(db_);
     auto cf = static_pointer_cast<rocksdb::ColumnFamilyHandle>(cf_);
     Slice data{change.data()};
-    auto ok = cf ? db->Merge(wo(), cf.get(), key2slice(be), slice(data))
-                 : db->Merge(wo(), key2slice(be), slice(data));
-    return status(ok);
+    IFROK(cf ? db->Merge(wo(), cf.get(), key2slice(be), slice(data))
+             : db->Merge(wo(), key2slice(be), slice(data)));
+    return Status::OK;
 }
 
 template <typename Frame>
@@ -247,8 +246,8 @@ Status RocksDBStore<Frame>::Write(const Records& batch) {
         b.Merge(key2slice(k), slice);
     }
     auto db = static_pointer_cast<rocksdb::DB>(db_);
-    auto ok = db->Write(wo(), &b);
-    return status(ok);
+    IFROK(db->Write(wo(), &b));
+    return Status::OK;
 }
 
 //  I T E R A T O R
@@ -292,11 +291,7 @@ Status RocksDBStore<Frame>::Iterator::Next() {
     }
     auto i = static_pointer_cast<rocksdb::Iterator>(i_);
     i->Next();
-    rocksdb::Status ok = i->status();
-    if (!ok.ok()) {
-        Close();
-        return ron::status(ok);
-    }
+    IFROK(i->status());
     return Status::OK;
 }
 
@@ -309,11 +304,7 @@ Status RocksDBStore<Frame>::Iterator::SeekTo(Key key, bool prev) {
     auto be = key.be();
     auto k = key2slice(be);
     prev ? i->SeekForPrev(k) : i->Seek(k);
-    auto ok = i->status();
-    if (!ok.ok()) {
-        Close();
-        return ron::status(ok);
-    }
+    IFROK(i->status());
     return Status::OK;
 }
 
@@ -335,19 +326,13 @@ Status RocksDBStore<Frame>::OpenAll(Branches& branches) {
     init_options<Frame>(options);
 
     vector<std::string> cfnames;
-    auto ok = rocksdb::DB::ListColumnFamilies(options, HOME, &cfnames);
-    if (!ok.ok()) {
-        return status(ok);
-    }
+    IFROK(rocksdb::DB::ListColumnFamilies(options, HOME, &cfnames));
     for (auto& name : cfnames) {
         families.push_back(CFD{name, cfo});
     }
 
     rocksdb::DB* db;
-    ok = DB::Open(options, HOME, families, &handles, &db);
-    if (!ok.ok()) {
-        return status(ok);
-    }
+    IFROK(DB::Open(options, HOME, families, &handles, &db));
 
     branches.clear();
     branches.reserve(families.size());

@@ -8,6 +8,8 @@ constexpr uint64_t Word::LOWER6[11];
 const Word Word::NEVER{Word::MAX_VALUE};
 const Uuid Uuid::NIL{0, 0};
 const Uuid Uuid::FATAL{Word::MAX_VALUE, Word::MAX_VALUE};
+const Uuid Uuid::NEVER = Uuid::Time(Word::MAX_VALUE, Word::MAX_VALUE);
+const Uuid Uuid::COMMENT{1134907106097364992UL, 0};
 
 void Word::write_base64(String& to) const {
     size_t len = 0;

@@ -1,7 +1,8 @@
-#ifndef CPP_MAP_CONST_HPP
-#define CPP_MAP_CONST_HPP
+#ifndef RON_DB_CONST_HPP
+#define RON_DB_CONST_HPP
 
 #include "../ron/uuid.hpp"
+#include "key.hpp"
 
 namespace ron {
 
@@ -46,7 +47,7 @@ static const Uuid JSON_MAP_ID{JSON_MAP_NAME, 0};
 static const Uuid MAP_IDS[] = {CHAIN_MAP_ID, META_MAP_ID, OP_MAP_ID,
                                YARN_MAP_ID,  SHA2_MAP_ID, PREV_MAP_ID,
                                HEAD_MAP_ID,  OBJ_MAP_ID,  CSV_MAP_ID,
-                               TXT_MAP_ID,   JSON_MAP_ID, FATAL};
+                               TXT_MAP_ID,   JSON_MAP_ID, Uuid::FATAL};
 
 inline Uuid map2uuid(MAP e) { return MAP_IDS[e]; }
 
@@ -81,4 +82,4 @@ inline MAP uuid2map(const Uuid& u) {
 
 }  // namespace ron
 
-#endif  // CPP_CONST_HPP
+#endif

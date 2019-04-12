@@ -143,8 +143,8 @@ Status RocksDBStore<Frame>::Create(Uuid id) {
     }
 
     Frame new_yarn_root = OneOp<Frame>(id, YARN_FORM_UUID);
-    IFOK(Write(Key{}, new_yarn_root));
-    IFOK(Write(END_KEY, Frame{}));
+    IFOK(Write(Key::ZERO, new_yarn_root));
+    IFOK(Write(Key::END, Frame{}));
 
     return Status::OK;
 }
@@ -187,13 +187,14 @@ Status RocksDBStore<Frame>::Put(Key key, const Frame& state, Uuid branch) {
 template <typename Frame>
 Status RocksDBStore<Frame>::Write(Key key, const Frame& change) {
     if (!db_) return Status::BAD_STATE.comment("closed");
-    if (key == END_KEY && !change.empty()) {
-        return Status::BADARGS.comment("can't write to END_KEY");
+    if (key == Key::END && !change.empty()) {
+        return Status::BADARGS.comment("can't write to Key::END");
     }
     auto be = key.be();
     auto db = static_pointer_cast<rocksdb::DB>(db_);
     auto cf = static_pointer_cast<rocksdb::ColumnFamilyHandle>(cf_);
     Slice data{change.data()};
+    LOG('w', key, change.data());
     IFROK(cf ? db->Merge(wo(), cf.get(), key2slice(be), slice(data))
              : db->Merge(wo(), key2slice(be), slice(data)));
     return Status::OK;
@@ -202,7 +203,7 @@ Status RocksDBStore<Frame>::Write(Key key, const Frame& change) {
 template <typename Frame>
 Status RocksDBStore<Frame>::Read(Key key, Frame& result) {
     if (!db_) return Status::BAD_STATE.comment("closed");
-    if (key == END_KEY) {
+    if (key == Key::END) {
         result.Clear();
         return Status::OK;
     }
@@ -213,11 +214,15 @@ Status RocksDBStore<Frame>::Read(Key key, Frame& result) {
     auto ok = cf ? db->Get(ro(), cf.get(), key2slice(k), &ret)
                  : db->Get(ro(), key2slice(k), &ret);
     if (ok.IsNotFound()) {
-        return Status::NOT_FOUND;
+        LOG('r', key, "");
+        result.Clear();
+        return Status::OK;
     }
     if (!ok.ok()) {
+        LOG('r', key, status(ok).str());
         return status(ok);
     }
+    LOG('r', key, ret);
     result.swap(ret);
     return Status::OK;
 }
@@ -244,6 +249,7 @@ Status RocksDBStore<Frame>::Write(const Records& batch) {
         const String& data = i->second.data();
         rocksdb::Slice slice{data};
         b.Merge(key2slice(k), slice);
+        LOG('m', i->first, data);
     }
     auto db = static_pointer_cast<rocksdb::DB>(db_);
     IFROK(db->Write(wo(), &b));
@@ -270,7 +276,7 @@ template <typename Frame>
 Key RocksDBStore<Frame>::Iterator::key() const {
     auto i = static_pointer_cast<const rocksdb::Iterator>(i_);
     if (!i || !i->Valid()) {
-        return END_KEY;
+        return Key::END;
     }
     return slice2key(i->key());
 }
@@ -304,6 +310,7 @@ Status RocksDBStore<Frame>::Iterator::SeekTo(Key key, bool prev) {
     auto be = key.be();
     auto k = key2slice(be);
     prev ? i->SeekForPrev(k) : i->Seek(k);
+    auto ok = i->status();
     IFROK(i->status());
     return Status::OK;
 }

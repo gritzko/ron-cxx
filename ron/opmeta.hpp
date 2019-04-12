@@ -91,7 +91,7 @@ struct OpMeta {
 
     template <typename Cursor>
     inline bool is_check(const Cursor& cur) const {
-        return cur.ref() == id && cur.id().version() == NAME;
+        return cur.id().version() == NAME && cur.ref() == id;
     }
 
     template <class Cursor>

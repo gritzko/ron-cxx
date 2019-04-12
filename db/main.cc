@@ -154,7 +154,7 @@ Status CommandTest(RonReplica& replica, const string& file) {
     static const string FAIL{"\033[1;31mFAIL\033[0m\t"};
     for (int i = 0; ok && i < io.size(); i++) {
         Cursor c = io[i].cursor();
-        if (c.id() != COMMENT_UUID)
+        if (c.id() != Uuid::COMMENT)
             return Status::BADFRAME.comment("no in/out header");
         TERM term = c.term();
         string comment;

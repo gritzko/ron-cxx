@@ -49,8 +49,8 @@ Status CompareOps(const Cursor& a, const Cursor& b) {
 template <typename Cursor>
 Status CompareWithCursors(Cursor a, Cursor b) {
     while (a.valid() && b.valid()) {
-        while (a.valid() && a.id() == COMMENT_UUID) a.Next();
-        while (b.valid() && b.id() == COMMENT_UUID) b.Next();
+        while (a.valid() && a.id() == Uuid::COMMENT) a.Next();
+        while (b.valid() && b.id() == Uuid::COMMENT) b.Next();
         if (!a.valid() || !b.valid()) break;
         Status ok = CompareOps<Cursor>(a, b);
         if (!ok) {
@@ -59,8 +59,8 @@ Status CompareWithCursors(Cursor a, Cursor b) {
         a.Next();
         b.Next();
     }
-    while (a.valid() && a.id() == COMMENT_UUID) a.Next();
-    while (b.valid() && b.id() == COMMENT_UUID) b.Next();
+    while (a.valid() && a.id() == Uuid::COMMENT) a.Next();
+    while (b.valid() && b.id() == Uuid::COMMENT) b.Next();
     if (a.valid() || b.valid())
         return Status::BADFRAME.comment("one frame is longer");
     return Status::OK;

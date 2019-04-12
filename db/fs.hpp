@@ -47,7 +47,7 @@ class TmpDir {
    public:
     TmpDir() = default;
 
-    Status cd(String name = "test") {
+    Status cd(String name) {
         char dir[MAX_PATH_LEN];
         getcwd(dir, MAX_PATH_LEN);
         cwd_ = String{dir};

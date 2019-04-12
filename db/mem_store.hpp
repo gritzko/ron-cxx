@@ -46,7 +46,7 @@ class InMemoryStore {
         Frame meta = OneOp<Frame>(id, YARN_FORM_UUID);
         Key zero{};
         state_.insert(Record{zero, meta});
-        state_.insert(Record{END_KEY, Frame{}});
+        state_.insert(Record{Key::END, Frame{}});
         return Status::OK;
     }
 
@@ -74,7 +74,7 @@ class InMemoryStore {
 
         Cursor value() {
             if (len_ == 0) {
-                return Cursor{std::string{}};
+                return Cursor{""};
             }
             if (len_ == 1) {
                 return Cursor{b_->second};
@@ -85,11 +85,11 @@ class InMemoryStore {
             return Cursor{merged_};
         }
 
-        inline ron::Key key() const { return len_ == 0 ? END_KEY : b_->first; }
+        inline ron::Key key() const { return len_ == 0 ? Key::END : b_->first; }
 
         /**
          * Moves to the next record in the store.
-         * If already at the END_KEY then does nothing.
+         * If already at the Key::END then does nothing.
          * @return OK or error
          */
         Status Next() {
@@ -111,25 +111,28 @@ class InMemoryStore {
         /**
          * Moves to the given key. If none found, moves to the nearest
          * greater key (if prev==true then nearest lesser key).
-         * May end up on zero or END_KEY (which are always present).
+         * May end up on zero or Key::END (which are always present).
          * @return OK or error if something really bad happened
          */
         Status SeekTo(ron::Key key, bool prev = false) {
             b_ = store_.lower_bound(key);
-            if (b_ == store_.end() && prev && !store_.empty()) {
-                --b_;
-            }
+            e_ = b_;
             if (b_ == store_.end()) {
-                return Status::ENDOFINPUT;
-            }
-            if (prev && b_->first != key) {
+                if (prev && !store_.empty()) {
+                    --b_;
+                    e_ = b_;
+                } else {
+                    return Status::OK;
+                }
+            } else if (prev && b_->first != key) {
                 if (b_ != store_.begin()) {
                     --b_;
+                    e_ = b_;
                 } else {
-                    b_ = store_.end();
+                    b_ = e_ = store_.end();
+                    return Status::OK;
                 }
             }
-            e_ = b_;
             scroll();
             return Status::OK;
         }
@@ -141,8 +144,8 @@ class InMemoryStore {
     };
 
     Status Write(Key key, const Frame& change) {
-        if (key == END_KEY)
-            return Status::BADARGS.comment("can't write at END_KEY");
+        if (key == Key::END)
+            return Status::BADARGS.comment("can't write at Key::END");
         state_.insert(Record{key, change});
         return Status::OK;
     }
@@ -152,7 +155,7 @@ class InMemoryStore {
         auto range = state_.equal_range(key);
         if (range.first == range.second) {
             result = Frame{};
-            return Status::NOT_FOUND;
+            return Status::OK;
         }
         auto i = range.first;
         ++i;

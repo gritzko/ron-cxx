@@ -20,7 +20,10 @@ class JoinedStore {
 
     JoinedStore(StoreA& a, StoreB& b) : a_{a}, b_{b} {}
 
-    Status Write(Key key, const Frame& data) { return a_.Write(key, data); }
+    Status Write(Key key, const Frame& data) {
+        LOG('W', key, data.data());
+        return b_.Write(key, data);
+    }
 
     Status Read(Key key, Frame& into) {
         Frame a, b;
@@ -33,6 +36,7 @@ class JoinedStore {
         } else {
             IFOK(MergeFrames(into, Frames{a, b}));
         }
+        LOG('R', key, into.data());
         return Status::OK;
     }
 
@@ -51,7 +55,7 @@ class JoinedStore {
 
        public:
         Iterator(JoinedStore& host)
-            : ai_{host.a_}, bi_{host.b_}, at_{END_KEY}, merged_{} {}
+            : ai_{host.a_}, bi_{host.b_}, at_{Key::END}, merged_{} {}
 
         Status Next() {
             if (ai_.key() == at_) {
@@ -68,15 +72,18 @@ class JoinedStore {
             Status ok;
             IFOK(ai_.SeekTo(key, prev));
             IFOK(bi_.SeekTo(key, prev));
+            LOG('S', key, ai_.key().str() + ' ' + bi_.key().str() + '\n');
             pick();
             return Status::OK;
         }
 
         Cursor value() {
             if (ai_.key() != at_) {
+                LOG('I', at_, bi_.value().data().str());
                 return bi_.value();
             }
             if (bi_.key() != at_) {
+                LOG('I', at_, ai_.value().data().str());
                 return ai_.value();
             }
             // have to merge then
@@ -84,8 +91,9 @@ class JoinedStore {
             inputs.push_back(ai_.value());
             inputs.push_back(bi_.value());
             Status ok = MergeCursors<Frame>(merged_, inputs);
+            LOG('I', at_, merged_.data());
             return ok ? Cursor{merged_}
-                      : OneOp<Frame>(ok.code(), FATAL).cursor();
+                      : OneOp<Frame>(ok.code(), Uuid::FATAL).cursor();
         }
 
         inline Key key() const { return at_; }

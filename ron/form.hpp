@@ -104,7 +104,7 @@ const std::unordered_map<Uuid, FORM> UUID2FORM = {
     {JSON_FORM_UUID, JSON_MAP_FORM},
     {CSV_FORM_UUID, CSV_MAP_FORM},
     {TXT_FORM_UUID, TXT_MAP_FORM},
-    {FATAL, ERROR_NO_FORM}
+    {Uuid::FATAL, ERROR_NO_FORM}
 
 };
 
@@ -114,8 +114,11 @@ inline FORM uuid2form(Uuid u) {
 }
 
 inline Uuid form2uuid(FORM form) {
-    assert(form < sizeof(FORMS));
-    return Uuid{FORMS[form], 0};
+    if (form < sizeof(FORMS)) {
+        return Uuid{FORMS[form], 0};
+    } else {
+        return Uuid::FATAL;
+    }
 }
 
 }  // namespace ron

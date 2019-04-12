@@ -108,10 +108,6 @@ class Replica {
         return branches_.find(branch)->second;
     }
 
-    inline Commit GetBranchHead(Uuid branch) {
-        //??!!
-    }
-
     inline RocksStore& GetMeta() { return GetBranch(Uuid::NIL); }
 
     inline Status GetChain(Frame& chain, Uuid chain_id);
@@ -139,12 +135,14 @@ class Replica {
     //  O T H E R  A C C E S S O R S
 
     /** If we don't know the exact chain id, we have to scan the table to
-     *  find the chain. Then, we scan the chain to find the op. */
+     *  find the chain. Then, we scan the chain to find the op.
+     *  @param{op_id} the op id or ~+yarn_id for the yarn tip
+     */
     Status FindOpMeta(OpMeta& meta, Uuid op_id, Commit& commit);
 
     /** Fetches the op metadata for the chain head op.
      * @param meta - the op meta object with op id set to the chain id */
-    Status FindChainStartMeta(OpMeta& meta, Uuid op_id, Commit& commit);
+    Status FindChainHeadMeta(OpMeta& meta, Uuid op_id, Commit& commit);
 
     Status FindObjectLog(Frame& frame, Uuid id, Commit& commit);
 
@@ -233,7 +231,7 @@ class Replica {
     inline Status FrameRecv(Builder& response, Frame frame,
                             Uuid branch = Uuid::NIL) {
         Cursor c{frame};
-        cerr << "Recv on " << branch.str() << endl;
+        cerr << "Recv on " << branch.str() << frame.data() << endl;
         return Recv(response, c, branch);
     }
     Status DispatchRecv(Builder& resp, Cursor& c, Commit& commit);

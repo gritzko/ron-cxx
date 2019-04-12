@@ -243,6 +243,7 @@ list(APPEND SWARMDB_HEADERS
 
 set(SWARMDB_SOURCES
         ${SWARMDB_HEADERS}
+        db/key.cc
         db/replica.cc
         db/rocks_store.cc
     )

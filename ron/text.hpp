@@ -56,6 +56,7 @@ class TextFrame {
         }
         explicit Cursor(const String& str) : Cursor{Slice{str}} {}
         explicit Cursor(const TextFrame& host) : Cursor{host.data_} {}
+        Cursor(const Cursor& b) = default;
         const Op& op() const { return op_; }
         Status Next();
         void Trim(const Cursor& b) {
@@ -79,6 +80,9 @@ class TextFrame {
             return has(idx, UUID) && uuid(idx) == id;
         }
         const Slice data() const { return data_; }
+        const Slice at_data() const {
+            return data_.slice(frange_t{at_, off_ - at_});
+        }
         inline Slice slice(frange_t range) const { return data().slice(range); }
         inline const Uuid& id() const { return op_.id(); }
         inline const Uuid& ref() const { return op_.ref(); }

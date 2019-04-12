@@ -213,6 +213,8 @@ struct Uuid : public Atom {
     /** Nil UUID as per RFC4122 */
     static const Uuid NIL;
     static const Uuid FATAL;
+    static const Uuid NEVER;
+    static const Uuid COMMENT;
 
     inline static Uuid Parse(char variety, const Slice& value, char version,
                              const Slice& origin) {
@@ -223,9 +225,6 @@ struct Uuid : public Atom {
     static Word HybridTime(time_t seconds, long int nanos = 0);
     static Word Now();
 };
-
-const static Uuid FATAL{Word::MAX_VALUE, Word::MAX_VALUE};
-const static Uuid COMMENT_UUID{1134907106097364992UL, 0};
 
 typedef std::pair<uint64_t, uint64_t> uint64pair;
 

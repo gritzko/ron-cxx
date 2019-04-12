@@ -18,18 +18,19 @@ TEST(Store, Ends) {
     Frame frame;
     ASSERT_TRUE(IsOK(store.Read(Key{}, frame)));
     ASSERT_FALSE(frame.empty());
-    ASSERT_TRUE(IsOK(store.Read(END_KEY, frame)));
+    ASSERT_TRUE(IsOK(store.Read(Key::END, frame)));
     ASSERT_TRUE(frame.empty());
-    ASSERT_FALSE(IsOK(store.Read(Key{id,LWW_RDT_FORM}, frame)));
+    ASSERT_TRUE(IsOK(store.Read(Key{id,LWW_RDT_FORM}, frame)));
+    ASSERT_TRUE(frame.empty());
     Iterator i{store};
-    ASSERT_EQ(i.key(), END_KEY);
+    ASSERT_EQ(i.key(), Key::END);
     ASSERT_FALSE(i.value().valid());
 
-    ASSERT_TRUE(IsOK(i.SeekTo(END_KEY, false)));
-    ASSERT_EQ(i.key(), END_KEY);
+    ASSERT_TRUE(IsOK(i.SeekTo(Key::END, false)));
+    ASSERT_EQ(i.key(), Key::END);
     ASSERT_FALSE(i.value().valid());
-    ASSERT_TRUE(IsOK(i.SeekTo(END_KEY, true)));
-    ASSERT_EQ(i.key(), END_KEY);
+    ASSERT_TRUE(IsOK(i.SeekTo(Key::END, true)));
+    ASSERT_EQ(i.key(), Key::END);
     ASSERT_FALSE(i.value().valid());
 
     ASSERT_TRUE(IsOK(i.SeekTo(Key{}, true)));
@@ -41,14 +42,14 @@ TEST(Store, Ends) {
 
     // empty store, 2 records: zero and end
     ASSERT_TRUE(IsOK(i.Next()));
-    ASSERT_TRUE(IsOK(i.SeekTo(END_KEY, true)));
-    ASSERT_EQ(i.key(), END_KEY);
+    ASSERT_TRUE(IsOK(i.SeekTo(Key::END, true)));
+    ASSERT_EQ(i.key(), Key::END);
     ASSERT_FALSE(i.value().valid());
 
     // Next() at the end => end, returns ENDOFINPUT
     ASSERT_FALSE(i.Next()==Status::ENDOFINPUT);
-    ASSERT_TRUE(IsOK(i.SeekTo(END_KEY, true)));
-    ASSERT_EQ(i.key(), END_KEY);
+    ASSERT_TRUE(IsOK(i.SeekTo(Key::END, true)));
+    ASSERT_EQ(i.key(), Key::END);
     ASSERT_FALSE(i.value().valid());
 }
 

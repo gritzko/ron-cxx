@@ -23,7 +23,7 @@ template <typename Frame>
 Status Replica<Frame>::Create(Word origin) {
     RocksStore db;
     // Uuid branch_id{0, origin};
-    Uuid now = Uuid{Uuid::Now(), origin};
+    Uuid now = Uuid::Time(Uuid::Now(), origin);
     Status ok = db.Create(now);
     if (!ok) {
         return ok;
@@ -114,41 +114,45 @@ Replica<Frame>::~Replica() {
 template <class Frame>
 Status Replica<Frame>::FindOpMeta(OpMeta& meta, Uuid op_id, Commit& commit) {
     // find head rec
-    OpMeta head;
-    Status ok = FindChainStartMeta(head, op_id, commit);
-    if (!ok) {
-        return ok;
-    }
-    if (head.id == op_id) {
+    IFOK(FindChainHeadMeta(meta, op_id, commit));
+    if (meta.id == op_id) {
         return Status::OK;
     }
     // load object log
     Frame object_log;
-    ok = FindObjectLog(object_log, head.object, commit);
-    if (!ok) {
-        return ok;
-    }
+    IFOK(FindObjectLog(object_log, meta.object, commit));
     // seek to the head
     Cursor cur{object_log};
-    while (cur.valid() && cur.id() != head.id) {
+    while (cur.valid() && cur.id() != meta.id) {
         cur.Next();
     }
     if (!cur.valid()) {
-        return Status::NOT_FOUND.comment("the head is not in the log?!");
+        return Status::NOT_FOUND.comment("the chain head is not in the log?!");
     }
     // seek to the op
     while (cur.id() != op_id && cur.Next()) {
-        head.Next(cur);
+        if (cur.id().origin() != op_id.origin()) {
+            continue;
+        }
+        if (cur.ref() != meta.id) {
+            return Status::NOT_FOUND.comment("no op in the chain:" +
+                                             op_id.str());
+        }
+        meta.Next(cur);
     }
     if (!cur.valid()) {
-        return Status::NOT_FOUND.comment("no such op");
+        if (op_id.value() == NEVER) {
+            return Status::OK;  // a dirty trick to pick the yarn tip
+        }
+        return Status::NOT_FOUND.comment("no such op: " + op_id.str());
     }
+    meta.Next(cur);
     return Status::OK;
 }
 
 template <class Frame>
-Status Replica<Frame>::FindChainStartMeta(OpMeta& meta, Uuid op_id,
-                                          Commit& commit) {
+Status Replica<Frame>::FindChainHeadMeta(OpMeta& meta, Uuid op_id,
+                                         Commit& commit) {
     CommitIterator i{commit};
     Status ok = i.SeekTo(Key{op_id, META_FORM_UUID}, true);
     if (!ok) {
@@ -160,7 +164,7 @@ Status Replica<Frame>::FindChainStartMeta(OpMeta& meta, Uuid op_id,
     }
     if (metac.id().origin() != op_id.origin() ||
         metac.ref() != META_FORM_UUID) {
-        return Status::CAUSEBREAK.comment("no such yarn?");
+        return Status::NOT_FOUND.comment("no such yarn?");
     }
     ok = meta.Load(metac);
     return ok;
@@ -174,7 +178,9 @@ Status Replica<Frame>::FindYarnTipMeta(OpMeta& meta, Word yarn,
 }
 
 template <class Frame>
-Status Replica<Frame>::FindObjectLog(Frame& frame, Uuid id, Commit& commit) {}
+Status Replica<Frame>::FindObjectLog(Frame& frame, Uuid id, Commit& commit) {
+    return commit.Read(Key{id, LOG_RAW_FORM}, frame);
+}
 
 //  E V E N T  Q U E R I E S
 
@@ -203,7 +209,8 @@ Status Replica<Frame>::ReadChainlet(Builder& to, OpMeta& meta, Cursor& from) {
     Status ok = from.Next();
     // TODO(gritzko) sanity checks
     while (ok) {
-        if (meta.is_next(from)) {
+        if (from.id() == Uuid::COMMENT) {
+        } else if (meta.is_next(from)) {
             meta.Next(from);
             to.AppendOp(from);
         } else if (meta.is_check(from)) {
@@ -233,12 +240,13 @@ template <class Frame>
 Status Replica<Frame>::WriteNewChain(Builder&, Cursor& chain, Commit& commit) {
     Status ok;
     Uuid id = chain.id();
+    Uuid ref_id = chain.ref();
+    cerr << "\nIN:\t" << id.str() << "\t" << ref_id.str() << endl;
 
     // sanity checks
     if (id.version() != TIME) {
         return Status::BAD_STATE.comment("not an event?!");
     }
-    Uuid ref_id = chain.ref();
     if (ref_id.version() == TIME) {  // edit object
         if (ref_id >= id) {
             return Status::CAUSEBREAK;
@@ -254,14 +262,14 @@ Status Replica<Frame>::WriteNewChain(Builder&, Cursor& chain, Commit& commit) {
 
     // find the last op on the yarn (the tip) and its metadata
     OpMeta tip_meta;
+    Uuid& tip_id = tip_meta.id;
     ok = FindYarnTipMeta(tip_meta, id.origin(), commit);
-    if (chain.ref() ==
-        YARN_FORM_UUID) {  // actually, it is the first op on the yarn
+    if (chain.ref() == YARN_FORM_UUID) {
+        // actually, it is the first op on the yarn
         if (ok == Status::NOT_FOUND) {
             tip_meta = OpMeta{chain};
             ok = Status::OK;
-        }
-        if (!ok) {
+        } else if (!ok) {
             return ok;
         } else if (id == tip_meta.id) {
             // TODO compare
@@ -269,13 +277,13 @@ Status Replica<Frame>::WriteNewChain(Builder&, Cursor& chain, Commit& commit) {
         } else {
             return Status::CONFLICT.comment("can't merge a duplicate-id yarn");
         }
-    }
-    if (!ok) {
-        return ok;
-    }
-    Uuid& tip_id = tip_meta.id;
-    if (tip_id >= id) {
-        return Status::REPEAT;
+    } else {
+        if (!ok) {
+            return ok;
+        }
+        if (tip_id >= id) {
+            return Status::REPEAT;
+        }
     }
 
     // find the referenced op and its metadata (hash, object id)
@@ -342,7 +350,11 @@ Status Replica<Frame>::GetMap(Frame& result, Uuid id, Uuid map, Uuid branch) {
     query.EndChunk(QUERY);
     Cursor qc{query.data()};
     // Status ok = MapperQuery(response, qc, branch);
-    Commit readonly = GetBranchHead(branch);
+    MemStore mem;
+    if (!HasBranch(branch)) {
+        return Status::NOT_FOUND.comment("no branch " + branch.str());
+    }
+    Commit readonly{GetBranch(branch), mem};
     Records devnull;
     IFOK(DispatchRecv(response, qc, readonly));
     result = response.Release();
@@ -471,7 +483,7 @@ Status Replica<Frame>::Recv(Builder& resp, Cursor& c, Uuid branch_id) {
     Commit commit{branch_store, changes};
 
     while (c.valid() && ok) {
-        if (c.id() == COMMENT_UUID) {
+        if (c.id() == Uuid::COMMENT) {
             ok = c.Next();
             continue;
         }

@@ -21,7 +21,7 @@ struct Key {
 
     static constexpr size_t SIZE = sizeof(bits);
 
-    Key() = default;
+    Key() : bits{0, 0} {}
 
     Key(const Key& b) = default;
 
@@ -63,9 +63,17 @@ struct Key {
     String str() const {
         return '*' + form2uuid(form()).str() + '#' + id().str();
     }
+
+    static const Key ZERO;
+    static const Key END;
 };
 
-static Key END_KEY{FATAL, ERROR_NO_FORM};
+inline void LOG(char code, const Key& key, const String& value) {
+#ifndef NDEBUG
+    std::cerr << code << '\t' << key.str() << '\t'
+              << (value.empty() ? "-\n" : value);
+#endif
+}
 
 }  // namespace ron
 

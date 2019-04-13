@@ -76,6 +76,7 @@ struct OpMeta {
      */
     template <class Cursor>
     Status Next(const Cursor& op, const OpMeta& refd) {
+        assert(op.id().origin()==id.origin() && op.id()>id);
         prev = id.value();
         id = op.id();
         Uuid ref = op.ref();
@@ -133,38 +134,6 @@ struct OpMeta {
         // hash;
         return Status::OK;
     }
-
-    /*
-        Status ReadAnnotation(Cursor& cur) {
-            const Uuid& name = cur.id();
-            if (name.version() != NAME) {
-                return Status::BAD_STATE.comment("not an annotation");
-            }
-            if (cur.ref() != id) {
-                return Status::BAD_STATE.comment("annotation for a wrong op");
-            }
-            if (name == SHA2_UUID && cur.has(2, STRING)) {
-                SHA2 annhash =
-                    SHA2::ParseBase64(cur.string(2));  // TODO format check
-                if (!hash.matches(annhash)) return Status::HASHBREAK;
-                if (annhash.known_bits_ > hash.known_bits_) hash = annhash;
-            } else if (name == OBJ_UUID && cur.has(2, UUID)) {
-                Uuid annobj = cur.uuid(2);
-                if (object.zero()) {
-                    object = annobj;
-                } else if (object != annobj) {
-                    return Status::TREEBREAK;
-                }
-            } else if (name == RDT_UUID && cur.has(2, UUID)) {
-                Uuid annrdt = cur.uuid(2);
-                if (rdt.zero()) {
-                    rdt = annrdt;
-                } else if (annrdt != rdt) {
-                    return Status::TREEBREAK;
-                }
-            }
-            return Status::OK;
-        }*/
 
     inline bool is_head() const { return chain == id.value(); }
 

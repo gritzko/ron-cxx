@@ -146,6 +146,8 @@ class Replica {
 
     Status FindObjectLog(Frame& frame, Uuid id, Commit& commit);
 
+    Status NewOpSanityChecks(const Cursor& op);
+
     //  T R A N S A C T I O N A L  R E A D S  W R I T E S
 
     /** @object+id :xxx ? */

@@ -11,15 +11,6 @@ const Uuid Replica<Frame>::NOW_UUID{915334634030497792UL, 0};
 //  L I F E C Y C L E
 
 template <typename Frame>
-void Replica<Frame>::cerr_batch(Records& save) {
-    for (int i = 0; i < save.size(); ++i) {
-        cerr << form2uuid(save[i].first.form()).str() << '\t';
-        cerr << save[i].first.id().str() << '\t';
-        cerr << save[i].second.data();
-    }
-}
-
-template <typename Frame>
 Status Replica<Frame>::Create(Word origin) {
     RocksStore db;
     // Uuid branch_id{0, origin};
@@ -43,7 +34,7 @@ Status Replica<Frame>::Create(Word origin) {
 
     // 3. chain meta record
     Cursor mc{yarn_object};
-    OpMeta meta{mc};
+    OpMeta meta{mc, OpMeta{}};
     Builder meta_record;
     meta.Save(meta_record);
     initials.emplace_back(Key{now, META_META_FORM}, meta_record.Release());
@@ -130,7 +121,7 @@ Status Replica<Frame>::FindOpMeta(OpMeta& meta, Uuid op_id, Commit& commit) {
         return Status::NOT_FOUND.comment("the chain head is not in the log?!");
     }
     // seek to the op
-    while (cur.id() != op_id && cur.Next()) {
+    while (cur.Next()) {
         if (cur.id().origin() != op_id.origin()) {
             continue;
         }
@@ -138,7 +129,10 @@ Status Replica<Frame>::FindOpMeta(OpMeta& meta, Uuid op_id, Commit& commit) {
             return Status::NOT_FOUND.comment("no op in the chain:" +
                                              op_id.str());
         }
-        meta.Next(cur);
+        meta.Next(cur, meta);
+        if (meta.id == op_id) {
+            break;
+        }
     }
     if (!cur.valid()) {
         if (op_id.value() == NEVER) {
@@ -146,7 +140,6 @@ Status Replica<Frame>::FindOpMeta(OpMeta& meta, Uuid op_id, Commit& commit) {
         }
         return Status::NOT_FOUND.comment("no such op: " + op_id.str());
     }
-    meta.Next(cur);
     return Status::OK;
 }
 
@@ -204,14 +197,14 @@ Status Replica<Frame>::See(Uuid timestamp) {
 
 template <class Frame>
 Status Replica<Frame>::ReadChainlet(Builder& to, OpMeta& meta, Cursor& from) {
-    meta.Next(from);
     to.AppendOp(from);
     Status ok = from.Next();
     // TODO(gritzko) sanity checks
     while (ok) {
+        LOG('l', Key{from.id(), ZERO_RAW_FORM}, "...\n");
         if (from.id() == Uuid::COMMENT) {
         } else if (meta.is_next(from)) {
-            meta.Next(from);
+            meta.Next(from, meta);
             to.AppendOp(from);
         } else if (meta.is_check(from)) {
             ok = meta.Check(from);
@@ -229,21 +222,10 @@ Status Replica<Frame>::ReadChainlet(Builder& to, OpMeta& meta, Cursor& from) {
     return ok;
 }
 
-/** The key lifecycle method: accepts a new chain of ops, checks it
- * against existing ops, checks integrity/consistency/causality,
- * saves the chain, updates object state.
- * @param batch a WriteBatch for all the db writes
- * @param branch
- * @param chain a cursor positioned on the head of the chain;
- *              will be moved to the first non-chain op (or EOF) */
 template <class Frame>
-Status Replica<Frame>::WriteNewChain(Builder&, Cursor& chain, Commit& commit) {
-    Status ok;
+Status Replica<Frame>::NewOpSanityChecks(const Cursor& chain) {
     Uuid id = chain.id();
     Uuid ref_id = chain.ref();
-    cerr << "\nIN:\t" << id.str() << "\t" << ref_id.str() << endl;
-
-    // sanity checks
     if (id.version() != TIME) {
         return Status::BAD_STATE.comment("not an event?!");
     }
@@ -259,6 +241,25 @@ Status Replica<Frame>::WriteNewChain(Builder&, Cursor& chain, Commit& commit) {
             return Status::NOT_IMPLEMENTED.comment("create zero typed obj?");
         }
     }
+    return Status::OK;
+}
+
+/** The key lifecycle method: accepts a new chain of ops, checks it
+ * against existing ops, checks integrity/consistency/causality,
+ * saves the chain, updates object state.
+ * @param batch a WriteBatch for all the db writes
+ * @param branch
+ * @param chain a cursor positioned on the head of the chain;
+ *              will be moved to the first non-chain op (or EOF) */
+template <class Frame>
+Status Replica<Frame>::WriteNewChain(Builder&, Cursor& chain, Commit& commit) {
+    Status ok;
+    Uuid id = chain.id();
+    Uuid ref_id = chain.ref();
+    cerr << "\nIN:\t" << id.str() << "\t" << ref_id.str() << endl;
+
+    // sanity checks
+    IFOK(NewOpSanityChecks(chain));
 
     // find the last op on the yarn (the tip) and its metadata
     OpMeta tip_meta;
@@ -267,7 +268,7 @@ Status Replica<Frame>::WriteNewChain(Builder&, Cursor& chain, Commit& commit) {
     if (chain.ref() == YARN_FORM_UUID) {
         // actually, it is the first op on the yarn
         if (ok == Status::NOT_FOUND) {
-            tip_meta = OpMeta{chain};
+            tip_meta = OpMeta{chain, OpMeta{}};
             ok = Status::OK;
         } else if (!ok) {
             return ok;
@@ -287,24 +288,24 @@ Status Replica<Frame>::WriteNewChain(Builder&, Cursor& chain, Commit& commit) {
     }
 
     // find the referenced op and its metadata (hash, object id)
-    OpMeta ref_meta;
     if (ref_id == tip_id) {  // the op refs the tip, we have the meta already
-        ref_meta = tip_meta;
+        tip_meta.Next(chain, tip_meta);
     } else if (ref_id.version() == NAME) {  // tree root, references nothing
         FORM form = uuid2form(ref_id);
         if (form == ERROR_NO_FORM) {
             return Status::NOT_IMPLEMENTED.comment("form unknown: " +
                                                    ref_id.str());
         }
+        tip_meta = OpMeta{chain, tip_meta};
         // TODO check it is an RDT or yarn
-        ref_meta = OpMeta{chain, tip_meta};
     } else {  // ok, let's check the db
         // we enforce referential integrity but we
         // can't run datatype-specific checks here
+        OpMeta ref_meta;
         IFOK(FindOpMeta(ref_meta, ref_id, commit));
+        tip_meta.Next(chain, ref_meta);
     }
 
-    Uuid& obj_id = ref_meta.object;
     if (ref_id != tip_id) {
         Builder chain_record;
         tip_meta.Save(chain_record);
@@ -312,6 +313,7 @@ Status Replica<Frame>::WriteNewChain(Builder&, Cursor& chain, Commit& commit) {
     }
 
     // walk/check the chainlet
+    Uuid& obj_id = tip_meta.object;
     Builder chainlet;
     IFOK(ReadChainlet(chainlet, tip_meta, chain));
     IFOK(See(tip_meta.id));  // implausible timestamps etc
@@ -505,7 +507,6 @@ Status Replica<Frame>::Recv(Builder& resp, Cursor& c, Uuid branch_id) {
 
     Records save;
     if (ok && changes.Release(save)) {
-        cerr_batch(save);
         IFOK(branch_store.Write(save));
     }
     // the response is rendered

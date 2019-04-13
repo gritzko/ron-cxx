@@ -92,6 +92,8 @@ struct SHA2 {
     }
 
     inline uint32_t known_bits() const { return known_bits_; }
+
+    static const SHA2 ZERO;
 };
 
 // a binary stream of RON primitives

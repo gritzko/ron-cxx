@@ -19,7 +19,7 @@ static const int RON_en_main = 72;
 Status TextFrame::Cursor::Next() {
     Atoms& atoms = op_.atoms_;
 
-    int line = 1;
+    int line = line_;
 
     switch (cs) {
         case RON_error:
@@ -4606,6 +4606,7 @@ Status TextFrame::Cursor::Next() {
 
     at_ = off_;
     off_ = p - pb;
+    line_ = line;
 
     if (op_.size()) prev_id_ = op_.id();
 
@@ -4615,6 +4616,9 @@ Status TextFrame::Cursor::Next() {
     if (term && cs != RON_error) {
         op_.term_ = chr2term(term);  // FIXME gen a fn
         return Status::OK;
+    } else if (cs > RON_first_final) {
+        cs = RON_error;
+        return Status::ENDOFFRAME;
     } else {
         cs = RON_error;
         char msg[64];

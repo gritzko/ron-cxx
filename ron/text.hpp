@@ -34,6 +34,7 @@ class TextFrame {
         int off_;
         int cs;
         Uuid prev_id_;
+        int line_;
 
         static constexpr int RON_FULL_STOP = 255;
         static constexpr int SPEC_SIZE = 2;  // open RON
@@ -49,7 +50,8 @@ class TextFrame {
               at_{0},
               off_{0},
               cs{0},
-              prev_id_{} {
+              prev_id_{},
+              line_{1} {
             if (advance) {
                 Next();
             }

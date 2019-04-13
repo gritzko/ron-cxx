@@ -165,7 +165,7 @@ struct Atom {
 struct Uuid : public Atom {
     Uuid() : Atom{0, 0} {}
     Uuid(Word value, Word origin) : Atom{value, origin} {}
-    Uuid(Slice data);
+    explicit Uuid(Slice data);
     // pre-parsed Uuid, got hints and correctness guarantee
     Uuid(char variety, const Slice& value, char version, const Slice& origin)
         : Uuid{Word{ABC[(int)variety], value},

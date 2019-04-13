@@ -2,7 +2,7 @@
 @1hLH+test_lww :yarn;
 
 @~ 'create an lww object'!
-@1hLHRG+test_lww :lww ,
+@1hLHRG+test_lww :lww,
     'type' 'ticket',
     'date' '19 Jan 2019',
     'organisation' 'The State Museum of Oriental Art',
@@ -27,10 +27,14 @@
     'price' 30000,
 @1hLHXS+test_lww
     'enter' '18:18:14',
-    'exit'  '20:45:25';
+    'exit'  '20:45:25',
+@sha3 
+    '12345y12op4y59148y5'
+    ;
 
-@~ 'TODO undo/redo needs op-specific delete/undelete' !
-@~ 'TODO readable business datetime, e.g. 19A192045P' !
+@~ 'TODO undo/redo needs op-specific delete/undelete' ;
+@~ 'TODO readable business datetime, e.g. 19A192045P' ;
+@~ 'NOTE the difference between maps (@time-orig) and annotations (@type)' ;
 .
 
 

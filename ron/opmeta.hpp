@@ -15,7 +15,7 @@ struct OpMeta {
     /** op id */
     Uuid id;
     /** the type of the object */
-    Uuid rdt;
+    Uuid rdt;  // FIXME FORM
     /** the object (the causal tree the op is attached to) */
     Uuid object;
     /** op Merkle hash */
@@ -31,25 +31,16 @@ struct OpMeta {
     static Uuid PREV_UUID;
     static Uuid HEAD_UUID;
 
-    OpMeta() = default;
-
     OpMeta(const OpMeta& orig) = default;
 
-    /** Yarn root.
-      @param{op} the root op
-      @param{form} the name UUID for the form (RDT id or "yarn")
-      @param{prev} the hash of the yarn-preceding op or the credential hash for
-      the yarn root */
-    template <class Cursor>
-    OpMeta(const Cursor& op)
-        : id{op.id()},
-          rdt{YARN_FORM_UUID},
-          object{id},
-          prev{},
-          chain{id.value()} {
-        assert(op.ref() == YARN_FORM_UUID);
-        hash = SHA2::OpMerkleHash(op, SHA2{}, SHA2{rdt});
-    }
+    /** Nil op metadata @0:0; */
+    OpMeta()
+        : id{Uuid::NIL},
+          rdt{Uuid::NIL},
+          object{Uuid::NIL},
+          hash{SHA2::ZERO},
+          prev{Word{}},
+          chain{Word{}} {}
 
     /** Causal tree root (object creation).
       @param{op} the root op
@@ -67,22 +58,6 @@ struct OpMeta {
         hash = SHA2::OpMerkleHash(op, prev.hash, SHA2{rdt});
     }
 
-    /** Non-root op (has a previous op on the same yarn, references some past
-     * op).
-     * @param {op} the op
-     * @param {ref} meta for the referenced op (in a chain, prev==ref)
-     * @param {prev} meta for the previous op in the yarn
-     */
-    template <class Cursor>
-    OpMeta(const Cursor& op, const OpMeta& ref, const OpMeta& prev)
-        : id{op.id()},
-          rdt{ref.rdt},
-          object{ref.object},
-          prev{prev.id.value()},
-          chain{prev.id == ref.id ? ref.chain_id() : op.id()} {
-        hash = SHA2::OpMerkleHash(op, prev.hash, ref.hash);
-    }
-
     template <typename Cursor>
     inline bool is_next(const Cursor& cur) const {
         return cur.id().version() == TIME && cur.id().origin() == id.origin() &&
@@ -94,8 +69,22 @@ struct OpMeta {
         return cur.id().version() == NAME && cur.ref() == id;
     }
 
+    /** Advance to the next op in the yarn.
+     * @param{op} the next op
+     * @param{ref} the meta for the op referenced by the new op
+     * @return should be OK
+     */
     template <class Cursor>
-    Status Next(const Cursor& op) {
+    Status Next(const Cursor& op, const OpMeta& refd) {
+        prev = id.value();
+        id = op.id();
+        Uuid ref = op.ref();
+        if (ref.origin() != id.origin() || prev != ref.value()) {
+            chain = id.value();
+        }
+        rdt = refd.rdt;
+        object = refd.object;
+        hash = SHA2::OpMerkleHash(op, hash, refd.hash);
         return Status::OK;
     }
 

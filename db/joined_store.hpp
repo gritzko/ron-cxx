@@ -32,7 +32,7 @@ class JoinedStore {
         if (a.empty()) {
             std::swap(b, into);
         } else if (b.empty()) {
-            std::swap(b, into);
+            std::swap(a, into);
         } else {
             IFOK(MergeFrames(into, Frames{a, b}));
         }
@@ -73,7 +73,18 @@ class JoinedStore {
             IFOK(ai_.SeekTo(key, prev));
             IFOK(bi_.SeekTo(key, prev));
             LOG('S', key, ai_.key().str() + ' ' + bi_.key().str() + '\n');
-            pick();
+            merged_.Clear();
+            if (prev) {
+                if (ai_.key() == Key::END) {
+                    at_ = bi_.key();
+                } else if (bi_.key() == Key::END) {
+                    at_ = ai_.key();
+                } else {
+                    at_ = std::max(ai_.key(), bi_.key());
+                }
+            } else {
+                at_ = std::min(ai_.key(), bi_.key());
+            }
             return Status::OK;
         }
 

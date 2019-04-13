@@ -28,8 +28,8 @@ struct Key {
     explicit Key(uint64pair b) : bits{b} {}  // NOLINT
 
     Key(Uuid id, FORM form) {
-        bits.second = id.origin()._64 & Word::PAYLOAD_BITS;
-        bits.first = id.value()._64 & Word::PAYLOAD_BITS;
+        bits.first = id.origin()._64 & Word::PAYLOAD_BITS;
+        bits.second = id.value()._64 & Word::PAYLOAD_BITS;
         bits.second |= bits.first << 60;
         bits.first >>= 4;
         bits.first |= uint64_t(form) << 56;
@@ -48,16 +48,16 @@ struct Key {
     }
 
     inline bool operator<(const Key& b) const { return bits < b.bits; }
-
+    inline bool operator>(const Key& b) const { return bits > b.bits; }
     inline bool operator==(const Key& b) const { return bits == b.bits; }
     inline bool operator!=(const Key& b) const { return bits != b.bits; }
 
     inline FORM form() const { return FORM(bits.first >> 56); }
 
     inline Uuid id(enum UUID uuid_flags = TIME) const {
-        return Uuid{
-            ((bits.first << 4) & Word::PAYLOAD_BITS) | (bits.second >> 60),
-            (bits.second & Word::PAYLOAD_BITS) | (uint64_t(uuid_flags) << 60)};
+        return Uuid{(bits.second & Word::PAYLOAD_BITS),
+                    ((bits.first << 4) & Word::PAYLOAD_BITS) |
+                        (bits.second >> 60) | (uint64_t(uuid_flags) << 60)};
     }
 
     String str() const {

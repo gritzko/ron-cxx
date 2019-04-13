@@ -233,7 +233,7 @@ class Replica {
     inline Status FrameRecv(Builder& response, Frame frame,
                             Uuid branch = Uuid::NIL) {
         Cursor c{frame};
-        cerr << "Recv on " << branch.str() << frame.data() << endl;
+        cerr << "Recv on " << branch.str() << '\t' << frame.data() << endl;
         return Recv(response, c, branch);
     }
     Status DispatchRecv(Builder& resp, Cursor& c, Commit& commit);

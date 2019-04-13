@@ -199,11 +199,11 @@ template <class Frame>
 Status Replica<Frame>::ReadChainlet(Builder& to, OpMeta& meta, Cursor& from) {
     to.AppendOp(from);
     Status ok = from.Next();
-    // TODO(gritzko) sanity checks
     while (ok) {
-        LOG('l', Key{from.id(), ZERO_RAW_FORM}, "...\n");
+        LOG('?', Key{from.id(), ZERO_RAW_FORM}, "...\n");
         if (from.id() == Uuid::COMMENT) {
         } else if (meta.is_next(from)) {
+            IFOK(NewOpSanityChecks(from));
             meta.Next(from, meta);
             to.AppendOp(from);
         } else if (meta.is_check(from)) {
@@ -375,12 +375,14 @@ Status Replica<Frame>::ObjectQuery(Builder& response, Cursor& query,
         IFOK(commit.Read(key, f));
         Cursor c{f};
         response.AppendAll(c);
+        query.Next();
         return Status::OK;
     } else if (mode_ & KEEP_OBJECT_LOGS) {
         Key logkey{query.id(), LOG_FORM_UUID};
         Frame log;
         commit.Read(logkey, log);
         Status ok = ObjectLogIntoState(response, log);
+        query.Next();
         return ok;
     } else {
         return Status::NOT_FOUND.comment("unsupported form");

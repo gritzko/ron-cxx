@@ -9,6 +9,25 @@ using MemStore = InMemoryStore<TextFrame>;
 using Store = MemStore;
 using Iterator = typename Store::Iterator;
 
+TEST(MemStore, Keys) {
+    auto now = Uuid::Now();
+    Word yarn = Word::random();
+    Uuid id1 = Uuid::Time(now, yarn);
+    Key key1{id1, LWW_FORM_UUID};
+    ASSERT_EQ(key1.id(), id1);
+    ASSERT_EQ(key1.form(), LWW_RDT_FORM);
+    Uuid id2 = Uuid::Time(now.inc(), yarn);
+    Uuid id3 = Uuid::Time(now, yarn.inc());
+    ASSERT_GT(id2, id1);
+    ASSERT_GT(id3, id1);
+    ASSERT_GT(id2, id3);
+    Key key2{id2, LWW_FORM_UUID};
+    Key key3{id3, LWW_FORM_UUID};
+    ASSERT_GT(key2, key1);
+    ASSERT_GT(key3, key1);
+    ASSERT_GT(key3, key2); // origin first
+}
+
 TEST(MemStore, Ends) {
     TmpDir tmp;
     tmp.cd("Ends");

@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 #include "../rdt/rdt.hpp"
 #include "../ron/ron.hpp"
 #include "key.hpp"
@@ -29,7 +30,7 @@ class RocksDBStore {
      * shared_ptr<void> works, thanks to type erasure.  */
     SharedPtr cf_;
 
-    RocksDBStore(SharedPtr db, SharedPtr cf) : db_{db}, cf_{cf} {}
+    RocksDBStore(SharedPtr db, SharedPtr cf) : db_{std::move(db)}, cf_{std::move(cf)} {}
 
    public:
     RocksDBStore() : db_{nullptr}, cf_{nullptr} {}

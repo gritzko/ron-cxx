@@ -14,7 +14,7 @@ TEST(Store, Ends) {
     Store store;
     auto now = Uuid::Now();
     Uuid id{now, Word::random()};
-    ASSERT_TRUE(IsOK(store.Create(id)));
+    ASSERT_TRUE(IsOK(store.Create(Uuid::NIL)));
     Frame frame;
     ASSERT_TRUE(IsOK(store.Read(Key{}, frame)));
     ASSERT_FALSE(frame.empty());
@@ -47,7 +47,7 @@ TEST(Store, Ends) {
     ASSERT_FALSE(i.value().valid());
 
     // Next() at the end => end, returns ENDOFINPUT
-    ASSERT_FALSE(i.Next()==Status::ENDOFINPUT);
+    ASSERT_TRUE(i.Next()==Status::ENDOFINPUT); // FIXME  other stores
     ASSERT_TRUE(IsOK(i.SeekTo(Key::END, true)));
     ASSERT_EQ(i.key(), Key::END);
     ASSERT_FALSE(i.value().valid());
@@ -86,7 +86,7 @@ TEST (Store, Iterator) {
     Store store;
     auto now = Uuid::Now();
     Uuid id{now, Word::random()};
-    ASSERT_TRUE(store.Create(id));
+    ASSERT_TRUE(store.Create(Uuid::NIL));
     Frame a{frame_a}, b{frame_b}, correct{frame_merged};
     Key key{Uuid{"1+A"}, LWW_FORM_UUID};
     ASSERT_TRUE(store.Write(key, a));
@@ -109,8 +109,8 @@ TEST (Store, Branches) {
     Frame a{frame_a}, b{frame_b}, correct{frame_merged};
     Store store;
     auto now = Uuid::Now();
-    Uuid id{now, Word::random()};
-    ASSERT_TRUE(IsOK(store.Create(id)));
+    //Uuid id{now, Word::random()};
+    ASSERT_TRUE(IsOK(store.Create(Uuid::NIL)));
     Uuid branch_id{"0+branchB"};
     Key key{Uuid{"1+A"}, LWW_FORM_UUID};
     Store branch = store;

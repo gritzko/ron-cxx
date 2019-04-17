@@ -1,9 +1,9 @@
 #ifndef RON_ROCKS_STORE_HPP
 #define RON_ROCKS_STORE_HPP
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <memory>
 #include "../rdt/rdt.hpp"
 #include "../ron/ron.hpp"
 #include "key.hpp"
@@ -30,10 +30,15 @@ class RocksDBStore {
      * shared_ptr<void> works, thanks to type erasure.  */
     SharedPtr cf_;
 
-    RocksDBStore(SharedPtr db, SharedPtr cf) : db_{std::move(db)}, cf_{std::move(cf)} {}
+    RocksDBStore(SharedPtr db, SharedPtr cf)
+        : db_{std::move(db)}, cf_{std::move(cf)} {}
 
    public:
     RocksDBStore() : db_{nullptr}, cf_{nullptr} {}
+
+    explicit RocksDBStore(SharedPtr db) : db_{std::move(db)}, cf_{nullptr} {}
+
+    inline SharedPtr db() const { return db_; }
 
     class Iterator {
         SharedPtr i_;
@@ -73,6 +78,8 @@ class RocksDBStore {
 
     ~RocksDBStore() { Close(); }
 };
+
+extern String ROCKSDB_STORE_DIR;
 
 }  // namespace ron
 

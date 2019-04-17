@@ -72,13 +72,57 @@ Status Replica<Frame>::Open() {
 }
 
 template <typename Frame>
+Status Replica<Frame>::CreateBranch(Word branch) {
+    Uuid branch_id{NEVER, branch};
+    if (HasBranch(branch_id)) {
+        return Status::BADARGS.comment("branch already exists");
+    }
+    const Store& meta = GetBranch(Uuid::NIL);
+    Store new_branch{meta.db()};
+    IFOK(new_branch.Create(branch_id));
+    branches_.emplace(branch_id, new_branch);
+    return Status::OK;
+}
+
+template <typename Frame>
+Status Replica<Frame>::WriteName(Uuid key, Uuid value, Uuid branch) {
+    if (!HasBranch(branch)) return Status::NOT_FOUND.comment("branch unknown");
+    Records w;
+    Uuid id = Now(branch.origin());
+    // Frame valop = OneOp<Frame>(id, last_name_id_, key, value);
+    // GetBranch(branch).Write(Key{}, valop);
+    //???!!!last_name_id_ = id;
+    return Status::OK;
+}
+
+template <typename Frame>
+Status Replica<Frame>::ReadNames(Names& names, Uuid branch) {
+    if (!HasBranch(branch)) {
+        return Status::NOT_FOUND.comment("no such branch");
+    }
+    Frame zeroobj;
+    IFOK(GetObject(zeroobj, Uuid::NIL, LWW_FORM_UUID));
+    Cursor c{zeroobj, false};
+    while (c.Next()) {
+        if (c.size() != 4) {
+            continue;
+        }
+        if (!c.has(2, UUID) || !c.has(3, UUID)) {
+            continue;
+        }
+        names[c.uuid(2)] = c.uuid(3);
+    }
+    return Status::OK;
+}
+
+template <typename Frame>
 Uuid Replica<Frame>::Now(Word origin) {
     if (origin == ZERO) {
         origin = home_.origin();
     }
     Word next = Uuid::HybridTime(time(nullptr));
     now_ = next > now_ ? next : now_.inc();
-    return Uuid{now_, origin};
+    return Uuid::Time(now_, origin);
 }
 
 template <typename Frame>

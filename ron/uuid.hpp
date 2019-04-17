@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <iostream>
 #include <string>
+#include <vector>
 #include "const.hpp"
 #include "portable_endian.hpp"
 #include "slice.hpp"
@@ -173,6 +174,7 @@ struct Uuid : public Atom {
     explicit Uuid(const ron::String& buf) : Uuid{Slice{buf}} {}
     explicit Uuid(const char* buf)
         : Uuid{Slice{buf, static_cast<fsize_t>(strlen(buf))}} {}
+    explicit Uuid(const Atom& a) : Atom{a} {}
     inline enum UUID version() const { return (enum UUID)(ofb() & 3U); }
     inline uint8_t variety() const { return vfb(); }
     inline Word& word(int a, int i) { return Atom::word(i); }
@@ -182,6 +184,7 @@ struct Uuid : public Atom {
     inline bool is_ambiguous() const {
         return origin().is_zero() && value().is_all_digits();
     }
+    inline bool is_error() const { return origin() == Word::MAX_VALUE; }
     static Uuid Time(Word value, Word origin) {
         return Uuid{value, (uint64_t(origin) & Word::PAYLOAD_BITS) |
                                (uint64_t(UUID::TIME) << Word::PBS)};
@@ -226,9 +229,11 @@ struct Uuid : public Atom {
     static Word Now();
 };
 
-typedef std::pair<uint64_t, uint64_t> uint64pair;
+using uint64pair = std::pair<uint64_t, uint64_t>;
 
-typedef std::pair<Uuid, Uuid> Spec;
+using Spec = std::pair<Uuid, Uuid>;
+using Atoms = std::vector<Atom>;
+using Uuids = std::vector<Uuid>;
 
 }  // namespace ron
 

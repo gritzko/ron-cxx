@@ -2,14 +2,13 @@
 #include <iostream>
 #include <cassert>
 #include "../uuid.hpp"
-#include "../spans.hpp"
 #define DEBUG 1
 
 using namespace ron;
 using namespace std;
 
 
-void test_uuids () {
+/*void test_uuids () {
     Uuid one{"1i5C0o+gYpLcnUnF6"};
     Uuid two{"1i5C1O+gYpLcnUnF6"};
     Uuids ids;
@@ -52,7 +51,7 @@ void test_uuids () {
     ids.pop_back();
     assert(ids.size()==2);
 
-}
+}*/
 
 
 void test_uuid () {
@@ -100,7 +99,7 @@ void test_uuid () {
 
 int main (int argn, char** args) {
     test_uuid();
-    test_uuids();
+    //test_uuids();
     // TODO a little benchmark
     // TODO Uuid:Sha2()
     // TODO calendar -> timestamp

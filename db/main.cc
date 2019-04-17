@@ -17,7 +17,13 @@ typedef Replica<Frame> RonReplica;
 typedef Frame::Builder Builder;
 typedef Frame::Cursor Cursor;
 typedef vector<Frame> Frames;
+using Store = RonReplica::Store;
 using StoreIterator = typename RonReplica::RocksStore::Iterator;
+
+#define CHECKARG(a, x)                     \
+    if (a) {                               \
+        return Status::BADARGS.comment(x); \
+    }
 
 // const Uuid COMMENT_UUID{1134907106097364992UL, 0};
 const Uuid OUT_UUID{935024688260710400UL, 0};
@@ -43,83 +49,28 @@ DEFINE_bool(h, false, "Show help");
 DECLARE_bool(help);
 DECLARE_string(helpmatch);
 
-/**
+using Args = Strings;
 
-    swarmdb test 'test/rdt/rga.ron'
-    swarmdb mount @todo$gritzko:txt as todo.md
-    swarmdb mount list
-    swarmdb peer ws://1.2.3.4/lj3Fhtc43
-    swarmdb see todo.md, push;
+constexpr const char* GET_USAGE{
+    "get <form> of <id>\n"
+    "   prints a stored frame\n"
+    "   <form> - form id\n"
+    "   <id> - object/version UUID\n"
+    "       e.g. swarmdb get log of 1kFHN0VmHh+0046cGqZgm\n"};
 
- */
+constexpr const char* HELP_USAGE{
+    "help\n"
+    "   print a memo on commands\n"};
 
-Status CommandHashFrame(const string& filename);
-Status CommandWriteNewFrame(RonReplica& replica, const string& filename);
-Status CommandGetFrame(RonReplica& replica, const string& name);
-Status CommandQuery(RonReplica& replica, const string& name);
-Status CommandDump(RonReplica& replica, const string& prefix);
-Status CommandTest(RonReplica& replica, const string& file);
-Status CompareFrames(const Frame& a, const Frame& b);
+constexpr const char* NEW_USAGE{
+    "new <rdt> [as <objectname>]\n"
+    "   create an empty object of the given type\n"
+    "   <objectname> a tag for the object (name UUID)\n"
+    "       e.g. swarmdb new ct as readme\n"};
 
-Status RunCommands() {
-    TmpDir tmp;
-    RonReplica replica{};
-    Status ok;
-
-    Uuid store{Uuid::NIL};
-
-    if (FLAGS_create || !FLAGS_test.empty()) {
-        if (FLAGS_store.empty()) {
-            ok = tmp.cd("swarmdb_test_" + basename(FLAGS_test));
-            if (!ok) return ok;
-        }
-        ok = replica.Create(Word::random());
-        if (!ok) return ok;
-    }
-
-    ok = replica.Open();
-    if (!ok) return ok;
-
-    tmp.back();
-
-    if (FLAGS_now) {
-        Uuid now = replica.Now();
-        cout << now.str() << endl;
-    } else if (!FLAGS_hash.empty()) {
-        ok = CommandHashFrame(FLAGS_hash);
-    } else if (!FLAGS_query.empty()) {
-        ok = CommandQuery(replica, FLAGS_query);
-    } else if (!FLAGS_get.empty()) {
-        ok = CommandGetFrame(replica, FLAGS_get);
-    } else if (!FLAGS_write.empty()) {
-        ok = CommandWriteNewFrame(replica, FLAGS_write);
-    } else if (!FLAGS_dump.empty()) {
-        ok = CommandDump(replica, FLAGS_dump);
-    } else if (!FLAGS_test.empty()) {
-        ok = CommandTest(replica, FLAGS_test);
-    } else {
-    }
-
-    if (replica.open()) replica.Close();
-
-    return ok;
-}
-
-int main(int argn, char** args) {
-    gflags::SetUsageMessage("swarmdb -- a syncable embedded RON database");
-    gflags::ParseCommandLineNonHelpFlags(&argn, &args, true);
-    if (FLAGS_help || FLAGS_h) {
-        FLAGS_help = false;
-        FLAGS_helpmatch = "db";
-    }
-    gflags::HandleCommandLineHelpFlags();
-
-    Status ok = RunCommands();
-
-    if (!ok) cerr << "error\t" << ok.str() << '\n';
-
-    return ok ? 0 : -1;
-}
+constexpr const char* HOP_USAGE{
+    "hop <BranchName|SNAPSHOT>\n"
+    "   switch to another branch or snapshot\n"};
 
 Status LoadFrame(Frame& target, int fd) {
     string tmp;
@@ -142,7 +93,43 @@ Status LoadFrame(Frame& target, const string& filename) {
     return LoadFrame(target, fd);
 }
 
-Status CommandTest(RonReplica& replica, const string& file) {
+constexpr const char* CREATE_USAGE{
+    "create [as <BranchName>]\n"
+    "   create an empty branch\n"
+    "   <BranchName> a tag for the branch (name UUID, up to 10 Base64 chars)\n"
+    "       e.g. swarmdb create as Experiment\n"};
+
+Status CommandCreate(RonReplica& replica, Args& args) {
+    if (args.empty()) {
+        if (replica.open()) {
+            return Status::BADARGS.comment("replica already exists");
+        }
+        return replica.Create(ZERO);
+    }
+    CHECKARG(args.back() != "as", CREATE_USAGE);
+    args.pop_back();
+    CHECKARG(args.empty(), "need a name for the branch");
+    Uuid tag{args.back()};
+    CHECKARG(tag.is_error(),
+             "the name must be a name UUID (up to ten Base64 chars)");
+    Word id = Word::random();
+    Status ok = replica.CreateBranch(id);
+    if (!ok) {
+        return ok;
+    }
+    Uuid branch_id{Uuid::Time(NEVER, id)};
+    IFOK(replica.WriteName(tag, branch_id));
+    return ok;
+}
+
+constexpr const char* TEST_USAGE{
+    "test <test_file.ron>\n"
+    "   runs a test script\n"};
+
+Status CommandTest(RonReplica& replica, Args& args) {
+    CHECKARG(args.empty(), TEST_USAGE);
+    String file = args.back();
+    args.pop_back();
     Frame tests;
     Status ok = LoadFrame(tests, file);
     if (!ok) return ok;
@@ -181,33 +168,17 @@ Status CommandTest(RonReplica& replica, const string& file) {
     return ok;
 }
 
-Status CommandDump(RonReplica& replica, const string& what) {
+Status CommandDump(RonReplica& replica, Args& args) {
     FORM rdt = ZERO_RAW_FORM;
-    if (what.size() > 1) {
+    /*if (what.size() > 1) {
         rdt = uuid2form(Uuid{what});
         if (rdt == ZERO_RAW_FORM) return Status::BADARGS.comment("unknown RDT");
-    }
+    }*/
     if (!replica.open()) return Status::BAD_STATE.comment("db is not open?");
     StoreIterator i{replica.GetBranch(Uuid::NIL)};
     IFOK(i.SeekTo(Key{}));
     do {
-        Key key{i.key()};
-        // if (rdt != RDT_COUNT && key.rdt() != rdt) continue;
-        String k;
-        k.reserve(64);
-        k.push_back('\n');
-        k.push_back('*');
-        form2uuid(key.form()).write_base64(k);
-        k.push_back('#');
-        key.id().write_base64(k);
-        k.push_back('\n');
-        int wok = write(STDOUT_FILENO, k.data(), k.size());
-        if (wok != k.size()) return Status::IOFAIL.comment("dump: write fails");
-        Cursor val = i.value();
-        wok = write(STDOUT_FILENO, val.data().data(), val.size());
-        if (wok != val.size())
-            return Status::IOFAIL.comment("dump: incomplete write");
-        i.Next();
+        cout << i.key().str() << '\t' << i.value().data().str();
     } while (i.Next());
     i.Close();
     return Status::OK;
@@ -231,11 +202,17 @@ Status CommandQuery(RonReplica& replica, const string& name) {
     return ok;
 }
 
-Status CommandGetFrame(RonReplica& replica, const string& name) {
-    if (name.empty()) return Status::BADARGS;
-    Uuid id{}, rdt{};
+Status CommandGetFrame(RonReplica& replica, Args& args) {
+    CHECKARG(args.empty(), GET_USAGE);
+    Uuid rdt{args.back()};
+    args.pop_back();
+    CHECKARG(args.back() != "of", GET_USAGE);
+    args.pop_back();
+    CHECKARG(args.empty(), GET_USAGE);
+    Uuid id{args.back()};
+    args.pop_back();
     size_t dot;
-    if (name[0] == '@') {
+    /*if (name[0] == '@') {
         string termd{name};
         termd.push_back(';');
         TextFrame::Cursor cur{termd};
@@ -247,7 +224,7 @@ Status CommandGetFrame(RonReplica& replica, const string& name) {
         rdt = Uuid{name.substr(dot + 1, name.size() - dot - 1)};
     } else {
         id = Uuid{name};
-    }
+    }*/
     if (id == Uuid::FATAL || rdt == Uuid::FATAL) return Status::BADARGS;
     Frame result;
     Status ok = id.version() == TIME ? replica.GetFrame(result, id, rdt)
@@ -308,6 +285,19 @@ Status CommandWriteNewFrame(RonReplica& replica, const string& filename) {
     return ok;
 }
 
+Status CommandNew(RonReplica& replica, Args& args) {
+    CHECKARG(args.empty(), NEW_USAGE);
+    Uuid rdt{args.back()};
+    CHECKARG(rdt.is_error(), "can't parse " + args.back());
+    args.pop_back();
+    FORM form = uuid2form(rdt);
+    CHECKARG(form == ERROR_NO_FORM, "form unknown");
+    Frame new_obj = OneOp<Frame>(replica.Now(), rdt);
+    Builder re;
+    Cursor cu{new_obj};
+    return replica.Recv(re, cu);
+}
+
 Status CommandHashFrame(const string& filename) {
     Frame frame;
     LoadFrame(frame, filename);
@@ -360,4 +350,156 @@ Status CommandHashFrame(const string& filename) {
     }
     cout << report.data() << endl;
     return Status::OK;
+}
+
+constexpr const char* LIST_USAGE{
+    "list [branches|snapshots|objects|tags] [in <BranchName>]\n"
+    "   list branches (or snapshots, or named objects or all the tags)\n"};
+
+Status CommandListStores(RonReplica& replica, Args& args) {
+    Uuids stores;
+    IFOK(replica.ListStores(stores));
+    for (auto& u : stores) {
+        cout << u.str() << '\n';
+    }
+    return Status::OK;
+}
+
+Status CommandList(RonReplica& replica, Args& args) {
+    CHECKARG(args.empty(), LIST_USAGE);
+    String what{args.back()};
+    if (what == "stores") {
+        return CommandListStores(replica, args);
+    }
+
+    Uuid branch = replica.current_branch();
+    args.pop_back();
+    if (!args.empty()) {
+        CHECKARG(args.back() == "in", LIST_USAGE);
+        args.pop_back();
+        CHECKARG(args.empty(), "in what?");
+        branch = Uuid{args.back()};
+        args.pop_back();
+        CHECKARG(branch.is_error(), "bad branch id syntax; must be name/id");
+        CHECKARG(!replica.HasBranch(branch), "no such branch");
+    }
+
+    typename RonReplica::Names names;
+    IFOK(replica.ReadNames(names, branch));
+
+    for (auto& p : names) {
+        cout << p.second.str() << '\t' << p.first.str() << '\n';
+    }
+
+    /** 1. branches
+    Uuids stores;
+    IFOK(replica.ListStores(stores));
+    for(auto i : stores) {
+        cout << i.str() << endl;
+    }*/
+    return Status::OK;
+}
+
+Status CommandHop(RonReplica& replica, Args& args) {
+    // 1. exact tag list mech
+    // 2. current branch? LoadFrame?
+    // 3. now/version?
+}
+
+Status CommandHelp(RonReplica& replica, Args& args) {
+    cout << "swarmdb -- a versioned syncable RON database\n"
+            "   \n"
+         << HELP_USAGE << CREATE_USAGE << NEW_USAGE << GET_USAGE << LIST_USAGE
+         << HOP_USAGE << TEST_USAGE;
+    return Status::OK;
+}
+
+Status OpenReplica(RonReplica& replica) {
+    // TODO  go ../../.. for .swarmdb
+    if (!file_exists(ROCKSDB_STORE_DIR)) {
+        return Status::NOT_FOUND;
+    }
+    IFOK(replica.Open());
+    return Status::OK;
+}
+
+Status RunCommands(Args& args) {
+    TmpDir tmp;
+    RonReplica replica{};
+    Status ok;
+
+    if (args.empty()) return Status::OK;
+    String verb{args.back()};
+    args.pop_back();
+
+    if (verb == "test") {
+        IFOK(tmp.cd("swarmdb_test_" + basename(FLAGS_test)));
+    }
+
+    ok = OpenReplica(replica);
+    if (!ok && verb != "create") {
+        return ok;
+    }
+
+    tmp.back();
+
+    if (verb == "create") {
+        return CommandCreate(replica, args);
+    } else if (verb == "now") {
+        return replica.Now();
+    } else if (verb == "dump") {
+        return CommandDump(replica, args);
+    } else if (verb == "get") {
+        return CommandGetFrame(replica, args);
+    } else if (verb == "help") {
+        return CommandHelp(replica, args);
+    } else if (verb == "test") {
+        return CommandTest(replica, args);
+    } else if (verb == "create") {
+        // TODO create db there^  create a CF here
+    } else if (verb == "new") {
+        return CommandNew(replica, args);
+    } else if (verb == "list") {
+        return CommandList(replica, args);
+    } else if (verb == "hop") {
+        return CommandHop(replica, args);
+    } else {
+        return Status::BADARGS.comment(
+            "format: swarmdb verb [object] [prepositionals...]");
+    }
+    /*
+     } else if (!FLAGS_hash.empty()) {
+     ok = CommandHashFrame(FLAGS_hash);
+     } else if (!FLAGS_query.empty()) {
+     ok = CommandQuery(replica, FLAGS_query);
+     } else if (!FLAGS_get.empty()) {
+     ok = CommandGetFrame(replica, FLAGS_get);
+     } else if (!FLAGS_write.empty()) {
+     ok = CommandWriteNewFrame(replica, FLAGS_write);
+     } else if (!FLAGS_dump.empty()) {
+     } else if (!FLAGS_test.empty()) {
+     ok = CommandTest(replica, FLAGS_test);
+     } else {
+     }*/
+
+    return ok;
+}
+
+int main(int argn, char** args) {
+    Args arguments;
+    for (int i = 1; i < argn; ++i) {
+        arguments.push_back(args[i]);
+    }
+    std::reverse(arguments.begin(), arguments.end());
+
+    Status ok = RunCommands(arguments);
+
+    if (ok != Status::OK) {
+        cout << ok.code().str() << '\n';
+        if (!ok.comment().empty()) {
+            cerr << ok.comment() << '\n';
+        }
+    }
+
+    return ok.code().is_error() ? 0 : -1;
 }

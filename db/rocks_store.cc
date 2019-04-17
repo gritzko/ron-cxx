@@ -13,6 +13,8 @@ using ColumnFamilyOptions = rocksdb::ColumnFamilyOptions;
 using ColumnFamilyHandle = rocksdb::ColumnFamilyHandle;
 using ColumnFamilyDescriptor = rocksdb::ColumnFamilyDescriptor;
 
+String ROCKSDB_STORE_DIR{".swarmdb"};
+
 //  C O N V E R S I O N S
 
 static inline rocksdb::Slice slice(ron::Slice slice) {
@@ -116,7 +118,6 @@ void init_options(rocksdb::Options& options) {
     }
 
 //  S T O R E
-static const string HOME = ".swarmdb";
 
 template <typename Frame>
 Status RocksDBStore<Frame>::Create(Uuid id) {
@@ -127,19 +128,15 @@ Status RocksDBStore<Frame>::Create(Uuid id) {
 
     if (!db_) {
         rocksdb::DB* db;
-        IFROK(DB::Open(options, HOME, &db));
+        IFROK(DB::Open(options, ROCKSDB_STORE_DIR, &db));
         db_ = SharedPtr{db};
     }
 
-    Frame yarn_root;
-    Uuid cfid{};
-    Status ok = Read(Key{}, yarn_root);
-    if (ok && !yarn_root.empty()) {
+    if (id != Uuid::NIL) {
         ColumnFamilyHandle* cfh;
         auto db = static_pointer_cast<rocksdb::DB>(db_);
         IFROK(db->CreateColumnFamily(options, id.str(), &cfh));
         cf_.reset(cfh);
-        cfid = id;
     }
 
     Frame new_yarn_root = OneOp<Frame>(id, YARN_FORM_UUID);
@@ -157,7 +154,7 @@ Status RocksDBStore<Frame>::Open(Uuid id) {
     init_options<Frame>(options);
 
     rocksdb::DB* db;
-    IFROK(DB::Open(options, HOME, &db));
+    IFROK(DB::Open(options, ROCKSDB_STORE_DIR, &db));
     db_.reset(db);
 
     if (!id.zero()) {
@@ -261,7 +258,8 @@ Status RocksDBStore<Frame>::Write(const Records& batch) {
 template <typename Frame>
 RocksDBStore<Frame>::Iterator::Iterator(RocksDBStore& host) {
     auto db = static_pointer_cast<rocksdb::DB>(host.db_);
-    auto i = db->NewIterator(ro());
+    auto cf = static_pointer_cast<rocksdb::ColumnFamilyHandle>(host.cf_);
+    auto i = cf ? db->NewIterator(ro(), cf.get()) : db->NewIterator(ro());
     i_ = shared_ptr<rocksdb::Iterator>(i);
 }
 
@@ -298,6 +296,9 @@ Status RocksDBStore<Frame>::Iterator::Next() {
     auto i = static_pointer_cast<rocksdb::Iterator>(i_);
     i->Next();
     IFROK(i->status());
+    if (!i->Valid()) {
+        return Status::ENDOFINPUT;
+    }
     return Status::OK;
 }
 
@@ -310,7 +311,6 @@ Status RocksDBStore<Frame>::Iterator::SeekTo(Key key, bool prev) {
     auto be = key.be();
     auto k = key2slice(be);
     prev ? i->SeekForPrev(k) : i->Seek(k);
-    auto ok = i->status();
     IFROK(i->status());
     return Status::OK;
 }
@@ -333,13 +333,14 @@ Status RocksDBStore<Frame>::OpenAll(Branches& branches) {
     init_options<Frame>(options);
 
     vector<std::string> cfnames;
-    IFROK(rocksdb::DB::ListColumnFamilies(options, HOME, &cfnames));
+    IFROK(
+        rocksdb::DB::ListColumnFamilies(options, ROCKSDB_STORE_DIR, &cfnames));
     for (auto& name : cfnames) {
         families.push_back(CFD{name, cfo});
     }
 
     rocksdb::DB* db;
-    IFROK(DB::Open(options, HOME, families, &handles, &db));
+    IFROK(DB::Open(options, ROCKSDB_STORE_DIR, families, &handles, &db));
 
     branches.clear();
     branches.reserve(families.size());

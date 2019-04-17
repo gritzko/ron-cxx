@@ -42,6 +42,9 @@ class Replica {
     using MemStore = InMemoryStore<Frame>;
     using Commit = JoinedStore<RocksStore, MemStore>;
     using CommitIterator = typename Commit::Iterator;
+    using Store = RocksStore;
+
+    using Names = std::unordered_map<Uuid, Uuid>;
 
     static const Uuid NOW_UUID;
 
@@ -59,21 +62,39 @@ class Replica {
 
     TxtMapper<Commit> txt_;
 
-    /** Stores for all the db's existing branches. */
+    /** Stores for all the db's existing branches and snapshots.
+     *  Branch stores are names ~+BranchId while snapshot stores
+     *  are named VerS10N+BranchId.
+     *  The 0-store contains metadata: branch names, peer URLs,
+     *  private keys etc; it is not replicated unless in cluster
+     *  scenarios.
+     *   */
     std::unordered_map<Uuid, RocksStore> branches_;
 
-    MemStore EMPTY;
+    Frame config_;
+
+    const static MemStore EMPTY;
 
    public:
     Replica() = default;
 
     //  L I F E C Y C L E
 
+    /** Create an empty replica (no branches, only the 0-store). */
     static Status Create(Word origin);
 
+    /** Open the replica in the current directory (all branches). */
     Status Open();
 
     Status CreateBranch(Word branch);
+
+    Status ListStores(Uuids& stores) {
+        stores.clear();
+        for (auto& p : branches_) {
+            stores.push_back(p.first);
+        }
+        return Status::OK;
+    }
 
     Status GC();
 
@@ -86,11 +107,19 @@ class Replica {
 
     inline bool open() const { return !branches_.empty(); }
 
+    const Frame& config() const { return config_; }
+
+    Uuid current_branch() const { return Uuid::NIL; }
+
+    Status ReadConfigRecord(Uuid key, Atoms& values);
+
+    Status WriteConfigRecord(Uuid key, const Atoms& values);
+
     //  B R A N C H E S / Y A R N S
 
     Status SplitBranch(Uuid mark);
     Status MergeBranch(Uuid mark);
-    Status DropBranch(Word branch);
+    Status DropBranch(Uuid branch);
 
     Status GetFrame(Frame& object, Uuid id, Uuid rdt, Uuid branch = Uuid::NIL);
 
@@ -104,9 +133,17 @@ class Replica {
         return branches_.find(branch) != branches_.end();
     }
 
+    inline RocksStore& GetCurrentBranch() {
+        return branches_.find(Uuid::NIL)->second;
+    }
+
     inline RocksStore& GetBranch(Uuid branch) {
         return branches_.find(branch)->second;
     }
+
+    Status ReadNames(Names& names, Uuid branch = Uuid::NIL);
+
+    Status WriteName(Uuid key, Uuid value, Uuid branch = Uuid::NIL);
 
     inline RocksStore& GetMeta() { return GetBranch(Uuid::NIL); }
 
@@ -114,7 +151,10 @@ class Replica {
 
     Status FillAllStates(RocksStore& branch);
 
-    Status GetObject(Frame& frame, Uuid id, Uuid rdt, Uuid branch = Uuid::NIL);
+    inline Status GetObject(Frame& frame, Uuid id, Uuid rdt,
+                            Uuid branch = Uuid::NIL) {
+        return GetFrame(frame, id, rdt, branch);
+    }
 
     inline Status GetObjectLog(Frame& frame, Uuid id, Uuid branch = Uuid::NIL) {
         return GetFrame(frame, id, LOG_FORM_UUID);

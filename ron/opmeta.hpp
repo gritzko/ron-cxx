@@ -76,7 +76,7 @@ struct OpMeta {
      */
     template <class Cursor>
     Status Next(const Cursor& op, const OpMeta& refd) {
-        assert(op.id().origin()==id.origin() && op.id()>id);
+        assert(op.id().origin() == id.origin() && op.id() > id);
         prev = id.value();
         id = op.id();
         Uuid ref = op.ref();

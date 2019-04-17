@@ -289,6 +289,7 @@ add_test(JOINSTORE test24-joinstore)
 
 add_executable(swarmdb_bin
     ${SWARMDB_SOURCES}
+    db/fs.hpp
     db/main.cc
 )
 add_dependencies(swarmdb_bin rocksdb_static)

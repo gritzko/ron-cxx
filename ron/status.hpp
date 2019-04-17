@@ -14,7 +14,8 @@ class Status {
    public:
     Status() : code_{0, 0} {}
     explicit Status(uint64_t err_code) : code_{err_code, Word::PAYLOAD_BITS} {}
-    Status(Uuid code, const String& comment) : code_{code}, comment_{comment} {}
+    Status(Uuid code, const String& comment = "")
+        : code_{code}, comment_{comment} {}
 
     inline explicit operator Uuid() const { return code_; }
 

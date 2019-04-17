@@ -57,7 +57,8 @@ class TextFrame {
             }
         }
         explicit Cursor(const String& str) : Cursor{Slice{str}} {}
-        explicit Cursor(const TextFrame& host) : Cursor{host.data_} {}
+        explicit Cursor(const TextFrame& host, bool advance = true)
+            : Cursor{host.data_, advance} {}
         Cursor(const Cursor& b) = default;
         const Op& op() const { return op_; }
         Status Next();

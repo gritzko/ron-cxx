@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.9.4)
-project(cpp)
+project(RON C CXX)
 include(ExternalProject)
 enable_testing()
+FIND_PACKAGE ( Threads REQUIRED )
 
 #  S E T T I N G S
 
@@ -53,11 +54,12 @@ ExternalProject_Add(
     URL_HASH SHA1=452f5a5e7d735f26bd30b837207b4b4527610dba
     UPDATE_COMMAND ""
     PREFIX ${ROCKSDB_PREFIX}
-    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
+    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX} --parallel ${CORES}
     CMAKE_CACHE_ARGS -DWITH_TESTS:BOOL=FALSE
-    CMAKE_GENERATOR "Unix Makefiles"
+#    CMAKE_GENERATOR "Unix Makefiles"
     BUILD_COMMAND ${CMAKE_COMMAND} ${CMAKE_ARGS} --build . --target rocksdb
     INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdb_pro/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
+    BUILD_IN_SOURCE 1
     BUILD_BYPRODUCTS ${DEPS_PREFIX}/lib/librocksdb.a
 )
 add_library(rocksdb_static STATIC IMPORTED)
@@ -211,7 +213,7 @@ target_link_libraries(test14-rga ron_static rdt_headers)
 add_test(RGA test14-rga)
 
 add_executable(test15-max rdt/test/max.cc)
-target_link_libraries(test15-max ron_static rdt_headers gtest_static)
+target_link_libraries(test15-max ron_static rdt_headers Threads::Threads gtest_static)
 add_test(MAX test15-max)
 
 #  S W A R M D B

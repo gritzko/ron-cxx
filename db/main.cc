@@ -1,5 +1,4 @@
 #include <fcntl.h>
-#include <gflags/gflags.h>
 #include <unistd.h>
 #include <ctime>
 #include <unordered_map>
@@ -29,25 +28,6 @@ using StoreIterator = typename RonReplica::RocksStore::Iterator;
 const Uuid OUT_UUID{935024688260710400UL, 0};
 const Uuid IN_UUID{824721681762222080UL, 0};
 const Uuid TEST_UUID{526483344616062976UL, 0};
-
-DEFINE_bool(create, false, "create a new replica");
-DEFINE_string(feed, "", "feed a RON frame");
-DEFINE_string(write, "", "write a RON frame (new ops)");
-DEFINE_string(query, "", "submit a RON query (e.g. @chain:1gPH5o+gritzko?)");
-DEFINE_string(get, "",
-              "get a RON frame, e.g. --get @1gPH5o+gritzko:lww or "
-              "1gPH5o+gritzko.lww or 1gPH5o+gritzko)");
-DEFINE_bool(now, false, "print the current time(stamp)");
-DEFINE_string(hash, "", "Merkle-hash a causally ordered frame");
-DEFINE_string(dump, "", "dump the db (e.g. --dump meta or --dump -)");
-DEFINE_string(store, "", "db store dir");
-DEFINE_string(test, "", "run a test case (the test data stays in the db!)");
-DEFINE_bool(
-    clean, false,
-    "clean the result of metadata (e.g. --get @csv:1h8GbW+gYpLcnUnF6 --clean)");
-DEFINE_bool(h, false, "Show help");
-DECLARE_bool(help);
-DECLARE_string(helpmatch);
 
 using Args = Strings;
 
@@ -230,7 +210,7 @@ Status CommandGetFrame(RonReplica& replica, Args& args) {
     Status ok = id.version() == TIME ? replica.GetFrame(result, id, rdt)
                                      : replica.GetMap(result, rdt, id);
     if (!ok) return ok;
-    if (!FLAGS_clean) {
+    if (!/*FLAGS_clean*/true) {
         cout << result.data() << '\n';
     } else {
         Cursor c = result.cursor();  // TODO
@@ -433,7 +413,7 @@ Status RunCommands(Args& args) {
     args.pop_back();
 
     if (verb == "test") {
-        IFOK(tmp.cd("swarmdb_test_" + basename(FLAGS_test)));
+        IFOK(tmp.cd("swarmdb_test"));
     }
 
     ok = OpenReplica(replica);

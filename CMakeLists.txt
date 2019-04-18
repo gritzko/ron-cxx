@@ -14,7 +14,6 @@ set(ROCKSDB_PREFIX ${DEPS_PREFIX}/build/rocksdb)
 #set(CXXOPTS_PREFIX ${DEPS_PREFIX}/build/cxxopts)
 set(CRYPTO_PREFIX ${DEPS_PREFIX}/build/botan)
 set(snappy_PREFIX ${DEPS_PREFIX}/build/snappy)
-set(GFLAGS_PREFIX ${DEPS_PREFIX}/build/gflags)
 set(DMP_PREFIX ${DEPS_PREFIX}/build/dmp)
 set(BTREE_PREFIX ${DEPS_PREFIX}/build/btree)
 set(GTEST_PREFIX ${DEPS_PREFIX}/build/gtest)
@@ -32,21 +31,6 @@ endif()
 set(MAKE_FLAGS "-j${CORES}")
 
 #  D E P E N D E N C I E S
-
-ExternalProject_Add(
-    gflags_pro
-    PREFIX ${GFLAGS_PREFIX}
-    URL https://github.com/gflags/gflags/archive/v2.2.2.tar.gz
-    URL_HASH SHA1=4d42470afb7236fb0cf90f8bbb0cec588073c17c
-    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
-    CMAKE_GENERATOR "Unix Makefiles"
-    BUILD_IN_SOURCE 1
-    BUILD_BYPRODUCTS ${DEPS_PREFIX}/lib/libgflags.a
-)
-
-add_library(gflags_static STATIC IMPORTED)
-set_property(TARGET gflags_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/libgflags.a)
-add_dependencies(gflags_static gflags_pro)
 
 ExternalProject_Add(
     snappy_pro
@@ -125,7 +109,6 @@ ExternalProject_Add(
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ${BTREE_HEADERS} ${DEPS_PREFIX}/include/
     )
-add_dependencies(cpp_btree_header gflags_pro)
 
 ExternalProject_Add(
     gtest_pro
@@ -293,7 +276,7 @@ add_executable(swarmdb_bin
     db/main.cc
 )
 add_dependencies(swarmdb_bin rocksdb_static)
-target_link_libraries(swarmdb_bin pthread z bz2 snappy_static gflags_static botan_static ron_static rocksdb_static)
+target_link_libraries(swarmdb_bin pthread z bz2 snappy_static botan_static ron_static rocksdb_static)
 SET_TARGET_PROPERTIES(swarmdb_bin PROPERTIES OUTPUT_NAME swarmdb)
 add_dependencies(swarmdb_bin dmp_diff_header)
 add_dependencies(swarmdb_bin cpp_btree_header)

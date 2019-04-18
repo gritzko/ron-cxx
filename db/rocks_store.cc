@@ -139,9 +139,8 @@ Status RocksDBStore<Frame>::Create(Uuid id) {
         cf_.reset(cfh);
     }
 
-    Frame new_yarn_root = OneOp<Frame>(id, YARN_FORM_UUID);
-    IFOK(Write(Key::ZERO, new_yarn_root));
-    IFOK(Write(Key::END, Frame{}));
+    Frame now = OneOp<Frame>(id, ZERO_FORM_UUID, id);
+    IFOK(Write(Key::ZERO, now));
 
     return Status::OK;
 }

@@ -11,35 +11,16 @@ const Uuid Replica<Frame>::NOW_UUID{915334634030497792UL, 0};
 //  L I F E C Y C L E
 
 template <typename Frame>
-Status Replica<Frame>::Create(Word origin) {
+Status Replica<Frame>::CreateReplica() {
     RocksStore db;
     // Uuid branch_id{0, origin};
-    Uuid now = Uuid::Time(Uuid::Now(), origin);
-    Status ok = db.Create(now);
-    if (!ok) {
-        return ok;
-    }
-    Records initials;
+    // Uuid now = Uuid::Time(Uuid::Now(), 0);
+    IFOK(db.Create(Uuid::NIL));
 
-    // 1. the yarn object
-    Builder yarn_obj_builder;
-    yarn_obj_builder.AppendNewOp(now, YARN_FORM_UUID);
-    Frame yarn_object{yarn_obj_builder.Release()};
-    initials.emplace_back(Key{now, YARN_RAW_FORM}, yarn_object);
-    // TODO(gritzko) public yarn metadata stored as key-value pairs (e.g. pub
-    // key, author name)
+    Frame local_names = OneOp<Frame>(Uuid::NIL, LWW_FORM_UUID);
+    IFOK(db.Write(Key{Uuid::NIL, LWW_FORM_UUID}, local_names));
 
-    // 2. the "now" record
-    // FIXME See(now, initials);
-
-    // 3. chain meta record
-    Cursor mc{yarn_object};
-    OpMeta meta{mc, OpMeta{}};
-    Builder meta_record;
-    meta.Save(meta_record);
-    initials.emplace_back(Key{now, META_META_FORM}, meta_record.Release());
-
-    return db.Write(initials);
+    return Status::OK;
 }
 
 template <typename Frame>
@@ -81,6 +62,15 @@ Status Replica<Frame>::CreateBranch(Word branch) {
     Store new_branch{meta.db()};
     IFOK(new_branch.Create(branch_id));
     branches_.emplace(branch_id, new_branch);
+
+    Records initials;
+
+    Frame yarn_meta = OneOp<Frame>(branch_id, YARN_FORM_UUID);
+    IFOK(new_branch.Write(Key{branch_id, LOG_RAW_FORM}, yarn_meta));
+
+    Frame names = OneOp<Frame>(Uuid::NIL, LWW_FORM_UUID);
+    IFOK(new_branch.Write(Key{Uuid::NIL, LWW_FORM_UUID}, names));
+
     return Status::OK;
 }
 

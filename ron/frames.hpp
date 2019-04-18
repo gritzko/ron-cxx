@@ -74,11 +74,11 @@ Status CompareFrames(const Frame& frame_a, const Frame& frame_b) {
     return CompareWithCursors(a, b);
 }
 
-template <typename Frame>
-Frame OneOp(Uuid id, Uuid ref) {
+template <typename Frame, class... Ts>
+Frame OneOp(Uuid id, Uuid ref, Ts... args) {
     using Builder = typename Frame::Builder;
     Builder b;
-    b.AppendNewOp(id, ref);
+    b.AppendNewOp(id, ref, args...);
     return b.Release();
 }
 

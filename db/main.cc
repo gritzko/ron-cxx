@@ -73,6 +73,17 @@ Status LoadFrame(Frame& target, const string& filename) {
     return LoadFrame(target, fd);
 }
 
+constexpr const char* INIT_USAGE{
+    "init\n"
+    "   create a replica\n"};
+
+Status CommandInit(RonReplica& replica, Args& args) {
+    if (replica.open()) {
+        return Status::BADARGS.comment("replica already exists");
+    }
+    return replica.CreateReplica();
+}
+
 constexpr const char* CREATE_USAGE{
     "create [as <BranchName>]\n"
     "   create an empty branch\n"
@@ -80,26 +91,20 @@ constexpr const char* CREATE_USAGE{
     "       e.g. swarmdb create as Experiment\n"};
 
 Status CommandCreate(RonReplica& replica, Args& args) {
-    if (args.empty()) {
-        if (replica.open()) {
-            return Status::BADARGS.comment("replica already exists");
-        }
-        return replica.Create(ZERO);
+    Word id = Word::random();  // TODO keys
+    IFOK(replica.CreateBranch(id));
+
+    if (!args.empty() && args.back() == "as") {
+        args.pop_back();
+        CHECKARG(args.empty(), "need a name for the branch");
+        Uuid tag{args.back()};
+        CHECKARG(tag.is_error(),
+                 "the name must be a name UUID (up to ten Base64 chars)");
+        Uuid branch_id{Uuid::Time(NEVER, id)};
+        IFOK(replica.WriteName(tag, branch_id));
     }
-    CHECKARG(args.back() != "as", CREATE_USAGE);
-    args.pop_back();
-    CHECKARG(args.empty(), "need a name for the branch");
-    Uuid tag{args.back()};
-    CHECKARG(tag.is_error(),
-             "the name must be a name UUID (up to ten Base64 chars)");
-    Word id = Word::random();
-    Status ok = replica.CreateBranch(id);
-    if (!ok) {
-        return ok;
-    }
-    Uuid branch_id{Uuid::Time(NEVER, id)};
-    IFOK(replica.WriteName(tag, branch_id));
-    return ok;
+
+    return Status::OK;
 }
 
 constexpr const char* TEST_USAGE{
@@ -384,13 +389,14 @@ Status CommandHop(RonReplica& replica, Args& args) {
     // 1. exact tag list mech
     // 2. current branch? LoadFrame?
     // 3. now/version?
+    return Status::NOT_IMPLEMENTED;
 }
 
 Status CommandHelp(RonReplica& replica, Args& args) {
     cout << "swarmdb -- a versioned syncable RON database\n"
             "   \n"
-         << HELP_USAGE << CREATE_USAGE << NEW_USAGE << GET_USAGE << LIST_USAGE
-         << HOP_USAGE << TEST_USAGE;
+         << HELP_USAGE << INIT_USAGE << CREATE_USAGE << NEW_USAGE << GET_USAGE
+         << LIST_USAGE << HOP_USAGE << TEST_USAGE;
     return Status::OK;
 }
 
@@ -414,16 +420,20 @@ Status RunCommands(Args& args) {
 
     if (verb == "test") {
         IFOK(tmp.cd("swarmdb_test"));
+    } else {
+        std::srand(std::time(nullptr));
     }
 
     ok = OpenReplica(replica);
-    if (!ok && verb != "create") {
+    if (!ok && verb != "init") {
         return ok;
     }
 
     tmp.back();
 
-    if (verb == "create") {
+    if (verb == "init") {
+        return CommandInit(replica, args);
+    } else if (verb == "create") {
         return CommandCreate(replica, args);
     } else if (verb == "now") {
         return replica.Now();
@@ -481,5 +491,5 @@ int main(int argn, char** args) {
         }
     }
 
-    return ok.code().is_error() ? 0 : -1;
+    return ok.code().is_error() ? -1 : 0;
 }

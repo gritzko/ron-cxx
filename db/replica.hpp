@@ -81,7 +81,7 @@ class Replica {
     //  L I F E C Y C L E
 
     /** Create an empty replica (no branches, only the 0-store). */
-    static Status Create(Word origin);
+    static Status CreateReplica();
 
     /** Open the replica in the current directory (all branches). */
     Status Open();

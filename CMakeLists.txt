@@ -285,8 +285,8 @@ SET_TARGET_PROPERTIES(swarmdb_bin PROPERTIES OUTPUT_NAME swarmdb)
 add_dependencies(swarmdb_bin dmp_diff_header)
 add_dependencies(swarmdb_bin cpp_btree_header)
 
-add_test(bb-lww swarmdb --test ${CMAKE_SOURCE_DIR}/test/rdt/lww.ron)
-add_test(bb-rga swarmdb --test ${CMAKE_SOURCE_DIR}/test/rdt/rga.ron)
+add_test(bb-lww swarmdb test ${CMAKE_SOURCE_DIR}/test/rdt/lww.ron)
+add_test(bb-rga swarmdb test ${CMAKE_SOURCE_DIR}/test/rdt/rga.ron)
 
 add_custom_target(
         format

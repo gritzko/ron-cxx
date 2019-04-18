@@ -420,16 +420,16 @@ Status RunCommands(Args& args) {
 
     if (verb == "test") {
         IFOK(tmp.cd("swarmdb_test"));
+        IFOK(replica.CreateReplica());
+        IFOK(OpenReplica(replica));
+        tmp.back();
     } else {
         std::srand(std::time(nullptr));
+        ok = OpenReplica(replica);
+        if (!ok && verb != "init") {
+            return ok;
+        }
     }
-
-    ok = OpenReplica(replica);
-    if (!ok && verb != "init") {
-        return ok;
-    }
-
-    tmp.back();
 
     if (verb == "init") {
         return CommandInit(replica, args);

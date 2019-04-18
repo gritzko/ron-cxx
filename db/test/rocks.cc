@@ -22,6 +22,11 @@ TEST(Store, Ends) {
     ASSERT_TRUE(frame.empty());
     ASSERT_TRUE(IsOK(store.Read(Key{id,LWW_RDT_FORM}, frame)));
     ASSERT_TRUE(frame.empty());
+
+    // empty store, 2 records: zero and something
+    Frame op1 = OneOp<Frame>(id, LOG_FORM_UUID);
+    ASSERT_TRUE(IsOK(store.Write(Key{id,LOG_FORM_UUID}, op1)));
+
     Iterator i{store};
     ASSERT_EQ(i.key(), Key::END);
     ASSERT_FALSE(i.value().valid());
@@ -30,21 +35,21 @@ TEST(Store, Ends) {
     ASSERT_EQ(i.key(), Key::END);
     ASSERT_FALSE(i.value().valid());
     ASSERT_TRUE(IsOK(i.SeekTo(Key::END, true)));
-    ASSERT_EQ(i.key(), Key::END);
-    ASSERT_FALSE(i.value().valid());
+    //ASSERT_EQ(i.key(), Key::END);
+    ASSERT_TRUE(i.value().valid()); // there must be something
 
     ASSERT_TRUE(IsOK(i.SeekTo(Key{}, true)));
     ASSERT_EQ(i.key(), Key{});
     ASSERT_TRUE(i.value().valid());
+
     ASSERT_TRUE(IsOK(i.SeekTo(Key{}, false)));
     ASSERT_EQ(i.key(), Key{});
     ASSERT_TRUE(i.value().valid());
 
-    // empty store, 2 records: zero and end
     ASSERT_TRUE(IsOK(i.Next()));
     ASSERT_TRUE(IsOK(i.SeekTo(Key::END, true)));
-    ASSERT_EQ(i.key(), Key::END);
-    ASSERT_FALSE(i.value().valid());
+    ASSERT_NE(i.key(), Key::END);
+    ASSERT_TRUE(i.value().valid());
 
     // Next() at the end => end, returns ENDOFINPUT
     ASSERT_TRUE(i.Next()==Status::ENDOFINPUT); // FIXME  other stores

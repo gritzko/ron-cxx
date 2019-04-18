@@ -17,7 +17,7 @@ while read UUID; do
     
     UUIDHI=`echo $UUID | tr '[:lower:]' '[:upper:]'`
     INT=`./uuid2int $UUID | awk '{print $2}'`
-    NM=${UUIDHI}"_"${NAME}
+    NM="${UUIDHI}_${NAME}"
     ID=${NM}"_ID"
     IDNAME=${NM}"_NAME"
     CONST=$CONST"static constexpr uint64_t $IDNAME{${INT}UL};\n"

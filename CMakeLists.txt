@@ -210,6 +210,10 @@ add_executable(test14-rga rdt/test/rga.cc)
 target_link_libraries(test14-rga ron_static rdt_headers)
 add_test(RGA test14-rga)
 
+add_executable(test15-max rdt/test/max.cc)
+target_link_libraries(test15-max ron_static rdt_headers gtest_static)
+add_test(MAX test15-max)
+
 #  S W A R M D B
 
 list(APPEND SWARMDB_HEADERS

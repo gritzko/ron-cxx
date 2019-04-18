@@ -210,7 +210,7 @@ Status CommandGetFrame(RonReplica& replica, Args& args) {
     Status ok = id.version() == TIME ? replica.GetFrame(result, id, rdt)
                                      : replica.GetMap(result, rdt, id);
     if (!ok) return ok;
-    if (!/*FLAGS_clean*/true) {
+    if (!/*FLAGS_clean*/ true) {
         cout << result.data() << '\n';
     } else {
         Cursor c = result.cursor();  // TODO

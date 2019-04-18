@@ -1,19 +1,20 @@
-zero RAW
-yarn RAW
-log RAW
-tail RAW
-patch RAW
-span RAW
-chain RAW
-graph RAW
-meta META
-prev META
-obj META
-sha3 META
-vv META
-lww RDT
-rga RDT
-mx RDT
-json MAP
-csv MAP
-txt MAP
+zero_RAW
+yarn_RAW
+log_RAW
+tail_RAW
+patch_RAW
+span_RAW
+chain_RAW
+graph_RAW
+meta_META
+prev_META
+obj_META
+sha3_META
+vv_META
+lww_RDT
+rga_RDT
+mx_RDT
+max_RDT
+json_MAP
+csv_MAP
+txt_MAP

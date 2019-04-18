@@ -5,6 +5,7 @@
 #include "../ron/status.hpp"
 #include "log.hpp"
 #include "lww.hpp"
+#include "max.hpp"
 #include "meta.hpp"
 #include "mx.hpp"
 #include "rga.hpp"
@@ -18,6 +19,7 @@ class MasterRDT {
     MetaRDT<Frame> meta_;
     MatrixRDT<Frame> mx_;
     RGArrayRDT<Frame> rga_;
+    MaxRDT<Frame> max_;
 
    public:
     using Builder = typename Frame::Builder;
@@ -43,54 +45,8 @@ class MasterRDT {
                 return mx_.Merge(output, inputs);
             case RGA_RDT_FORM:
                 return rga_.Merge(output, inputs);
-            case ERROR_NO_FORM:
-                if (!inputs.empty()) {
-                    output.AppendAll(inputs.back());
-                }
-                return Status::OK;
-            default:
-                return Status::NOT_IMPLEMENTED;
-        }
-    }
-
-    Status GC(Builder &output, FORM form, const Frame &input) const {
-        switch (form) {
-            case LOG_RAW_FORM:
-                return log_.GC(output, input);
-            case ZERO_RAW_FORM:
-            case META_META_FORM:
-                return meta_.GC(output, input);
-            case YARN_RAW_FORM:
-            case LWW_RDT_FORM:
-                return lww_.GC(output, input);
-            case MX_RDT_FORM:
-                return mx_.GC(output, input);
-            case RGA_RDT_FORM:
-                return rga_.GC(output, input);
-            case ERROR_NO_FORM:
-                if (!input.empty()) {
-                    output.AppendAll(input.cursor());
-                }
-                return Status::OK;
-            default:
-                return Status::NOT_IMPLEMENTED;
-        }
-    }
-
-    Status MergeGC(Builder &output, FORM form, Cursors &inputs) const {
-        switch (form) {
-            case LOG_RAW_FORM:
-                return log_.MergeGC(output, inputs);
-            case ZERO_RAW_FORM:
-            case META_META_FORM:
-                return meta_.MergeGC(output, inputs);
-            case YARN_RAW_FORM:
-            case LWW_RDT_FORM:
-                return lww_.MergeGC(output, inputs);
-            case MX_RDT_FORM:
-                return mx_.MergeGC(output, inputs);
-            case RGA_RDT_FORM:
-                return rga_.MergeGC(output, inputs);
+            case MAX_RDT_FORM:
+                return max_.Merge(output, inputs);
             case ERROR_NO_FORM:
                 if (!inputs.empty()) {
                     output.AppendAll(inputs.back());

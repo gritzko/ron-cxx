@@ -48,7 +48,7 @@ TEST(Store, Ends) {
 
     // Next() at the end => end, returns ENDOFINPUT
     ASSERT_TRUE(i.Next()==Status::ENDOFINPUT); // FIXME  other stores
-    ASSERT_TRUE(IsOK(i.SeekTo(Key::END, true)));
+    ASSERT_TRUE(IsOK(i.SeekTo(Key::END, false)));
     ASSERT_EQ(i.key(), Key::END);
     ASSERT_FALSE(i.value().valid());
 }

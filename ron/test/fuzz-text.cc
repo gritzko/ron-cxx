@@ -19,7 +19,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     do {
         copyb.AppendOp(c);
     } while (c.Next());
-    Frame copy = copyb.frame();
+    Frame copy = copyb.Release();
 
     Cursor a{data};
     Cursor b = copy.cursor();

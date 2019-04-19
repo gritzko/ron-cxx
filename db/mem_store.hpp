@@ -140,6 +140,7 @@ class InMemoryStore {
         Status Close() {
             b_ = e_ = store_.end();
             len_ = 0;
+            return Status::OK;
         }
     };
 

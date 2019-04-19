@@ -2,13 +2,16 @@
 
 ## 1 hour (must be separate commits)
 
+- [ ] nicer HasBranch/GetBranch convention
+- [ ] branch metadata: names / last name op, now
+
 - [ ] Replica metadata tests (now, origin, sig)
-- [ ] kill merged\_ in MemStore
 - [ ] only one template instantiation, in libswarmdb.so
 - [x] ninja build
 - [ ] CF list, option
-- [ ] Store{uuid}, not {path}
+- [x] Store{uuid}, not {path}
 - [ ] Replica::See()
+- [ ] kill merged\_ in MemStore
 - [ ] iter key() value() const
 
 ## 1 day
@@ -17,8 +20,8 @@
 - [ ]  (MemStore goes to RDT as btree is header-only)
 - [ ] Builder.AppendXyz may fail (Status? exceptions?)
 - [ ] RocksDB frame header stripping
-- [ ] CLI args are RON, mapper args too - Op, Frame.GetXxx(atom)
-- [ ] RDT-level fuzzing
+- [x] CLI args are RON, mapper args too - Op, Frame.GetXxx(atom)
+- [ ] RDT-level fuzzing -- RGA/CT has a memory bug!
 
 ## 1 week
 

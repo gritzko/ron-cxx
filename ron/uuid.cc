@@ -11,6 +11,22 @@ const Uuid Uuid::FATAL{Word::MAX_VALUE, Word::MAX_VALUE};
 const Uuid Uuid::NEVER = Uuid::Time(Word::MAX_VALUE, Word::MAX_VALUE);
 const Uuid Uuid::COMMENT{"~"};
 
+inline case_t char_case(uint64_t v) {
+    constexpr uint64_t CAPS_MASK = ( (1UL<<36) - (1UL<<10) ) | (1UL<<63);
+    constexpr uint64_t SNAKE_MASK = ( (1UL<<63) - (1UL<<36) ) ;
+    int idx = v&63;
+    return case_t( (((CAPS_MASK>>idx)&1)<<1) | ((SNAKE_MASK>>idx)&1) );
+}
+
+case_t Word::base64_case() const {
+    case_t ret = NUMERIC;
+    uint64_t u = _64;
+    for(int i=0; i<10 && u!=3; ++i, u>>=6) {
+        ret = case_t(ret|char_case(u));
+    }
+    return ret;
+}
+
 void Word::write_base64(String& to) const {
     size_t len = 0;
     do {

@@ -164,7 +164,7 @@ set_property(TARGET ron_static PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 #  L I B R O N  U N I T  T E S T S
 
 add_executable(test01-uuid ron/test/uuid.cc)
-target_link_libraries(test01-uuid ron_static)
+target_link_libraries(test01-uuid ron_static gtest_static Threads::Threads)
 add_test(UUID test01-uuid)
 
 add_executable(test02-text ron/test/text.cc)

@@ -10,6 +10,14 @@
 
 namespace ron {
 
+enum case_t : uint8_t {
+    NUMERIC = 0,
+    SNAKE = 1,
+    CAPS = 2,
+    CAMEL = 3
+};
+
+
 union Word {
     uint64_t _64;
     uint8_t _8[8];
@@ -122,10 +130,11 @@ union Word {
     inline explicit operator double() const { return *(double*)this; }
     explicit Word(int64_t val) : _64{*(uint64_t*)&val} {}
     inline explicit operator int64_t() const { return *(int64_t*)this; }
+    case_t base64_case() const ;
 };
 
 enum half_t { VALUE = 0, ORIGIN = 1 };
-const Word NEVER{Word::MAX_VALUE};
+const Word NEVER{63UL<<54};
 const Word ZERO{};
 
 struct Atom {
@@ -162,6 +171,7 @@ struct Atom {
         return (ATOM)(fb & 3U);
     }
 };
+
 
 struct Uuid : public Atom {
     Uuid() : Atom{0, 0} {}

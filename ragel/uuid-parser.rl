@@ -2,7 +2,7 @@
 
 namespace ron {
 
-    Uuid::Uuid (Slice data) {
+    Uuid::Uuid (Slice data) noexcept {
 
         %% machine UUID;
         %% write data;

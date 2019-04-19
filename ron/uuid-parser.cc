@@ -4,7 +4,7 @@
 
 namespace ron {
 
-Uuid::Uuid(Slice data) {
+Uuid::Uuid(Slice data) noexcept {
 #line 8 "ragel/uuid-parser.rl"
 
 #line 13 "ron/uuid-parser.cc"

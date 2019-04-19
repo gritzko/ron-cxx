@@ -23,6 +23,27 @@ class TextFrame {
 
     const String& data() const { return data_; }
 
+    static String unescape(const Slice& data);
+    static inline String string(Slice data, const Atom& a) {
+        Slice esc = data.slice(a.origin().range());
+        return unescape(esc);
+    }
+    static inline int64_t integer(Slice data, const Atom& a) {
+        return static_cast<int64_t>(a.value());
+    }
+    static inline double number(Slice data, const Atom& a) {
+        return static_cast<double>(a.value());
+    }
+    inline String string(const Atom& a) {
+        return string(data_, a);
+    }
+    inline int64_t integer(const Atom& a) {
+        return integer(data_, a);
+    }
+    inline double number(const Atom& a) {
+        return number(data_, a);
+    }
+
     //  P A R S I N G
 
     class Cursor {
@@ -95,12 +116,10 @@ class TextFrame {
             return op_.type(idx);
         }
         inline TERM term() const { return op_.term(); }
-        static String unescape(const Slice& data);
         String string(fsize_t idx) const {
             assert(type(idx) == STRING);
             // FIXME check metrics
-            Slice esc = data_.slice(op_.atom(idx).origin().range());
-            return unescape(esc);
+            return TextFrame::string(data_, atom(idx));
         }
         int64_t integer(fsize_t idx) const {
             assert(type(idx) == INT);

@@ -51,7 +51,7 @@ void TextFrame::Builder::WriteValues(const Cursor2& cur) {
             case STRING:
                 Write(ATOM_PUNCT[STRING]);
                 range = op.atom(i).origin().range();
-                WriteString(Cursor::unescape(cur.data().slice(range)));
+                WriteString(unescape(cur.data().slice(range)));
                 Write(ATOM_PUNCT[STRING]);
                 break;
             case FLOAT:

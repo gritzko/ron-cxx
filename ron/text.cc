@@ -31,7 +31,7 @@ double TextFrame::Cursor::parse_float(Slice range) {
     return ret;
 }
 
-String TextFrame::Cursor::unescape(const Slice& data) {
+String TextFrame::unescape(const Slice& data) {
     String ret{};
     for (auto c = data.begin(); c < data.end(); c++) {
         if (*c != ESC) {

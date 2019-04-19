@@ -1,5 +1,6 @@
 #ifndef RON_RDT_LWW_OBJ_HPP
 #define RON_RDT_LWW_OBJ_HPP
+#include <cmath>
 #include <unordered_map>
 #include "../ron/ron.hpp"
 
@@ -42,7 +43,7 @@ class LWWObject {
         return OneOp<Frame>(id, last_, key, args...);
     }
 
-    Atom get(Uuid key, ATOM type) {
+    Atom atom(Uuid key, ATOM type) {
         auto i = vals_.find(key);
         if (i == vals_.end() || i->second.type() != type) {
             return Uuid::NIL;
@@ -50,7 +51,22 @@ class LWWObject {
         return i->second;
     }
 
-    inline int64_t get_int(Uuid key) { return data_.integer(get(key, INT)); }
+    inline int64_t integer(Uuid key) {
+        Atom a = atom(key, INT);
+        return Uuid::NIL == a ? 0 : data_.integer(a);
+    }
+
+    inline Uuid uuid(Uuid key) { return Uuid{atom(key, UUID)}; }
+
+    inline double number(Uuid key) {
+        Atom a = atom(key, FLOAT);
+        return Uuid::NIL == a ? std::nan("") : data_.number(a);
+    }
+
+    inline String string(Uuid key) {
+        Atom a = atom(key, STRING);
+        return Uuid::NIL == a ? "" : data_.string(a);
+    }
 };
 
 };  // namespace ron

@@ -202,6 +202,7 @@ struct Uuid : public Atom {
     inline bool operator<(const Uuid& b) const { return words_ < b.words_; }
     inline bool operator>(const Uuid& b) const { return words_ > b.words_; }
     inline bool operator==(const Uuid& b) const { return words_ == b.words_; }
+    inline bool operator==(const Atom& b) const { return words_ == b.words_; }
     inline bool operator==(const char* b) const { return *this == Uuid{b}; }
     inline bool operator!=(const Uuid& b) const { return words_ != b.words_; }
     inline bool operator<=(const Uuid& b) const { return words_ <= b.words_; }

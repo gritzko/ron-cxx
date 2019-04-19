@@ -1,14 +1,16 @@
 #include <iostream>
-#include <cassert>
+#include "gtest/gtest.h"
 #include "../../ron/ron.hpp"
 #include "../rdt.hpp"
+#include "../rdt/lww_obj.hpp"
 #define DEBUG 1
 
 using namespace ron;
 using namespace std;
 
-typedef LastWriteWinsRDT<typename ron::TextFrame> TextLWW;
-typedef TextFrame::Cursors Cursors;
+using Frame = TextFrame;
+using TextLWW = LastWriteWinsRDT<Frame>;
+using Cursors = TextFrame::Cursors;
 
 string scan (const TextFrame& frame) {
     string ret;
@@ -26,8 +28,8 @@ string scan (const TextFrame& frame) {
     return ret;
 }
 
-int main (int argn, char** args) {
 
+TEST(LWW, Reduction) {
     TextFrame::Builder ab_builder, c_builder, abc_builder, b2_builder,
     abbc_builder, ab2c_builder, ab2c_builder2;
     vector<TextFrame> inputs;
@@ -45,23 +47,37 @@ int main (int argn, char** args) {
     Cursors i1 = cursors(inputs);
     lww.Merge(abc_builder, i1);
     TextFrame abc = abc_builder.Release();
-    assert(scan(abc)=="_,a,b,c");
+    ASSERT_TRUE(scan(abc)=="_,a,b,c");
 
     inputs.push_back(b2_builder.Release());
 
     Cursors i2 = cursors(inputs);
     lww.Merge(abbc_builder, i2);
     TextFrame abbc = abbc_builder.Release();
-    assert(scan(abbc)=="_,a,b,c,b");
+    ASSERT_TRUE(scan(abbc)=="_,a,b,c,b");
 
     lww.GC(ab2c_builder, abbc);
     TextFrame ab2c = ab2c_builder.Release();
-    assert(scan(ab2c)=="_,a,c,b");
+    ASSERT_TRUE(scan(ab2c)=="_,a,c,b");
 
     Cursors i3 = cursors(inputs);
     lww.MergeGC(ab2c_builder2, i3);
     TextFrame ab2c2 = ab2c_builder2.Release();
-    assert(scan(ab2c2)=="_,a,c,b");
-    assert(ab2c.data()==ab2c2.data());
+    ASSERT_TRUE(scan(ab2c2)=="_,a,c,b");
+    ASSERT_TRUE(ab2c.data()==ab2c2.data());
+}
 
+TEST(LWW, Object) {
+    Frame init{"@12345+orig :lww, abc 123;"};
+    LWWObject<Frame> obj{init};
+    ASSERT_EQ(obj.get_int(Uuid{"abc"}), 123);
+    Frame update{"@123456+orig :12345+orig abc 234;"};
+    obj.Update(update);
+    ASSERT_EQ(obj.get_int(Uuid{"abc"}), 234);
+    cerr<<"SDSDDDDSSD\n";
+}
+
+int main (int argn, char** args) {
+    ::testing::InitGoogleTest(&argn, args);
+    return RUN_ALL_TESTS();
 }

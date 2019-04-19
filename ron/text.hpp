@@ -34,15 +34,9 @@ class TextFrame {
     static inline double number(Slice data, const Atom& a) {
         return static_cast<double>(a.value());
     }
-    inline String string(const Atom& a) {
-        return string(data_, a);
-    }
-    inline int64_t integer(const Atom& a) {
-        return integer(data_, a);
-    }
-    inline double number(const Atom& a) {
-        return number(data_, a);
-    }
+    inline String string(const Atom& a) { return string(data_, a); }
+    inline int64_t integer(const Atom& a) { return integer(data_, a); }
+    inline double number(const Atom& a) { return number(data_, a); }
 
     //  P A R S I N G
 

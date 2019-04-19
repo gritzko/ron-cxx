@@ -197,7 +197,7 @@ target_include_directories(rdt_headers INTERFACE rdt/)
 #  R D T  U N I T  T E S T S
 
 add_executable(test10-lww rdt/test/lww.cc)
-target_link_libraries(test10-lww ron_static rdt_headers)
+target_link_libraries(test10-lww ron_static rdt_headers Threads::Threads gtest)
 add_test(LWW test10-lww)
 
 #add_executable(test11-metardt rdt/test/meta.cc)

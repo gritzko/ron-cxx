@@ -146,6 +146,20 @@ Status RocksDBStore<Frame>::Create(Uuid id) {
 }
 
 template <typename Frame>
+Status RocksDBStore<Frame>::ReadId() {
+    Frame now;
+    IFOK(Read(Key::ZERO, now));
+    Cursor c{now};
+    if (c.valid()) {
+        id_ = c.id().origin();
+        return Status::OK;
+    } else {
+        id_ = NEVER;
+        return Status::BAD_STATE.comment("malformed 'now' record");
+    }
+}
+
+template <typename Frame>
 Status RocksDBStore<Frame>::Open(Uuid id) {
     if (db_) return Status::BAD_STATE.comment("db open already");
 
@@ -159,7 +173,9 @@ Status RocksDBStore<Frame>::Open(Uuid id) {
     if (!id.zero()) {
         return Status::NOT_IMPLEMENTED.comment("use OpenAll for now");
     }
-    // cf_.reset(db->DefaultColumnFamily());
+    // cf_.reset(db->DefaultColumnFamily()); ???
+
+    ReadId();
 
     return Status::OK;
 }

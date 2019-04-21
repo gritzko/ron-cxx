@@ -182,41 +182,41 @@ class Replica {
 
     Status FindObjectLog(Frame& frame, Uuid id, Commit& commit);
 
-    Status NewOpSanityChecks(const Cursor& op);
+    Status CheckEventSanity(const Cursor& op);
 
     //  T R A N S A C T I O N A L  R E A D S  W R I T E S
 
     /** @object+id :xxx ? */
-    Status FrameQuery(Builder& response, Cursor& query, Commit& commit);
+    Status QueryFrame(Builder& response, Cursor& query, Commit& commit);
 
     /** @object+id :lww ? */
-    Status ObjectQuery(Builder& response, Cursor& query, Commit& commit);
+    Status QueryObject(Builder& response, Cursor& query, Commit& commit);
 
     /** @head+id :span ? */
-    Status OpChainQuery(Builder& response, Cursor& query, Commit& commit);
+    Status QueryOpChain(Builder& response, Cursor& query, Commit& commit);
 
     /** @object+id :log ?   @version+id :log ?   @version+id :log till versn+id
      * ? */
-    Status ObjectLogQuery(Builder& response, Cursor& query, Commit& commit);
+    Status QueryObjectLog(Builder& response, Cursor& query, Commit& commit);
 
     /** @version+id :tail ? */
-    Status ObjectLogTailQuery(Builder& response, Cursor& query, Commit& commit);
+    Status QueryObjectLogTail(Builder& response, Cursor& query, Commit& commit);
 
     /** @version+id :patch ? */
-    Status ObjectPatchQuery(Builder& response, Cursor& query, Commit& commit);
+    Status QueryObjectPatch(Builder& response, Cursor& query, Commit& commit);
 
     /** @version+id :version+id ?
     Status ObjectLogSegmentQuery(Builder& response, Cursor& query, Uuid
     branch=Uuid::Uuid::NIL); */
 
     /** @op+id :meta ?  @op+id :sha3 ?  @op+id :prev ?  @op+id :obj ?  */
-    Status OpMetaQuery(Builder& response, Cursor& query, Commit& commit);
+    Status QueryOpMeta(Builder& response, Cursor& query, Commit& commit);
 
     /** @time+yarn :vv ?  @~+yarn :vv ? */
-    Status YarnVVQuery(Builder& response, Cursor& query, Commit& commit);
+    Status QueryYarnVV(Builder& response, Cursor& query, Commit& commit);
 
     /** @time+yarn :yarn ? */
-    Status YarnQuery(Builder& response, Cursor& query, Commit& commit);
+    Status QueryYarn(Builder& response, Cursor& query, Commit& commit);
 
     //  M A P P E R  Q U E R I E S
 
@@ -226,7 +226,7 @@ class Replica {
         @object-id :dtxt,
             @version-till :version-from ?
     */
-    Status MapperQuery(Builder& response, Cursor& query, Commit& commit);
+    Status QueryMapper(Builder& response, Cursor& query, Commit& commit);
 
     //  S U B S C R I P T I O N S
 
@@ -247,10 +247,12 @@ class Replica {
 
     //  W R I T E S
 
-    Status ReadChainlet(Builder& to, OpMeta& meta, Cursor& from);
+    Status SaveChainlet(Builder& to, OpMeta& meta, Cursor& from);
 
     // feed a causally ordered log - checks causality, updates the chain cache
-    Status WriteNewChain(Builder&, Cursor& chain, Commit& commit);
+    Status SaveChain(Builder&, Cursor& chain, Commit& commit);
+
+    Status WriteNewEvents(Builder&, Cursor& chain, Commit& commit);
 
     /**
         @version-id :txt 'text' !
@@ -258,21 +260,22 @@ class Replica {
         @object-id :dtxt,
             @version-to :version-from 2 -1 2 'x' !
     */
-    Status MapWrite(Cursor& write, Commit& commit) {
+    Status WriteThroughMap(Cursor& write, Commit& commit) {
         return Status::NOT_IMPLEMENTED.comment("MapWrite");
     }
 
     //  R E C E I V E S
 
-    Status Recv(Builder& response, Cursor& c, Uuid branch = Uuid::NIL);
+    Status ReceiveQuery(Builder& response, Cursor& c, Commit& commit);
 
-    inline Status FrameRecv(Builder& response, Frame frame,
-                            Uuid branch = Uuid::NIL) {
+    Status Receive(Builder& response, Cursor& c, Uuid branch = Uuid::NIL);
+
+    inline Status ReceiveFrame(Builder& response, Frame frame,
+                               Uuid branch = Uuid::NIL) {
         Cursor c{frame};
-        cerr << "Recv on " << branch.str() << '\t' << frame.data() << endl;
-        return Recv(response, c, branch);
+        return Receive(response, c, branch);
     }
-    Status DispatchRecv(Builder& resp, Cursor& c, Commit& commit);
+    Status ReceiveWrites(Builder& resp, Cursor& c, Commit& commit);
 
     // the entry point: recoder, normalizer, access control
     // converts any-coded incoming frame into internal-coded chains, queries,
@@ -281,8 +284,6 @@ class Replica {
     Status AnyFrameRecv(Uuid conn_id, const FrameB& frame) {
         return Status::NOT_IMPLEMENTED.comment("AnyFrameRecv");
     }
-
-    void cerr_batch(Records& save);
 };
 
 }  // namespace ron

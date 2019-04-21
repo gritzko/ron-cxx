@@ -82,5 +82,14 @@ Frame OneOp(Uuid id, Uuid ref, Ts... args) {
     return b.Release();
 }
 
+template <typename Frame, class... Ts>
+Frame Query(Uuid id, Uuid ref, Ts... args) {
+    using Builder = typename Frame::Builder;
+    Builder b;
+    b.AppendNewOp(id, ref, args...);
+    b.EndChunk(QUERY);
+    return b.Release();
+}
+
 }  // namespace ron
 #endif

@@ -237,14 +237,14 @@ Status Replica<Frame>::See(Uuid timestamp) {
 }
 
 template <class Frame>
-Status Replica<Frame>::ReadChainlet(Builder& to, OpMeta& meta, Cursor& from) {
+Status Replica<Frame>::SaveChainlet(Builder& to, OpMeta& meta, Cursor& from) {
     to.AppendOp(from);
     Status ok = from.Next();
     while (ok) {
         LOG('?', Key{from.id(), ZERO_RAW_FORM}, "...\n");
         if (from.id() == Uuid::COMMENT) {
         } else if (meta.is_next(from)) {
-            IFOK(NewOpSanityChecks(from));
+            IFOK(CheckEventSanity(from));
             meta.Next(from, meta);
             to.AppendOp(from);
         } else if (meta.is_check(from)) {
@@ -264,7 +264,7 @@ Status Replica<Frame>::ReadChainlet(Builder& to, OpMeta& meta, Cursor& from) {
 }
 
 template <class Frame>
-Status Replica<Frame>::NewOpSanityChecks(const Cursor& chain) {
+Status Replica<Frame>::CheckEventSanity(const Cursor& chain) {
     Uuid id = chain.id();
     Uuid ref_id = chain.ref();
     if (id.version() != TIME) {
@@ -293,13 +293,13 @@ Status Replica<Frame>::NewOpSanityChecks(const Cursor& chain) {
  * @param chain a cursor positioned on the head of the chain;
  *              will be moved to the first non-chain op (or EOF) */
 template <class Frame>
-Status Replica<Frame>::WriteNewChain(Builder&, Cursor& chain, Commit& commit) {
+Status Replica<Frame>::SaveChain(Builder&, Cursor& chain, Commit& commit) {
     Status ok;
     Uuid id = chain.id();
     Uuid ref_id = chain.ref();
 
     // sanity checks
-    IFOK(NewOpSanityChecks(chain));
+    IFOK(CheckEventSanity(chain));
 
     // find the last op on the yarn (the tip) and its metadata
     OpMeta tip_meta;
@@ -355,7 +355,7 @@ Status Replica<Frame>::WriteNewChain(Builder&, Cursor& chain, Commit& commit) {
     // walk/check the chainlet
     Uuid& obj_id = tip_meta.object;
     Builder chainlet;
-    IFOK(ReadChainlet(chainlet, tip_meta, chain));
+    IFOK(SaveChainlet(chainlet, tip_meta, chain));
     IFOK(See(tip_meta.id));  // implausible timestamps etc
     Frame data = chainlet.Release();
     IFOK(commit.Write(Key{obj_id, LOG_FORM_UUID}, data));
@@ -398,13 +398,13 @@ Status Replica<Frame>::GetMap(Frame& result, Uuid id, Uuid map, Uuid branch) {
     }
     Commit readonly{GetBranch(branch), mem};
     Records devnull;
-    IFOK(DispatchRecv(response, qc, readonly));
+    IFOK(ReceiveWrites(response, qc, readonly));
     result = response.Release();
     return Status::OK;
 }
 
 template <typename Frame>
-Status Replica<Frame>::ObjectQuery(Builder& response, Cursor& query,
+Status Replica<Frame>::QueryObject(Builder& response, Cursor& query,
                                    Commit& commit) {
     if (!open()) {
         return Status::NOTOPEN;
@@ -430,15 +430,22 @@ Status Replica<Frame>::ObjectQuery(Builder& response, Cursor& query,
 }
 
 template <typename Frame>
-Status Replica<Frame>::YarnQuery(Builder& response, Cursor& query,
+Status Replica<Frame>::QueryYarnVV(Builder& response, Cursor& query,
+                                   Commit& commit) {
+    return Status::NOT_IMPLEMENTED.comment("QueryYarnVV");
+}
+
+template <typename Frame>
+Status Replica<Frame>::QueryYarn(Builder& response, Cursor& query,
                                  Commit& commit) {
     return Status::NOT_IMPLEMENTED.comment("YarnQuery");
 }
 
 template <typename Frame>
-Status Replica<Frame>::ObjectLogQuery(Builder& response, Cursor& query,
+Status Replica<Frame>::QueryObjectLog(Builder& response, Cursor& query,
                                       Commit& commit) {
     Uuid id = query.id();
+    query.Next();
     OpMeta meta;
     IFOK(FindOpMeta(meta, id, commit));
     Key logkey{meta.object, meta.rdt};
@@ -462,8 +469,8 @@ Status Replica<Frame>::ObjectLogQuery(Builder& response, Cursor& query,
 
 template <class Cursor>
 TERM look_ahead(Cursor c) {
-    while (c.Next() && c.term() == REDUCED)
-        ;
+    while (c.Next() && c.term() == REDUCED) {
+    }
     return c.valid() ? c.term() : REDUCED;
 }
 
@@ -481,9 +488,42 @@ inline bool is_query(const Cursor& c) {
 }
 
 template <typename Frame>
-Status Replica<Frame>::DispatchRecv(Builder& resp, Cursor& c, Commit& commit) {
+Status Replica<Frame>::WriteNewEvents(Builder& resp, Cursor& uc,
+                                      Commit& commit) {
+    Builder stamp;
+    Uuid now = Now(commit.id());
+    constexpr uint64_t MAXSEQ = 1 << 30;
+    while (uc.valid() && uc.id().origin().payload() == 0) {
+        now.inc();
+        if (uc.id().origin().payload() != 0) {
+            return Status::BAD_STATE.comment("stamped already");
+        }
+        Uuid id{now.value()._64, now.origin()};
+        Uuid ref{uc.ref()};
+        if (ref.origin() == 0 && ref.value() < MAXSEQ) {
+            ref = Uuid{now.value()._64 + uc.ref().value()._64, now.origin()};
+        }
+        stamp.AppendAmendedOp(uc, RAW, id, ref);
+        uc.Next();
+    }
+    Cursor stamped{stamp.data()};
+    Status ok;
+    while (stamped.valid() && ok) {
+        ok = SaveChain(resp, stamped, commit);
+    }
+    return ok;
+}
+
+template <typename Frame>
+Status Replica<Frame>::ReceiveWrites(Builder& resp, Cursor& c, Commit& commit) {
     // NOTE all methods that take a Cursor MUST consume their ops
     // NOTE all incoming chunks MUST specify a form unless they are events
+    if (c.ref().version() == TIME) {
+        return WriteNewEvents(resp, c, commit);
+    }
+    if (c.ref().version() != NAME) {
+        return Status::BADARGS.comment("unrecognized write pattern");
+    }
     FORM form = uuid2form(c.ref());
     TERM term = peek_term(c);
     switch (form) {  // TODO mark forms as rdt/meta/map
@@ -491,24 +531,9 @@ Status Replica<Frame>::DispatchRecv(Builder& resp, Cursor& c, Commit& commit) {
         case RGA_RDT_FORM:
         case MX_RDT_FORM:
         case YARN_RAW_FORM:
-            switch (term) {
-                case QUERY:
-                    return ObjectQuery(resp, c, commit);
-                case RAW:
-                    return WriteNewChain(resp, c, commit);
-                default:
-                    return Status::NOT_IMPLEMENTED.comment("RDT unknown");
-            }
-            break;
+            return WriteNewEvents(resp, c, commit);
         case TXT_MAP_FORM:
-            switch (term) {
-                case QUERY:
-                    return txt_.Read(resp, c, commit);
-                case HEADER:
-                    return txt_.Write(resp, c, commit);
-                default:
-                    return Status::NOT_IMPLEMENTED.comment("txt");
-            }
+            return txt_.Write(resp, c, commit);
         default:
             return Status::NOT_IMPLEMENTED.comment("unknown form: " +
                                                    c.ref().str());
@@ -516,7 +541,27 @@ Status Replica<Frame>::DispatchRecv(Builder& resp, Cursor& c, Commit& commit) {
 }
 
 template <typename Frame>
-Status Replica<Frame>::Recv(Builder& resp, Cursor& c, Uuid branch_id) {
+Status Replica<Frame>::ReceiveQuery(Builder& response, Cursor& c,
+                                    Commit& commit) {
+    FORM form = uuid2form(c.ref());
+    switch (form) {
+        case LWW_RDT_FORM:
+        case RGA_RDT_FORM:
+        case MX_RDT_FORM:
+        case YARN_RAW_FORM:
+            return QueryObject(response, c, commit);
+        case LOG_RAW_FORM:
+            return QueryObjectLog(response, c, commit);
+        case TXT_MAP_FORM:
+            return txt_.Read(response, c, commit);
+        default:
+            return Status::NOT_IMPLEMENTED.comment("unknown query form: " +
+                                                   c.ref().str());
+    }
+}
+
+template <typename Frame>
+Status Replica<Frame>::Receive(Builder& resp, Cursor& c, Uuid branch_id) {
     Status ok = Status::OK;
     if (!HasBranch(branch_id)) {
         // TODO 1 such check
@@ -529,29 +574,28 @@ Status Replica<Frame>::Recv(Builder& resp, Cursor& c, Uuid branch_id) {
     while (c.valid() && ok) {
         if (c.id() == Uuid::COMMENT) {
             ok = c.Next();
-            continue;
+        } else if (c.term() == QUERY) {
+            ok = ReceiveQuery(resp, c, commit);
+        } else if (c.id().version() == TIME && c.id().origin().payload() != 0) {
+            ok = SaveChain(resp, c, commit);
+        } else if (c.id().version() == TIME) {
+            ok = ReceiveWrites(resp, c, commit);
+        } else if (c.id().version() == NAME) {
+            ok = Status::BADVALUE.comment("a runaway annotation");
+        } else if (c.id().version() == HASH) {
+            ok = Status::NOT_IMPLEMENTED.comment("no blob support yet");
+        } else {
+            ok = Status::NOT_IMPLEMENTED.comment("unrecognized op pattern");
         }
-        if (c.id().version() == HASH) {
-            return Status::NOT_IMPLEMENTED.comment(
-                "blobs are not supported yet");
-        }
-        if (c.ref().version() == TIME) {
-            ok = WriteNewChain(resp, c, commit);
-            continue;
-        }
-        if (c.ref().version() != NAME) {
-            ok = Status::NOT_IMPLEMENTED.comment(
-                "expecting events,queries or writes");
-        }
-
-        ok = DispatchRecv(resp, c, commit);
     }
 
     Records save;
     if (ok && changes.Release(save)) {
+        // Frames are applied transactionally, all or nothing.
+        // We saw no errors => we may save the changes.
         IFOK(branch_store.Write(save));
     }
-    // the response is rendered
+    // the response is rendered already
 
     return ok;
 }

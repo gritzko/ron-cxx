@@ -32,13 +32,6 @@ const Uuid TEST_UUID{526483344616062976UL, 0};
 
 using Args = Strings;
 
-constexpr const char* GET_USAGE{
-    "get <form> of <id>\n"
-    "   prints a stored frame\n"
-    "   <form> - form id\n"
-    "   <id> - object/version UUID\n"
-    "       e.g. swarmdb get log of 1kFHN0VmHh+0046cGqZgm\n"};
-
 constexpr const char* HELP_USAGE{
     "help\n"
     "   print a memo on commands\n"};
@@ -80,9 +73,9 @@ Status CommandInit(RonReplica& replica, Args& args) {
 }
 
 constexpr const char* CREATE_USAGE{
-    "create [as <BranchName>]\n"
+    "create [as BranchName]\n"
     "   create an empty branch\n"
-    "   <BranchName> a tag for the branch (name UUID, up to 10 Base64 chars)\n"
+    "   BranchName a tag for the branch (name UUID, up to 10 Base64 chars)\n"
     "       e.g. swarmdb create as Experiment\n"};
 
 Status CommandCreate(RonReplica& replica, Args& args) {
@@ -137,7 +130,7 @@ Status CommandTest(RonReplica& replica, Args& args) {
             }
             cerr << "?\t" << comment << '\t' << (ok ? OK : FAIL) << endl;
         } else if (term == HEADER) {
-            ok = replica.FrameRecv(b, io[i]);
+            ok = replica.ReceiveFrame(b, io[i]);
             cerr << "!\t" << comment << '\t' << (ok ? OK : FAIL + ok.str())
                  << endl;
         } else {
@@ -176,20 +169,32 @@ Status CommandQuery(RonReplica& replica, const string& name) {
     if (id == Uuid::FATAL || rdt == Uuid::FATAL)
         return Status::BADARGS.comment("not an UUID");
     Builder result;
-    Status ok = replica.Recv(result, cur);
+    Status ok = replica.Receive(result, cur);
     if (ok) cout << result.data() << '\n';
     return ok;
 }
+
+constexpr const char* GET_USAGE{
+    "get lww of 12345+someid [clean]\n"
+    "   prints a stored frame\n"
+    "   lww - form id\n"
+    "   12345+someid - object UUID or object version UUID\n"
+    "       e.g. swarmdb get log of 1kFHN0VmHh+0046cGqZgm\n"};
 
 Status CommandGetFrame(RonReplica& replica, Args& args) {
     CHECKARG(args.empty(), GET_USAGE);
     Uuid rdt{args.back()};
     args.pop_back();
+    CHECKARG(rdt == Uuid::FATAL || rdt.version() != NAME,
+             "the form much be a NAME UUID");
     CHECKARG(args.back() != "of", GET_USAGE);
     args.pop_back();
     CHECKARG(args.empty(), GET_USAGE);
     Uuid id{args.back()};
+    CHECKARG(id.version() != UUID::TIME,
+             "frame id must be an EVENT UUID, not " + args.back());
     args.pop_back();
+    bool clean = !args.empty() && args.back() == "clean";
     size_t dot;
     /*if (name[0] == '@') {
         string termd{name};
@@ -204,64 +209,38 @@ Status CommandGetFrame(RonReplica& replica, Args& args) {
     } else {
         id = Uuid{name};
     }*/
-    if (id == Uuid::FATAL || rdt == Uuid::FATAL) return Status::BADARGS;
-    Frame result;
-    Status ok = id.version() == TIME ? replica.GetFrame(result, id, rdt)
-                                     : replica.GetMap(result, rdt, id);
-    if (!ok) return ok;
-    if (!/*FLAGS_clean*/ true) {
+    Builder result;
+    Frame query = Query<Frame>(id, rdt);
+    Cursor qc{query};
+    IFOK(replica.Receive(result, qc));
+    if (!clean) {
         cout << result.data() << '\n';
     } else {
-        Cursor c = result.cursor();  // TODO
+        Cursor c{result.data()};
         if (c.valid() && c.has(2, STRING)) {
             cout << c.string(2);
+        } else {
+            return Status::BADVALUE.comment("no string in the first value pos");
         }
     }
-    return ok;
+    return Status::OK;
 }
 
-Status CommandWriteNewFrame(RonReplica& replica, const string& filename) {
+constexpr const char* WRITE_USAGE{
+    "write file.ron [on BranchName]\n"
+    "   write an unstamped frame to the db\n"};
+
+Status CommandWrite(RonReplica& replica, Args& args) {
+    String filename = "-";
+    if (!args.empty()) {
+        filename = args.back();
+        args.pop_back();
+    }
     Uuid now = replica.Now();
     Frame unstamped;
-    LoadFrame(unstamped, filename);
-    Builder stamp;
-    Cursor uc = unstamped.cursor();
-    constexpr uint64_t MAXSEQ = 1 << 30;
-    while (uc.valid()) {
-        if (uc.id().origin() != ZERO) {
-            return Status::BAD_STATE.comment("stamped already");
-        }
-        Uuid id{now.value()._64 + uc.id().value()._64, now.origin()};
-        Uuid ref{uc.ref()};
-        if (ref.origin() == 0 && ref.value() < MAXSEQ) {
-            ref = Uuid{now.value()._64 + uc.ref().value()._64, now.origin()};
-        }
-        stamp.AppendAmendedOp(uc, RAW, id, ref);
-        uc.Next();
-    }
-    Frame stamped = stamp.Release();
-
-    cout << stamped.data() << '\n';
-
-    Cursor cur = stamped.cursor();
-    Status ok = Status::OK;
-
-    typename RonReplica::RocksStore& branch = replica.GetBranch(Uuid::NIL);
-    typename RonReplica::MemStore mem{};
-    RonReplica::Commit batch{branch, mem};
-    Builder none;
-
-    while (cur.valid() && ok) {
-        ok = replica.WriteNewChain(none, cur, batch);
-    }
-
-    if (ok) {
-        typename RonReplica::Records writes;
-        mem.Release(writes);
-        branch.Write(writes);
-    }
-
-    return ok;
+    IFOK(LoadFrame(unstamped, filename));
+    Builder res;
+    return replica.ReceiveFrame(res, unstamped);
 }
 
 constexpr const char* NEW_USAGE{
@@ -280,7 +259,7 @@ Status CommandNew(RonReplica& replica, Args& args) {
     Frame new_obj = OneOp<Frame>(replica.Now(), rdt);
     Builder re;
     Cursor cu{new_obj};
-    Status ok = replica.Recv(re, cu);
+    Status ok = replica.Receive(re, cu);
     if (ok) {
         ok = ok.comment(rdt.str() + " object created");
     }
@@ -342,7 +321,7 @@ Status CommandHashFrame(const string& filename) {
 }
 
 constexpr const char* LIST_USAGE{
-    "list [branches|snapshots|stores] [in <BranchName>]\n"
+    "list [branches|snapshots|stores] [in BranchName]\n"
     "   list branches (or snapshots, or named objects or all the tags)\n"};
 
 Status CommandList(RonReplica& replica, Args& args) {
@@ -361,7 +340,7 @@ Status CommandList(RonReplica& replica, Args& args) {
 }
 
 constexpr const char* NAME_USAGE{
-    "name 1234+some_id as new_name [on BranchName]\n"
+    "name 1234+someid as new_name [on BranchName]\n"
     "   assign a name to an object (a yarn, a version)\n"};
 
 Status CommandName(RonReplica& replica, Args& args) {
@@ -383,7 +362,7 @@ Status CommandName(RonReplica& replica, Args& args) {
 }
 
 constexpr const char* NAMED_USAGE{
-    "named [yarns|objects|versions|things] [in <BranchName>]\n"
+    "named [yarns|objects|versions|things] [in BranchName]\n"
     "   list names for branches (or snapshots, or objects or all the names)\n"};
 
 Status CommandNamed(RonReplica& replica, Args& args) {
@@ -441,7 +420,8 @@ Status CommandHelp(RonReplica& replica, Args& args) {
     cout << "swarmdb -- a versioned syncable RON database\n"
             "   \n"
          << HELP_USAGE << INIT_USAGE << CREATE_USAGE << NEW_USAGE << GET_USAGE
-         << LIST_USAGE << NAME_USAGE << NAMED_USAGE << HOP_USAGE << TEST_USAGE;
+         << LIST_USAGE << NAME_USAGE << NAMED_USAGE << HOP_USAGE << TEST_USAGE
+         << WRITE_USAGE;
     return Status::OK;
 }
 
@@ -500,6 +480,8 @@ Status RunCommands(Args& args) {
         return CommandNamed(replica, args);
     } else if (verb == "name") {
         return CommandName(replica, args);
+    } else if (verb == "write") {
+        return CommandWrite(replica, args);
     } else if (verb == "hop") {
         return CommandHop(replica, args);
     } else {
@@ -520,6 +502,8 @@ Status RunCommands(Args& args) {
      ok = CommandTest(replica, FLAGS_test);
      } else {
      }*/
+
+    replica.Close();
 
     return ok;
 }

@@ -20,6 +20,8 @@ class JoinedStore {
 
     JoinedStore(StoreA& a, StoreB& b) : a_{a}, b_{b} {}
 
+    Word id() const { return a_.id(); }
+
     Status Write(Key key, const Frame& data) {
         LOG('W', key, data.data());
         return b_.Write(key, data);

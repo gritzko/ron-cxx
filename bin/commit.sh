@@ -37,7 +37,9 @@ make format
 
 cd ..
 
-git add $@ || exit 11
+if [ $@ ]; then
+    git add $@ || exit 11
+fi
 
 git commit -S || exit 6
 

@@ -1,6 +1,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <ctime>
+#include <cstdlib>
 #include <unordered_map>
 #include "../rdt/rdt.hpp"
 #include "../ron/ron.hpp"
@@ -403,7 +404,7 @@ Status CommandHelp(RonReplica& replica, Args& args) {
 Status OpenReplica(RonReplica& replica) {
     // TODO  go ../../.. for .swarmdb
     if (!file_exists(ROCKSDB_STORE_DIR)) {
-        return Status::NOT_FOUND;
+        return Status::NOT_FOUND.comment("no replica found (.swarmdb)");
     }
     IFOK(replica.Open());
     return Status::OK;
@@ -481,6 +482,9 @@ int main(int argn, char** args) {
         arguments.push_back(args[i]);
     }
     std::reverse(arguments.begin(), arguments.end());
+    if (getenv("TRACE")) {
+        Key::trace_by_key = true;
+    }
 
     Status ok = RunCommands(arguments);
 

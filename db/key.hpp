@@ -66,12 +66,17 @@ struct Key {
 
     static const Key ZERO;
     static const Key END;
+
+    /** Trace data events, see LOG() */
+    static bool trace_by_key;
 };
 
 inline void LOG(char code, const Key& key, const String& value) {
 #ifndef NDEBUG
-    std::cerr << code << '\t' << key.str() << '\t'
+    if (Key::trace_by_key) {
+        std::cerr << code << '\t' << key.str() << '\t'
               << (value.empty() ? "-\n" : value);
+    }
 #endif
 }
 

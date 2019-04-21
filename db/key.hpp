@@ -75,7 +75,7 @@ inline void LOG(char code, const Key& key, const String& value) {
 #ifndef NDEBUG
     if (Key::trace_by_key) {
         std::cerr << code << '\t' << key.str() << '\t'
-              << (value.empty() ? "-\n" : value);
+                  << (value.empty() ? "-\n" : value);
     }
 #endif
 }

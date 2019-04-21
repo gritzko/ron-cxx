@@ -19,6 +19,13 @@ Status Replica<Frame>::CreateReplica() {
 
     Frame local_names = OneOp<Frame>(Uuid::NIL, LWW_FORM_UUID);
     IFOK(db.Write(Key{Uuid::NIL, LWW_FORM_UUID}, local_names));
+    Uuid now0 = Uuid::Time(Uuid::Now(), ZERO);
+    Frame local_yarn = OneOp<Frame>(now0, YARN_FORM_UUID);
+    IFOK(db.Write(Key{now0, LOG_FORM_UUID}, local_yarn));
+    OpMeta tip_meta{local_yarn.cursor(), OpMeta{}};
+    Builder b;
+    tip_meta.Save(b);
+    IFOK(db.Write(Key{now0, META_FORM_UUID}, b.Release()));
 
     return Status::OK;
 }
@@ -53,8 +60,7 @@ Status Replica<Frame>::Open() {
 }
 
 template <typename Frame>
-Status Replica<Frame>::CreateBranch(Word branch) {
-    Uuid branch_id{NEVER, branch};
+Status Replica<Frame>::CreateBranch(Uuid branch_id) {
     if (HasBranch(branch_id)) {
         return Status::BADARGS.comment("branch already exists");
     }
@@ -79,10 +85,11 @@ Status Replica<Frame>::WriteName(Uuid key, Uuid value, Uuid branch) {
     if (!HasBranch(branch)) return Status::NOT_FOUND.comment("branch unknown");
     Records w;
     Uuid id = Now(branch.origin());
-    // Frame valop = OneOp<Frame>(id, last_name_id_, key, value);
-    // GetBranch(branch).Write(Key{}, valop);
+    Key names_key{Uuid::NIL, LWW_RDT_FORM};
+    Frame valop = OneOp<Frame>(id, Uuid::NIL, key, value);
+    GetBranch(branch).Write(names_key, valop);
     //???!!!last_name_id_ = id;
-    return Status::OK;
+    return id;
 }
 
 template <typename Frame>
@@ -290,7 +297,6 @@ Status Replica<Frame>::WriteNewChain(Builder&, Cursor& chain, Commit& commit) {
     Status ok;
     Uuid id = chain.id();
     Uuid ref_id = chain.ref();
-    cerr << "\nIN:\t" << id.str() << "\t" << ref_id.str() << endl;
 
     // sanity checks
     IFOK(NewOpSanityChecks(chain));
@@ -355,7 +361,7 @@ Status Replica<Frame>::WriteNewChain(Builder&, Cursor& chain, Commit& commit) {
     IFOK(commit.Write(Key{obj_id, LOG_FORM_UUID}, data));
     IFOK(commit.Write(Key{obj_id, tip_meta.rdt}, data));
 
-    return ok;
+    return tip_meta.id;
 }
 
 template <typename Frame>

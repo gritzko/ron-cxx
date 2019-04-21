@@ -86,7 +86,7 @@ class Replica {
     /** Open the replica in the current directory (all branches). */
     Status Open();
 
-    Status CreateBranch(Word branch);
+    Status CreateBranch(Uuid branch_id);
 
     Status ListStores(Uuids& stores) {
         stores.clear();
@@ -126,10 +126,6 @@ class Replica {
     //  H I G H  L E V E L  A C C E S S O R S
 
     inline bool HasBranch(Uuid branch) {
-        cerr << "need branch " << branch.str() << endl;
-        for (auto& kv : branches_) {
-            cerr << "\t" << kv.first.str() << endl;
-        }
         return branches_.find(branch) != branches_.end();
     }
 

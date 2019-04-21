@@ -1,7 +1,7 @@
 #include <fcntl.h>
 #include <unistd.h>
-#include <ctime>
 #include <cstdlib>
+#include <ctime>
 #include <unordered_map>
 #include "../rdt/rdt.hpp"
 #include "../ron/ron.hpp"
@@ -12,11 +12,11 @@
 using namespace ron;
 using namespace std;
 
-typedef TextFrame Frame;
-typedef Replica<Frame> RonReplica;
-typedef Frame::Builder Builder;
-typedef Frame::Cursor Cursor;
-typedef vector<Frame> Frames;
+using Frame = TextFrame;
+using RonReplica = Replica<Frame>;
+using Builder = Frame::Builder;
+using Cursor = Frame::Cursor;
+using Frames = vector<Frame>;
 using Store = RonReplica::Store;
 using StoreIterator = typename RonReplica::RocksStore::Iterator;
 
@@ -42,12 +42,6 @@ constexpr const char* GET_USAGE{
 constexpr const char* HELP_USAGE{
     "help\n"
     "   print a memo on commands\n"};
-
-constexpr const char* NEW_USAGE{
-    "new <rdt> [as <objectname>]\n"
-    "   create an empty object of the given type\n"
-    "   <objectname> a tag for the object (name UUID)\n"
-    "       e.g. swarmdb new ct as readme\n"};
 
 constexpr const char* HOP_USAGE{
     "hop <BranchName|SNAPSHOT>\n"
@@ -92,20 +86,19 @@ constexpr const char* CREATE_USAGE{
     "       e.g. swarmdb create as Experiment\n"};
 
 Status CommandCreate(RonReplica& replica, Args& args) {
-    Word id = Word::random();  // TODO keys
-    IFOK(replica.CreateBranch(id));
-
+    Word yarn_id = Word::random();  // TODO keys
+    Uuid branch_id = Uuid::Time(NEVER, yarn_id);
+    IFOK(replica.CreateBranch(branch_id));
     if (!args.empty() && args.back() == "as") {
         args.pop_back();
         CHECKARG(args.empty(), "need a name for the branch");
         Uuid tag{args.back()};
         CHECKARG(tag.is_error(),
                  "the name must be a name UUID (up to ten Base64 chars)");
-        Uuid branch_id{Uuid::Time(NEVER, id)};
         IFOK(replica.WriteName(tag, branch_id));
     }
 
-    return Status::OK;
+    return Status{branch_id, "You started a yarn"};
 }
 
 constexpr const char* TEST_USAGE{
@@ -271,6 +264,12 @@ Status CommandWriteNewFrame(RonReplica& replica, const string& filename) {
     return ok;
 }
 
+constexpr const char* NEW_USAGE{
+    "new <rdt> [as objectname>] [on BranchName]\n"
+    "   create an empty object of the given type\n"
+    "   <objectname> a tag for the object (name UUID)\n"
+    "       e.g. swarmdb new ct as readme\n"};
+
 Status CommandNew(RonReplica& replica, Args& args) {
     CHECKARG(args.empty(), NEW_USAGE);
     Uuid rdt{args.back()};
@@ -281,7 +280,11 @@ Status CommandNew(RonReplica& replica, Args& args) {
     Frame new_obj = OneOp<Frame>(replica.Now(), rdt);
     Builder re;
     Cursor cu{new_obj};
-    return replica.Recv(re, cu);
+    Status ok = replica.Recv(re, cu);
+    if (ok) {
+        ok = ok.comment(rdt.str() + " object created");
+    }
+    return ok;
 }
 
 Status CommandHashFrame(const string& filename) {
@@ -339,27 +342,70 @@ Status CommandHashFrame(const string& filename) {
 }
 
 constexpr const char* LIST_USAGE{
-    "list [branches|snapshots|objects|tags] [in <BranchName>]\n"
+    "list [branches|snapshots|stores] [in <BranchName>]\n"
     "   list branches (or snapshots, or named objects or all the tags)\n"};
 
-Status CommandListStores(RonReplica& replica, Args& args) {
+Status CommandList(RonReplica& replica, Args& args) {
+    CHECKARG(args.empty(), LIST_USAGE);
+
     Uuids stores;
     IFOK(replica.ListStores(stores));
+
+    typename RonReplica::Names names;
+    IFOK(replica.ReadNames(names));
+
     for (auto& u : stores) {
-        cout << u.str() << '\n';
+        cout << u.str() << '\t' << names[u] << '\n';
     }
     return Status::OK;
 }
 
-Status CommandList(RonReplica& replica, Args& args) {
-    CHECKARG(args.empty(), LIST_USAGE);
-    String what{args.back()};
-    if (what == "stores") {
-        return CommandListStores(replica, args);
-    }
+constexpr const char* NAME_USAGE{
+    "name 1234+some_id as new_name [on BranchName]\n"
+    "   assign a name to an object (a yarn, a version)\n"};
 
-    Uuid branch = replica.current_branch();
+Status CommandName(RonReplica& replica, Args& args) {
+    CHECKARG(args.empty(), NAME_USAGE);
+    Uuid id{args.back()};
     args.pop_back();
+    CHECKARG(id.is_error(), NAME_USAGE);
+    CHECKARG(id.version() != TIME, "can only name event ids");
+    CHECKARG(args.back() != "as", NAME_USAGE);
+    args.pop_back();
+    CHECKARG(args.empty(), NAME_USAGE);
+    Uuid name{args.back()};
+    CHECKARG(name.version() != NAME, "a name UUID is up to 10 Base64 chars");
+    Status ok = replica.WriteName(name, id);
+    if (ok) {
+        ok = ok.comment("assigned name " + name.str() + " to " + id.str());
+    }
+    return ok;
+}
+
+constexpr const char* NAMED_USAGE{
+    "named [yarns|objects|versions|things] [in <BranchName>]\n"
+    "   list names for branches (or snapshots, or objects or all the names)\n"};
+
+Status CommandNamed(RonReplica& replica, Args& args) {
+    map<String, case_t> str2code{
+        {"yarns", CAMEL},
+        {"objects", SNAKE},
+        {"versions", CAPS},
+        {"things", NUMERIC},
+    };
+    bool all{false};
+    if (!args.empty() && args.back() == "all") {
+        all = true;
+        args.pop_back();
+    }
+    case_t what = NUMERIC;
+    if (!args.empty()) {
+        auto i = str2code.find(args.back());
+        CHECKARG(i == str2code.end(), NAMED_USAGE);
+        what = i->second;
+        args.pop_back();
+    }
+    Uuid branch = replica.current_branch();
     if (!args.empty()) {
         CHECKARG(args.back() == "in", LIST_USAGE);
         args.pop_back();
@@ -374,15 +420,13 @@ Status CommandList(RonReplica& replica, Args& args) {
     IFOK(replica.ReadNames(names, branch));
 
     for (auto& p : names) {
-        cout << p.second.str() << '\t' << p.first.str() << '\n';
+        Uuid id = p.second;
+        Uuid name = p.first;
+        if (what == NUMERIC || what == id.value().base64_case()) {
+            cout << p.second.str() << '\t' << p.first.str() << '\n';
+        }
     }
 
-    /** 1. branches
-    Uuids stores;
-    IFOK(replica.ListStores(stores));
-    for(auto i : stores) {
-        cout << i.str() << endl;
-    }*/
     return Status::OK;
 }
 
@@ -397,7 +441,7 @@ Status CommandHelp(RonReplica& replica, Args& args) {
     cout << "swarmdb -- a versioned syncable RON database\n"
             "   \n"
          << HELP_USAGE << INIT_USAGE << CREATE_USAGE << NEW_USAGE << GET_USAGE
-         << LIST_USAGE << HOP_USAGE << TEST_USAGE;
+         << LIST_USAGE << NAME_USAGE << NAMED_USAGE << HOP_USAGE << TEST_USAGE;
     return Status::OK;
 }
 
@@ -452,6 +496,10 @@ Status RunCommands(Args& args) {
         return CommandNew(replica, args);
     } else if (verb == "list") {
         return CommandList(replica, args);
+    } else if (verb == "named") {
+        return CommandNamed(replica, args);
+    } else if (verb == "name") {
+        return CommandName(replica, args);
     } else if (verb == "hop") {
         return CommandHop(replica, args);
     } else {

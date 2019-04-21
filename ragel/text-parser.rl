@@ -72,7 +72,7 @@ Status TextFrame::Cursor::Next () {
     if (term && cs!=RON_error) {
         op_.term_ = chr2term(term); // FIXME gen a fn
         return Status::OK;
-    } else if (cs>RON_first_final) {
+    } else if (cs>=RON_first_final) {
         cs = RON_error;
         return Status::ENDOFFRAME;
     } else {

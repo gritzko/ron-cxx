@@ -182,6 +182,13 @@ void test_utf16 () {
     assert(parsed.size()==12);
 }
 
+void test_end() {
+    String frame{"@1kK7vk+0 :lww ;\n"};
+    Cursor c{frame};
+    assert(c.valid());
+    assert(c.Next()==Status::ENDOFFRAME);
+}
+
 int main (int argn, char** args) {
     test_basic_cycle();
     test_optional_chars();
@@ -194,5 +201,6 @@ int main (int argn, char** args) {
     test_span_spread();
     test_syntax_errors();
     test_utf16();
+    test_end();
     return 0;
 }

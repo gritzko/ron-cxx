@@ -54,7 +54,7 @@ ExternalProject_Add(
     URL_HASH SHA1=452f5a5e7d735f26bd30b837207b4b4527610dba
     UPDATE_COMMAND ""
     PREFIX ${ROCKSDB_PREFIX}
-    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX} --parallel ${CORES}
+    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX} --parallel ${CORES} -DWITH_TOOLS=OFF -DWITH_GFLAGS=OFF
     CMAKE_CACHE_ARGS -DWITH_TESTS:BOOL=FALSE
 #    CMAKE_GENERATOR "Unix Makefiles"
     BUILD_COMMAND ${CMAKE_COMMAND} ${CMAKE_ARGS} --build . --target rocksdb
@@ -178,6 +178,15 @@ add_test(HASH test03-hash)
 add_executable(test04-meta ron/test/meta.cc)
 target_link_libraries(test04-meta ron_static botan_static)
 add_test(HASH test04-meta)
+
+add_executable(fuzz01-text EXCLUDE_FROM_ALL ron/test/fuzz-text.cc)
+target_compile_options(fuzz01-text
+            PRIVATE $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>
+            )
+target_link_libraries(fuzz01-text
+            PRIVATE $<$<C_COMPILER_ID:Clang>:-fsanitize=fuzzer>
+            ron_static
+            )
 
 #  L I B R D T  ( H E A D E R  O N L Y )
 

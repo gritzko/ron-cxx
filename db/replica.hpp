@@ -138,6 +138,7 @@ class Replica {
     }
 
     Status ReadNames(Names& names, Uuid branch = Uuid::NIL);
+    Status ReadName(Uuid& id, Uuid name, Uuid branch = Uuid::NIL);
 
     Status WriteName(Uuid key, Uuid value, Uuid branch = Uuid::NIL);
 

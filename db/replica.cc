@@ -113,6 +113,11 @@ Status Replica<Frame>::ReadNames(Names& names, Uuid branch) {
 }
 
 template <typename Frame>
+Status Replica<Frame>::ReadName(Uuid& id, Uuid name, Uuid branch) {
+    return Status::NOT_IMPLEMENTED.comment("ReadName");
+}
+
+template <typename Frame>
 Uuid Replica<Frame>::Now(Word origin) {
     if (origin == ZERO) {
         origin = home_.origin();
@@ -558,6 +563,7 @@ Status Replica<Frame>::ReceiveQuery(Builder& response, Cursor& c,
             return Status::NOT_IMPLEMENTED.comment("unknown query form: " +
                                                    c.ref().str());
     }
+    c.Next();
 }
 
 template <typename Frame>

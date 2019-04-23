@@ -11,6 +11,7 @@
 namespace ron {
 
 enum case_t : uint8_t { NUMERIC = 0, SNAKE = 1, CAPS = 2, CAMEL = 3 };
+const String CASE_NAMES[]{"numeric", "snake_case", "ALL~CAPS", "CamelCase"};
 
 union Word {
     uint64_t _64;
@@ -128,7 +129,7 @@ union Word {
 };
 
 enum half_t { VALUE = 0, ORIGIN = 1 };
-const Word NEVER{63UL << 54};
+const Word NEVER{uint64_t(63UL << 54)};
 const Word ZERO{};
 
 struct Atom {

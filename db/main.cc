@@ -61,6 +61,59 @@ Status LoadFrame(Frame& target, const string& filename) {
     return LoadFrame(target, fd);
 }
 
+Status ScanAsNameArg(Uuid& name, case_t lcase, RonReplica& replica,
+                     Args& args) {
+    if (args.empty()) {
+        name = Uuid::NIL;
+        return Status::OK;
+    }
+    if (args.back() != "as") {
+        return Status::OK;
+    }
+    args.pop_back();
+    CHECKARG(args.empty(), "please provide a name");
+    name = Uuid{args.back()};
+    CHECKARG(name.is_error(), "must be a UUID");
+    CHECKARG(name.version() != NAME, "must be a NAME UUID");
+    CHECKARG(lcase != NUMERIC && name.value().base64_case() != lcase,
+             "use " + CASE_NAMES[lcase]);
+    args.pop_back();
+    return Status::OK;
+}
+
+Status ScanOnBranchArg(Uuid& branch, RonReplica& replica, Args& args) {
+    if (args.empty()) {
+        branch = replica.current_branch();
+        return Status::OK;
+    }
+    if (args.back() != "on") {
+        return Status::OK;
+    }
+    args.pop_back();
+    CHECKARG(args.empty(), "on what branch?");
+    branch = Uuid{args.back()};
+    args.pop_back();
+    CHECKARG(branch.is_error(), "bad branch id syntax; must be name/id");
+    CHECKARG(!replica.HasBranch(branch), "no such branch");
+    return Status::OK;
+}
+
+Status ScanOfObjectArg(Uuid& object, RonReplica& replica, Args& args) {
+    if (args.empty()) {
+        object = Uuid::NIL;
+        return Status::OK;
+    }
+    if (args.back() != "of") {
+        return Status::OK;
+    }
+    args.pop_back();
+    CHECKARG(args.empty(), "of what object?");
+    object = Uuid{args.back()};
+    args.pop_back();
+    CHECKARG(object.is_error(), "bad id syntax");
+    return Status::OK;
+}
+
 constexpr const char* INIT_USAGE{
     "init\n"
     "   create a replica\n"};
@@ -95,8 +148,8 @@ Status CommandCreate(RonReplica& replica, Args& args) {
 }
 
 constexpr const char* TEST_USAGE{
-    "test <test_file.ron>\n"
-    "   runs a test script\n"};
+    "test test_file.ron\n"
+    "   runs a RON test script\n"};
 
 Status CommandTest(RonReplica& replica, Args& args) {
     CHECKARG(args.empty(), TEST_USAGE);
@@ -187,13 +240,13 @@ Status CommandGetFrame(RonReplica& replica, Args& args) {
     args.pop_back();
     CHECKARG(rdt == Uuid::FATAL || rdt.version() != NAME,
              "the form much be a NAME UUID");
-    CHECKARG(args.back() != "of", GET_USAGE);
-    args.pop_back();
-    CHECKARG(args.empty(), GET_USAGE);
-    Uuid id{args.back()};
+    Uuid id;
+    IFOK(ScanOfObjectArg(id, replica, args));
+    if (id.version() == NAME) {
+        IFOK(replica.ReadName(id, id));
+    }
     CHECKARG(id.version() != UUID::TIME,
              "frame id must be an EVENT UUID, not " + args.back());
-    args.pop_back();
     bool clean = !args.empty() && args.back() == "clean";
     size_t dot;
     /*if (name[0] == '@') {
@@ -244,7 +297,7 @@ Status CommandWrite(RonReplica& replica, Args& args) {
 }
 
 constexpr const char* NEW_USAGE{
-    "new <rdt> [as objectname>] [on BranchName]\n"
+    "new <rdt> [as objectname] [on BranchName]\n"
     "   create an empty object of the given type\n"
     "   <objectname> a tag for the object (name UUID)\n"
     "       e.g. swarmdb new ct as readme\n"};
@@ -256,11 +309,20 @@ Status CommandNew(RonReplica& replica, Args& args) {
     args.pop_back();
     FORM form = uuid2form(rdt);
     CHECKARG(form == ERROR_NO_FORM, "form unknown");
+
+    Uuid name;
+    IFOK(ScanAsNameArg(name, SNAKE, replica, args));
+
+    CHECKARG(!args.empty(), NEW_USAGE);
+
     Frame new_obj = OneOp<Frame>(replica.Now(), rdt);
     Builder re;
     Cursor cu{new_obj};
     Status ok = replica.Receive(re, cu);
     if (ok) {
+        if (!name.zero()) {
+            replica.WriteName(name, ok.code());
+        }
         ok = ok.comment(rdt.str() + " object created");
     }
     return ok;
@@ -322,7 +384,7 @@ Status CommandHashFrame(const string& filename) {
 
 constexpr const char* LIST_USAGE{
     "list [branches|snapshots|stores] [in BranchName]\n"
-    "   list branches (or snapshots, or named objects or all the tags)\n"};
+    "   list branches (or snapshots, or all the stores)\n"};
 
 Status CommandList(RonReplica& replica, Args& args) {
     CHECKARG(args.empty(), LIST_USAGE);
@@ -349,11 +411,11 @@ Status CommandName(RonReplica& replica, Args& args) {
     args.pop_back();
     CHECKARG(id.is_error(), NAME_USAGE);
     CHECKARG(id.version() != TIME, "can only name event ids");
-    CHECKARG(args.back() != "as", NAME_USAGE);
-    args.pop_back();
-    CHECKARG(args.empty(), NAME_USAGE);
-    Uuid name{args.back()};
-    CHECKARG(name.version() != NAME, "a name UUID is up to 10 Base64 chars");
+
+    Uuid name;
+    IFOK(ScanAsNameArg(name, NUMERIC, replica, args));
+    CHECKARG(name.zero(), NAME_USAGE);
+
     Status ok = replica.WriteName(name, id);
     if (ok) {
         ok = ok.comment("assigned name " + name.str() + " to " + id.str());
@@ -362,7 +424,7 @@ Status CommandName(RonReplica& replica, Args& args) {
 }
 
 constexpr const char* NAMED_USAGE{
-    "named [yarns|objects|versions|things] [in BranchName]\n"
+    "named [yarns|objects|versions|things] [on BranchName]\n"
     "   list names for branches (or snapshots, or objects or all the names)\n"};
 
 Status CommandNamed(RonReplica& replica, Args& args) {
@@ -372,11 +434,6 @@ Status CommandNamed(RonReplica& replica, Args& args) {
         {"versions", CAPS},
         {"things", NUMERIC},
     };
-    bool all{false};
-    if (!args.empty() && args.back() == "all") {
-        all = true;
-        args.pop_back();
-    }
     case_t what = NUMERIC;
     if (!args.empty()) {
         auto i = str2code.find(args.back());
@@ -384,16 +441,8 @@ Status CommandNamed(RonReplica& replica, Args& args) {
         what = i->second;
         args.pop_back();
     }
-    Uuid branch = replica.current_branch();
-    if (!args.empty()) {
-        CHECKARG(args.back() == "in", LIST_USAGE);
-        args.pop_back();
-        CHECKARG(args.empty(), "in what?");
-        branch = Uuid{args.back()};
-        args.pop_back();
-        CHECKARG(branch.is_error(), "bad branch id syntax; must be name/id");
-        CHECKARG(!replica.HasBranch(branch), "no such branch");
-    }
+    Uuid branch;
+    IFOK(ScanOnBranchArg(branch, replica, args));
 
     typename RonReplica::Names names;
     IFOK(replica.ReadNames(names, branch));
@@ -401,7 +450,7 @@ Status CommandNamed(RonReplica& replica, Args& args) {
     for (auto& p : names) {
         Uuid id = p.second;
         Uuid name = p.first;
-        if (what == NUMERIC || what == id.value().base64_case()) {
+        if (what == NUMERIC || what == name.value().base64_case()) {
             cout << p.second.str() << '\t' << p.first.str() << '\n';
         }
     }
@@ -509,9 +558,9 @@ Status RunCommands(Args& args) {
 }
 
 int main(int argn, char** args) {
-    Args arguments;
+    Args arguments{};
     for (int i = 1; i < argn; ++i) {
-        arguments.push_back(args[i]);
+        arguments.emplace_back(args[i]);
     }
     std::reverse(arguments.begin(), arguments.end());
     if (getenv("TRACE")) {

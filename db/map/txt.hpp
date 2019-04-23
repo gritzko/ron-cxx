@@ -24,6 +24,7 @@ Status TxtMapper<Commit>::Read(Builder& response, Cursor& query, Commit& branch)
         pos++;
     }
     response.AppendNewOp(id, TXT_MAP_ID, text);
+    query.Next(); // consume the query
     return Status::OK;
 }
 

@@ -8,11 +8,11 @@ namespace ron {
 #line 7 "ragel/text-parser.rl"
 
 #line 12 "ron/text-parser.cc"
-static const int RON_start = 72;
-static const int RON_first_final = 72;
+static const int RON_start = 74;
+static const int RON_first_final = 74;
 static const int RON_error = 0;
 
-static const int RON_en_main = 72;
+static const int RON_en_main = 74;
 
 #line 8 "ragel/text-parser.rl"
 
@@ -57,6 +57,7 @@ Status TextFrame::Cursor::Next() {
     CharRef strb{p};
     CharRef uuidb{p};
     CharRef wordb{p};
+    Codepoint cp{0};
     char term{0};
     Slice value, origin;
     char variety, version;
@@ -67,11 +68,11 @@ Status TextFrame::Cursor::Next() {
 
     // std::cerr<<"starting with "<<cs<<" ["<<p<<"]\n";
 
-#line 79 "ron/text-parser.cc"
+#line 80 "ron/text-parser.cc"
     {
         if (p == pe) goto _test_eof;
         switch (cs) {
-        tr198 :
+        tr220 :
 #line 50 "ragel/./text-grammar.rl"
         {
             if ((*p) == '\n') {
@@ -79,7 +80,7 @@ Status TextFrame::Cursor::Next() {
                 lineb = p;
             }
         }
-            goto st72;
+            goto st74;
         tr14 :
 #line 45 "ragel/./text-grammar.rl"
         {
@@ -87,12 +88,12 @@ Status TextFrame::Cursor::Next() {
             pos_++;
             if (p < pe - 1) {
                 p++;
-                cs = 72;
+                cs = 74;
                 goto _out;
             }
         }
-            goto st72;
-        tr49 :
+            goto st74;
+        tr60 :
 #line 16 "ragel/./text-grammar.rl"
         {
             Slice the_int(intb, p);
@@ -100,7 +101,7 @@ Status TextFrame::Cursor::Next() {
                 cs = 0;
                 {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
@@ -114,12 +115,12 @@ Status TextFrame::Cursor::Next() {
                 pos_++;
                 if (p < pe - 1) {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
-            goto st72;
-        tr59 :
+            goto st74;
+        tr70 :
 #line 28 "ragel/./text-grammar.rl"
         {
             Slice the_float{floatb, p};
@@ -127,7 +128,7 @@ Status TextFrame::Cursor::Next() {
                 cs = 0;
                 {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
@@ -140,12 +141,12 @@ Status TextFrame::Cursor::Next() {
                 pos_++;
                 if (p < pe - 1) {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
-            goto st72;
-        tr73 :
+            goto st74;
+        tr84 :
 #line 14 "ragel/././uuid-grammar.rl"
         {
             value = Slice{wordb, p};
@@ -158,7 +159,7 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 72;
+                        cs = 74;
                         goto _out;
                     }
                 }
@@ -170,12 +171,12 @@ Status TextFrame::Cursor::Next() {
                 pos_++;
                 if (p < pe - 1) {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
-            goto st72;
-        tr84 :
+            goto st74;
+        tr95 :
 #line 17 "ragel/././uuid-grammar.rl"
         {
             origin = Slice{wordb, p};
@@ -188,7 +189,7 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 72;
+                        cs = 74;
                         goto _out;
                     }
                 }
@@ -200,12 +201,12 @@ Status TextFrame::Cursor::Next() {
                 pos_++;
                 if (p < pe - 1) {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
-            goto st72;
-        tr99 :
+            goto st74;
+        tr110 :
 #line 16 "ragel/./text-grammar.rl"
         {
             Slice the_int(intb, p);
@@ -213,7 +214,7 @@ Status TextFrame::Cursor::Next() {
                 cs = 0;
                 {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
@@ -232,7 +233,7 @@ Status TextFrame::Cursor::Next() {
                         cs = 0;
                         {
                             p++;
-                            cs = 72;
+                            cs = 74;
                             goto _out;
                         }
                     }
@@ -245,12 +246,12 @@ Status TextFrame::Cursor::Next() {
                 pos_++;
                 if (p < pe - 1) {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
-            goto st72;
-        tr112 :
+            goto st74;
+        tr123 :
 #line 17 "ragel/././uuid-grammar.rl"
         {
             origin = Slice{wordb, p};
@@ -264,7 +265,7 @@ Status TextFrame::Cursor::Next() {
                         cs = 0;
                         {
                             p++;
-                            cs = 72;
+                            cs = 74;
                             goto _out;
                         }
                     }
@@ -277,12 +278,12 @@ Status TextFrame::Cursor::Next() {
                 pos_++;
                 if (p < pe - 1) {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
-            goto st72;
-        tr121 :
+            goto st74;
+        tr132 :
 #line 14 "ragel/././uuid-grammar.rl"
         {
             value = Slice{wordb, p};
@@ -296,7 +297,7 @@ Status TextFrame::Cursor::Next() {
                         cs = 0;
                         {
                             p++;
-                            cs = 72;
+                            cs = 74;
                             goto _out;
                         }
                     }
@@ -309,12 +310,12 @@ Status TextFrame::Cursor::Next() {
                 pos_++;
                 if (p < pe - 1) {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
-            goto st72;
-        tr131 :
+            goto st74;
+        tr142 :
 #line 28 "ragel/./text-grammar.rl"
         {
             Slice the_float{floatb, p};
@@ -322,7 +323,7 @@ Status TextFrame::Cursor::Next() {
                 cs = 0;
                 {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
@@ -340,7 +341,7 @@ Status TextFrame::Cursor::Next() {
                         cs = 0;
                         {
                             p++;
-                            cs = 72;
+                            cs = 74;
                             goto _out;
                         }
                     }
@@ -353,12 +354,12 @@ Status TextFrame::Cursor::Next() {
                 pos_++;
                 if (p < pe - 1) {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
-            goto st72;
-        tr139 :
+            goto st74;
+        tr150 :
 #line 28 "ragel/./text-grammar.rl"
         {
             Slice the_float{floatb, p};
@@ -366,7 +367,7 @@ Status TextFrame::Cursor::Next() {
                 cs = 0;
                 {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
@@ -384,7 +385,7 @@ Status TextFrame::Cursor::Next() {
                         cs = 0;
                         {
                             p++;
-                            cs = 72;
+                            cs = 74;
                             goto _out;
                         }
                     }
@@ -397,12 +398,12 @@ Status TextFrame::Cursor::Next() {
                 pos_++;
                 if (p < pe - 1) {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
-            goto st72;
-        tr153 :
+            goto st74;
+        tr175 :
 #line 14 "ragel/././uuid-grammar.rl"
         {
             value = Slice{wordb, p};
@@ -417,12 +418,12 @@ Status TextFrame::Cursor::Next() {
                 pos_++;
                 if (p < pe - 1) {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
-            goto st72;
-        tr168 :
+            goto st74;
+        tr190 :
 #line 14 "ragel/././uuid-grammar.rl"
         {
             value = Slice{wordb, p};
@@ -437,12 +438,12 @@ Status TextFrame::Cursor::Next() {
                 pos_++;
                 if (p < pe - 1) {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
-            goto st72;
-        tr179 :
+            goto st74;
+        tr201 :
 #line 17 "ragel/././uuid-grammar.rl"
         {
             origin = Slice{wordb, p};
@@ -457,12 +458,12 @@ Status TextFrame::Cursor::Next() {
                 pos_++;
                 if (p < pe - 1) {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
-            goto st72;
-        tr189 :
+            goto st74;
+        tr211 :
 #line 17 "ragel/././uuid-grammar.rl"
         {
             origin = Slice{wordb, p};
@@ -477,20 +478,20 @@ Status TextFrame::Cursor::Next() {
                 pos_++;
                 if (p < pe - 1) {
                     p++;
-                    cs = 72;
+                    cs = 74;
                     goto _out;
                 }
             }
-            goto st72;
-        st72:
-            if (++p == pe) goto _test_eof72;
-            case 72:
-#line 369 "ron/text-parser.cc"
+            goto st74;
+        st74:
+            if (++p == pe) goto _test_eof74;
+            case 74:
+#line 370 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr198;
+                        goto tr220;
                     case 32u:
-                        goto tr198;
+                        goto tr220;
                     case 33u:
                         goto tr14;
                     case 39u:
@@ -500,19 +501,19 @@ Status TextFrame::Cursor::Next() {
                     case 44u:
                         goto tr14;
                     case 46u:
-                        goto st58;
+                        goto st60;
                     case 59u:
                         goto tr14;
                     case 61u:
-                        goto st24;
+                        goto st25;
                     case 62u:
-                        goto st27;
+                        goto st28;
                     case 63u:
                         goto tr14;
                     case 64u:
-                        goto st59;
+                        goto st61;
                     case 94u:
-                        goto st31;
+                        goto st32;
                     case 95u:
                         goto tr23;
                     case 126u:
@@ -522,7 +523,7 @@ Status TextFrame::Cursor::Next() {
                     if ((*p) > 10u) {
                         if (43u <= (*p) && (*p) <= 45u) goto tr20;
                     } else if ((*p) >= 9u)
-                        goto tr198;
+                        goto tr220;
                 } else if ((*p) > 57u) {
                     if ((*p) < 71u) {
                         if (65u <= (*p) && (*p) <= 70u) goto tr22;
@@ -536,7 +537,7 @@ Status TextFrame::Cursor::Next() {
             st0:
                 cs = 0;
                 goto _out;
-            tr50 :
+            tr61 :
 #line 16 "ragel/./text-grammar.rl"
             {
                 Slice the_int(intb, p);
@@ -553,7 +554,7 @@ Status TextFrame::Cursor::Next() {
                 uuidb = nullptr;  // sabotage uuid
             }
                 goto st1;
-            tr60 :
+            tr71 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -569,7 +570,7 @@ Status TextFrame::Cursor::Next() {
                                         body.range_of(the_float)));
             }
                 goto st1;
-            tr75 :
+            tr86 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -589,7 +590,7 @@ Status TextFrame::Cursor::Next() {
                     op_.AddAtom(Uuid{variety, value, version, origin});
                 }
                 goto st1;
-            tr85 :
+            tr96 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -609,7 +610,7 @@ Status TextFrame::Cursor::Next() {
                     op_.AddAtom(Uuid{variety, value, version, origin});
                 }
                 goto st1;
-            tr101 :
+            tr112 :
 #line 16 "ragel/./text-grammar.rl"
             {
                 Slice the_int(intb, p);
@@ -644,7 +645,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st1;
-            tr113 :
+            tr124 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -666,7 +667,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st1;
-            tr122 :
+            tr133 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -688,7 +689,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st1;
-            tr132 :
+            tr143 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -722,7 +723,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st1;
-            tr140 :
+            tr151 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -756,7 +757,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st1;
-            tr155 :
+            tr177 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -766,7 +767,7 @@ Status TextFrame::Cursor::Next() {
 #line 9 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
                 goto st1;
-            tr170 :
+            tr192 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -776,7 +777,7 @@ Status TextFrame::Cursor::Next() {
 #line 12 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
                 goto st1;
-            tr180 :
+            tr202 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -786,7 +787,7 @@ Status TextFrame::Cursor::Next() {
 #line 12 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
                 goto st1;
-            tr190 :
+            tr212 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -799,7 +800,7 @@ Status TextFrame::Cursor::Next() {
             st1:
                 if (++p == pe) goto _test_eof1;
             case 1:
-#line 597 "ron/text-parser.cc"
+#line 598 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -828,11 +829,39 @@ Status TextFrame::Cursor::Next() {
             {
                 strb = p;
             }
+#line 8 "ragel/././utf8-grammar.rl"
+                { cp = (*p); }
+                goto st2;
+            tr7 :
+#line 8 "ragel/././utf8-grammar.rl"
+            {
+                cp = (*p);
+            }
+                goto st2;
+            tr156 :
+#line 56 "ragel/./text-grammar.rl"
+            {
+                cp = decode_esc((*p));
+            }
+                goto st2;
+            tr162 :
+#line 57 "ragel/./text-grammar.rl"
+            {
+                cp = decode_hex_cp(Slice{p - 4, 4});
+            }
+#line 8 "ragel/././utf8-grammar.rl"
+                { cp = (*p); }
+                goto st2;
+            tr168 :
+#line 7 "ragel/././utf8-grammar.rl"
+            {
+                cp = (cp << 6) | ((*p) & 0x3f);
+            }
                 goto st2;
             st2:
                 if (++p == pe) goto _test_eof2;
             case 2:
-#line 627 "ron/text-parser.cc"
+#line 648 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -841,21 +870,21 @@ Status TextFrame::Cursor::Next() {
                     case 39u:
                         goto tr8;
                     case 92u:
-                        goto st50;
+                        goto st51;
                 }
                 if ((*p) < 224u) {
                     if ((*p) > 191u) {
-                        if (192u <= (*p) && (*p) <= 223u) goto st55;
+                        if (192u <= (*p) && (*p) <= 223u) goto tr10;
                     } else if ((*p) >= 128u)
                         goto st0;
                 } else if ((*p) > 239u) {
                     if ((*p) > 247u) {
                         if (248u <= (*p)) goto st0;
                     } else if ((*p) >= 240u)
-                        goto st57;
+                        goto tr12;
                 } else
-                    goto st56;
-                goto st2;
+                    goto tr11;
+                goto tr7;
             tr2 :
 #line 22 "ragel/./text-grammar.rl"
             {
@@ -874,10 +903,21 @@ Status TextFrame::Cursor::Next() {
                 op_.AddAtom(Atom::String(body.range_of(the_str)));
             }
                 goto st3;
+            tr163 :
+#line 57 "ragel/./text-grammar.rl"
+            {
+                cp = decode_hex_cp(Slice{p - 4, 4});
+            }
+#line 23 "ragel/./text-grammar.rl"
+                {
+                    Slice the_str{strb, p};
+                    op_.AddAtom(Atom::String(body.range_of(the_str)));
+                }
+                goto st3;
             st3:
                 if (++p == pe) goto _test_eof3;
             case 3:
-#line 669 "ron/text-parser.cc"
+#line 699 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr13;
@@ -894,13 +934,13 @@ Status TextFrame::Cursor::Next() {
                     case 59u:
                         goto tr14;
                     case 61u:
-                        goto st24;
+                        goto st25;
                     case 62u:
-                        goto st27;
+                        goto st28;
                     case 63u:
                         goto tr14;
                     case 94u:
-                        goto st31;
+                        goto st32;
                 }
                 if (9u <= (*p) && (*p) <= 10u) goto tr13;
                 goto st0;
@@ -913,7 +953,7 @@ Status TextFrame::Cursor::Next() {
                 }
             }
                 goto st4;
-            tr48 :
+            tr59 :
 #line 16 "ragel/./text-grammar.rl"
             {
                 Slice the_int(intb, p);
@@ -937,7 +977,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st4;
-            tr58 :
+            tr69 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -960,7 +1000,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st4;
-            tr72 :
+            tr83 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -987,7 +1027,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st4;
-            tr83 :
+            tr94 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -1014,7 +1054,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st4;
-            tr98 :
+            tr109 :
 #line 16 "ragel/./text-grammar.rl"
             {
                 Slice the_int(intb, p);
@@ -1056,7 +1096,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st4;
-            tr111 :
+            tr122 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -1085,7 +1125,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st4;
-            tr120 :
+            tr131 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -1114,7 +1154,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st4;
-            tr130 :
+            tr141 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -1155,7 +1195,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st4;
-            tr138 :
+            tr149 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -1196,7 +1236,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st4;
-            tr167 :
+            tr189 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -1213,7 +1253,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st4;
-            tr178 :
+            tr200 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -1233,7 +1273,7 @@ Status TextFrame::Cursor::Next() {
             st4:
                 if (++p == pe) goto _test_eof4;
             case 4:
-#line 937 "ron/text-parser.cc"
+#line 967 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr13;
@@ -1250,13 +1290,13 @@ Status TextFrame::Cursor::Next() {
                     case 59u:
                         goto tr14;
                     case 61u:
-                        goto st24;
+                        goto st25;
                     case 62u:
-                        goto st27;
+                        goto st28;
                     case 63u:
                         goto tr14;
                     case 94u:
-                        goto st31;
+                        goto st32;
                     case 95u:
                         goto tr23;
                     case 126u:
@@ -1286,7 +1326,7 @@ Status TextFrame::Cursor::Next() {
                 }
             }
                 goto st5;
-            tr51 :
+            tr62 :
 #line 16 "ragel/./text-grammar.rl"
             {
                 Slice the_int(intb, p);
@@ -1303,7 +1343,7 @@ Status TextFrame::Cursor::Next() {
                 uuidb = nullptr;  // sabotage uuid
             }
                 goto st5;
-            tr61 :
+            tr72 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -1319,7 +1359,7 @@ Status TextFrame::Cursor::Next() {
                                         body.range_of(the_float)));
             }
                 goto st5;
-            tr76 :
+            tr87 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -1339,7 +1379,7 @@ Status TextFrame::Cursor::Next() {
                     op_.AddAtom(Uuid{variety, value, version, origin});
                 }
                 goto st5;
-            tr86 :
+            tr97 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -1359,7 +1399,7 @@ Status TextFrame::Cursor::Next() {
                     op_.AddAtom(Uuid{variety, value, version, origin});
                 }
                 goto st5;
-            tr102 :
+            tr113 :
 #line 16 "ragel/./text-grammar.rl"
             {
                 Slice the_int(intb, p);
@@ -1394,7 +1434,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st5;
-            tr114 :
+            tr125 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -1416,7 +1456,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st5;
-            tr123 :
+            tr134 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -1438,7 +1478,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st5;
-            tr133 :
+            tr144 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -1472,7 +1512,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st5;
-            tr141 :
+            tr152 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -1506,7 +1546,7 @@ Status TextFrame::Cursor::Next() {
                     }
                 }
                 goto st5;
-            tr156 :
+            tr178 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -1516,7 +1556,7 @@ Status TextFrame::Cursor::Next() {
 #line 9 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
                 goto st5;
-            tr171 :
+            tr193 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -1526,7 +1566,7 @@ Status TextFrame::Cursor::Next() {
 #line 12 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
                 goto st5;
-            tr181 :
+            tr203 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -1536,7 +1576,7 @@ Status TextFrame::Cursor::Next() {
 #line 12 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
                 goto st5;
-            tr191 :
+            tr213 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -1549,7 +1589,7 @@ Status TextFrame::Cursor::Next() {
             st5:
                 if (++p == pe) goto _test_eof5;
             case 5:
-#line 1169 "ron/text-parser.cc"
+#line 1199 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr24;
@@ -1594,11 +1634,39 @@ Status TextFrame::Cursor::Next() {
             {
                 strb = p;
             }
+#line 8 "ragel/././utf8-grammar.rl"
+                { cp = (*p); }
+                goto st7;
+            tr33 :
+#line 8 "ragel/././utf8-grammar.rl"
+            {
+                cp = (*p);
+            }
+                goto st7;
+            tr43 :
+#line 56 "ragel/./text-grammar.rl"
+            {
+                cp = decode_esc((*p));
+            }
+                goto st7;
+            tr49 :
+#line 57 "ragel/./text-grammar.rl"
+            {
+                cp = decode_hex_cp(Slice{p - 4, 4});
+            }
+#line 8 "ragel/././utf8-grammar.rl"
+                { cp = (*p); }
+                goto st7;
+            tr55 :
+#line 7 "ragel/././utf8-grammar.rl"
+            {
+                cp = (cp << 6) | ((*p) & 0x3f);
+            }
                 goto st7;
             st7:
                 if (++p == pe) goto _test_eof7;
             case 7:
-#line 1214 "ron/text-parser.cc"
+#line 1264 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -1611,17 +1679,17 @@ Status TextFrame::Cursor::Next() {
                 }
                 if ((*p) < 224u) {
                     if ((*p) > 191u) {
-                        if (192u <= (*p) && (*p) <= 223u) goto st17;
+                        if (192u <= (*p) && (*p) <= 223u) goto tr36;
                     } else if ((*p) >= 128u)
                         goto st0;
                 } else if ((*p) > 239u) {
                     if ((*p) > 247u) {
                         if (248u <= (*p)) goto st0;
                     } else if ((*p) >= 240u)
-                        goto st19;
+                        goto tr38;
                 } else
-                    goto st18;
-                goto st7;
+                    goto tr37;
+                goto tr33;
             tr28 :
 #line 22 "ragel/./text-grammar.rl"
             {
@@ -1649,10 +1717,21 @@ Status TextFrame::Cursor::Next() {
                 }
             }
                 goto st8;
+            tr50 :
+#line 57 "ragel/./text-grammar.rl"
+            {
+                cp = decode_hex_cp(Slice{p - 4, 4});
+            }
+#line 23 "ragel/./text-grammar.rl"
+                {
+                    Slice the_str{strb, p};
+                    op_.AddAtom(Atom::String(body.range_of(the_str)));
+                }
+                goto st8;
             st8:
                 if (++p == pe) goto _test_eof8;
             case 8:
-#line 1265 "ron/text-parser.cc"
+#line 1324 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr39;
@@ -1692,7 +1771,7 @@ Status TextFrame::Cursor::Next() {
             st10:
                 if (++p == pe) goto _test_eof10;
             case 10:
-#line 1304 "ron/text-parser.cc"
+#line 1363 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr40;
@@ -1715,7 +1794,7 @@ Status TextFrame::Cursor::Next() {
             st11:
                 if (++p == pe) goto _test_eof11;
             case 11:
-#line 1326 "ron/text-parser.cc"
+#line 1385 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr42;
@@ -1738,27 +1817,33 @@ Status TextFrame::Cursor::Next() {
                 strb = p;
             }
                 goto st12;
+            tr51 :
+#line 57 "ragel/./text-grammar.rl"
+            {
+                cp = decode_hex_cp(Slice{p - 4, 4});
+            }
+                goto st12;
             st12:
                 if (++p == pe) goto _test_eof12;
             case 12:
-#line 1346 "ron/text-parser.cc"
+#line 1409 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 34u:
-                        goto st7;
+                        goto tr43;
                     case 39u:
-                        goto st7;
+                        goto tr43;
                     case 47u:
-                        goto st7;
+                        goto tr43;
                     case 92u:
-                        goto st7;
+                        goto tr43;
                     case 98u:
-                        goto st7;
+                        goto tr43;
                     case 110u:
-                        goto st7;
+                        goto tr43;
                     case 114u:
-                        goto st7;
+                        goto tr43;
                     case 116u:
-                        goto st7;
+                        goto tr43;
                     case 117u:
                         goto st13;
                 }
@@ -1797,47 +1882,133 @@ Status TextFrame::Cursor::Next() {
                 if (++p == pe) goto _test_eof16;
             case 16:
                 if ((*p) < 65u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto st7;
+                    if (48u <= (*p) && (*p) <= 57u) goto st17;
                 } else if ((*p) > 70u) {
-                    if (97u <= (*p) && (*p) <= 102u) goto st7;
+                    if (97u <= (*p) && (*p) <= 102u) goto st17;
                 } else
-                    goto st7;
+                    goto st17;
                 goto st0;
+            st17:
+                if (++p == pe) goto _test_eof17;
+            case 17:
+                switch ((*p)) {
+                    case 10u:
+                        goto st0;
+                    case 13u:
+                        goto st0;
+                    case 39u:
+                        goto tr50;
+                    case 92u:
+                        goto tr51;
+                }
+                if ((*p) < 224u) {
+                    if ((*p) > 191u) {
+                        if (192u <= (*p) && (*p) <= 223u) goto tr52;
+                    } else if ((*p) >= 128u)
+                        goto st0;
+                } else if ((*p) > 239u) {
+                    if ((*p) > 247u) {
+                        if (248u <= (*p)) goto st0;
+                    } else if ((*p) >= 240u)
+                        goto tr54;
+                } else
+                    goto tr53;
+                goto tr49;
             tr30 :
 #line 22 "ragel/./text-grammar.rl"
             {
                 strb = p;
             }
-                goto st17;
-            st17:
-                if (++p == pe) goto _test_eof17;
-            case 17:
-#line 1419 "ron/text-parser.cc"
-                if (128u <= (*p) && (*p) <= 191u) goto st7;
+#line 9 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0x1f; }
+                goto st18;
+            tr36 :
+#line 9 "ragel/././utf8-grammar.rl"
+            {
+                cp = (*p) & 0x1f;
+            }
+                goto st18;
+            tr52 :
+#line 57 "ragel/./text-grammar.rl"
+            {
+                cp = decode_hex_cp(Slice{p - 4, 4});
+            }
+#line 9 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0x1f; }
+                goto st18;
+            tr56 :
+#line 7 "ragel/././utf8-grammar.rl"
+            {
+                cp = (cp << 6) | ((*p) & 0x3f);
+            }
+                goto st18;
+            st18:
+                if (++p == pe) goto _test_eof18;
+            case 18:
+#line 1523 "ron/text-parser.cc"
+                if (128u <= (*p) && (*p) <= 191u) goto tr55;
                 goto st0;
             tr31 :
 #line 22 "ragel/./text-grammar.rl"
             {
                 strb = p;
             }
-                goto st18;
-            st18:
-                if (++p == pe) goto _test_eof18;
-            case 18:
-#line 1431 "ron/text-parser.cc"
-                if (128u <= (*p) && (*p) <= 191u) goto st17;
+#line 10 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0xf; }
+                goto st19;
+            tr37 :
+#line 10 "ragel/././utf8-grammar.rl"
+            {
+                cp = (*p) & 0xf;
+            }
+                goto st19;
+            tr53 :
+#line 57 "ragel/./text-grammar.rl"
+            {
+                cp = decode_hex_cp(Slice{p - 4, 4});
+            }
+#line 10 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0xf; }
+                goto st19;
+            tr57 :
+#line 7 "ragel/././utf8-grammar.rl"
+            {
+                cp = (cp << 6) | ((*p) & 0x3f);
+            }
+                goto st19;
+            st19:
+                if (++p == pe) goto _test_eof19;
+            case 19:
+#line 1551 "ron/text-parser.cc"
+                if (128u <= (*p) && (*p) <= 191u) goto tr56;
                 goto st0;
             tr32 :
 #line 22 "ragel/./text-grammar.rl"
             {
                 strb = p;
             }
-                goto st19;
-            st19:
-                if (++p == pe) goto _test_eof19;
-            case 19:
-#line 1443 "ron/text-parser.cc"
-                if (128u <= (*p) && (*p) <= 191u) goto st18;
+#line 11 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 7; }
+                goto st20;
+            tr38 :
+#line 11 "ragel/././utf8-grammar.rl"
+            {
+                cp = (*p) & 7;
+            }
+                goto st20;
+            tr54 :
+#line 57 "ragel/./text-grammar.rl"
+            {
+                cp = decode_hex_cp(Slice{p - 4, 4});
+            }
+#line 11 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 7; }
+                goto st20;
+            st20:
+                if (++p == pe) goto _test_eof20;
+            case 20:
+#line 1575 "ron/text-parser.cc"
+                if (128u <= (*p) && (*p) <= 191u) goto tr57;
                 goto st0;
             tr20 :
 #line 15 "ragel/./text-grammar.rl"
@@ -1846,93 +2017,93 @@ Status TextFrame::Cursor::Next() {
             }
 #line 27 "ragel/./text-grammar.rl"
                 { floatb = p; }
-                goto st20;
-            st20:
-                if (++p == pe) goto _test_eof20;
-            case 20:
-#line 1457 "ron/text-parser.cc"
-                if (48u <= (*p) && (*p) <= 57u) goto st21;
-                goto st0;
+                goto st21;
             st21:
                 if (++p == pe) goto _test_eof21;
             case 21:
-                switch ((*p)) {
-                    case 13u:
-                        goto tr48;
-                    case 32u:
-                        goto tr48;
-                    case 33u:
-                        goto tr49;
-                    case 39u:
-                        goto tr50;
-                    case 40u:
-                        goto tr51;
-                    case 44u:
-                        goto tr49;
-                    case 46u:
-                        goto st22;
-                    case 59u:
-                        goto tr49;
-                    case 61u:
-                        goto tr53;
-                    case 62u:
-                        goto tr54;
-                    case 63u:
-                        goto tr49;
-                    case 69u:
-                        goto st34;
-                    case 94u:
-                        goto tr56;
-                    case 101u:
-                        goto st34;
-                }
-                if ((*p) > 10u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto st21;
-                } else if ((*p) >= 9u)
-                    goto tr48;
+#line 1589 "ron/text-parser.cc"
+                if (48u <= (*p) && (*p) <= 57u) goto st22;
                 goto st0;
             st22:
                 if (++p == pe) goto _test_eof22;
             case 22:
-                if (48u <= (*p) && (*p) <= 57u) goto st23;
+                switch ((*p)) {
+                    case 13u:
+                        goto tr59;
+                    case 32u:
+                        goto tr59;
+                    case 33u:
+                        goto tr60;
+                    case 39u:
+                        goto tr61;
+                    case 40u:
+                        goto tr62;
+                    case 44u:
+                        goto tr60;
+                    case 46u:
+                        goto st23;
+                    case 59u:
+                        goto tr60;
+                    case 61u:
+                        goto tr64;
+                    case 62u:
+                        goto tr65;
+                    case 63u:
+                        goto tr60;
+                    case 69u:
+                        goto st35;
+                    case 94u:
+                        goto tr67;
+                    case 101u:
+                        goto st35;
+                }
+                if ((*p) > 10u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto st22;
+                } else if ((*p) >= 9u)
+                    goto tr59;
                 goto st0;
             st23:
                 if (++p == pe) goto _test_eof23;
             case 23:
+                if (48u <= (*p) && (*p) <= 57u) goto st24;
+                goto st0;
+            st24:
+                if (++p == pe) goto _test_eof24;
+            case 24:
                 switch ((*p)) {
                     case 13u:
-                        goto tr58;
+                        goto tr69;
                     case 32u:
-                        goto tr58;
+                        goto tr69;
                     case 33u:
-                        goto tr59;
+                        goto tr70;
                     case 39u:
-                        goto tr60;
+                        goto tr71;
                     case 40u:
-                        goto tr61;
+                        goto tr72;
                     case 44u:
-                        goto tr59;
+                        goto tr70;
                     case 59u:
-                        goto tr59;
+                        goto tr70;
                     case 61u:
-                        goto tr62;
+                        goto tr73;
                     case 62u:
-                        goto tr63;
+                        goto tr74;
                     case 63u:
-                        goto tr59;
+                        goto tr70;
                     case 69u:
-                        goto st34;
+                        goto st35;
                     case 94u:
-                        goto tr64;
+                        goto tr75;
                     case 101u:
-                        goto st34;
+                        goto st35;
                 }
                 if ((*p) > 10u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto st23;
+                    if (48u <= (*p) && (*p) <= 57u) goto st24;
                 } else if ((*p) >= 9u)
-                    goto tr58;
+                    goto tr69;
                 goto st0;
-            tr65 :
+            tr76 :
 #line 50 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
@@ -1940,8 +2111,8 @@ Status TextFrame::Cursor::Next() {
                     lineb = p;
                 }
             }
-                goto st24;
-            tr53 :
+                goto st25;
+            tr64 :
 #line 16 "ragel/./text-grammar.rl"
             {
                 Slice the_int(intb, p);
@@ -1949,7 +2120,7 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 24;
+                        cs = 25;
                         goto _out;
                     }
                 }
@@ -1957,8 +2128,8 @@ Status TextFrame::Cursor::Next() {
                     Atom::Integer(parse_int(the_int), body.range_of(the_int)));
                 uuidb = nullptr;  // sabotage uuid
             }
-                goto st24;
-            tr62 :
+                goto st25;
+            tr73 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -1966,15 +2137,15 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 24;
+                        cs = 25;
                         goto _out;
                     }
                 }
                 op_.AddAtom(Atom::Float(parse_float(the_float),
                                         body.range_of(the_float)));
             }
-                goto st24;
-            tr79 :
+                goto st25;
+            tr90 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -1987,14 +2158,14 @@ Status TextFrame::Cursor::Next() {
                         cs = 0;
                         {
                             p++;
-                            cs = 24;
+                            cs = 25;
                             goto _out;
                         }
                     }
                     op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-                goto st24;
-            tr88 :
+                goto st25;
+            tr99 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -2007,14 +2178,14 @@ Status TextFrame::Cursor::Next() {
                         cs = 0;
                         {
                             p++;
-                            cs = 24;
+                            cs = 25;
                             goto _out;
                         }
                     }
                     op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-                goto st24;
-            tr105 :
+                goto st25;
+            tr116 :
 #line 16 "ragel/./text-grammar.rl"
             {
                 Slice the_int(intb, p);
@@ -2022,7 +2193,7 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 24;
+                        cs = 25;
                         goto _out;
                     }
                 }
@@ -2041,15 +2212,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 24;
+                                cs = 25;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st24;
-            tr116 :
+                goto st25;
+            tr127 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -2063,15 +2234,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 24;
+                                cs = 25;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st24;
-            tr124 :
+                goto st25;
+            tr135 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -2085,15 +2256,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 24;
+                                cs = 25;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st24;
-            tr135 :
+                goto st25;
+            tr146 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -2101,7 +2272,7 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 24;
+                        cs = 25;
                         goto _out;
                     }
                 }
@@ -2119,15 +2290,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 24;
+                                cs = 25;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st24;
-            tr142 :
+                goto st25;
+            tr153 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -2135,7 +2306,7 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 24;
+                        cs = 25;
                         goto _out;
                     }
                 }
@@ -2153,15 +2324,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 24;
+                                cs = 25;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st24;
-            tr160 :
+                goto st25;
+            tr182 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -2170,8 +2341,8 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 9 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
-                goto st24;
-            tr174 :
+                goto st25;
+            tr196 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -2180,8 +2351,8 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 12 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
-                goto st24;
-            tr183 :
+                goto st25;
+            tr205 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -2190,8 +2361,8 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 12 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
-                goto st24;
-            tr194 :
+                goto st25;
+            tr216 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -2200,39 +2371,27 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 9 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
-                goto st24;
-            st24:
-                if (++p == pe) goto _test_eof24;
-            case 24:
-#line 1717 "ron/text-parser.cc"
-                switch ((*p)) {
-                    case 13u:
-                        goto tr65;
-                    case 32u:
-                        goto tr65;
-                    case 43u:
-                        goto tr66;
-                    case 45u:
-                        goto tr66;
-                }
-                if ((*p) > 10u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto tr67;
-                } else if ((*p) >= 9u)
-                    goto tr65;
-                goto st0;
-            tr66 :
-#line 15 "ragel/./text-grammar.rl"
-            {
-                intb = p;
-            }
                 goto st25;
             st25:
                 if (++p == pe) goto _test_eof25;
             case 25:
-#line 1738 "ron/text-parser.cc"
-                if (48u <= (*p) && (*p) <= 57u) goto st26;
+#line 1849 "ron/text-parser.cc"
+                switch ((*p)) {
+                    case 13u:
+                        goto tr76;
+                    case 32u:
+                        goto tr76;
+                    case 43u:
+                        goto tr77;
+                    case 45u:
+                        goto tr77;
+                }
+                if ((*p) > 10u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto tr78;
+                } else if ((*p) >= 9u)
+                    goto tr76;
                 goto st0;
-            tr67 :
+            tr77 :
 #line 15 "ragel/./text-grammar.rl"
             {
                 intb = p;
@@ -2241,37 +2400,49 @@ Status TextFrame::Cursor::Next() {
             st26:
                 if (++p == pe) goto _test_eof26;
             case 26:
-#line 1750 "ron/text-parser.cc"
+#line 1870 "ron/text-parser.cc"
+                if (48u <= (*p) && (*p) <= 57u) goto st27;
+                goto st0;
+            tr78 :
+#line 15 "ragel/./text-grammar.rl"
+            {
+                intb = p;
+            }
+                goto st27;
+            st27:
+                if (++p == pe) goto _test_eof27;
+            case 27:
+#line 1882 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr48;
+                        goto tr59;
                     case 32u:
-                        goto tr48;
+                        goto tr59;
                     case 33u:
-                        goto tr49;
+                        goto tr60;
                     case 39u:
-                        goto tr50;
+                        goto tr61;
                     case 40u:
-                        goto tr51;
+                        goto tr62;
                     case 44u:
-                        goto tr49;
+                        goto tr60;
                     case 59u:
-                        goto tr49;
+                        goto tr60;
                     case 61u:
-                        goto tr53;
+                        goto tr64;
                     case 62u:
-                        goto tr54;
+                        goto tr65;
                     case 63u:
-                        goto tr49;
+                        goto tr60;
                     case 94u:
-                        goto tr56;
+                        goto tr67;
                 }
                 if ((*p) > 10u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto st26;
+                    if (48u <= (*p) && (*p) <= 57u) goto st27;
                 } else if ((*p) >= 9u)
-                    goto tr48;
+                    goto tr59;
                 goto st0;
-            tr69 :
+            tr80 :
 #line 50 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
@@ -2279,8 +2450,8 @@ Status TextFrame::Cursor::Next() {
                     lineb = p;
                 }
             }
-                goto st27;
-            tr54 :
+                goto st28;
+            tr65 :
 #line 16 "ragel/./text-grammar.rl"
             {
                 Slice the_int(intb, p);
@@ -2288,7 +2459,7 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 27;
+                        cs = 28;
                         goto _out;
                     }
                 }
@@ -2296,8 +2467,8 @@ Status TextFrame::Cursor::Next() {
                     Atom::Integer(parse_int(the_int), body.range_of(the_int)));
                 uuidb = nullptr;  // sabotage uuid
             }
-                goto st27;
-            tr63 :
+                goto st28;
+            tr74 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -2305,15 +2476,15 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 27;
+                        cs = 28;
                         goto _out;
                     }
                 }
                 op_.AddAtom(Atom::Float(parse_float(the_float),
                                         body.range_of(the_float)));
             }
-                goto st27;
-            tr80 :
+                goto st28;
+            tr91 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -2326,14 +2497,14 @@ Status TextFrame::Cursor::Next() {
                         cs = 0;
                         {
                             p++;
-                            cs = 27;
+                            cs = 28;
                             goto _out;
                         }
                     }
                     op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-                goto st27;
-            tr89 :
+                goto st28;
+            tr100 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -2346,14 +2517,14 @@ Status TextFrame::Cursor::Next() {
                         cs = 0;
                         {
                             p++;
-                            cs = 27;
+                            cs = 28;
                             goto _out;
                         }
                     }
                     op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-                goto st27;
-            tr106 :
+                goto st28;
+            tr117 :
 #line 16 "ragel/./text-grammar.rl"
             {
                 Slice the_int(intb, p);
@@ -2361,7 +2532,7 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 27;
+                        cs = 28;
                         goto _out;
                     }
                 }
@@ -2380,15 +2551,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 27;
+                                cs = 28;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st27;
-            tr117 :
+                goto st28;
+            tr128 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -2402,15 +2573,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 27;
+                                cs = 28;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st27;
-            tr125 :
+                goto st28;
+            tr136 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -2424,15 +2595,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 27;
+                                cs = 28;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st27;
-            tr136 :
+                goto st28;
+            tr147 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -2440,7 +2611,7 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 27;
+                        cs = 28;
                         goto _out;
                     }
                 }
@@ -2458,15 +2629,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 27;
+                                cs = 28;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st27;
-            tr143 :
+                goto st28;
+            tr154 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -2474,7 +2645,7 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 27;
+                        cs = 28;
                         goto _out;
                     }
                 }
@@ -2492,15 +2663,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 27;
+                                cs = 28;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st27;
-            tr161 :
+                goto st28;
+            tr183 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -2509,8 +2680,8 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 9 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
-                goto st27;
-            tr175 :
+                goto st28;
+            tr197 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -2519,8 +2690,8 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 12 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
-                goto st27;
-            tr184 :
+                goto st28;
+            tr206 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -2529,8 +2700,8 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 12 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
-                goto st27;
-            tr195 :
+                goto st28;
+            tr217 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -2539,35 +2710,35 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 9 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
-                goto st27;
-            st27:
-                if (++p == pe) goto _test_eof27;
-            case 27:
-#line 1968 "ron/text-parser.cc"
+                goto st28;
+            st28:
+                if (++p == pe) goto _test_eof28;
+            case 28:
+#line 2100 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr69;
+                        goto tr80;
                     case 32u:
-                        goto tr69;
+                        goto tr80;
                     case 95u:
-                        goto tr71;
+                        goto tr82;
                     case 126u:
-                        goto tr71;
+                        goto tr82;
                 }
                 if ((*p) < 65u) {
                     if ((*p) > 10u) {
-                        if (48u <= (*p) && (*p) <= 57u) goto tr70;
+                        if (48u <= (*p) && (*p) <= 57u) goto tr81;
                     } else if ((*p) >= 9u)
-                        goto tr69;
+                        goto tr80;
                 } else if ((*p) > 70u) {
                     if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto tr71;
+                        if (97u <= (*p) && (*p) <= 122u) goto tr82;
                     } else if ((*p) >= 71u)
-                        goto tr71;
+                        goto tr82;
                 } else
-                    goto tr70;
+                    goto tr81;
                 goto st0;
-            tr70 :
+            tr81 :
 #line 6 "ragel/././uuid-grammar.rl"
             {
                 variety = '0';
@@ -2577,130 +2748,130 @@ Status TextFrame::Cursor::Next() {
             }
 #line 13 "ragel/././uuid-grammar.rl"
                 { wordb = p; }
-                goto st28;
-            st28:
-                if (++p == pe) goto _test_eof28;
-            case 28:
-#line 2005 "ron/text-parser.cc"
+                goto st29;
+            st29:
+                if (++p == pe) goto _test_eof29;
+            case 29:
+#line 2137 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr72;
+                        goto tr83;
                     case 32u:
-                        goto tr72;
+                        goto tr83;
                     case 33u:
-                        goto tr73;
+                        goto tr84;
                     case 39u:
-                        goto tr75;
+                        goto tr86;
                     case 40u:
-                        goto tr76;
+                        goto tr87;
                     case 44u:
-                        goto tr73;
+                        goto tr84;
                     case 47u:
-                        goto tr77;
+                        goto tr88;
                     case 59u:
-                        goto tr73;
+                        goto tr84;
                     case 61u:
-                        goto tr79;
+                        goto tr90;
                     case 62u:
-                        goto tr80;
+                        goto tr91;
                     case 63u:
-                        goto tr73;
+                        goto tr84;
                     case 94u:
-                        goto tr81;
+                        goto tr92;
                     case 95u:
-                        goto st38;
+                        goto st39;
                     case 126u:
-                        goto st38;
+                        goto st39;
                 }
                 if ((*p) < 43u) {
                     if ((*p) > 10u) {
-                        if (36u <= (*p) && (*p) <= 37u) goto tr74;
+                        if (36u <= (*p) && (*p) <= 37u) goto tr85;
                     } else if ((*p) >= 9u)
-                        goto tr72;
+                        goto tr83;
                 } else if ((*p) > 45u) {
                     if ((*p) < 65u) {
-                        if (48u <= (*p) && (*p) <= 57u) goto st38;
+                        if (48u <= (*p) && (*p) <= 57u) goto st39;
                     } else if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st38;
+                        if (97u <= (*p) && (*p) <= 122u) goto st39;
                     } else
-                        goto st38;
+                        goto st39;
                 } else
-                    goto tr74;
+                    goto tr85;
                 goto st0;
-            tr74 :
+            tr85 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
             }
 #line 15 "ragel/././uuid-grammar.rl"
                 { version = (*p); }
-                goto st29;
-            st29:
-                if (++p == pe) goto _test_eof29;
-            case 29:
-#line 2050 "ron/text-parser.cc"
-                switch ((*p)) {
-                    case 95u:
-                        goto tr82;
-                    case 126u:
-                        goto tr82;
-                }
-                if ((*p) < 65u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto tr82;
-                } else if ((*p) > 90u) {
-                    if (97u <= (*p) && (*p) <= 122u) goto tr82;
-                } else
-                    goto tr82;
-                goto st0;
-            tr82 :
-#line 16 "ragel/././uuid-grammar.rl"
-            {
-                wordb = p;
-            }
                 goto st30;
             st30:
                 if (++p == pe) goto _test_eof30;
             case 30:
-#line 2072 "ron/text-parser.cc"
+#line 2182 "ron/text-parser.cc"
+                switch ((*p)) {
+                    case 95u:
+                        goto tr93;
+                    case 126u:
+                        goto tr93;
+                }
+                if ((*p) < 65u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto tr93;
+                } else if ((*p) > 90u) {
+                    if (97u <= (*p) && (*p) <= 122u) goto tr93;
+                } else
+                    goto tr93;
+                goto st0;
+            tr93 :
+#line 16 "ragel/././uuid-grammar.rl"
+            {
+                wordb = p;
+            }
+                goto st31;
+            st31:
+                if (++p == pe) goto _test_eof31;
+            case 31:
+#line 2204 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr83;
+                        goto tr94;
                     case 32u:
-                        goto tr83;
+                        goto tr94;
                     case 33u:
-                        goto tr84;
+                        goto tr95;
                     case 39u:
-                        goto tr85;
+                        goto tr96;
                     case 40u:
-                        goto tr86;
+                        goto tr97;
                     case 44u:
-                        goto tr84;
+                        goto tr95;
                     case 59u:
-                        goto tr84;
+                        goto tr95;
                     case 61u:
-                        goto tr88;
+                        goto tr99;
                     case 62u:
-                        goto tr89;
+                        goto tr100;
                     case 63u:
-                        goto tr84;
+                        goto tr95;
                     case 94u:
-                        goto tr90;
+                        goto tr101;
                     case 95u:
-                        goto st30;
+                        goto st31;
                     case 126u:
-                        goto st30;
+                        goto st31;
                 }
                 if ((*p) < 48u) {
-                    if (9u <= (*p) && (*p) <= 10u) goto tr83;
+                    if (9u <= (*p) && (*p) <= 10u) goto tr94;
                 } else if ((*p) > 57u) {
                     if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st30;
+                        if (97u <= (*p) && (*p) <= 122u) goto st31;
                     } else if ((*p) >= 65u)
-                        goto st30;
+                        goto st31;
                 } else
-                    goto st30;
+                    goto st31;
                 goto st0;
-            tr91 :
+            tr102 :
 #line 50 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
@@ -2708,8 +2879,8 @@ Status TextFrame::Cursor::Next() {
                     lineb = p;
                 }
             }
-                goto st31;
-            tr56 :
+                goto st32;
+            tr67 :
 #line 16 "ragel/./text-grammar.rl"
             {
                 Slice the_int(intb, p);
@@ -2717,7 +2888,7 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 31;
+                        cs = 32;
                         goto _out;
                     }
                 }
@@ -2725,8 +2896,8 @@ Status TextFrame::Cursor::Next() {
                     Atom::Integer(parse_int(the_int), body.range_of(the_int)));
                 uuidb = nullptr;  // sabotage uuid
             }
-                goto st31;
-            tr64 :
+                goto st32;
+            tr75 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -2734,15 +2905,15 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 31;
+                        cs = 32;
                         goto _out;
                     }
                 }
                 op_.AddAtom(Atom::Float(parse_float(the_float),
                                         body.range_of(the_float)));
             }
-                goto st31;
-            tr81 :
+                goto st32;
+            tr92 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -2755,14 +2926,14 @@ Status TextFrame::Cursor::Next() {
                         cs = 0;
                         {
                             p++;
-                            cs = 31;
+                            cs = 32;
                             goto _out;
                         }
                     }
                     op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-                goto st31;
-            tr90 :
+                goto st32;
+            tr101 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -2775,14 +2946,14 @@ Status TextFrame::Cursor::Next() {
                         cs = 0;
                         {
                             p++;
-                            cs = 31;
+                            cs = 32;
                             goto _out;
                         }
                     }
                     op_.AddAtom(Uuid{variety, value, version, origin});
                 }
-                goto st31;
-            tr109 :
+                goto st32;
+            tr120 :
 #line 16 "ragel/./text-grammar.rl"
             {
                 Slice the_int(intb, p);
@@ -2790,7 +2961,7 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 31;
+                        cs = 32;
                         goto _out;
                     }
                 }
@@ -2809,15 +2980,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 31;
+                                cs = 32;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st31;
-            tr118 :
+                goto st32;
+            tr129 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -2831,15 +3002,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 31;
+                                cs = 32;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st31;
-            tr126 :
+                goto st32;
+            tr137 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -2853,15 +3024,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 31;
+                                cs = 32;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st31;
-            tr137 :
+                goto st32;
+            tr148 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -2869,7 +3040,7 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 31;
+                        cs = 32;
                         goto _out;
                     }
                 }
@@ -2887,15 +3058,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 31;
+                                cs = 32;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st31;
-            tr144 :
+                goto st32;
+            tr155 :
 #line 28 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
@@ -2903,7 +3074,7 @@ Status TextFrame::Cursor::Next() {
                     cs = 0;
                     {
                         p++;
-                        cs = 31;
+                        cs = 32;
                         goto _out;
                     }
                 }
@@ -2921,15 +3092,15 @@ Status TextFrame::Cursor::Next() {
                             cs = 0;
                             {
                                 p++;
-                                cs = 31;
+                                cs = 32;
                                 goto _out;
                             }
                         }
                         op_.AddAtom(Uuid{variety, value, version, origin});
                     }
                 }
-                goto st31;
-            tr162 :
+                goto st32;
+            tr184 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -2938,8 +3109,8 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 9 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
-                goto st31;
-            tr176 :
+                goto st32;
+            tr198 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -2948,8 +3119,8 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 12 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
-                goto st31;
-            tr185 :
+                goto st32;
+            tr207 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -2958,8 +3129,8 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 12 "ragel/./text-grammar.rl"
                 { op_.SetRef(Uuid{variety, value, version, origin}); }
-                goto st31;
-            tr196 :
+                goto st32;
+            tr218 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -2968,39 +3139,27 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 9 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
-                goto st31;
-            st31:
-                if (++p == pe) goto _test_eof31;
-            case 31:
-#line 2298 "ron/text-parser.cc"
-                switch ((*p)) {
-                    case 13u:
-                        goto tr91;
-                    case 32u:
-                        goto tr91;
-                    case 43u:
-                        goto tr92;
-                    case 45u:
-                        goto tr92;
-                }
-                if ((*p) > 10u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto tr93;
-                } else if ((*p) >= 9u)
-                    goto tr91;
-                goto st0;
-            tr92 :
-#line 27 "ragel/./text-grammar.rl"
-            {
-                floatb = p;
-            }
                 goto st32;
             st32:
                 if (++p == pe) goto _test_eof32;
             case 32:
-#line 2319 "ron/text-parser.cc"
-                if (48u <= (*p) && (*p) <= 57u) goto st33;
+#line 2430 "ron/text-parser.cc"
+                switch ((*p)) {
+                    case 13u:
+                        goto tr102;
+                    case 32u:
+                        goto tr102;
+                    case 43u:
+                        goto tr103;
+                    case 45u:
+                        goto tr103;
+                }
+                if ((*p) > 10u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto tr104;
+                } else if ((*p) >= 9u)
+                    goto tr102;
                 goto st0;
-            tr93 :
+            tr103 :
 #line 27 "ragel/./text-grammar.rl"
             {
                 floatb = p;
@@ -3009,89 +3168,101 @@ Status TextFrame::Cursor::Next() {
             st33:
                 if (++p == pe) goto _test_eof33;
             case 33:
-#line 2331 "ron/text-parser.cc"
-                switch ((*p)) {
-                    case 46u:
-                        goto st22;
-                    case 69u:
-                        goto st34;
-                    case 101u:
-                        goto st34;
-                }
-                if (48u <= (*p) && (*p) <= 57u) goto st33;
+#line 2451 "ron/text-parser.cc"
+                if (48u <= (*p) && (*p) <= 57u) goto st34;
                 goto st0;
+            tr104 :
+#line 27 "ragel/./text-grammar.rl"
+            {
+                floatb = p;
+            }
+                goto st34;
             st34:
                 if (++p == pe) goto _test_eof34;
             case 34:
+#line 2463 "ron/text-parser.cc"
                 switch ((*p)) {
-                    case 43u:
+                    case 46u:
+                        goto st23;
+                    case 69u:
                         goto st35;
-                    case 45u:
+                    case 101u:
                         goto st35;
                 }
-                if (48u <= (*p) && (*p) <= 57u) goto st36;
+                if (48u <= (*p) && (*p) <= 57u) goto st34;
                 goto st0;
             st35:
                 if (++p == pe) goto _test_eof35;
             case 35:
-                if (48u <= (*p) && (*p) <= 57u) goto st36;
+                switch ((*p)) {
+                    case 43u:
+                        goto st36;
+                    case 45u:
+                        goto st36;
+                }
+                if (48u <= (*p) && (*p) <= 57u) goto st37;
                 goto st0;
             st36:
                 if (++p == pe) goto _test_eof36;
             case 36:
+                if (48u <= (*p) && (*p) <= 57u) goto st37;
+                goto st0;
+            st37:
+                if (++p == pe) goto _test_eof37;
+            case 37:
                 switch ((*p)) {
                     case 13u:
-                        goto tr58;
+                        goto tr69;
                     case 32u:
-                        goto tr58;
+                        goto tr69;
                     case 33u:
-                        goto tr59;
+                        goto tr70;
                     case 39u:
-                        goto tr60;
+                        goto tr71;
                     case 40u:
-                        goto tr61;
+                        goto tr72;
                     case 44u:
-                        goto tr59;
+                        goto tr70;
                     case 59u:
-                        goto tr59;
+                        goto tr70;
                     case 61u:
-                        goto tr62;
+                        goto tr73;
                     case 62u:
-                        goto tr63;
+                        goto tr74;
                     case 63u:
-                        goto tr59;
+                        goto tr70;
                     case 94u:
-                        goto tr64;
+                        goto tr75;
                 }
                 if ((*p) > 10u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto st36;
+                    if (48u <= (*p) && (*p) <= 57u) goto st37;
                 } else if ((*p) >= 9u)
-                    goto tr58;
+                    goto tr69;
                 goto st0;
-            tr77 :
+            tr88 :
 #line 12 "ragel/././uuid-grammar.rl"
             {
                 variety = *(p - 1);
             }
-                goto st37;
-            st37:
-                if (++p == pe) goto _test_eof37;
-            case 37:
-#line 2389 "ron/text-parser.cc"
+                goto st38;
+            st38:
+                if (++p == pe) goto _test_eof38;
+            case 38:
+#line 2521 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
-                        goto tr97;
+                        goto tr108;
                     case 126u:
-                        goto tr97;
+                        goto tr108;
                 }
                 if ((*p) < 65u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto tr97;
+                    if (48u <= (*p) && (*p) <= 57u) goto tr108;
                 } else if ((*p) > 90u) {
-                    if (97u <= (*p) && (*p) <= 122u) goto tr97;
+                    if (97u <= (*p) && (*p) <= 122u) goto tr108;
                 } else
-                    goto tr97;
+                    goto tr108;
                 goto st0;
-            tr71 :
+            tr82 :
 #line 6 "ragel/././uuid-grammar.rl"
             {
                 variety = '0';
@@ -3101,59 +3272,59 @@ Status TextFrame::Cursor::Next() {
             }
 #line 13 "ragel/././uuid-grammar.rl"
                 { wordb = p; }
-                goto st38;
-            tr97 :
+                goto st39;
+            tr108 :
 #line 13 "ragel/././uuid-grammar.rl"
             {
                 wordb = p;
             }
-                goto st38;
-            st38:
-                if (++p == pe) goto _test_eof38;
-            case 38:
-#line 2422 "ron/text-parser.cc"
+                goto st39;
+            st39:
+                if (++p == pe) goto _test_eof39;
+            case 39:
+#line 2554 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr72;
+                        goto tr83;
                     case 32u:
-                        goto tr72;
+                        goto tr83;
                     case 33u:
-                        goto tr73;
+                        goto tr84;
                     case 39u:
-                        goto tr75;
+                        goto tr86;
                     case 40u:
-                        goto tr76;
+                        goto tr87;
                     case 44u:
-                        goto tr73;
+                        goto tr84;
                     case 59u:
-                        goto tr73;
+                        goto tr84;
                     case 61u:
-                        goto tr79;
+                        goto tr90;
                     case 62u:
-                        goto tr80;
+                        goto tr91;
                     case 63u:
-                        goto tr73;
+                        goto tr84;
                     case 94u:
-                        goto tr81;
+                        goto tr92;
                     case 95u:
-                        goto st38;
+                        goto st39;
                     case 126u:
-                        goto st38;
+                        goto st39;
                 }
                 if ((*p) < 43u) {
                     if ((*p) > 10u) {
-                        if (36u <= (*p) && (*p) <= 37u) goto tr74;
+                        if (36u <= (*p) && (*p) <= 37u) goto tr85;
                     } else if ((*p) >= 9u)
-                        goto tr72;
+                        goto tr83;
                 } else if ((*p) > 45u) {
                     if ((*p) < 65u) {
-                        if (48u <= (*p) && (*p) <= 57u) goto st38;
+                        if (48u <= (*p) && (*p) <= 57u) goto st39;
                     } else if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st38;
+                        if (97u <= (*p) && (*p) <= 122u) goto st39;
                     } else
-                        goto st38;
+                        goto st39;
                 } else
-                    goto tr74;
+                    goto tr85;
                 goto st0;
             tr21 :
 #line 15 "ragel/./text-grammar.rl"
@@ -3171,157 +3342,157 @@ Status TextFrame::Cursor::Next() {
                 }
 #line 13 "ragel/././uuid-grammar.rl"
                 { wordb = p; }
-                goto st39;
-            st39:
-                if (++p == pe) goto _test_eof39;
-            case 39:
-#line 2475 "ron/text-parser.cc"
+                goto st40;
+            st40:
+                if (++p == pe) goto _test_eof40;
+            case 40:
+#line 2607 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr98;
-                    case 32u:
-                        goto tr98;
-                    case 33u:
-                        goto tr99;
-                    case 39u:
-                        goto tr101;
-                    case 40u:
-                        goto tr102;
-                    case 44u:
-                        goto tr99;
-                    case 46u:
-                        goto st22;
-                    case 47u:
-                        goto tr103;
-                    case 59u:
-                        goto tr99;
-                    case 61u:
-                        goto tr105;
-                    case 62u:
-                        goto tr106;
-                    case 63u:
-                        goto tr99;
-                    case 69u:
-                        goto st45;
-                    case 94u:
                         goto tr109;
+                    case 32u:
+                        goto tr109;
+                    case 33u:
+                        goto tr110;
+                    case 39u:
+                        goto tr112;
+                    case 40u:
+                        goto tr113;
+                    case 44u:
+                        goto tr110;
+                    case 46u:
+                        goto st23;
+                    case 47u:
+                        goto tr114;
+                    case 59u:
+                        goto tr110;
+                    case 61u:
+                        goto tr116;
+                    case 62u:
+                        goto tr117;
+                    case 63u:
+                        goto tr110;
+                    case 69u:
+                        goto st46;
+                    case 94u:
+                        goto tr120;
                     case 95u:
-                        goto st43;
+                        goto st44;
                     case 101u:
-                        goto st45;
+                        goto st46;
                     case 126u:
-                        goto st43;
+                        goto st44;
                 }
                 if ((*p) < 43u) {
                     if ((*p) > 10u) {
-                        if (36u <= (*p) && (*p) <= 37u) goto tr100;
+                        if (36u <= (*p) && (*p) <= 37u) goto tr111;
                     } else if ((*p) >= 9u)
-                        goto tr98;
+                        goto tr109;
                 } else if ((*p) > 45u) {
                     if ((*p) < 65u) {
-                        if (48u <= (*p) && (*p) <= 57u) goto st44;
+                        if (48u <= (*p) && (*p) <= 57u) goto st45;
                     } else if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st43;
+                        if (97u <= (*p) && (*p) <= 122u) goto st44;
                     } else
-                        goto st43;
+                        goto st44;
                 } else
-                    goto tr100;
+                    goto tr111;
                 goto st0;
-            tr100 :
+            tr111 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
             }
 #line 15 "ragel/././uuid-grammar.rl"
                 { version = (*p); }
-                goto st40;
-            st40:
-                if (++p == pe) goto _test_eof40;
-            case 40:
-#line 2523 "ron/text-parser.cc"
-                switch ((*p)) {
-                    case 95u:
-                        goto tr110;
-                    case 126u:
-                        goto tr110;
-                }
-                if ((*p) < 65u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto tr110;
-                } else if ((*p) > 90u) {
-                    if (97u <= (*p) && (*p) <= 122u) goto tr110;
-                } else
-                    goto tr110;
-                goto st0;
-            tr110 :
-#line 16 "ragel/././uuid-grammar.rl"
-            {
-                wordb = p;
-            }
                 goto st41;
             st41:
                 if (++p == pe) goto _test_eof41;
             case 41:
-#line 2545 "ron/text-parser.cc"
+#line 2655 "ron/text-parser.cc"
                 switch ((*p)) {
-                    case 13u:
-                        goto tr111;
-                    case 32u:
-                        goto tr111;
-                    case 33u:
-                        goto tr112;
-                    case 39u:
-                        goto tr113;
-                    case 40u:
-                        goto tr114;
-                    case 44u:
-                        goto tr112;
-                    case 59u:
-                        goto tr112;
-                    case 61u:
-                        goto tr116;
-                    case 62u:
-                        goto tr117;
-                    case 63u:
-                        goto tr112;
-                    case 94u:
-                        goto tr118;
                     case 95u:
-                        goto st41;
+                        goto tr121;
                     case 126u:
-                        goto st41;
+                        goto tr121;
                 }
-                if ((*p) < 48u) {
-                    if (9u <= (*p) && (*p) <= 10u) goto tr111;
-                } else if ((*p) > 57u) {
-                    if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st41;
-                    } else if ((*p) >= 65u)
-                        goto st41;
+                if ((*p) < 65u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto tr121;
+                } else if ((*p) > 90u) {
+                    if (97u <= (*p) && (*p) <= 122u) goto tr121;
                 } else
-                    goto st41;
+                    goto tr121;
                 goto st0;
-            tr103 :
-#line 12 "ragel/././uuid-grammar.rl"
+            tr121 :
+#line 16 "ragel/././uuid-grammar.rl"
             {
-                variety = *(p - 1);
+                wordb = p;
             }
                 goto st42;
             st42:
                 if (++p == pe) goto _test_eof42;
             case 42:
-#line 2581 "ron/text-parser.cc"
+#line 2677 "ron/text-parser.cc"
+                switch ((*p)) {
+                    case 13u:
+                        goto tr122;
+                    case 32u:
+                        goto tr122;
+                    case 33u:
+                        goto tr123;
+                    case 39u:
+                        goto tr124;
+                    case 40u:
+                        goto tr125;
+                    case 44u:
+                        goto tr123;
+                    case 59u:
+                        goto tr123;
+                    case 61u:
+                        goto tr127;
+                    case 62u:
+                        goto tr128;
+                    case 63u:
+                        goto tr123;
+                    case 94u:
+                        goto tr129;
+                    case 95u:
+                        goto st42;
+                    case 126u:
+                        goto st42;
+                }
+                if ((*p) < 48u) {
+                    if (9u <= (*p) && (*p) <= 10u) goto tr122;
+                } else if ((*p) > 57u) {
+                    if ((*p) > 90u) {
+                        if (97u <= (*p) && (*p) <= 122u) goto st42;
+                    } else if ((*p) >= 65u)
+                        goto st42;
+                } else
+                    goto st42;
+                goto st0;
+            tr114 :
+#line 12 "ragel/././uuid-grammar.rl"
+            {
+                variety = *(p - 1);
+            }
+                goto st43;
+            st43:
+                if (++p == pe) goto _test_eof43;
+            case 43:
+#line 2713 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
-                        goto tr119;
+                        goto tr130;
                     case 126u:
-                        goto tr119;
+                        goto tr130;
                 }
                 if ((*p) < 65u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto tr119;
+                    if (48u <= (*p) && (*p) <= 57u) goto tr130;
                 } else if ((*p) > 90u) {
-                    if (97u <= (*p) && (*p) <= 122u) goto tr119;
+                    if (97u <= (*p) && (*p) <= 122u) goto tr130;
                 } else
-                    goto tr119;
+                    goto tr130;
                 goto st0;
             tr23 :
 #line 6 "ragel/././uuid-grammar.rl"
@@ -3333,276 +3504,276 @@ Status TextFrame::Cursor::Next() {
             }
 #line 13 "ragel/././uuid-grammar.rl"
                 { wordb = p; }
-                goto st43;
-            tr119 :
+                goto st44;
+            tr130 :
 #line 13 "ragel/././uuid-grammar.rl"
             {
                 wordb = p;
             }
-                goto st43;
-            st43:
-                if (++p == pe) goto _test_eof43;
-            case 43:
-#line 2614 "ron/text-parser.cc"
-                switch ((*p)) {
-                    case 13u:
-                        goto tr120;
-                    case 32u:
-                        goto tr120;
-                    case 33u:
-                        goto tr121;
-                    case 39u:
-                        goto tr122;
-                    case 40u:
-                        goto tr123;
-                    case 44u:
-                        goto tr121;
-                    case 59u:
-                        goto tr121;
-                    case 61u:
-                        goto tr124;
-                    case 62u:
-                        goto tr125;
-                    case 63u:
-                        goto tr121;
-                    case 94u:
-                        goto tr126;
-                    case 95u:
-                        goto st43;
-                    case 126u:
-                        goto st43;
-                }
-                if ((*p) < 43u) {
-                    if ((*p) > 10u) {
-                        if (36u <= (*p) && (*p) <= 37u) goto tr100;
-                    } else if ((*p) >= 9u)
-                        goto tr120;
-                } else if ((*p) > 45u) {
-                    if ((*p) < 65u) {
-                        if (48u <= (*p) && (*p) <= 57u) goto st43;
-                    } else if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st43;
-                    } else
-                        goto st43;
-                } else
-                    goto tr100;
-                goto st0;
+                goto st44;
             st44:
                 if (++p == pe) goto _test_eof44;
             case 44:
+#line 2746 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr98;
+                        goto tr131;
                     case 32u:
-                        goto tr98;
+                        goto tr131;
                     case 33u:
-                        goto tr99;
+                        goto tr132;
                     case 39u:
-                        goto tr101;
+                        goto tr133;
                     case 40u:
-                        goto tr102;
+                        goto tr134;
                     case 44u:
-                        goto tr99;
-                    case 46u:
-                        goto st22;
+                        goto tr132;
                     case 59u:
-                        goto tr99;
+                        goto tr132;
                     case 61u:
-                        goto tr105;
+                        goto tr135;
                     case 62u:
-                        goto tr106;
+                        goto tr136;
                     case 63u:
-                        goto tr99;
-                    case 69u:
-                        goto st45;
+                        goto tr132;
                     case 94u:
-                        goto tr109;
+                        goto tr137;
                     case 95u:
-                        goto st43;
-                    case 101u:
-                        goto st45;
+                        goto st44;
                     case 126u:
-                        goto st43;
+                        goto st44;
                 }
                 if ((*p) < 43u) {
                     if ((*p) > 10u) {
-                        if (36u <= (*p) && (*p) <= 37u) goto tr100;
+                        if (36u <= (*p) && (*p) <= 37u) goto tr111;
                     } else if ((*p) >= 9u)
-                        goto tr98;
+                        goto tr131;
                 } else if ((*p) > 45u) {
                     if ((*p) < 65u) {
                         if (48u <= (*p) && (*p) <= 57u) goto st44;
                     } else if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st43;
+                        if (97u <= (*p) && (*p) <= 122u) goto st44;
                     } else
-                        goto st43;
+                        goto st44;
                 } else
-                    goto tr100;
+                    goto tr111;
                 goto st0;
             st45:
                 if (++p == pe) goto _test_eof45;
             case 45:
                 switch ((*p)) {
                     case 13u:
-                        goto tr120;
+                        goto tr109;
                     case 32u:
-                        goto tr120;
+                        goto tr109;
                     case 33u:
-                        goto tr121;
+                        goto tr110;
                     case 39u:
-                        goto tr122;
+                        goto tr112;
                     case 40u:
-                        goto tr123;
+                        goto tr113;
                     case 44u:
-                        goto tr121;
+                        goto tr110;
+                    case 46u:
+                        goto st23;
                     case 59u:
-                        goto tr121;
+                        goto tr110;
                     case 61u:
-                        goto tr124;
+                        goto tr116;
                     case 62u:
-                        goto tr125;
+                        goto tr117;
                     case 63u:
-                        goto tr121;
+                        goto tr110;
+                    case 69u:
+                        goto st46;
                     case 94u:
-                        goto tr126;
+                        goto tr120;
                     case 95u:
-                        goto st43;
+                        goto st44;
+                    case 101u:
+                        goto st46;
                     case 126u:
-                        goto st43;
+                        goto st44;
                 }
                 if ((*p) < 43u) {
                     if ((*p) > 10u) {
-                        if (36u <= (*p) && (*p) <= 37u) goto tr100;
+                        if (36u <= (*p) && (*p) <= 37u) goto tr111;
                     } else if ((*p) >= 9u)
-                        goto tr120;
+                        goto tr109;
                 } else if ((*p) > 45u) {
                     if ((*p) < 65u) {
-                        if (48u <= (*p) && (*p) <= 57u) goto st48;
+                        if (48u <= (*p) && (*p) <= 57u) goto st45;
                     } else if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st43;
+                        if (97u <= (*p) && (*p) <= 122u) goto st44;
                     } else
-                        goto st43;
+                        goto st44;
                 } else
-                    goto tr127;
+                    goto tr111;
                 goto st0;
-            tr127 :
+            st46:
+                if (++p == pe) goto _test_eof46;
+            case 46:
+                switch ((*p)) {
+                    case 13u:
+                        goto tr131;
+                    case 32u:
+                        goto tr131;
+                    case 33u:
+                        goto tr132;
+                    case 39u:
+                        goto tr133;
+                    case 40u:
+                        goto tr134;
+                    case 44u:
+                        goto tr132;
+                    case 59u:
+                        goto tr132;
+                    case 61u:
+                        goto tr135;
+                    case 62u:
+                        goto tr136;
+                    case 63u:
+                        goto tr132;
+                    case 94u:
+                        goto tr137;
+                    case 95u:
+                        goto st44;
+                    case 126u:
+                        goto st44;
+                }
+                if ((*p) < 43u) {
+                    if ((*p) > 10u) {
+                        if (36u <= (*p) && (*p) <= 37u) goto tr111;
+                    } else if ((*p) >= 9u)
+                        goto tr131;
+                } else if ((*p) > 45u) {
+                    if ((*p) < 65u) {
+                        if (48u <= (*p) && (*p) <= 57u) goto st49;
+                    } else if ((*p) > 90u) {
+                        if (97u <= (*p) && (*p) <= 122u) goto st44;
+                    } else
+                        goto st44;
+                } else
+                    goto tr138;
+                goto st0;
+            tr138 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
             }
 #line 15 "ragel/././uuid-grammar.rl"
                 { version = (*p); }
-                goto st46;
-            st46:
-                if (++p == pe) goto _test_eof46;
-            case 46:
-#line 2735 "ron/text-parser.cc"
-                switch ((*p)) {
-                    case 95u:
-                        goto tr110;
-                    case 126u:
-                        goto tr110;
-                }
-                if ((*p) < 65u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto tr129;
-                } else if ((*p) > 90u) {
-                    if (97u <= (*p) && (*p) <= 122u) goto tr110;
-                } else
-                    goto tr110;
-                goto st0;
-            tr129 :
-#line 16 "ragel/././uuid-grammar.rl"
-            {
-                wordb = p;
-            }
                 goto st47;
             st47:
                 if (++p == pe) goto _test_eof47;
             case 47:
-#line 2757 "ron/text-parser.cc"
+#line 2867 "ron/text-parser.cc"
                 switch ((*p)) {
-                    case 13u:
-                        goto tr130;
-                    case 32u:
-                        goto tr130;
-                    case 33u:
-                        goto tr131;
-                    case 39u:
-                        goto tr132;
-                    case 40u:
-                        goto tr133;
-                    case 44u:
-                        goto tr131;
-                    case 59u:
-                        goto tr131;
-                    case 61u:
-                        goto tr135;
-                    case 62u:
-                        goto tr136;
-                    case 63u:
-                        goto tr131;
-                    case 94u:
-                        goto tr137;
                     case 95u:
-                        goto st41;
+                        goto tr121;
                     case 126u:
-                        goto st41;
+                        goto tr121;
                 }
-                if ((*p) < 48u) {
-                    if (9u <= (*p) && (*p) <= 10u) goto tr130;
-                } else if ((*p) > 57u) {
-                    if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st41;
-                    } else if ((*p) >= 65u)
-                        goto st41;
+                if ((*p) < 65u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto tr140;
+                } else if ((*p) > 90u) {
+                    if (97u <= (*p) && (*p) <= 122u) goto tr121;
                 } else
-                    goto st47;
+                    goto tr121;
                 goto st0;
+            tr140 :
+#line 16 "ragel/././uuid-grammar.rl"
+            {
+                wordb = p;
+            }
+                goto st48;
             st48:
                 if (++p == pe) goto _test_eof48;
             case 48:
+#line 2889 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr138;
-                    case 32u:
-                        goto tr138;
-                    case 33u:
-                        goto tr139;
-                    case 39u:
-                        goto tr140;
-                    case 40u:
                         goto tr141;
-                    case 44u:
-                        goto tr139;
-                    case 59u:
-                        goto tr139;
-                    case 61u:
+                    case 32u:
+                        goto tr141;
+                    case 33u:
                         goto tr142;
-                    case 62u:
+                    case 39u:
                         goto tr143;
-                    case 63u:
-                        goto tr139;
-                    case 94u:
+                    case 40u:
                         goto tr144;
+                    case 44u:
+                        goto tr142;
+                    case 59u:
+                        goto tr142;
+                    case 61u:
+                        goto tr146;
+                    case 62u:
+                        goto tr147;
+                    case 63u:
+                        goto tr142;
+                    case 94u:
+                        goto tr148;
                     case 95u:
-                        goto st43;
+                        goto st42;
                     case 126u:
-                        goto st43;
+                        goto st42;
+                }
+                if ((*p) < 48u) {
+                    if (9u <= (*p) && (*p) <= 10u) goto tr141;
+                } else if ((*p) > 57u) {
+                    if ((*p) > 90u) {
+                        if (97u <= (*p) && (*p) <= 122u) goto st42;
+                    } else if ((*p) >= 65u)
+                        goto st42;
+                } else
+                    goto st48;
+                goto st0;
+            st49:
+                if (++p == pe) goto _test_eof49;
+            case 49:
+                switch ((*p)) {
+                    case 13u:
+                        goto tr149;
+                    case 32u:
+                        goto tr149;
+                    case 33u:
+                        goto tr150;
+                    case 39u:
+                        goto tr151;
+                    case 40u:
+                        goto tr152;
+                    case 44u:
+                        goto tr150;
+                    case 59u:
+                        goto tr150;
+                    case 61u:
+                        goto tr153;
+                    case 62u:
+                        goto tr154;
+                    case 63u:
+                        goto tr150;
+                    case 94u:
+                        goto tr155;
+                    case 95u:
+                        goto st44;
+                    case 126u:
+                        goto st44;
                 }
                 if ((*p) < 43u) {
                     if ((*p) > 10u) {
-                        if (36u <= (*p) && (*p) <= 37u) goto tr100;
+                        if (36u <= (*p) && (*p) <= 37u) goto tr111;
                     } else if ((*p) >= 9u)
-                        goto tr138;
+                        goto tr149;
                 } else if ((*p) > 45u) {
                     if ((*p) < 65u) {
-                        if (48u <= (*p) && (*p) <= 57u) goto st48;
+                        if (48u <= (*p) && (*p) <= 57u) goto st49;
                     } else if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st43;
+                        if (97u <= (*p) && (*p) <= 122u) goto st44;
                     } else
-                        goto st43;
+                        goto st44;
                 } else
-                    goto tr100;
+                    goto tr111;
                 goto st0;
             tr22 :
 #line 6 "ragel/././uuid-grammar.rl"
@@ -3614,96 +3785,92 @@ Status TextFrame::Cursor::Next() {
             }
 #line 13 "ragel/././uuid-grammar.rl"
                 { wordb = p; }
-                goto st49;
-            st49:
-                if (++p == pe) goto _test_eof49;
-            case 49:
-#line 2837 "ron/text-parser.cc"
+                goto st50;
+            st50:
+                if (++p == pe) goto _test_eof50;
+            case 50:
+#line 2969 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr120;
+                        goto tr131;
                     case 32u:
-                        goto tr120;
+                        goto tr131;
                     case 33u:
-                        goto tr121;
+                        goto tr132;
                     case 39u:
-                        goto tr122;
+                        goto tr133;
                     case 40u:
-                        goto tr123;
+                        goto tr134;
                     case 44u:
-                        goto tr121;
+                        goto tr132;
                     case 47u:
-                        goto tr103;
+                        goto tr114;
                     case 59u:
-                        goto tr121;
+                        goto tr132;
                     case 61u:
-                        goto tr124;
+                        goto tr135;
                     case 62u:
-                        goto tr125;
+                        goto tr136;
                     case 63u:
-                        goto tr121;
+                        goto tr132;
                     case 94u:
-                        goto tr126;
+                        goto tr137;
                     case 95u:
-                        goto st43;
+                        goto st44;
                     case 126u:
-                        goto st43;
+                        goto st44;
                 }
                 if ((*p) < 43u) {
                     if ((*p) > 10u) {
-                        if (36u <= (*p) && (*p) <= 37u) goto tr100;
+                        if (36u <= (*p) && (*p) <= 37u) goto tr111;
                     } else if ((*p) >= 9u)
-                        goto tr120;
+                        goto tr131;
                 } else if ((*p) > 45u) {
                     if ((*p) < 65u) {
-                        if (48u <= (*p) && (*p) <= 57u) goto st43;
+                        if (48u <= (*p) && (*p) <= 57u) goto st44;
                     } else if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st43;
+                        if (97u <= (*p) && (*p) <= 122u) goto st44;
                     } else
-                        goto st43;
+                        goto st44;
                 } else
-                    goto tr100;
+                    goto tr111;
                 goto st0;
             tr3 :
 #line 22 "ragel/./text-grammar.rl"
             {
                 strb = p;
             }
-                goto st50;
-            st50:
-                if (++p == pe) goto _test_eof50;
-            case 50:
-#line 2880 "ron/text-parser.cc"
-                switch ((*p)) {
-                    case 34u:
-                        goto st2;
-                    case 39u:
-                        goto st2;
-                    case 47u:
-                        goto st2;
-                    case 92u:
-                        goto st2;
-                    case 98u:
-                        goto st2;
-                    case 110u:
-                        goto st2;
-                    case 114u:
-                        goto st2;
-                    case 116u:
-                        goto st2;
-                    case 117u:
-                        goto st51;
-                }
-                goto st0;
+                goto st51;
+            tr164 :
+#line 57 "ragel/./text-grammar.rl"
+            {
+                cp = decode_hex_cp(Slice{p - 4, 4});
+            }
+                goto st51;
             st51:
                 if (++p == pe) goto _test_eof51;
             case 51:
-                if ((*p) < 65u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto st52;
-                } else if ((*p) > 70u) {
-                    if (97u <= (*p) && (*p) <= 102u) goto st52;
-                } else
-                    goto st52;
+#line 3016 "ron/text-parser.cc"
+                switch ((*p)) {
+                    case 34u:
+                        goto tr156;
+                    case 39u:
+                        goto tr156;
+                    case 47u:
+                        goto tr156;
+                    case 92u:
+                        goto tr156;
+                    case 98u:
+                        goto tr156;
+                    case 110u:
+                        goto tr156;
+                    case 114u:
+                        goto tr156;
+                    case 116u:
+                        goto tr156;
+                    case 117u:
+                        goto st52;
+                }
                 goto st0;
             st52:
                 if (++p == pe) goto _test_eof52;
@@ -3729,77 +3896,173 @@ Status TextFrame::Cursor::Next() {
                 if (++p == pe) goto _test_eof54;
             case 54:
                 if ((*p) < 65u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto st2;
+                    if (48u <= (*p) && (*p) <= 57u) goto st55;
                 } else if ((*p) > 70u) {
-                    if (97u <= (*p) && (*p) <= 102u) goto st2;
+                    if (97u <= (*p) && (*p) <= 102u) goto st55;
                 } else
-                    goto st2;
+                    goto st55;
                 goto st0;
+            st55:
+                if (++p == pe) goto _test_eof55;
+            case 55:
+                if ((*p) < 65u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto st56;
+                } else if ((*p) > 70u) {
+                    if (97u <= (*p) && (*p) <= 102u) goto st56;
+                } else
+                    goto st56;
+                goto st0;
+            st56:
+                if (++p == pe) goto _test_eof56;
+            case 56:
+                switch ((*p)) {
+                    case 10u:
+                        goto st0;
+                    case 13u:
+                        goto st0;
+                    case 39u:
+                        goto tr163;
+                    case 92u:
+                        goto tr164;
+                }
+                if ((*p) < 224u) {
+                    if ((*p) > 191u) {
+                        if (192u <= (*p) && (*p) <= 223u) goto tr165;
+                    } else if ((*p) >= 128u)
+                        goto st0;
+                } else if ((*p) > 239u) {
+                    if ((*p) > 247u) {
+                        if (248u <= (*p)) goto st0;
+                    } else if ((*p) >= 240u)
+                        goto tr167;
+                } else
+                    goto tr166;
+                goto tr162;
             tr4 :
 #line 22 "ragel/./text-grammar.rl"
             {
                 strb = p;
             }
-                goto st55;
-            st55:
-                if (++p == pe) goto _test_eof55;
-            case 55:
-#line 2953 "ron/text-parser.cc"
-                if (128u <= (*p) && (*p) <= 191u) goto st2;
+#line 9 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0x1f; }
+                goto st57;
+            tr10 :
+#line 9 "ragel/././utf8-grammar.rl"
+            {
+                cp = (*p) & 0x1f;
+            }
+                goto st57;
+            tr165 :
+#line 57 "ragel/./text-grammar.rl"
+            {
+                cp = decode_hex_cp(Slice{p - 4, 4});
+            }
+#line 9 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0x1f; }
+                goto st57;
+            tr169 :
+#line 7 "ragel/././utf8-grammar.rl"
+            {
+                cp = (cp << 6) | ((*p) & 0x3f);
+            }
+                goto st57;
+            st57:
+                if (++p == pe) goto _test_eof57;
+            case 57:
+#line 3130 "ron/text-parser.cc"
+                if (128u <= (*p) && (*p) <= 191u) goto tr168;
                 goto st0;
             tr5 :
 #line 22 "ragel/./text-grammar.rl"
             {
                 strb = p;
             }
-                goto st56;
-            st56:
-                if (++p == pe) goto _test_eof56;
-            case 56:
-#line 2965 "ron/text-parser.cc"
-                if (128u <= (*p) && (*p) <= 191u) goto st55;
+#line 10 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0xf; }
+                goto st58;
+            tr11 :
+#line 10 "ragel/././utf8-grammar.rl"
+            {
+                cp = (*p) & 0xf;
+            }
+                goto st58;
+            tr166 :
+#line 57 "ragel/./text-grammar.rl"
+            {
+                cp = decode_hex_cp(Slice{p - 4, 4});
+            }
+#line 10 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0xf; }
+                goto st58;
+            tr170 :
+#line 7 "ragel/././utf8-grammar.rl"
+            {
+                cp = (cp << 6) | ((*p) & 0x3f);
+            }
+                goto st58;
+            st58:
+                if (++p == pe) goto _test_eof58;
+            case 58:
+#line 3158 "ron/text-parser.cc"
+                if (128u <= (*p) && (*p) <= 191u) goto tr169;
                 goto st0;
             tr6 :
 #line 22 "ragel/./text-grammar.rl"
             {
                 strb = p;
             }
-                goto st57;
-            st57:
-                if (++p == pe) goto _test_eof57;
-            case 57:
-#line 2977 "ron/text-parser.cc"
-                if (128u <= (*p) && (*p) <= 191u) goto st56;
-                goto st0;
-            st58:
-                if (++p == pe) goto _test_eof58;
-            case 58:
-                if ((*p) == 10u) goto st73;
-                goto st0;
-            st73:
-                if (++p == pe) goto _test_eof73;
-            case 73:
-                goto st0;
+#line 11 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 7; }
+                goto st59;
+            tr12 :
+#line 11 "ragel/././utf8-grammar.rl"
+            {
+                cp = (*p) & 7;
+            }
+                goto st59;
+            tr167 :
+#line 57 "ragel/./text-grammar.rl"
+            {
+                cp = decode_hex_cp(Slice{p - 4, 4});
+            }
+#line 11 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 7; }
+                goto st59;
             st59:
                 if (++p == pe) goto _test_eof59;
             case 59:
+#line 3182 "ron/text-parser.cc"
+                if (128u <= (*p) && (*p) <= 191u) goto tr170;
+                goto st0;
+            st60:
+                if (++p == pe) goto _test_eof60;
+            case 60:
+                if ((*p) == 10u) goto st75;
+                goto st0;
+            st75:
+                if (++p == pe) goto _test_eof75;
+            case 75:
+                goto st0;
+            st61:
+                if (++p == pe) goto _test_eof61;
+            case 61:
                 switch ((*p)) {
                     case 95u:
-                        goto tr151;
+                        goto tr173;
                     case 126u:
-                        goto tr151;
+                        goto tr173;
                 }
                 if ((*p) < 65u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto tr150;
+                    if (48u <= (*p) && (*p) <= 57u) goto tr172;
                 } else if ((*p) > 70u) {
                     if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto tr151;
+                        if (97u <= (*p) && (*p) <= 122u) goto tr173;
                     } else if ((*p) >= 71u)
-                        goto tr151;
+                        goto tr173;
                 } else
-                    goto tr150;
+                    goto tr172;
                 goto st0;
-            tr150 :
+            tr172 :
 #line 6 "ragel/././uuid-grammar.rl"
             {
                 variety = '0';
@@ -3809,59 +4072,59 @@ Status TextFrame::Cursor::Next() {
             }
 #line 13 "ragel/././uuid-grammar.rl"
                 { wordb = p; }
-                goto st60;
-            st60:
-                if (++p == pe) goto _test_eof60;
-            case 60:
-#line 3028 "ron/text-parser.cc"
+                goto st62;
+            st62:
+                if (++p == pe) goto _test_eof62;
+            case 62:
+#line 3233 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr152;
+                        goto tr174;
                     case 32u:
-                        goto tr152;
+                        goto tr174;
                     case 33u:
-                        goto tr153;
+                        goto tr175;
                     case 39u:
-                        goto tr155;
+                        goto tr177;
                     case 40u:
-                        goto tr156;
+                        goto tr178;
                     case 44u:
-                        goto tr153;
+                        goto tr175;
                     case 47u:
-                        goto tr157;
+                        goto tr179;
                     case 58u:
-                        goto tr159;
+                        goto tr181;
                     case 59u:
-                        goto tr153;
+                        goto tr175;
                     case 61u:
-                        goto tr160;
+                        goto tr182;
                     case 62u:
-                        goto tr161;
+                        goto tr183;
                     case 63u:
-                        goto tr153;
+                        goto tr175;
                     case 94u:
-                        goto tr162;
+                        goto tr184;
                     case 95u:
-                        goto st71;
+                        goto st73;
                     case 126u:
-                        goto st71;
+                        goto st73;
                 }
                 if ((*p) < 43u) {
                     if ((*p) > 10u) {
-                        if (36u <= (*p) && (*p) <= 37u) goto tr154;
+                        if (36u <= (*p) && (*p) <= 37u) goto tr176;
                     } else if ((*p) >= 9u)
-                        goto tr152;
+                        goto tr174;
                 } else if ((*p) > 45u) {
                     if ((*p) < 65u) {
-                        if (48u <= (*p) && (*p) <= 57u) goto st71;
+                        if (48u <= (*p) && (*p) <= 57u) goto st73;
                     } else if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st71;
+                        if (97u <= (*p) && (*p) <= 122u) goto st73;
                     } else
-                        goto st71;
+                        goto st73;
                 } else
-                    goto tr154;
+                    goto tr176;
                 goto st0;
-            tr163 :
+            tr185 :
 #line 50 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
@@ -3869,8 +4132,8 @@ Status TextFrame::Cursor::Next() {
                     lineb = p;
                 }
             }
-                goto st61;
-            tr152 :
+                goto st63;
+            tr174 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -3886,8 +4149,8 @@ Status TextFrame::Cursor::Next() {
                         lineb = p;
                     }
                 }
-                goto st61;
-            tr188 :
+                goto st63;
+            tr210 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -3903,16 +4166,16 @@ Status TextFrame::Cursor::Next() {
                         lineb = p;
                     }
                 }
-                goto st61;
-            st61:
-                if (++p == pe) goto _test_eof61;
-            case 61:
-#line 3115 "ron/text-parser.cc"
+                goto st63;
+            st63:
+                if (++p == pe) goto _test_eof63;
+            case 63:
+#line 3320 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr163;
+                        goto tr185;
                     case 32u:
-                        goto tr163;
+                        goto tr185;
                     case 33u:
                         goto tr14;
                     case 39u:
@@ -3922,17 +4185,17 @@ Status TextFrame::Cursor::Next() {
                     case 44u:
                         goto tr14;
                     case 58u:
-                        goto st62;
+                        goto st64;
                     case 59u:
                         goto tr14;
                     case 61u:
-                        goto st24;
+                        goto st25;
                     case 62u:
-                        goto st27;
+                        goto st28;
                     case 63u:
                         goto tr14;
                     case 94u:
-                        goto st31;
+                        goto st32;
                     case 95u:
                         goto tr23;
                     case 126u:
@@ -3942,7 +4205,7 @@ Status TextFrame::Cursor::Next() {
                     if ((*p) > 10u) {
                         if (43u <= (*p) && (*p) <= 45u) goto tr20;
                     } else if ((*p) >= 9u)
-                        goto tr163;
+                        goto tr185;
                 } else if ((*p) > 57u) {
                     if ((*p) < 71u) {
                         if (65u <= (*p) && (*p) <= 70u) goto tr22;
@@ -3953,7 +4216,7 @@ Status TextFrame::Cursor::Next() {
                 } else
                     goto tr21;
                 goto st0;
-            tr159 :
+            tr181 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
@@ -3962,8 +4225,8 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 9 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
-                goto st62;
-            tr193 :
+                goto st64;
+            tr215 :
 #line 17 "ragel/././uuid-grammar.rl"
             {
                 origin = Slice{wordb, p};
@@ -3972,28 +4235,28 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 9 "ragel/./text-grammar.rl"
                 { op_.SetId(Uuid{variety, value, version, origin}); }
-                goto st62;
-            st62:
-                if (++p == pe) goto _test_eof62;
-            case 62:
-#line 3178 "ron/text-parser.cc"
+                goto st64;
+            st64:
+                if (++p == pe) goto _test_eof64;
+            case 64:
+#line 3383 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
-                        goto tr166;
+                        goto tr188;
                     case 126u:
-                        goto tr166;
+                        goto tr188;
                 }
                 if ((*p) < 65u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto tr165;
+                    if (48u <= (*p) && (*p) <= 57u) goto tr187;
                 } else if ((*p) > 70u) {
                     if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto tr166;
+                        if (97u <= (*p) && (*p) <= 122u) goto tr188;
                     } else if ((*p) >= 71u)
-                        goto tr166;
+                        goto tr188;
                 } else
-                    goto tr165;
+                    goto tr187;
                 goto st0;
-            tr165 :
+            tr187 :
 #line 6 "ragel/././uuid-grammar.rl"
             {
                 variety = '0';
@@ -4003,165 +4266,83 @@ Status TextFrame::Cursor::Next() {
             }
 #line 13 "ragel/././uuid-grammar.rl"
                 { wordb = p; }
-                goto st63;
-            st63:
-                if (++p == pe) goto _test_eof63;
-            case 63:
-#line 3210 "ron/text-parser.cc"
+                goto st65;
+            st65:
+                if (++p == pe) goto _test_eof65;
+            case 65:
+#line 3415 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr167;
+                        goto tr189;
                     case 32u:
-                        goto tr167;
+                        goto tr189;
                     case 33u:
-                        goto tr168;
+                        goto tr190;
                     case 39u:
-                        goto tr170;
+                        goto tr192;
                     case 40u:
-                        goto tr171;
+                        goto tr193;
                     case 44u:
-                        goto tr168;
+                        goto tr190;
                     case 47u:
-                        goto tr172;
+                        goto tr194;
                     case 59u:
-                        goto tr168;
+                        goto tr190;
                     case 61u:
-                        goto tr174;
+                        goto tr196;
                     case 62u:
-                        goto tr175;
+                        goto tr197;
                     case 63u:
-                        goto tr168;
+                        goto tr190;
                     case 94u:
-                        goto tr176;
+                        goto tr198;
                     case 95u:
-                        goto st67;
+                        goto st69;
                     case 126u:
-                        goto st67;
+                        goto st69;
                 }
                 if ((*p) < 43u) {
                     if ((*p) > 10u) {
-                        if (36u <= (*p) && (*p) <= 37u) goto tr169;
+                        if (36u <= (*p) && (*p) <= 37u) goto tr191;
                     } else if ((*p) >= 9u)
-                        goto tr167;
+                        goto tr189;
                 } else if ((*p) > 45u) {
                     if ((*p) < 65u) {
-                        if (48u <= (*p) && (*p) <= 57u) goto st67;
+                        if (48u <= (*p) && (*p) <= 57u) goto st69;
                     } else if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st67;
+                        if (97u <= (*p) && (*p) <= 122u) goto st69;
                     } else
-                        goto st67;
+                        goto st69;
                 } else
-                    goto tr169;
+                    goto tr191;
                 goto st0;
-            tr169 :
+            tr191 :
 #line 14 "ragel/././uuid-grammar.rl"
             {
                 value = Slice{wordb, p};
             }
 #line 15 "ragel/././uuid-grammar.rl"
                 { version = (*p); }
-                goto st64;
-            st64:
-                if (++p == pe) goto _test_eof64;
-            case 64:
-#line 3255 "ron/text-parser.cc"
-                switch ((*p)) {
-                    case 95u:
-                        goto tr177;
-                    case 126u:
-                        goto tr177;
-                }
-                if ((*p) < 65u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto tr177;
-                } else if ((*p) > 90u) {
-                    if (97u <= (*p) && (*p) <= 122u) goto tr177;
-                } else
-                    goto tr177;
-                goto st0;
-            tr177 :
-#line 16 "ragel/././uuid-grammar.rl"
-            {
-                wordb = p;
-            }
-                goto st65;
-            st65:
-                if (++p == pe) goto _test_eof65;
-            case 65:
-#line 3277 "ron/text-parser.cc"
-                switch ((*p)) {
-                    case 13u:
-                        goto tr178;
-                    case 32u:
-                        goto tr178;
-                    case 33u:
-                        goto tr179;
-                    case 39u:
-                        goto tr180;
-                    case 40u:
-                        goto tr181;
-                    case 44u:
-                        goto tr179;
-                    case 59u:
-                        goto tr179;
-                    case 61u:
-                        goto tr183;
-                    case 62u:
-                        goto tr184;
-                    case 63u:
-                        goto tr179;
-                    case 94u:
-                        goto tr185;
-                    case 95u:
-                        goto st65;
-                    case 126u:
-                        goto st65;
-                }
-                if ((*p) < 48u) {
-                    if (9u <= (*p) && (*p) <= 10u) goto tr178;
-                } else if ((*p) > 57u) {
-                    if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st65;
-                    } else if ((*p) >= 65u)
-                        goto st65;
-                } else
-                    goto st65;
-                goto st0;
-            tr172 :
-#line 12 "ragel/././uuid-grammar.rl"
-            {
-                variety = *(p - 1);
-            }
                 goto st66;
             st66:
                 if (++p == pe) goto _test_eof66;
             case 66:
-#line 3313 "ron/text-parser.cc"
+#line 3460 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
-                        goto tr186;
+                        goto tr199;
                     case 126u:
-                        goto tr186;
+                        goto tr199;
                 }
                 if ((*p) < 65u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto tr186;
+                    if (48u <= (*p) && (*p) <= 57u) goto tr199;
                 } else if ((*p) > 90u) {
-                    if (97u <= (*p) && (*p) <= 122u) goto tr186;
+                    if (97u <= (*p) && (*p) <= 122u) goto tr199;
                 } else
-                    goto tr186;
+                    goto tr199;
                 goto st0;
-            tr166 :
-#line 6 "ragel/././uuid-grammar.rl"
-            {
-                variety = '0';
-                version = '$';
-                origin = Slice{};
-                uuidb = p;
-            }
-#line 13 "ragel/././uuid-grammar.rl"
-                { wordb = p; }
-                goto st67;
-            tr186 :
-#line 13 "ragel/././uuid-grammar.rl"
+            tr199 :
+#line 16 "ragel/././uuid-grammar.rl"
             {
                 wordb = p;
             }
@@ -4169,149 +4350,69 @@ Status TextFrame::Cursor::Next() {
             st67:
                 if (++p == pe) goto _test_eof67;
             case 67:
-#line 3346 "ron/text-parser.cc"
+#line 3482 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr167;
+                        goto tr200;
                     case 32u:
-                        goto tr167;
+                        goto tr200;
                     case 33u:
-                        goto tr168;
+                        goto tr201;
                     case 39u:
-                        goto tr170;
+                        goto tr202;
                     case 40u:
-                        goto tr171;
+                        goto tr203;
                     case 44u:
-                        goto tr168;
+                        goto tr201;
                     case 59u:
-                        goto tr168;
+                        goto tr201;
                     case 61u:
-                        goto tr174;
+                        goto tr205;
                     case 62u:
-                        goto tr175;
+                        goto tr206;
                     case 63u:
-                        goto tr168;
+                        goto tr201;
                     case 94u:
-                        goto tr176;
+                        goto tr207;
                     case 95u:
                         goto st67;
                     case 126u:
                         goto st67;
-                }
-                if ((*p) < 43u) {
-                    if ((*p) > 10u) {
-                        if (36u <= (*p) && (*p) <= 37u) goto tr169;
-                    } else if ((*p) >= 9u)
-                        goto tr167;
-                } else if ((*p) > 45u) {
-                    if ((*p) < 65u) {
-                        if (48u <= (*p) && (*p) <= 57u) goto st67;
-                    } else if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st67;
-                    } else
-                        goto st67;
-                } else
-                    goto tr169;
-                goto st0;
-            tr154 :
-#line 14 "ragel/././uuid-grammar.rl"
-            {
-                value = Slice{wordb, p};
-            }
-#line 15 "ragel/././uuid-grammar.rl"
-                { version = (*p); }
-                goto st68;
-            st68:
-                if (++p == pe) goto _test_eof68;
-            case 68:
-#line 3390 "ron/text-parser.cc"
-                switch ((*p)) {
-                    case 95u:
-                        goto tr187;
-                    case 126u:
-                        goto tr187;
-                }
-                if ((*p) < 65u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto tr187;
-                } else if ((*p) > 90u) {
-                    if (97u <= (*p) && (*p) <= 122u) goto tr187;
-                } else
-                    goto tr187;
-                goto st0;
-            tr187 :
-#line 16 "ragel/././uuid-grammar.rl"
-            {
-                wordb = p;
-            }
-                goto st69;
-            st69:
-                if (++p == pe) goto _test_eof69;
-            case 69:
-#line 3412 "ron/text-parser.cc"
-                switch ((*p)) {
-                    case 13u:
-                        goto tr188;
-                    case 32u:
-                        goto tr188;
-                    case 33u:
-                        goto tr189;
-                    case 39u:
-                        goto tr190;
-                    case 40u:
-                        goto tr191;
-                    case 44u:
-                        goto tr189;
-                    case 58u:
-                        goto tr193;
-                    case 59u:
-                        goto tr189;
-                    case 61u:
-                        goto tr194;
-                    case 62u:
-                        goto tr195;
-                    case 63u:
-                        goto tr189;
-                    case 94u:
-                        goto tr196;
-                    case 95u:
-                        goto st69;
-                    case 126u:
-                        goto st69;
                 }
                 if ((*p) < 48u) {
-                    if (9u <= (*p) && (*p) <= 10u) goto tr188;
+                    if (9u <= (*p) && (*p) <= 10u) goto tr200;
                 } else if ((*p) > 57u) {
                     if ((*p) > 90u) {
-                        if (97u <= (*p) && (*p) <= 122u) goto st69;
+                        if (97u <= (*p) && (*p) <= 122u) goto st67;
                     } else if ((*p) >= 65u)
-                        goto st69;
+                        goto st67;
                 } else
-                    goto st69;
+                    goto st67;
                 goto st0;
-            tr157 :
+            tr194 :
 #line 12 "ragel/././uuid-grammar.rl"
             {
                 variety = *(p - 1);
             }
-                goto st70;
-            st70:
-                if (++p == pe) goto _test_eof70;
-            case 70:
-#line 3449 "ron/text-parser.cc"
+                goto st68;
+            st68:
+                if (++p == pe) goto _test_eof68;
+            case 68:
+#line 3518 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
-                        goto tr197;
+                        goto tr208;
                     case 126u:
-                        goto tr197;
+                        goto tr208;
                 }
                 if ((*p) < 65u) {
-                    if (48u <= (*p) && (*p) <= 57u) goto tr197;
+                    if (48u <= (*p) && (*p) <= 57u) goto tr208;
                 } else if ((*p) > 90u) {
-                    if (97u <= (*p) && (*p) <= 122u) goto tr197;
+                    if (97u <= (*p) && (*p) <= 122u) goto tr208;
                 } else
-                    goto tr197;
+                    goto tr208;
                 goto st0;
-            tr151 :
+            tr188 :
 #line 6 "ragel/././uuid-grammar.rl"
             {
                 variety = '0';
@@ -4321,9 +4422,87 @@ Status TextFrame::Cursor::Next() {
             }
 #line 13 "ragel/././uuid-grammar.rl"
                 { wordb = p; }
-                goto st71;
-            tr197 :
+                goto st69;
+            tr208 :
 #line 13 "ragel/././uuid-grammar.rl"
+            {
+                wordb = p;
+            }
+                goto st69;
+            st69:
+                if (++p == pe) goto _test_eof69;
+            case 69:
+#line 3551 "ron/text-parser.cc"
+                switch ((*p)) {
+                    case 13u:
+                        goto tr189;
+                    case 32u:
+                        goto tr189;
+                    case 33u:
+                        goto tr190;
+                    case 39u:
+                        goto tr192;
+                    case 40u:
+                        goto tr193;
+                    case 44u:
+                        goto tr190;
+                    case 59u:
+                        goto tr190;
+                    case 61u:
+                        goto tr196;
+                    case 62u:
+                        goto tr197;
+                    case 63u:
+                        goto tr190;
+                    case 94u:
+                        goto tr198;
+                    case 95u:
+                        goto st69;
+                    case 126u:
+                        goto st69;
+                }
+                if ((*p) < 43u) {
+                    if ((*p) > 10u) {
+                        if (36u <= (*p) && (*p) <= 37u) goto tr191;
+                    } else if ((*p) >= 9u)
+                        goto tr189;
+                } else if ((*p) > 45u) {
+                    if ((*p) < 65u) {
+                        if (48u <= (*p) && (*p) <= 57u) goto st69;
+                    } else if ((*p) > 90u) {
+                        if (97u <= (*p) && (*p) <= 122u) goto st69;
+                    } else
+                        goto st69;
+                } else
+                    goto tr191;
+                goto st0;
+            tr176 :
+#line 14 "ragel/././uuid-grammar.rl"
+            {
+                value = Slice{wordb, p};
+            }
+#line 15 "ragel/././uuid-grammar.rl"
+                { version = (*p); }
+                goto st70;
+            st70:
+                if (++p == pe) goto _test_eof70;
+            case 70:
+#line 3595 "ron/text-parser.cc"
+                switch ((*p)) {
+                    case 95u:
+                        goto tr209;
+                    case 126u:
+                        goto tr209;
+                }
+                if ((*p) < 65u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto tr209;
+                } else if ((*p) > 90u) {
+                    if (97u <= (*p) && (*p) <= 122u) goto tr209;
+                } else
+                    goto tr209;
+                goto st0;
+            tr209 :
+#line 16 "ragel/././uuid-grammar.rl"
             {
                 wordb = p;
             }
@@ -4331,55 +4510,139 @@ Status TextFrame::Cursor::Next() {
             st71:
                 if (++p == pe) goto _test_eof71;
             case 71:
-#line 3482 "ron/text-parser.cc"
+#line 3617 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
-                        goto tr152;
+                        goto tr210;
                     case 32u:
-                        goto tr152;
+                        goto tr210;
                     case 33u:
-                        goto tr153;
+                        goto tr211;
                     case 39u:
-                        goto tr155;
+                        goto tr212;
                     case 40u:
-                        goto tr156;
+                        goto tr213;
                     case 44u:
-                        goto tr153;
+                        goto tr211;
                     case 58u:
-                        goto tr159;
+                        goto tr215;
                     case 59u:
-                        goto tr153;
+                        goto tr211;
                     case 61u:
-                        goto tr160;
+                        goto tr216;
                     case 62u:
-                        goto tr161;
+                        goto tr217;
                     case 63u:
-                        goto tr153;
+                        goto tr211;
                     case 94u:
-                        goto tr162;
+                        goto tr218;
                     case 95u:
                         goto st71;
                     case 126u:
                         goto st71;
                 }
-                if ((*p) < 43u) {
-                    if ((*p) > 10u) {
-                        if (36u <= (*p) && (*p) <= 37u) goto tr154;
-                    } else if ((*p) >= 9u)
-                        goto tr152;
-                } else if ((*p) > 45u) {
-                    if ((*p) < 65u) {
-                        if (48u <= (*p) && (*p) <= 57u) goto st71;
-                    } else if ((*p) > 90u) {
+                if ((*p) < 48u) {
+                    if (9u <= (*p) && (*p) <= 10u) goto tr210;
+                } else if ((*p) > 57u) {
+                    if ((*p) > 90u) {
                         if (97u <= (*p) && (*p) <= 122u) goto st71;
-                    } else
+                    } else if ((*p) >= 65u)
                         goto st71;
                 } else
-                    goto tr154;
+                    goto st71;
+                goto st0;
+            tr179 :
+#line 12 "ragel/././uuid-grammar.rl"
+            {
+                variety = *(p - 1);
+            }
+                goto st72;
+            st72:
+                if (++p == pe) goto _test_eof72;
+            case 72:
+#line 3654 "ron/text-parser.cc"
+                switch ((*p)) {
+                    case 95u:
+                        goto tr219;
+                    case 126u:
+                        goto tr219;
+                }
+                if ((*p) < 65u) {
+                    if (48u <= (*p) && (*p) <= 57u) goto tr219;
+                } else if ((*p) > 90u) {
+                    if (97u <= (*p) && (*p) <= 122u) goto tr219;
+                } else
+                    goto tr219;
+                goto st0;
+            tr173 :
+#line 6 "ragel/././uuid-grammar.rl"
+            {
+                variety = '0';
+                version = '$';
+                origin = Slice{};
+                uuidb = p;
+            }
+#line 13 "ragel/././uuid-grammar.rl"
+                { wordb = p; }
+                goto st73;
+            tr219 :
+#line 13 "ragel/././uuid-grammar.rl"
+            {
+                wordb = p;
+            }
+                goto st73;
+            st73:
+                if (++p == pe) goto _test_eof73;
+            case 73:
+#line 3687 "ron/text-parser.cc"
+                switch ((*p)) {
+                    case 13u:
+                        goto tr174;
+                    case 32u:
+                        goto tr174;
+                    case 33u:
+                        goto tr175;
+                    case 39u:
+                        goto tr177;
+                    case 40u:
+                        goto tr178;
+                    case 44u:
+                        goto tr175;
+                    case 58u:
+                        goto tr181;
+                    case 59u:
+                        goto tr175;
+                    case 61u:
+                        goto tr182;
+                    case 62u:
+                        goto tr183;
+                    case 63u:
+                        goto tr175;
+                    case 94u:
+                        goto tr184;
+                    case 95u:
+                        goto st73;
+                    case 126u:
+                        goto st73;
+                }
+                if ((*p) < 43u) {
+                    if ((*p) > 10u) {
+                        if (36u <= (*p) && (*p) <= 37u) goto tr176;
+                    } else if ((*p) >= 9u)
+                        goto tr174;
+                } else if ((*p) > 45u) {
+                    if ((*p) < 65u) {
+                        if (48u <= (*p) && (*p) <= 57u) goto st73;
+                    } else if ((*p) > 90u) {
+                        if (97u <= (*p) && (*p) <= 122u) goto st73;
+                    } else
+                        goto st73;
+                } else
+                    goto tr176;
                 goto st0;
         }
-    _test_eof72:
-        cs = 72;
+    _test_eof74:
+        cs = 74;
         goto _test_eof;
     _test_eof1:
         cs = 1;
@@ -4555,14 +4818,14 @@ Status TextFrame::Cursor::Next() {
     _test_eof58:
         cs = 58;
         goto _test_eof;
-    _test_eof73:
-        cs = 73;
-        goto _test_eof;
     _test_eof59:
         cs = 59;
         goto _test_eof;
     _test_eof60:
         cs = 60;
+        goto _test_eof;
+    _test_eof75:
+        cs = 75;
         goto _test_eof;
     _test_eof61:
         cs = 61;
@@ -4597,12 +4860,18 @@ Status TextFrame::Cursor::Next() {
     _test_eof71:
         cs = 71;
         goto _test_eof;
+    _test_eof72:
+        cs = 72;
+        goto _test_eof;
+    _test_eof73:
+        cs = 73;
+        goto _test_eof;
 
     _test_eof : {}
     _out : {}
     }
 
-#line 63 "ragel/text-parser.rl"
+#line 64 "ragel/text-parser.rl"
 
     at_ = off_;
     off_ = p - pb;

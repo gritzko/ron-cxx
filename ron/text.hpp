@@ -303,6 +303,23 @@ class TextFrame {
     // V A L U E  D E C O D E R S
 
     std::u16string utf16string(Atom range) const;
+
+    static Codepoint decode_hex_cp(Slice data);
+
+    static char decode_esc(char esc);
+
+    struct StringIterator {
+        Slice data_;
+        Codepoint cp_;
+
+       public:
+        StringIterator(Slice str) : data_{str}, cp_{0} { Next(); }
+        inline Codepoint operator*() const { return cp_; }
+        bool Next();
+        inline void operator++() { Next(); }
+        inline bool valid() const { return cp_ != 0; }
+        inline operator bool() const { return valid(); }
+    };
 };
 
 }  // namespace ron

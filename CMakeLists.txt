@@ -155,6 +155,7 @@ add_library(ron_static STATIC
     ron/text-parser.cc
     ron/string-parser.cc
     ron/text-builder.cc
+    ron/cp-parser.cc
     ron/hash.cc
     ron/form.hpp
 )
@@ -178,6 +179,10 @@ add_test(HASH test03-hash)
 add_executable(test04-meta ron/test/meta.cc)
 target_link_libraries(test04-meta ron_static botan_static)
 add_test(HASH test04-meta)
+
+add_executable(test05-cp ron/test/cp.cc)
+target_link_libraries(test05-cp ron_static gtest_static Threads::Threads)
+add_test(CODEPOINTS test05-cp)
 
 add_executable(fuzz01-text EXCLUDE_FROM_ALL ron/test/fuzz-text.cc)
 target_compile_options(fuzz01-text

@@ -53,6 +53,8 @@
             lineb = p;
         }
     }
+    action string_esc { cp = decode_esc(fc); }
+    action string_uesc { cp = decode_hex_cp(Slice{p-4,4}); }
 
     WS = [ \r\n\t] @newline;
 
@@ -70,10 +72,11 @@
     # UTF8 = TODO;
 
     # JSON-ey string
-    UNIESC = "\\u" [0-9a-fA-F]{4};
-    ESC = "\\" [nrt\\b'/"];
+    UNIESC = "\\u" [0-9a-fA-F]{4} %string_uesc;
+    ESC = "\\" [nrt\\b'/"] @string_esc;
     CHAR = CODEPOINT - ['\n\r\\];
-    STRING = ( (UNIESC|ESC|CHAR)* ) >begin_string %end_string;
+    CP = UNIESC|ESC|CHAR;
+    STRING = ( CP* ) >begin_string %end_string;
 
     # op term (header op, raw/reduced op, query op)
     OPTERM = [,;!?] @op_term;

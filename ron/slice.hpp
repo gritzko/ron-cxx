@@ -12,6 +12,7 @@ namespace ron {
 
 /** An Unicode codepoint. */
 using Codepoint = uint32_t;
+using Codepoints = std::vector<Codepoint>;
 
 using Char = unsigned char;
 
@@ -89,6 +90,12 @@ struct Slice {
         --size_;
     }
 
+    inline void advance(fsize_t sz) {
+        assert(sz <= size_);
+        buf_ += sz;
+        size_ -= sz;
+    }
+
     inline Char operator*() const {
         assert(size_ > 0);
         return *buf_;
@@ -96,6 +103,7 @@ struct Slice {
 
     inline const Char* data() const { return buf_; }
     inline fsize_t size() const { return size_; }
+    inline bool empty() const { return size_ == 0; }
 
     bool operator==(const Slice b) const {
         return size() == b.size() && memcmp(buf_, b.buf_, size()) == 0;

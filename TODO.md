@@ -22,6 +22,7 @@
 - [ ] RocksDB frame header stripping
 - [x] CLI args are RON, mapper args too - Op, Frame.GetXxx(atom)
 - [ ] RDT-level fuzzing -- RGA/CT has a memory bug!
+- [ ] use https://github.com/tplgy/cppcodec/
 
 ## 1 week
 

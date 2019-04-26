@@ -38,27 +38,8 @@ String TextFrame::unescape(const Slice& data) {
             ret.push_back(*c);
             continue;
         }
-        char escape = *(c + 1), unesc = escape;
-        switch (escape) {
-            case 'b':
-                unesc = '\b';
-                break;
-            case 'f':
-                unesc = '\f';
-                break;
-            case 'n':
-                unesc = '\n';
-                break;
-            case 'r':
-                unesc = '\r';
-                break;
-            case 't':
-                unesc = '\t';
-                break;
-            default:
-                unesc = escape;
-        }
-        ret.push_back(unesc);
+        char escape = *(c + 1);
+        ret.push_back(decode_esc(escape));
         c++;
     }
     return ret;
@@ -98,6 +79,39 @@ bool TextFrame::Cursor::int_too_big(const Slice& data) {
     }
     int res = memcmp(mem, MAXINTSTR, sz);
     return res > 0;
+}
+
+inline char TextFrame::decode_esc(char esc) {
+    switch (esc) {
+        case 'a':
+            return '\a';
+        case 'b':
+            return '\b';
+        case 'f':
+            return '\f';
+        case 'n':
+            return '\n';
+        case 'r':
+            return '\r';
+        case 't':
+            return '\t';
+        case 'v':
+            return '\v';
+        default:
+            return esc;
+    }
+}
+
+Codepoint TextFrame::decode_hex_cp(Slice data) {
+    Codepoint ret = 0;
+    while (!data.empty()) {
+        ret <<= 4;
+        int8_t i = ABC16[*data];
+        if (i == -1) return 0;
+        ret |= i;
+        ++data;
+    }
+    return ret;
 }
 
 }  // namespace ron

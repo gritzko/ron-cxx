@@ -263,12 +263,15 @@ list(APPEND SWARMDB_HEADERS
         db/mem_store.hpp
         db/rocks_store.hpp
         db/joined_store.hpp
+)
+list(APPEND SWARMDB_HEADERS_map
         db/map/csv.hpp
         db/map/txt.hpp
 )
 
 set(SWARMDB_SOURCES
         ${SWARMDB_HEADERS}
+        ${SWARMDB_HEADERS_map}
         db/key.cc
         db/replica.cc
         db/rocks_store.cc
@@ -361,3 +364,4 @@ install(TARGETS swarmdb_shared swarmdb_bin
 install(FILES ${RON_HEADERS} DESTINATION include/swarm/ron)
 install(FILES ${RDT_HEADERS} DESTINATION include/swarm/rdt)
 install(FILES ${SWARMDB_HEADERS} DESTINATION include/swarm/db)
+install(FILES ${SWARMDB_HEADERS_map} DESTINATION include/swarm/db/map)

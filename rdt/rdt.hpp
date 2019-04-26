@@ -136,7 +136,7 @@ Status MergeFrames(Frame &ret, std::vector<Frame> inputs) {
 }
 
 template <typename Frame>
-Status SplitFrame(const Frame input, typename Frame::Cursors &chains) {
+Status SplitFrame(const Frame& input, typename Frame::Cursors &chains) {
     using Cursor = typename Frame::Cursor;
     Cursor cur = input.cursor();
     Cursor nxt = cur;

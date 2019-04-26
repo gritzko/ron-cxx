@@ -143,10 +143,10 @@ list(APPEND RON_HEADERS
     ron/vv.hpp
     ron/opmeta.hpp
     ron/inc_stack.hpp
+    ron/form.hpp
 )
 
-add_library(ron_static STATIC
-    ${RON_HEADERS}
+list(APPEND RON_SOURCES
     ron/status.cc
     ron/uuid.cc
     ron/uuid-parser.cc
@@ -157,12 +157,27 @@ add_library(ron_static STATIC
     ron/text-builder.cc
     ron/cp-parser.cc
     ron/hash.cc
-    ron/form.hpp
+    )
+
+add_library(ron_static STATIC
+    ${RON_HEADERS}
+    ${RON_SOURCES}
 )
 add_dependencies(ron_static botan_pro)
 set_property(TARGET ron_static PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 #  L I B R O N  U N I T  T E S T S
+
+set(TEST_CXX_FLAGS $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize=address,undefined>)
+set(TEST_LDD_FLAGS $<$<C_COMPILER_ID:Clang>:-fsanitize=address,undefined>)
+
+add_library(ron_test_static STATIC
+    ${RON_HEADERS}
+    ${RON_SOURCES}
+)
+add_dependencies(ron_test_static botan_pro)
+target_compile_options(ron_test_static PRIVATE ${TEST_CXX_FLAGS})
+set_property(TARGET ron_test_static PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 add_executable(test01-uuid ron/test/uuid.cc)
 target_link_libraries(test01-uuid ron_static gtest_static Threads::Threads)
@@ -184,14 +199,12 @@ add_executable(test05-cp ron/test/cp.cc)
 target_link_libraries(test05-cp ron_static gtest_static Threads::Threads)
 add_test(CODEPOINTS test05-cp)
 
+set(FUZZ_CXX_FLAGS $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>)
+set(FUZZ_LDD_FLAGS $<$<C_COMPILER_ID:Clang>:-fsanitize=fuzzer>)
+
 add_executable(fuzz01-text EXCLUDE_FROM_ALL ron/test/fuzz-text.cc)
-target_compile_options(fuzz01-text
-            PRIVATE $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>
-            )
-target_link_libraries(fuzz01-text
-            PRIVATE $<$<C_COMPILER_ID:Clang>:-fsanitize=fuzzer>
-            ron_static
-            )
+target_compile_options(fuzz01-text PRIVATE ${FUZZ_CXX_FLAGS})
+target_link_libraries(fuzz01-text PRIVATE ${FUZZ_LDD_FLAGS} ron_static)
 
 #  L I B R D T  ( H E A D E R  O N L Y )
 
@@ -223,7 +236,8 @@ target_link_libraries(test12-mx ron_static rdt_headers)
 add_test(LWW test12-mx)
 
 add_executable(test14-rga rdt/test/rga.cc)
-target_link_libraries(test14-rga ron_static rdt_headers)
+target_compile_options(test14-rga PRIVATE ${TEST_CXX_FLAGS})
+target_link_libraries(test14-rga PRIVATE ${TEST_LDD_FLAGS} ron_test_static rdt_headers)
 add_test(RGA test14-rga)
 
 add_executable(test15-max rdt/test/max.cc)

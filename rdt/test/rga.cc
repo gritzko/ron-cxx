@@ -1,4 +1,3 @@
-#include <iostream>
 #include <cassert>
 #include "../../ron/ron.hpp"
 #include "../rdt.hpp"
@@ -8,8 +7,8 @@ using namespace ron;
 using namespace std;
 
 using Frame = TextFrame;
-typedef typename Frame::Cursor Cursor;
-typedef RGArrayRDT<typename ron::TextFrame> RGA;
+using Cursor = typename Frame::Cursor;
+using RGA = RGArrayRDT<typename ron::TextFrame>;
 
 string despace (string& orig) {
     string ret;
@@ -147,9 +146,7 @@ void test_ct_log2state () {
     vector<bool> tombs{};
     Frame state;
     Status ok = ObjectLogToState<Frame>(state, Frame{LOG});
-    cerr<<ok.str();
     assert(ok);
-    cerr<<state.data();
     assert(ScanRGA<Frame>(tombs, Frame{state}));
     assert( tombs[0]);
     assert(!tombs[1]);

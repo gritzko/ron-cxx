@@ -217,6 +217,7 @@ list(APPEND RDT_HEADERS
     rdt/chain.hpp
     rdt/log.hpp
     rdt/lww.hpp
+    rdt/max.hpp
     rdt/merge.hpp
     rdt/meta.hpp
     rdt/mx.hpp

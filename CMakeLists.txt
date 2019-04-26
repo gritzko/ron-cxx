@@ -180,23 +180,28 @@ target_compile_options(ron_test_static PRIVATE ${TEST_CXX_FLAGS})
 set_property(TARGET ron_test_static PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 add_executable(test01-uuid ron/test/uuid.cc)
-target_link_libraries(test01-uuid ron_static gtest_static Threads::Threads)
+target_compile_options(test01-uuid PRIVATE ${TEST_CXX_FLAGS})
+target_link_libraries(test01-uuid ${TEST_LDD_FLAGS} ron_test_static gtest_static Threads::Threads)
 add_test(UUID test01-uuid)
 
 add_executable(test02-text ron/test/text.cc)
-target_link_libraries(test02-text ron_static)
+target_compile_options(test02-text PRIVATE ${TEST_CXX_FLAGS})
+target_link_libraries(test02-text ${TEST_LDD_FLAGS} ron_test_static)
 add_test(TEXT test02-text)
 
 add_executable(test03-hash ron/test/hash.cc)
-target_link_libraries(test03-hash ron_static botan_static)
+target_compile_options(test03-hash PRIVATE ${TEST_CXX_FLAGS})
+target_link_libraries(test03-hash ${TEST_LDD_FLAGS} ron_test_static botan_static)
 add_test(HASH test03-hash)
 
 add_executable(test04-meta ron/test/meta.cc)
-target_link_libraries(test04-meta ron_static botan_static)
+target_compile_options(test04-meta PRIVATE ${TEST_CXX_FLAGS})
+target_link_libraries(test04-meta ${TEST_LDD_FLAGS} ron_test_static botan_static)
 add_test(HASH test04-meta)
 
 add_executable(test05-cp ron/test/cp.cc)
-target_link_libraries(test05-cp ron_static gtest_static Threads::Threads)
+target_compile_options(test05-cp PRIVATE ${TEST_CXX_FLAGS})
+target_link_libraries(test05-cp ${TEST_LDD_FLAGS} ron_test_static gtest_static Threads::Threads)
 add_test(CODEPOINTS test05-cp)
 
 set(FUZZ_CXX_FLAGS $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>)
@@ -224,7 +229,8 @@ target_include_directories(rdt_headers INTERFACE rdt/)
 #  R D T  U N I T  T E S T S
 
 add_executable(test10-lww rdt/test/lww.cc)
-target_link_libraries(test10-lww ron_static rdt_headers Threads::Threads gtest_static)
+target_compile_options(test10-lww PRIVATE ${TEST_CXX_FLAGS})
+target_link_libraries(test10-lww PRIVATE ${TEST_LDD_FLAGS} ron_test_static rdt_headers Threads::Threads gtest_static)
 add_test(LWW test10-lww)
 
 #add_executable(test11-metardt rdt/test/meta.cc)
@@ -232,7 +238,8 @@ add_test(LWW test10-lww)
 #add_test(META test11-metardt)
 
 add_executable(test12-mx rdt/test/mx.cc)
-target_link_libraries(test12-mx ron_static rdt_headers)
+target_compile_options(test12-mx PRIVATE ${TEST_CXX_FLAGS})
+target_link_libraries(test12-mx PRIVATE ${TEST_LDD_FLAGS} ron_test_static rdt_headers)
 add_test(LWW test12-mx)
 
 add_executable(test14-rga rdt/test/rga.cc)
@@ -241,7 +248,8 @@ target_link_libraries(test14-rga PRIVATE ${TEST_LDD_FLAGS} ron_test_static rdt_h
 add_test(RGA test14-rga)
 
 add_executable(test15-max rdt/test/max.cc)
-target_link_libraries(test15-max ron_static rdt_headers Threads::Threads gtest_static)
+target_compile_options(test15-max PRIVATE ${TEST_CXX_FLAGS})
+target_link_libraries(test15-max PRIVATE ${TEST_LDD_FLAGS} ron_test_static rdt_headers Threads::Threads gtest_static)
 add_test(MAX test15-max)
 
 #  S W A R M D B

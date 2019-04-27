@@ -193,6 +193,10 @@ Status CommandTest(RonReplica& replica, Args& args) {
     return ok;
 }
 
+constexpr const char* DUMP_USAGE{
+    "dump\n"
+    "   dumps the database contents to stdout\n"};
+
 Status CommandDump(RonReplica& replica, Args& args) {
     FORM rdt = ZERO_RAW_FORM;
     /*if (what.size() > 1) {
@@ -470,7 +474,7 @@ Status CommandHelp(RonReplica& replica, Args& args) {
             "   \n"
          << HELP_USAGE << INIT_USAGE << CREATE_USAGE << NEW_USAGE << GET_USAGE
          << LIST_USAGE << NAME_USAGE << NAMED_USAGE << HOP_USAGE << TEST_USAGE
-         << WRITE_USAGE;
+         << WRITE_USAGE << DUMP_USAGE;
     return Status::OK;
 }
 
@@ -492,6 +496,10 @@ Status RunCommands(Args& args) {
     String verb{args.back()};
     args.pop_back();
 
+    if (verb == "help" || verb == "--help" || verb == "-help" || verb == "-h") {
+        return CommandHelp(replica, args);
+    }
+    
     if (verb == "test") {
         IFOK(tmp.cd("swarmdb_test"));
         IFOK(replica.CreateReplica());
@@ -515,8 +523,6 @@ Status RunCommands(Args& args) {
         return CommandDump(replica, args);
     } else if (verb == "get") {
         return CommandGetFrame(replica, args);
-    } else if (verb == "help" || verb == "--help" || verb == "-help" || verb == "-h") {
-        return CommandHelp(replica, args);
     } else if (verb == "test") {
         return CommandTest(replica, args);
     } else if (verb == "create") {

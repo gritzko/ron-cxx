@@ -569,6 +569,9 @@ Status Replica<Store>::ReceiveQuery(Builder& response, Cursor& c,
 template <typename Store>
 Status Replica<Store>::Receive(Builder& resp, Cursor& c, Uuid branch_id) {
     Status ok = Status::OK;
+    if (!open()) {
+        return Status::NOTOPEN;
+    }
     if (!HasBranch(branch_id)) {
         // TODO 1 such check
         return Status::NOT_FOUND.comment("unknown branch");

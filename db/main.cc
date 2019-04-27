@@ -515,7 +515,7 @@ Status RunCommands(Args& args) {
         return CommandDump(replica, args);
     } else if (verb == "get") {
         return CommandGetFrame(replica, args);
-    } else if (verb == "help") {
+    } else if (verb == "help" || verb == "--help" || verb == "-help" || verb == "-h") {
         return CommandHelp(replica, args);
     } else if (verb == "test") {
         return CommandTest(replica, args);

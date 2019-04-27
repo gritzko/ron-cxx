@@ -86,7 +86,7 @@ set_property(TARGET botan_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/$
 ExternalProject_Add(
     dmp_diff_header
     PREFIX ${DMP_PREFIX}
-    GIT_REPOSITORY git@github.com:gritzko/myers-diff.git
+    GIT_REPOSITORY https://github.com/gritzko/myers-diff.git
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     BUILD_IN_SOURCE 1

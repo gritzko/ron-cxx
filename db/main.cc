@@ -7,18 +7,19 @@
 #include "../ron/ron.hpp"
 #include "fs.hpp"
 #include "replica.hpp"
+#include "rocks_store.hpp"
 #include "rocksdb/db.h"
 
 using namespace ron;
 using namespace std;
 
 using Frame = TextFrame;
-using RonReplica = Replica<Frame>;
 using Builder = Frame::Builder;
 using Cursor = Frame::Cursor;
 using Frames = vector<Frame>;
-using Store = RonReplica::Store;
-using StoreIterator = typename RonReplica::RocksStore::Iterator;
+using Store = RocksDBStore<Frame>;
+using RonReplica = Replica<Store>;
+using StoreIterator = typename Store::Iterator;
 
 #define CHECKARG(a, x)                     \
     if (a) {                               \
@@ -243,7 +244,7 @@ Status CommandGetFrame(RonReplica& replica, Args& args) {
     Uuid rdt{args.back()};
     args.pop_back();
     CHECKARG(rdt == Uuid::FATAL || rdt.version() != NAME,
-             "the form much be a NAME UUID");
+             "the form must be a NAME UUID");
     Uuid id;
     IFOK(ScanOfObjectArg(id, replica, args));
     if (id.version() == NAME) {
@@ -499,7 +500,7 @@ Status RunCommands(Args& args) {
     if (verb == "help" || verb == "--help" || verb == "-help" || verb == "-h") {
         return CommandHelp(replica, args);
     }
-    
+
     if (verb == "test") {
         IFOK(tmp.cd("swarmdb_test"));
         IFOK(replica.CreateReplica());

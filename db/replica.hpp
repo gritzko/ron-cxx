@@ -27,9 +27,10 @@ enum replica_modes_t : uint64_t {
     CONSISTENT_MODE = KEEP_STATES | KEEP_OBJECT_LOGS | KEEP_YARNS | KEEP_HASHES,
 };
 
-template <typename Frame>
+template <typename Store>
 class Replica {
    public:
+    using Frame = typename Store::Frame;
     using Record = std::pair<Key, Frame>;
     using Records = std::vector<Record>;
     using Batch = typename Frame::Batch;
@@ -38,11 +39,9 @@ class Replica {
 
     using tipmap_t = std::unordered_map<Word, OpMeta>;
 
-    using RocksStore = RocksDBStore<Frame>;
     using MemStore = InMemoryStore<Frame>;
-    using Commit = JoinedStore<RocksStore, MemStore>;
+    using Commit = JoinedStore<Store, MemStore>;
     using CommitIterator = typename Commit::Iterator;
-    using Store = RocksStore;
 
     using Names = std::unordered_map<Uuid, Uuid>;
 
@@ -69,7 +68,7 @@ class Replica {
      *  private keys etc; it is not replicated unless in cluster
      *  scenarios.
      *   */
-    std::unordered_map<Uuid, RocksStore> branches_;
+    std::unordered_map<Uuid, Store> branches_;
 
     Frame config_;
 
@@ -129,11 +128,11 @@ class Replica {
         return branches_.find(branch) != branches_.end();
     }
 
-    inline RocksStore& GetCurrentBranch() {
+    inline Store& GetCurrentBranch() {
         return branches_.find(Uuid::NIL)->second;
     }
 
-    inline RocksStore& GetBranch(Uuid branch) {
+    inline Store& GetBranch(Uuid branch) {
         return branches_.find(branch)->second;
     }
 
@@ -142,11 +141,11 @@ class Replica {
 
     Status WriteName(Uuid key, Uuid value, Uuid branch = Uuid::NIL);
 
-    inline RocksStore& GetMeta() { return GetBranch(Uuid::NIL); }
+    inline Store& GetMeta() { return GetBranch(Uuid::NIL); }
 
     inline Status GetChain(Frame& chain, Uuid chain_id);
 
-    Status FillAllStates(RocksStore& branch);
+    Status FillAllStates(Store& branch);
 
     inline Status GetObject(Frame& frame, Uuid id, Uuid rdt,
                             Uuid branch = Uuid::NIL) {
@@ -167,6 +166,7 @@ class Replica {
      * */
     Status FindYarnTipMeta(OpMeta& meta, Word yarn, Commit& commit);
 
+    // FIXME old conv, rework
     Status GetMap(Frame& result, Uuid id, Uuid map, Uuid branch = Uuid::NIL);
 
     //  O T H E R  A C C E S S O R S

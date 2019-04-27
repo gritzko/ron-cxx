@@ -5,14 +5,14 @@ namespace ron {
 
 using namespace std;
 
-template <typename Frame>
-const Uuid Replica<Frame>::NOW_UUID{915334634030497792UL, 0};
+template <typename Store>
+const Uuid Replica<Store>::NOW_UUID{915334634030497792UL, 0};
 
 //  L I F E C Y C L E
 
-template <typename Frame>
-Status Replica<Frame>::CreateReplica() {
-    RocksStore db;
+template <typename Store>
+Status Replica<Store>::CreateReplica() {
+    Store db;
     // Uuid branch_id{0, origin};
     // Uuid now = Uuid::Time(Uuid::Now(), 0);
     IFOK(db.Create(Uuid::NIL));
@@ -30,18 +30,18 @@ Status Replica<Frame>::CreateReplica() {
     return Status::OK;
 }
 
-template <typename Frame>
-Status Replica<Frame>::Open() {
+template <typename Store>
+Status Replica<Store>::Open() {
     if (open()) {
         return Status::BAD_STATE.comment("already open");
     }
 
-    Status ok = RocksStore::OpenAll(branches_);
+    Status ok = Store::OpenAll(branches_);
     if (!ok) {
         return ok;
     }
 
-    RocksStore& meta = GetBranch(Uuid::NIL);
+    Store& meta = GetBranch(Uuid::NIL);
     Frame meta_rec;
     ok = meta.Read(Key{}, meta_rec);
     if (!ok) {
@@ -59,8 +59,8 @@ Status Replica<Frame>::Open() {
     return Status::OK;
 }
 
-template <typename Frame>
-Status Replica<Frame>::CreateBranch(Uuid branch_id) {
+template <typename Store>
+Status Replica<Store>::CreateBranch(Uuid branch_id) {
     if (HasBranch(branch_id)) {
         return Status::BADARGS.comment("branch already exists");
     }
@@ -80,8 +80,8 @@ Status Replica<Frame>::CreateBranch(Uuid branch_id) {
     return Status::OK;
 }
 
-template <typename Frame>
-Status Replica<Frame>::WriteName(Uuid key, Uuid value, Uuid branch) {
+template <typename Store>
+Status Replica<Store>::WriteName(Uuid key, Uuid value, Uuid branch) {
     if (!HasBranch(branch)) return Status::NOT_FOUND.comment("branch unknown");
     Records w;
     Uuid id = Now(branch.origin());
@@ -92,8 +92,8 @@ Status Replica<Frame>::WriteName(Uuid key, Uuid value, Uuid branch) {
     return id;
 }
 
-template <typename Frame>
-Status Replica<Frame>::ReadNames(Names& names, Uuid branch) {
+template <typename Store>
+Status Replica<Store>::ReadNames(Names& names, Uuid branch) {
     if (!HasBranch(branch)) {
         return Status::NOT_FOUND.comment("no such branch");
     }
@@ -112,13 +112,13 @@ Status Replica<Frame>::ReadNames(Names& names, Uuid branch) {
     return Status::OK;
 }
 
-template <typename Frame>
-Status Replica<Frame>::ReadName(Uuid& id, Uuid name, Uuid branch) {
+template <typename Store>
+Status Replica<Store>::ReadName(Uuid& id, Uuid name, Uuid branch) {
     return Status::NOT_IMPLEMENTED.comment("ReadName");
 }
 
-template <typename Frame>
-Uuid Replica<Frame>::Now(Word origin) {
+template <typename Store>
+Uuid Replica<Store>::Now(Word origin) {
     if (origin == ZERO) {
         origin = home_.origin();
     }
@@ -127,13 +127,13 @@ Uuid Replica<Frame>::Now(Word origin) {
     return Uuid::Time(now_, origin);
 }
 
-template <typename Frame>
-Status Replica<Frame>::GC() {
+template <typename Store>
+Status Replica<Store>::GC() {
     return Status::OK;
 }
 
-template <typename Frame>
-Status Replica<Frame>::Close() {
+template <typename Store>
+Status Replica<Store>::Close() {
     if (!branches_.empty()) {
         GetBranch(Uuid::NIL).Close();
         branches_.clear();
@@ -141,15 +141,15 @@ Status Replica<Frame>::Close() {
     return Status::OK;
 }
 
-template <typename Frame>
-Replica<Frame>::~Replica() {
+template <typename Store>
+Replica<Store>::~Replica() {
     Close();
 }
 
 //  O B J E C T  L O G S
 
-template <class Frame>
-Status Replica<Frame>::FindOpMeta(OpMeta& meta, Uuid op_id, Commit& commit) {
+template <typename Store>
+Status Replica<Store>::FindOpMeta(OpMeta& meta, Uuid op_id, Commit& commit) {
     // find head rec
     IFOK(FindChainHeadMeta(meta, op_id, commit));
     if (meta.id == op_id) {
@@ -189,8 +189,8 @@ Status Replica<Frame>::FindOpMeta(OpMeta& meta, Uuid op_id, Commit& commit) {
     return Status::OK;
 }
 
-template <class Frame>
-Status Replica<Frame>::FindChainHeadMeta(OpMeta& meta, Uuid op_id,
+template <typename Store>
+Status Replica<Store>::FindChainHeadMeta(OpMeta& meta, Uuid op_id,
                                          Commit& commit) {
     CommitIterator i{commit};
     Status ok = i.SeekTo(Key{op_id, META_FORM_UUID}, true);
@@ -209,15 +209,15 @@ Status Replica<Frame>::FindChainHeadMeta(OpMeta& meta, Uuid op_id,
     return ok;
 }
 
-template <class Frame>
-Status Replica<Frame>::FindYarnTipMeta(OpMeta& meta, Word yarn,
+template <typename Store>
+Status Replica<Store>::FindYarnTipMeta(OpMeta& meta, Word yarn,
                                        Commit& commit) {
     Uuid yarn_end{NEVER, yarn};
     return FindOpMeta(meta, yarn_end, commit);
 }
 
-template <class Frame>
-Status Replica<Frame>::FindObjectLog(Frame& frame, Uuid id, Commit& commit) {
+template <typename Store>
+Status Replica<Store>::FindObjectLog(Frame& frame, Uuid id, Commit& commit) {
     return commit.Read(Key{id, LOG_RAW_FORM}, frame);
 }
 
@@ -225,8 +225,8 @@ Status Replica<Frame>::FindObjectLog(Frame& frame, Uuid id, Commit& commit) {
 
 //  R E C E I V E S
 
-template <class Frame>
-Status Replica<Frame>::See(Uuid timestamp) {
+template <typename Store>
+Status Replica<Store>::See(Uuid timestamp) {
     if (timestamp.value() < now_) {
         return Status::OK;
     }
@@ -241,8 +241,8 @@ Status Replica<Frame>::See(Uuid timestamp) {
     return Status::OK;
 }
 
-template <class Frame>
-Status Replica<Frame>::SaveChainlet(Builder& to, OpMeta& meta, Cursor& from) {
+template <typename Store>
+Status Replica<Store>::SaveChainlet(Builder& to, OpMeta& meta, Cursor& from) {
     to.AppendOp(from);
     Status ok = from.Next();
     while (ok) {
@@ -268,8 +268,8 @@ Status Replica<Frame>::SaveChainlet(Builder& to, OpMeta& meta, Cursor& from) {
     return ok;
 }
 
-template <class Frame>
-Status Replica<Frame>::CheckEventSanity(const Cursor& chain) {
+template <typename Store>
+Status Replica<Store>::CheckEventSanity(const Cursor& chain) {
     Uuid id = chain.id();
     Uuid ref_id = chain.ref();
     if (id.version() != TIME) {
@@ -297,8 +297,8 @@ Status Replica<Frame>::CheckEventSanity(const Cursor& chain) {
  * @param branch
  * @param chain a cursor positioned on the head of the chain;
  *              will be moved to the first non-chain op (or EOF) */
-template <class Frame>
-Status Replica<Frame>::SaveChain(Builder&, Cursor& chain, Commit& commit) {
+template <typename Store>
+Status Replica<Store>::SaveChain(Builder&, Cursor& chain, Commit& commit) {
     Status ok;
     Uuid id = chain.id();
     Uuid ref_id = chain.ref();
@@ -369,15 +369,15 @@ Status Replica<Frame>::SaveChain(Builder&, Cursor& chain, Commit& commit) {
     return tip_meta.id;
 }
 
-template <typename Frame>
-Status Replica<Frame>::GetFrame(Frame& object, Uuid id, Uuid rdt, Uuid branch) {
+template <typename Store>
+Status Replica<Store>::GetFrame(Frame& object, Uuid id, Uuid rdt, Uuid branch) {
     if (!open()) {
         return Status::NOTOPEN;
     }
     if (!HasBranch(branch)) {
         return Status::NOT_FOUND.comment("branch unknown");
     }
-    RocksStore& store = GetBranch(branch);
+    Store& store = GetBranch(branch);
     FORM t = uuid2form(rdt);
     if (t == ZERO_RAW_FORM) {
         return Status::NOTYPE;
@@ -386,8 +386,8 @@ Status Replica<Frame>::GetFrame(Frame& object, Uuid id, Uuid rdt, Uuid branch) {
     return store.Read(key, object);
 }
 
-template <typename Frame>
-Status Replica<Frame>::GetMap(Frame& result, Uuid id, Uuid map, Uuid branch) {
+template <typename Store>
+Status Replica<Store>::GetMap(Frame& result, Uuid id, Uuid map, Uuid branch) {
     if (!open()) {
         return Status::NOTOPEN;
     }
@@ -408,8 +408,8 @@ Status Replica<Frame>::GetMap(Frame& result, Uuid id, Uuid map, Uuid branch) {
     return Status::OK;
 }
 
-template <typename Frame>
-Status Replica<Frame>::QueryObject(Builder& response, Cursor& query,
+template <typename Store>
+Status Replica<Store>::QueryObject(Builder& response, Cursor& query,
                                    Commit& commit) {
     if (!open()) {
         return Status::NOTOPEN;
@@ -434,20 +434,20 @@ Status Replica<Frame>::QueryObject(Builder& response, Cursor& query,
     }
 }
 
-template <typename Frame>
-Status Replica<Frame>::QueryYarnVV(Builder& response, Cursor& query,
+template <typename Store>
+Status Replica<Store>::QueryYarnVV(Builder& response, Cursor& query,
                                    Commit& commit) {
     return Status::NOT_IMPLEMENTED.comment("QueryYarnVV");
 }
 
-template <typename Frame>
-Status Replica<Frame>::QueryYarn(Builder& response, Cursor& query,
+template <typename Store>
+Status Replica<Store>::QueryYarn(Builder& response, Cursor& query,
                                  Commit& commit) {
     return Status::NOT_IMPLEMENTED.comment("YarnQuery");
 }
 
-template <typename Frame>
-Status Replica<Frame>::QueryObjectLog(Builder& response, Cursor& query,
+template <typename Store>
+Status Replica<Store>::QueryObjectLog(Builder& response, Cursor& query,
                                       Commit& commit) {
     Uuid id = query.id();
     query.Next();
@@ -492,8 +492,8 @@ inline bool is_query(const Cursor& c) {
     return peek_term(c) == QUERY;
 }
 
-template <typename Frame>
-Status Replica<Frame>::WriteNewEvents(Builder& resp, Cursor& uc,
+template <typename Store>
+Status Replica<Store>::WriteNewEvents(Builder& resp, Cursor& uc,
                                       Commit& commit) {
     Builder stamp;
     Uuid now = Now(commit.id());
@@ -519,8 +519,8 @@ Status Replica<Frame>::WriteNewEvents(Builder& resp, Cursor& uc,
     return ok;
 }
 
-template <typename Frame>
-Status Replica<Frame>::ReceiveWrites(Builder& resp, Cursor& c, Commit& commit) {
+template <typename Store>
+Status Replica<Store>::ReceiveWrites(Builder& resp, Cursor& c, Commit& commit) {
     // NOTE all methods that take a Cursor MUST consume their ops
     // NOTE all incoming chunks MUST specify a form unless they are events
     if (c.ref().version() == TIME) {
@@ -545,8 +545,8 @@ Status Replica<Frame>::ReceiveWrites(Builder& resp, Cursor& c, Commit& commit) {
     }
 }
 
-template <typename Frame>
-Status Replica<Frame>::ReceiveQuery(Builder& response, Cursor& c,
+template <typename Store>
+Status Replica<Store>::ReceiveQuery(Builder& response, Cursor& c,
                                     Commit& commit) {
     FORM form = uuid2form(c.ref());
     switch (form) {
@@ -566,14 +566,14 @@ Status Replica<Frame>::ReceiveQuery(Builder& response, Cursor& c,
     c.Next();
 }
 
-template <typename Frame>
-Status Replica<Frame>::Receive(Builder& resp, Cursor& c, Uuid branch_id) {
+template <typename Store>
+Status Replica<Store>::Receive(Builder& resp, Cursor& c, Uuid branch_id) {
     Status ok = Status::OK;
     if (!HasBranch(branch_id)) {
         // TODO 1 such check
         return Status::NOT_FOUND.comment("unknown branch");
     }
-    RocksStore branch_store = GetBranch(branch_id);
+    Store branch_store = GetBranch(branch_id);
     MemStore changes{};
     Commit commit{branch_store, changes};
 
@@ -608,7 +608,7 @@ Status Replica<Frame>::Receive(Builder& resp, Cursor& c, Uuid branch_id) {
 
 /*template<typename Frame>
 template<class FrameB>
-Status Replica<Frame>::Recv (Builder& response, const FrameB& input) {
+Status Replica<Store>::Recv (Builder& response, const FrameB& input) {
     // scan, check, convert, split
     Batch to_process;
     Builder next;
@@ -625,6 +625,6 @@ Status Replica<Frame>::Recv (Builder& response, const FrameB& input) {
     return Recv(response, to_process);
 }*/
 
-template class Replica<TextFrame>;
+template class Replica<RocksDBStore<TextFrame>>;
 
 }  // namespace ron

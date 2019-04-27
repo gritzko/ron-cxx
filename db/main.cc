@@ -243,7 +243,7 @@ Status CommandGetFrame(RonReplica& replica, Args& args) {
     Uuid rdt{args.back()};
     args.pop_back();
     CHECKARG(rdt == Uuid::FATAL || rdt.version() != NAME,
-             "the form much be a NAME UUID");
+             "the form must be a NAME UUID");
     Uuid id;
     IFOK(ScanOfObjectArg(id, replica, args));
     if (id.version() == NAME) {
@@ -499,7 +499,7 @@ Status RunCommands(Args& args) {
     if (verb == "help" || verb == "--help" || verb == "-help" || verb == "-h") {
         return CommandHelp(replica, args);
     }
-    
+
     if (verb == "test") {
         IFOK(tmp.cd("swarmdb_test"));
         IFOK(replica.CreateReplica());

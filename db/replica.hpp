@@ -40,12 +40,12 @@ class Replica {
     using tipmap_t = std::unordered_map<Word, OpMeta>;
 
     using MemStore = InMemoryStore<Frame>;
-    using Commit = JoinedStore<Store, MemStore>;
-    using CommitIterator = typename Commit::Iterator;
+    using CommitStore = JoinedStore<Store, MemStore>;
 
     using Names = std::unordered_map<Uuid, Uuid>;
 
     static const Uuid NOW_UUID;
+    class Commit;
 
    private:
     /** the largest feasible timestamp seen */
@@ -87,9 +87,9 @@ class Replica {
 
     Status CreateBranch(Uuid branch_id);
 
-    Status ListStores(Uuids& stores) {
+    Status ListStores(Uuids &stores) {
         stores.clear();
-        for (auto& p : branches_) {
+        for (auto &p : branches_) {
             stores.push_back(p.first);
         }
         return Status::OK;
@@ -104,15 +104,17 @@ class Replica {
     Uuid Now(Word origin = ZERO);
     Status See(Uuid timestamp);
 
+    inline mode_t mode() const { return mode_; }
+
     inline bool open() const { return !branches_.empty(); }
 
-    const Frame& config() const { return config_; }
+    const Frame &config() const { return config_; }
 
     Uuid current_branch() const { return Uuid::NIL; }
 
-    Status ReadConfigRecord(Uuid key, Atoms& values);
+    Status ReadConfigRecord(Uuid key, Atoms &values);
 
-    Status WriteConfigRecord(Uuid key, const Atoms& values);
+    Status WriteConfigRecord(Uuid key, const Atoms &values);
 
     //  B R A N C H E S / Y A R N S
 
@@ -120,169 +122,202 @@ class Replica {
     Status MergeBranch(Uuid mark);
     Status DropBranch(Uuid branch);
 
-    Status GetFrame(Frame& object, Uuid id, Uuid rdt, Uuid branch = Uuid::NIL);
-
     //  H I G H  L E V E L  A C C E S S O R S
+
+    Status GetFrame(Frame &object, Uuid id, Uuid rdt, Uuid branch = Uuid::NIL);
 
     inline bool HasBranch(Uuid branch) {
         return branches_.find(branch) != branches_.end();
     }
 
-    inline Store& GetCurrentBranch() {
+    inline Store &GetCurrentBranch() {
         return branches_.find(Uuid::NIL)->second;
     }
 
-    inline Store& GetBranch(Uuid branch) {
+    inline Store &GetBranch(Uuid branch) {
         return branches_.find(branch)->second;
     }
 
-    Status ReadNames(Names& names, Uuid branch = Uuid::NIL);
-    Status ReadName(Uuid& id, Uuid name, Uuid branch = Uuid::NIL);
+    Status ReadNames(Names &names, Uuid branch = Uuid::NIL);
+    Status ReadName(Uuid &id, Uuid name, Uuid branch = Uuid::NIL);
 
     Status WriteName(Uuid key, Uuid value, Uuid branch = Uuid::NIL);
 
-    inline Store& GetMeta() { return GetBranch(Uuid::NIL); }
+    inline Store &GetMeta() { return GetBranch(Uuid::NIL); }
 
-    inline Status GetChain(Frame& chain, Uuid chain_id);
+    inline Status GetChain(Frame &chain, Uuid chain_id);
 
-    Status FillAllStates(Store& branch);
+    Status FillAllStates(Store &branch);
 
-    inline Status GetObject(Frame& frame, Uuid id, Uuid rdt,
+    inline Status GetObject(Frame &frame, Uuid id, Uuid rdt,
                             Uuid branch = Uuid::NIL) {
         return GetFrame(frame, id, rdt, branch);
     }
 
-    inline Status GetObjectLog(Frame& frame, Uuid id, Uuid branch = Uuid::NIL) {
+    inline Status GetObjectLog(Frame &frame, Uuid id, Uuid branch = Uuid::NIL) {
         return GetFrame(frame, id, LOG_FORM_UUID);
     }
 
-    Status FindObject(Frame& frame, Uuid key, Uuid branch = Uuid::NIL);
-
-    /** The last op in the yarn.
-     *  Must be something; the first op in a yarn is a meta-record
-     * @time+yarnid :yarn pubkey 'ABCDEF' name 'Victor' ...
-     * @param{yarn} yarn id
-     * @return a reference to the OpMeta entry (id==0 if none)
-     * */
-    Status FindYarnTipMeta(OpMeta& meta, Word yarn, Commit& commit);
+    Status FindObject(Frame &frame, Uuid key, Uuid branch = Uuid::NIL);
 
     // FIXME old conv, rework
-    Status GetMap(Frame& result, Uuid id, Uuid map, Uuid branch = Uuid::NIL);
+    Status GetMap(Frame &result, Uuid id, Uuid map, Uuid branch = Uuid::NIL);
 
-    //  O T H E R  A C C E S S O R S
+    class Commit {
+        Replica &host_;
+        Word yarn_id_;
+        MemStore mem_;
+        Store &main_;
+        CommitStore join_;
 
-    /** If we don't know the exact chain id, we have to scan the table to
-     *  find the chain. Then, we scan the chain to find the op.
-     *  @param{op_id} the op id or ~+yarn_id for the yarn tip
-     */
-    Status FindOpMeta(OpMeta& meta, Uuid op_id, Commit& commit);
+        using Iterator = typename CommitStore::Iterator;
 
-    /** Fetches the op metadata for the chain head op.
-     * @param meta - the op meta object with op id set to the chain id */
-    Status FindChainHeadMeta(OpMeta& meta, Uuid op_id, Commit& commit);
+        Commit(Replica &host, Store &main_store, Word id)
+            : host_{host},
+              yarn_id_{id},
+              mem_{},
+              main_{main_store},
+              join_{main_store, mem_} {}
+        friend class Replica;
 
-    Status FindObjectLog(Frame& frame, Uuid id, Commit& commit);
+       public:
+        using Frame = Replica::Frame;
+        using Records = Replica::Records;
 
-    Status CheckEventSanity(const Cursor& op);
+        inline Word yarn_id() const { return yarn_id_; }
 
-    //  T R A N S A C T I O N A L  R E A D S  W R I T E S
+        /** The last op in the yarn.
+         *  Must be something; the first op in a yarn is a meta-record
+         * @time+yarnid :yarn pubkey 'ABCDEF' name 'Victor' ...
+         * @param{yarn} yarn id
+         * @return a reference to the OpMeta entry (id==0 if none)
+         * */
+        Status FindYarnTipMeta(OpMeta &meta, Word yarn);
 
-    /** @object+id :xxx ? */
-    Status QueryFrame(Builder& response, Cursor& query, Commit& commit);
+        //  O T H E R  A C C E S S O R S
 
-    /** @object+id :lww ? */
-    Status QueryObject(Builder& response, Cursor& query, Commit& commit);
+        /** If we don't know the exact chain id, we have to scan the table to
+         *  find the chain. Then, we scan the chain to find the op.
+         *  @param{op_id} the op id or ~+yarn_id for the yarn tip
+         */
+        Status FindOpMeta(OpMeta &meta, Uuid op_id);
 
-    /** @head+id :span ? */
-    Status QueryOpChain(Builder& response, Cursor& query, Commit& commit);
+        /** Fetches the op metadata for the chain head op.
+         * @param meta - the op meta object with op id set to the chain id */
+        Status FindChainHeadMeta(OpMeta &meta, Uuid op_id);
 
-    /** @object+id :log ?   @version+id :log ?   @version+id :log till versn+id
-     * ? */
-    Status QueryObjectLog(Builder& response, Cursor& query, Commit& commit);
+        Status FindObjectLog(Frame &frame, Uuid id);
 
-    /** @version+id :tail ? */
-    Status QueryObjectLogTail(Builder& response, Cursor& query, Commit& commit);
+        Status CheckEventSanity(const Cursor &op);
 
-    /** @version+id :patch ? */
-    Status QueryObjectPatch(Builder& response, Cursor& query, Commit& commit);
+        //  T R A N S A C T I O N A L  R E A D S  W R I T E S
 
-    /** @version+id :version+id ?
-    Status ObjectLogSegmentQuery(Builder& response, Cursor& query, Uuid
-    branch=Uuid::Uuid::NIL); */
+        /** @object+id :xxx ? */
+        Status QueryFrame(Builder &response, Cursor &query);
 
-    /** @op+id :meta ?  @op+id :sha3 ?  @op+id :prev ?  @op+id :obj ?  */
-    Status QueryOpMeta(Builder& response, Cursor& query, Commit& commit);
+        /** @object+id :lww ? */
+        Status QueryObject(Builder &response, Cursor &query);
 
-    /** @time+yarn :vv ?  @~+yarn :vv ? */
-    Status QueryYarnVV(Builder& response, Cursor& query, Commit& commit);
+        /** @head+id :span ? */
+        Status QueryOpChain(Builder &response, Cursor &query);
 
-    /** @time+yarn :yarn ? */
-    Status QueryYarn(Builder& response, Cursor& query, Commit& commit);
+        /** @object+id :log ?   @version+id :log ?   @version+id :log till
+         * versn+id
+         * ? */
+        Status QueryObjectLog(Builder &response, Cursor &query);
 
-    //  M A P P E R  Q U E R I E S
+        /** @version+id :tail ? */
+        Status QueryObjectLogTail(Builder &response, Cursor &query);
 
-    /**
-        @object+id :map ?
-        @version+id :map ?
-        @object-id :dtxt,
-            @version-till :version-from ?
-    */
-    Status QueryMapper(Builder& response, Cursor& query, Commit& commit);
+        /** @version+id :patch ? */
+        Status QueryObjectPatch(Builder &response, Cursor &query);
 
-    //  S U B S C R I P T I O N S
+        /** @version+id :version+id ?
+        Status ObjectLogSegmentQuery(Builder& response, Cursor& query, Uuid
+        branch=Uuid::Uuid::NIL); */
 
-    /**
-        @object-id :dtxt ?
-        @version-id :dtxt ?
-    */
-    // Status MapperSub (Builder& response, Cursor& query, Uuid
-    // branch=Uuid::Uuid::NIL);
+        /** @op+id :meta ?  @op+id :sha3 ?  @op+id :prev ?  @op+id :obj ?  */
+        Status QueryOpMeta(Builder &response, Cursor &query);
 
-    /**
-        @object+id ?
-        @object+id :lww ?
-        @version+id ?
-        @version+id :lww ?
-    */
-    Status ObjectSub(Builder& response, Cursor& query);
+        /** @time+yarn :vv ?  @~+yarn :vv ? */
+        Status QueryYarnVV(Builder &response, Cursor &query);
 
-    //  W R I T E S
+        /** @time+yarn :yarn ? */
+        Status QueryYarn(Builder &response, Cursor &query);
 
-    Status SaveChainlet(Builder& to, OpMeta& meta, Cursor& from);
+        //  M A P P E R  Q U E R I E S
 
-    // feed a causally ordered log - checks causality, updates the chain cache
-    Status SaveChain(Builder&, Cursor& chain, Commit& commit);
+        /**
+            @object+id :map ?
+            @version+id :map ?
+            @object-id :dtxt,
+                @version-till :version-from ?
+        */
+        Status QueryMapper(Builder &response, Cursor &query);
 
-    Status WriteNewEvents(Builder&, Cursor& chain, Commit& commit);
+        //  S U B S C R I P T I O N S
 
-    /**
-        @version-id :txt 'text' !
+        /**
+            @object-id :dtxt ?
+            @version-id :dtxt ?
+        */
+        // Status MapperSub (Builder& response, Cursor& query, Uuid
+        // branch=Uuid::Uuid::NIL);
 
-        @object-id :dtxt,
-            @version-to :version-from 2 -1 2 'x' !
-    */
-    Status WriteThroughMap(Cursor& write, Commit& commit) {
-        return Status::NOT_IMPLEMENTED.comment("MapWrite");
-    }
+        /**
+            @object+id ?
+            @object+id :lww ?
+            @version+id ?
+            @version+id :lww ?
+        */
+        Status ObjectSub(Builder &response, Cursor &query);
 
-    //  R E C E I V E S
+        //  W R I T E S
 
-    Status ReceiveQuery(Builder& response, Cursor& c, Commit& commit);
+        Status SaveChainlet(Builder &to, OpMeta &meta, Cursor &from);
 
-    Status Receive(Builder& response, Cursor& c, Uuid branch = Uuid::NIL);
+        // feed a causally ordered log - checks causality, updates the chain
+        // cache
+        Status SaveChain(Builder &, Cursor &chain);
 
-    inline Status ReceiveFrame(Builder& response, Frame frame,
+        Status WriteNewEvents(Builder &, Cursor &chain);
+
+        /**
+            @version-id :txt 'text' !
+
+            @object-id :dtxt,
+                @version-to :version-from 2 -1 2 'x' !
+        */
+        Status WriteThroughMap(Cursor &write) {
+            return Status::NOT_IMPLEMENTED.comment("MapWrite");
+        }
+
+        //  R E C E I V E S
+
+        Status ReceiveQuery(Builder &response, Cursor &c);
+
+        Status ReceiveWrites(Builder &resp, Cursor &c);
+
+        Status Save();
+
+        inline Status Read(Key key, Frame &into) {
+            return join_.Read(key, into);
+        }
+    };
+
+    Status Receive(Builder &response, Cursor &c, Uuid branch = Uuid::NIL);
+
+    inline Status ReceiveFrame(Builder &response, Frame frame,
                                Uuid branch = Uuid::NIL) {
         Cursor c{frame};
         return Receive(response, c, branch);
     }
-    Status ReceiveWrites(Builder& resp, Cursor& c, Commit& commit);
 
     // the entry point: recoder, normalizer, access control
     // converts any-coded incoming frame into internal-coded chains, queries,
     // hash checks
     template <class FrameB>
-    Status AnyFrameRecv(Uuid conn_id, const FrameB& frame) {
+    Status AnyFrameRecv(Uuid conn_id, const FrameB &frame) {
         return Status::NOT_IMPLEMENTED.comment("AnyFrameRecv");
     }
 };

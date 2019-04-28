@@ -149,15 +149,15 @@ Replica<Store>::~Replica() {
 //  O B J E C T  L O G S
 
 template <typename Store>
-Status Replica<Store>::FindOpMeta(OpMeta& meta, Uuid op_id, Commit& commit) {
+Status Replica<Store>::Commit::FindOpMeta(OpMeta& meta, Uuid op_id) {
     // find head rec
-    IFOK(FindChainHeadMeta(meta, op_id, commit));
+    IFOK(FindChainHeadMeta(meta, op_id));
     if (meta.id == op_id) {
         return Status::OK;
     }
     // load object log
     Frame object_log;
-    IFOK(FindObjectLog(object_log, meta.object, commit));
+    IFOK(FindObjectLog(object_log, meta.object));
     // seek to the head
     Cursor cur{object_log};
     while (cur.valid() && cur.id() != meta.id) {
@@ -190,9 +190,8 @@ Status Replica<Store>::FindOpMeta(OpMeta& meta, Uuid op_id, Commit& commit) {
 }
 
 template <typename Store>
-Status Replica<Store>::FindChainHeadMeta(OpMeta& meta, Uuid op_id,
-                                         Commit& commit) {
-    CommitIterator i{commit};
+Status Replica<Store>::Commit::FindChainHeadMeta(OpMeta& meta, Uuid op_id) {
+    Iterator i{join_};
     Status ok = i.SeekTo(Key{op_id, META_FORM_UUID}, true);
     if (!ok) {
         return ok;
@@ -210,15 +209,14 @@ Status Replica<Store>::FindChainHeadMeta(OpMeta& meta, Uuid op_id,
 }
 
 template <typename Store>
-Status Replica<Store>::FindYarnTipMeta(OpMeta& meta, Word yarn,
-                                       Commit& commit) {
+Status Replica<Store>::Commit::FindYarnTipMeta(OpMeta& meta, Word yarn) {
     Uuid yarn_end{NEVER, yarn};
-    return FindOpMeta(meta, yarn_end, commit);
+    return FindOpMeta(meta, yarn_end);
 }
 
 template <typename Store>
-Status Replica<Store>::FindObjectLog(Frame& frame, Uuid id, Commit& commit) {
-    return commit.Read(Key{id, LOG_RAW_FORM}, frame);
+Status Replica<Store>::Commit::FindObjectLog(Frame& frame, Uuid id) {
+    return join_.Read(Key{id, LOG_RAW_FORM}, frame);
 }
 
 //  E V E N T  Q U E R I E S
@@ -242,7 +240,8 @@ Status Replica<Store>::See(Uuid timestamp) {
 }
 
 template <typename Store>
-Status Replica<Store>::SaveChainlet(Builder& to, OpMeta& meta, Cursor& from) {
+Status Replica<Store>::Commit::SaveChainlet(Builder& to, OpMeta& meta,
+                                            Cursor& from) {
     to.AppendOp(from);
     Status ok = from.Next();
     while (ok) {
@@ -269,7 +268,7 @@ Status Replica<Store>::SaveChainlet(Builder& to, OpMeta& meta, Cursor& from) {
 }
 
 template <typename Store>
-Status Replica<Store>::CheckEventSanity(const Cursor& chain) {
+Status Replica<Store>::Commit::CheckEventSanity(const Cursor& chain) {
     Uuid id = chain.id();
     Uuid ref_id = chain.ref();
     if (id.version() != TIME) {
@@ -298,7 +297,7 @@ Status Replica<Store>::CheckEventSanity(const Cursor& chain) {
  * @param chain a cursor positioned on the head of the chain;
  *              will be moved to the first non-chain op (or EOF) */
 template <typename Store>
-Status Replica<Store>::SaveChain(Builder&, Cursor& chain, Commit& commit) {
+Status Replica<Store>::Commit::SaveChain(Builder&, Cursor& chain) {
     Status ok;
     Uuid id = chain.id();
     Uuid ref_id = chain.ref();
@@ -309,7 +308,7 @@ Status Replica<Store>::SaveChain(Builder&, Cursor& chain, Commit& commit) {
     // find the last op on the yarn (the tip) and its metadata
     OpMeta tip_meta;
     Uuid& tip_id = tip_meta.id;
-    ok = FindYarnTipMeta(tip_meta, id.origin(), commit);
+    ok = FindYarnTipMeta(tip_meta, id.origin());
     if (chain.ref() == YARN_FORM_UUID) {
         // actually, it is the first op on the yarn
         if (ok == Status::NOT_FOUND) {
@@ -347,24 +346,24 @@ Status Replica<Store>::SaveChain(Builder&, Cursor& chain, Commit& commit) {
         // we enforce referential integrity but we
         // can't run datatype-specific checks here
         OpMeta ref_meta;
-        IFOK(FindOpMeta(ref_meta, ref_id, commit));
+        IFOK(FindOpMeta(ref_meta, ref_id));
         tip_meta.Next(chain, ref_meta);
     }
 
     if (ref_id != tip_id) {
         Builder chain_record;
         tip_meta.Save(chain_record);
-        IFOK(commit.Write(Key{id, META_FORM_UUID}, chain_record.Release()));
+        IFOK(join_.Write(Key{id, META_FORM_UUID}, chain_record.Release()));
     }
 
     // walk/check the chainlet
     Uuid& obj_id = tip_meta.object;
     Builder chainlet;
     IFOK(SaveChainlet(chainlet, tip_meta, chain));
-    IFOK(See(tip_meta.id));  // implausible timestamps etc
+    IFOK(host_.See(tip_meta.id));  // implausible timestamps etc
     Frame data = chainlet.Release();
-    IFOK(commit.Write(Key{obj_id, LOG_FORM_UUID}, data));
-    IFOK(commit.Write(Key{obj_id, tip_meta.rdt}, data));
+    IFOK(join_.Write(Key{obj_id, LOG_FORM_UUID}, data));
+    IFOK(join_.Write(Key{obj_id, tip_meta.rdt}, data));
 
     return tip_meta.id;
 }
@@ -401,31 +400,30 @@ Status Replica<Store>::GetMap(Frame& result, Uuid id, Uuid map, Uuid branch) {
     if (!HasBranch(branch)) {
         return Status::NOT_FOUND.comment("no branch " + branch.str());
     }
-    Commit readonly{GetBranch(branch), mem};
-    Records devnull;
-    IFOK(ReceiveWrites(response, qc, readonly));
-    result = response.Release();
+
+    // FIXME all wrong, see @cblp
+
+    // Commit readonly{GetBranch(branch), mem};
+    // Records devnull;
+    // IFOK(ReceiveWrites(response, qc, readonly));
+    // result = response.Release();
     return Status::OK;
 }
 
 template <typename Store>
-Status Replica<Store>::QueryObject(Builder& response, Cursor& query,
-                                   Commit& commit) {
-    if (!open()) {
-        return Status::NOTOPEN;
-    }
+Status Replica<Store>::Commit::QueryObject(Builder& response, Cursor& query) {
     Key key{query.id(), query.ref()};
-    if (mode_ & KEEP_STATES) {
+    if (host_.mode_ & KEEP_STATES) {
         Frame f;
-        IFOK(commit.Read(key, f));
+        IFOK(join_.Read(key, f));
         Cursor c{f};
         response.AppendAll(c);
         query.Next();
         return Status::OK;
-    } else if (mode_ & KEEP_OBJECT_LOGS) {
+    } else if (host_.mode_ & KEEP_OBJECT_LOGS) {
         Key logkey{query.id(), LOG_FORM_UUID};
         Frame log;
-        commit.Read(logkey, log);
+        join_.Read(logkey, log);
         Status ok = ObjectLogIntoState(response, log);
         query.Next();
         return ok;
@@ -435,34 +433,32 @@ Status Replica<Store>::QueryObject(Builder& response, Cursor& query,
 }
 
 template <typename Store>
-Status Replica<Store>::QueryYarnVV(Builder& response, Cursor& query,
-                                   Commit& commit) {
+Status Replica<Store>::Commit::QueryYarnVV(Builder& response, Cursor& query) {
     return Status::NOT_IMPLEMENTED.comment("QueryYarnVV");
 }
 
 template <typename Store>
-Status Replica<Store>::QueryYarn(Builder& response, Cursor& query,
-                                 Commit& commit) {
+Status Replica<Store>::Commit::QueryYarn(Builder& response, Cursor& query) {
     return Status::NOT_IMPLEMENTED.comment("YarnQuery");
 }
 
 template <typename Store>
-Status Replica<Store>::QueryObjectLog(Builder& response, Cursor& query,
-                                      Commit& commit) {
+Status Replica<Store>::Commit::QueryObjectLog(Builder& response,
+                                              Cursor& query) {
     Uuid id = query.id();
     query.Next();
     OpMeta meta;
-    IFOK(FindOpMeta(meta, id, commit));
+    IFOK(FindOpMeta(meta, id));
     Key logkey{meta.object, meta.rdt};
     if (id == meta.object) {
         Frame obj;
-        IFOK(commit.Read(logkey, obj));
+        IFOK(join_.Read(logkey, obj));
         Cursor objc{obj};
         response.AppendAll(objc);
         return Status::OK;
     }
     Frame log;
-    IFOK(commit.Read(logkey, log));
+    IFOK(join_.Read(logkey, log));
     // version | since | segment
     Cursor c{log};
     do {
@@ -493,10 +489,9 @@ inline bool is_query(const Cursor& c) {
 }
 
 template <typename Store>
-Status Replica<Store>::WriteNewEvents(Builder& resp, Cursor& uc,
-                                      Commit& commit) {
+Status Replica<Store>::Commit::WriteNewEvents(Builder& resp, Cursor& uc) {
     Builder stamp;
-    Uuid now = Now(commit.id());
+    Uuid now = host_.Now(yarn_id());
     constexpr uint64_t MAXSEQ = 1 << 30;
     while (uc.valid() && uc.id().origin().payload() == 0) {
         now.inc();
@@ -514,17 +509,17 @@ Status Replica<Store>::WriteNewEvents(Builder& resp, Cursor& uc,
     Cursor stamped{stamp.data()};
     Status ok;
     while (stamped.valid() && ok) {
-        ok = SaveChain(resp, stamped, commit);
+        ok = SaveChain(resp, stamped);
     }
     return ok;
 }
 
 template <typename Store>
-Status Replica<Store>::ReceiveWrites(Builder& resp, Cursor& c, Commit& commit) {
+Status Replica<Store>::Commit::ReceiveWrites(Builder& resp, Cursor& c) {
     // NOTE all methods that take a Cursor MUST consume their ops
     // NOTE all incoming chunks MUST specify a form unless they are events
     if (c.ref().version() == TIME) {
-        return WriteNewEvents(resp, c, commit);
+        return WriteNewEvents(resp, c);
     }
     if (c.ref().version() != NAME) {
         return Status::BADARGS.comment("unrecognized write pattern");
@@ -536,9 +531,9 @@ Status Replica<Store>::ReceiveWrites(Builder& resp, Cursor& c, Commit& commit) {
         case RGA_RDT_FORM:
         case MX_RDT_FORM:
         case YARN_RAW_FORM:
-            return WriteNewEvents(resp, c, commit);
+            return WriteNewEvents(resp, c);
         case TXT_MAP_FORM:
-            return txt_.Write(resp, c, commit);
+            return host_.txt_.Write(resp, c, *this);
         default:
             return Status::NOT_IMPLEMENTED.comment("unknown form: " +
                                                    c.ref().str());
@@ -546,19 +541,18 @@ Status Replica<Store>::ReceiveWrites(Builder& resp, Cursor& c, Commit& commit) {
 }
 
 template <typename Store>
-Status Replica<Store>::ReceiveQuery(Builder& response, Cursor& c,
-                                    Commit& commit) {
+Status Replica<Store>::Commit::ReceiveQuery(Builder& response, Cursor& c) {
     FORM form = uuid2form(c.ref());
     switch (form) {
         case LWW_RDT_FORM:
         case RGA_RDT_FORM:
         case MX_RDT_FORM:
         case YARN_RAW_FORM:
-            return QueryObject(response, c, commit);
+            return QueryObject(response, c);
         case LOG_RAW_FORM:
-            return QueryObjectLog(response, c, commit);
+            return QueryObjectLog(response, c);
         case TXT_MAP_FORM:
-            return txt_.Read(response, c, commit);
+            return host_.txt_.Read(response, c, *this);
         default:
             return Status::NOT_IMPLEMENTED.comment("unknown query form: " +
                                                    c.ref().str());
@@ -567,25 +561,39 @@ Status Replica<Store>::ReceiveQuery(Builder& response, Cursor& c,
 }
 
 template <typename Store>
+Status Replica<Store>::Commit::Save() {
+    Records save;
+    if (mem_.Release(save)) {
+        // Frames are applied transactionally, all or nothing.
+        // We saw no errors => we may save the changes.
+        return main_.Write(save);
+    } else {
+        return Status::OK;
+    }
+}
+
+template <typename Store>
 Status Replica<Store>::Receive(Builder& resp, Cursor& c, Uuid branch_id) {
     Status ok = Status::OK;
+    if (!open()) {
+        return Status::NOTOPEN;
+    }
     if (!HasBranch(branch_id)) {
         // TODO 1 such check
         return Status::NOT_FOUND.comment("unknown branch");
     }
     Store branch_store = GetBranch(branch_id);
-    MemStore changes{};
-    Commit commit{branch_store, changes};
+    Commit commit{*this, branch_store, branch_id.origin()};
 
     while (c.valid() && ok) {
         if (c.id() == Uuid::COMMENT) {
             ok = c.Next();
         } else if (c.term() == QUERY) {
-            ok = ReceiveQuery(resp, c, commit);
+            ok = commit.ReceiveQuery(resp, c);
         } else if (c.id().version() == TIME && c.id().origin().payload() != 0) {
-            ok = SaveChain(resp, c, commit);
+            ok = commit.SaveChain(resp, c);
         } else if (c.id().version() == TIME) {
-            ok = ReceiveWrites(resp, c, commit);
+            ok = commit.ReceiveWrites(resp, c);
         } else if (c.id().version() == NAME) {
             ok = Status::BADVALUE.comment("a runaway annotation");
         } else if (c.id().version() == HASH) {
@@ -595,11 +603,8 @@ Status Replica<Store>::Receive(Builder& resp, Cursor& c, Uuid branch_id) {
         }
     }
 
-    Records save;
-    if (ok && changes.Release(save)) {
-        // Frames are applied transactionally, all or nothing.
-        // We saw no errors => we may save the changes.
-        IFOK(branch_store.Write(save));
+    if (ok) {
+        ok = commit.Save();
     }
     // the response is rendered already
 

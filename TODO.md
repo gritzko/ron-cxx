@@ -2,7 +2,7 @@
 
 ## 1 hour (must be separate commits)
 
-- [ ] nicer HasBranch/GetBranch convention
+- [x] nicer HasBranch/GetBranch convention
 - [ ] branch metadata: names / last name op, now
 
 - [ ] Replica metadata tests (now, origin, sig)

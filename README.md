@@ -33,7 +33,7 @@ Still in the works / planned / envisioned:
 * `cmake ..`
 * `make`
 
-(ninja and xcode builds are supported too, e.g. `cmake .. -G ninja && ninja`)
+(ninja and xcode builds are supported too, e.g. `cmake -G Ninja .. && ninja`)
 
 Static dependencies are fetched from the net and built by cmake:
 

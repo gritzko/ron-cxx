@@ -191,7 +191,7 @@ add_test(TEXT test02-text)
 
 add_executable(test03-hash ron/test/hash.cc)
 target_compile_options(test03-hash PRIVATE ${TEST_CXX_FLAGS})
-target_link_libraries(test03-hash ${TEST_LDD_FLAGS} ron_test_static botan_static)
+target_link_libraries(test03-hash ${TEST_LDD_FLAGS} ron_test_static botan_static gtest_static Threads::Threads)
 add_test(HASH test03-hash)
 
 add_executable(test04-meta ron/test/meta.cc)

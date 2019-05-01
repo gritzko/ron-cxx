@@ -139,25 +139,26 @@ Status RocksDBStore<Frame>::Create(Uuid id) {
         cf_.reset(cfh);
     }
 
-    Frame now = OneOp<Frame>(id, ZERO_FORM_UUID, id);
+    tip = Uuid::NIL;
+    Frame now = OneOp<Frame>(tip, ZERO_FORM_UUID);
     IFOK(Write(Key::ZERO, now));
 
     return Status::OK;
 }
 
-template <typename Frame>
-Status RocksDBStore<Frame>::ReadId() {
-    Frame now;
-    IFOK(Read(Key::ZERO, now));
-    Cursor c{now};
-    if (c.valid()) {
-        id_ = c.id().origin();
-        return Status::OK;
-    } else {
-        id_ = NEVER;
-        return Status::BAD_STATE.comment("malformed 'now' record");
-    }
-}
+// template <typename Frame>
+// Status RocksDBStore<Frame>::ReadTip() {
+//    Frame now;
+//    IFOK(Read(Key::ZERO, now));
+//    Cursor c{now};
+//    if (c.valid()) {
+//        tip_ = c.id();
+//        return Status::OK;
+//    } else {
+//        tip_ = Uuid{NEVER,ZERO};
+//        return Status::BAD_STATE.comment("malformed 'now' record");
+//    }
+//}
 
 template <typename Frame>
 Status RocksDBStore<Frame>::Open(Uuid id) {
@@ -174,8 +175,6 @@ Status RocksDBStore<Frame>::Open(Uuid id) {
         return Status::NOT_IMPLEMENTED.comment("use OpenAll for now");
     }
     // cf_.reset(db->DefaultColumnFamily()); ???
-
-    ReadId();
 
     return Status::OK;
 }
@@ -256,11 +255,13 @@ Status RocksDBStore<Frame>::Read(Key key, Builder& to, Uuid branch) {
 template <typename Frame>
 Status RocksDBStore<Frame>::Write(const Records& batch) {
     rocksdb::WriteBatch b;
+    auto cf = static_pointer_cast<rocksdb::ColumnFamilyHandle>(cf_);
     for (auto i = batch.begin(); i != batch.end(); ++i) {
         uint64pair k = i->first.be();
         const String& data = i->second.data();
         rocksdb::Slice slice{data};
-        b.Merge(key2slice(k), slice);
+        cf ? b.Merge(cf.get(), key2slice(k), slice)
+           : b.Merge(key2slice(k), slice);
         LOG('m', i->first, data);
     }
     auto db = static_pointer_cast<rocksdb::DB>(db_);

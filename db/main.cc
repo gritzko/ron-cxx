@@ -19,6 +19,7 @@ using Cursor = Frame::Cursor;
 using Frames = vector<Frame>;
 using Store = RocksDBStore<Frame>;
 using RonReplica = Replica<Store>;
+using Commit = RonReplica::Commit;
 using StoreIterator = typename Store::Iterator;
 
 #define CHECKARG(a, x)                     \
@@ -95,7 +96,7 @@ Status ScanOnBranchArg(Uuid& branch, RonReplica& replica, Args& args) {
     branch = Uuid{args.back()};
     args.pop_back();
     CHECKARG(branch.is_error(), "bad branch id syntax; must be name/id");
-    CHECKARG(!replica.HasBranch(branch), "no such branch");
+    CHECKARG(!replica.HasBranch(branch.origin()), "no such branch");
     return Status::OK;
 }
 
@@ -133,16 +134,18 @@ constexpr const char* CREATE_USAGE{
     "       e.g. swarmdb create as Experiment\n"};
 
 Status CommandCreate(RonReplica& replica, Args& args) {
-    Word yarn_id = Word::random();  // TODO keys
-    Uuid branch_id = Uuid::Time(NEVER, yarn_id);
+    // TODO keys
+    Uuid branch_id = Uuid::Time(NEVER, Word::random());
     IFOK(replica.CreateBranch(branch_id));
+    IFOK(replica.SetActiveStore(branch_id));
     if (!args.empty() && args.back() == "as") {
         args.pop_back();
         CHECKARG(args.empty(), "need a name for the branch");
         Uuid tag{args.back()};
         CHECKARG(tag.is_error(),
                  "the name must be a name UUID (up to ten Base64 chars)");
-        IFOK(replica.WriteName(tag, branch_id));
+        Commit c{replica};
+        IFOK(c.WriteName(tag, branch_id));
     }
 
     return Status{branch_id, "You started a yarn"};
@@ -156,6 +159,12 @@ Status CommandTest(RonReplica& replica, Args& args) {
     CHECKARG(args.empty(), TEST_USAGE);
     String file = args.back();
     args.pop_back();
+
+    Word test_name{"test"};
+    Uuid test_branch_id = Uuid::Time(NEVER, test_name);
+    IFOK(replica.CreateBranch(Uuid::Time(1, test_name)));
+    IFOK(replica.SetActiveStore(test_branch_id));
+
     Frame tests;
     Status ok = LoadFrame(tests, file);
     if (!ok) return ok;
@@ -184,7 +193,7 @@ Status CommandTest(RonReplica& replica, Args& args) {
             }
             cerr << "?\t" << comment << '\t' << (ok ? OK : FAIL) << endl;
         } else if (term == HEADER) {
-            ok = replica.ReceiveFrame(b, io[i]);
+            ok = replica.ReceiveFrame(b, io[i], test_branch_id);
             cerr << "!\t" << comment << '\t' << (ok ? OK : FAIL + ok.str())
                  << endl;
         } else {
@@ -205,7 +214,7 @@ Status CommandDump(RonReplica& replica, Args& args) {
         if (rdt == ZERO_RAW_FORM) return Status::BADARGS.comment("unknown RDT");
     }*/
     if (!replica.open()) return Status::BAD_STATE.comment("db is not open?");
-    StoreIterator i{replica.GetBranch(Uuid::NIL)};
+    StoreIterator i{replica.GetMetaStore()};
     IFOK(i.SeekTo(Key{}));
     do {
         cout << i.key().str() << '\t' << i.value().data().str();
@@ -247,8 +256,11 @@ Status CommandGetFrame(RonReplica& replica, Args& args) {
              "the form must be a NAME UUID");
     Uuid id;
     IFOK(ScanOfObjectArg(id, replica, args));
+
+    Commit commit{replica};
+
     if (id.version() == NAME) {
-        IFOK(replica.ReadName(id, id));
+        IFOK(commit.ReadName(id, id));
     }
     CHECKARG(id.version() != UUID::TIME,
              "frame id must be an EVENT UUID, not " + args.back());
@@ -270,7 +282,7 @@ Status CommandGetFrame(RonReplica& replica, Args& args) {
     Builder result;
     Frame query = Query<Frame>(id, rdt);
     Cursor qc{query};
-    IFOK(replica.Receive(result, qc));
+    IFOK(replica.Receive(result, qc));  // FIXME
     if (!clean) {
         cout << result.data() << '\n';
     } else {
@@ -301,6 +313,11 @@ Status CommandWrite(RonReplica& replica, Args& args) {
     return replica.ReceiveFrame(res, unstamped);
 }
 
+#define RETIFBAD(commit)                              \
+    {                                                 \
+        if (!commit.status()) return commit.status(); \
+    }
+
 constexpr const char* NEW_USAGE{
     "new <rdt> [as objectname] [on BranchName]\n"
     "   create an empty object of the given type\n"
@@ -323,14 +340,15 @@ Status CommandNew(RonReplica& replica, Args& args) {
     Frame new_obj = OneOp<Frame>(replica.Now(), rdt);
     Builder re;
     Cursor cu{new_obj};
-    Status ok = replica.Receive(re, cu);
-    if (ok) {
-        if (!name.zero()) {
-            replica.WriteName(name, ok.code());
-        }
-        ok = ok.comment(rdt.str() + " object created");
+
+    Commit c{replica};
+    IFOK(c.WriteNewEvents(re, cu));
+    Uuid id = c.tip();  // error for invalids
+    if (!name.zero()) {
+        IFOK(c.WriteName(name, id));
     }
-    return ok;
+    // by default, a valid commit applies in the destructor (invalid aborts)
+    return Status(id, rdt.str() + " object created");
 }
 
 Status CommandHashFrame(const string& filename) {
@@ -398,7 +416,8 @@ Status CommandList(RonReplica& replica, Args& args) {
     IFOK(replica.ListStores(stores));
 
     typename RonReplica::Names names;
-    IFOK(replica.ReadNames(names));
+    Commit commit{replica, Uuid::NIL};
+    IFOK(commit.ReadNames(names));
 
     for (auto& u : stores) {
         cout << u.str() << '\t' << names[u] << '\n';
@@ -421,7 +440,8 @@ Status CommandName(RonReplica& replica, Args& args) {
     IFOK(ScanAsNameArg(name, NUMERIC, replica, args));
     CHECKARG(name.zero(), NAME_USAGE);
 
-    Status ok = replica.WriteName(name, id);
+    Commit commit{replica};
+    Status ok = commit.WriteName(name, id);
     if (ok) {
         ok = ok.comment("assigned name " + name.str() + " to " + id.str());
     }
@@ -449,8 +469,10 @@ Status CommandNamed(RonReplica& replica, Args& args) {
     Uuid branch;
     IFOK(ScanOnBranchArg(branch, replica, args));
 
+    Commit commit{replica};
+
     typename RonReplica::Names names;
-    IFOK(replica.ReadNames(names, branch));
+    IFOK(commit.ReadNames(names));
 
     for (auto& p : names) {
         Uuid id = p.second;

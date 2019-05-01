@@ -1,8 +1,5 @@
-@~ 'create a yarn' !
-@1hLH+test_lww :yarn;
-
 @~ 'create an lww object'!
-@1hLHRG+test_lww :lww,
+@1hLHRG+test :lww,
     'type' 'ticket',
     'date' '19 Jan 2019',
     'organisation' 'The State Museum of Oriental Art',
@@ -10,22 +7,22 @@
 .
 
 @~ 'update the object' !
-@1hLHXS+test_lww :1hLHRG0004+test_lww 
+@1hLHXS+test :1hLHRG0004+test
     'enter' '18:18:14',
     'exit'  '20:45:25';
 .
 
 @~ 'request the state' !
-@1hLHRG+test_lww :lww ?
+@1hLHRG+test :lww ?
 .
 
 @~ 'is it all merged' ?
-@1hLHRG+test_lww :lww,
+@1hLHRG+test :lww,
     'type' 'ticket',
     'date' '19 Jan 2019',
     'organisation' 'The State Museum of Oriental Art',
     'price' 30000,
-@1hLHXS+test_lww
+@1hLHXS+test
     'enter' '18:18:14',
     'exit'  '20:45:25';
 

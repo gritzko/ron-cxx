@@ -30,23 +30,18 @@ class RocksDBStore {
      * shared_ptr<void> works, thanks to type erasure.  */
     SharedPtr cf_;
 
-    Word id_;
-
     RocksDBStore(SharedPtr db, SharedPtr cf)
-        : db_{std::move(db)}, cf_{std::move(cf)} {
-        ReadId();
-    }
-
-    Status ReadId();
+        : db_{std::move(db)}, cf_{std::move(cf)} {}
 
    public:
-    RocksDBStore() : db_{nullptr}, cf_{nullptr} {}
+    /** used by Commit and others to cache the last written event id */
+    Uuid tip;
+
+    RocksDBStore() : db_{nullptr}, cf_{nullptr}, tip{} {}
 
     explicit RocksDBStore(SharedPtr db) : db_{std::move(db)}, cf_{nullptr} {}
 
     inline SharedPtr db() const { return db_; }
-
-    Word id() const { return id_; }
 
     class Iterator {
         SharedPtr i_;

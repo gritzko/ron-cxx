@@ -92,11 +92,11 @@ class JoinedStore {
 
         Cursor value() {
             if (ai_.key() != at_) {
-                LOG('I', at_, bi_.value().data().str());
+                LOG('-', at_, bi_.value().data().str());
                 return bi_.value();
             }
             if (bi_.key() != at_) {
-                LOG('I', at_, ai_.value().data().str());
+                LOG('=', at_, ai_.value().data().str());
                 return ai_.value();
             }
             // have to merge then
@@ -104,7 +104,7 @@ class JoinedStore {
             inputs.push_back(ai_.value());
             inputs.push_back(bi_.value());
             Status ok = MergeCursors<Frame>(merged_, inputs);
-            LOG('I', at_, merged_.data());
+            LOG('_', at_, merged_.data());
             return ok ? Cursor{merged_}
                       : OneOp<Frame>(ok.code(), Uuid::FATAL).cursor();
         }

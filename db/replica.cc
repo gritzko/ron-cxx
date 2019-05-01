@@ -36,67 +36,66 @@ Status Replica<Store>::Open() {
         return Status::BAD_STATE.comment("already open");
     }
 
-    Status ok = Store::OpenAll(branches_);
-    if (!ok) {
-        return ok;
-    }
+    IFOK(Store::OpenAll(branches_));
 
-    Store& meta = GetBranch(Uuid::NIL);
-    Frame meta_rec;
-    ok = meta.Read(Key{}, meta_rec);
-    if (!ok) {
-        return ok;
+    for (auto& i : branches_) {
+        Uuid id = i.first;
+        Store& store = i.second;
+        Frame meta_rec;
+        IFOK(store.Read(Key{}, meta_rec));
+        Cursor mc{meta_rec};
+        if (!mc.valid()) {
+            return Status::BADFRAME.comment("tip record is corrupted");
+        }
+        store.tip = mc.id();
+        IFOK(store.tip);
+        if (store.tip.origin() != id.origin()) {
+            return Status::BADFRAME.comment("tip record is malformed");
+        }
     }
-    if (meta_rec.empty()) {
-        return Status::BAD_STATE.comment("no metadata?!");
-    }
-    Cursor mc{meta_rec};
-    // if (!mc.has(2, UUID)) {
-    //    return Status::DB_FAIL.comment("no timestamp found");
-    //}
-    // now_ = mc.uuid(2);
 
     return Status::OK;
 }
 
 template <typename Store>
-Status Replica<Store>::CreateBranch(Uuid branch_id) {
-    if (HasBranch(branch_id)) {
+Status Replica<Store>::CreateBranch(Uuid yarn_event) {
+    Word yarn_id = yarn_event.origin();
+    Uuid branch_id = yarn2branch(yarn_id);
+    if (HasBranch(yarn_id)) {
         return Status::BADARGS.comment("branch already exists");
     }
-    const Store& meta = GetBranch(Uuid::NIL);
-    Store new_branch{meta.db()};
-    IFOK(new_branch.Create(branch_id));
-    branches_.emplace(branch_id, new_branch);
+    const Store& meta = GetMetaStore();
+    Store new_branch_tmp{meta.db()};
+    IFOK(new_branch_tmp.Create(branch_id));
+    branches_.emplace(branch_id, new_branch_tmp);
 
-    Records initials;
+    Commit commit{*this, branch_id};
+    Frame yarn_init = OneOp<Frame>(yarn_event, YARN_FORM_UUID);
+    Cursor c{yarn_init};
+    Builder b;
+    commit.SaveChain(b, c);
 
-    Frame yarn_meta = OneOp<Frame>(branch_id, YARN_FORM_UUID);
-    IFOK(new_branch.Write(Key{branch_id, LOG_RAW_FORM}, yarn_meta));
-
+    /*
     Frame names = OneOp<Frame>(Uuid::NIL, LWW_FORM_UUID);
     IFOK(new_branch.Write(Key{Uuid::NIL, LWW_FORM_UUID}, names));
+    */
 
-    return Status::OK;
+    return commit.Save();
 }
 
 template <typename Store>
-Status Replica<Store>::WriteName(Uuid key, Uuid value, Uuid branch) {
-    if (!HasBranch(branch)) return Status::NOT_FOUND.comment("branch unknown");
+Status Replica<Store>::Commit::WriteName(Uuid key, Uuid value) {
     Records w;
-    Uuid id = Now(branch.origin());
+    Uuid id = host_.Now(yarn_id());
     Key names_key{Uuid::NIL, LWW_RDT_FORM};
     Frame valop = OneOp<Frame>(id, Uuid::NIL, key, value);
-    GetBranch(branch).Write(names_key, valop);
+    IFOK(main_.Write(names_key, valop));
     //???!!!last_name_id_ = id;
     return id;
 }
 
 template <typename Store>
-Status Replica<Store>::ReadNames(Names& names, Uuid branch) {
-    if (!HasBranch(branch)) {
-        return Status::NOT_FOUND.comment("no such branch");
-    }
+Status Replica<Store>::Commit::ReadNames(Names& names) {
     Frame zeroobj;
     IFOK(GetObject(zeroobj, Uuid::NIL, LWW_FORM_UUID));
     Cursor c{zeroobj, false};
@@ -113,14 +112,14 @@ Status Replica<Store>::ReadNames(Names& names, Uuid branch) {
 }
 
 template <typename Store>
-Status Replica<Store>::ReadName(Uuid& id, Uuid name, Uuid branch) {
+Status Replica<Store>::Commit::ReadName(Uuid& id, Uuid name) {
     return Status::NOT_IMPLEMENTED.comment("ReadName");
 }
 
 template <typename Store>
 Uuid Replica<Store>::Now(Word origin) {
     if (origin == ZERO) {
-        origin = home_.origin();
+        origin = active_store().origin();
     }
     Word next = Uuid::HybridTime(time(nullptr));
     now_ = next > now_ ? next : now_.inc();
@@ -135,7 +134,7 @@ Status Replica<Store>::GC() {
 template <typename Store>
 Status Replica<Store>::Close() {
     if (!branches_.empty()) {
-        GetBranch(Uuid::NIL).Close();
+        GetMetaStore().Close();
         branches_.clear();
     }
     return Status::OK;
@@ -243,14 +242,22 @@ template <typename Store>
 Status Replica<Store>::Commit::SaveChainlet(Builder& to, OpMeta& meta,
                                             Cursor& from) {
     to.AppendOp(from);
-    Status ok = from.Next();
-    while (ok) {
+    Status ok;
+    while ((ok = from.Next())) {
         LOG('?', Key{from.id(), ZERO_RAW_FORM}, "...\n");
         if (from.id() == Uuid::COMMENT) {
         } else if (meta.is_next(from)) {
             IFOK(CheckEventSanity(from));
             meta.Next(from, meta);
             to.AppendOp(from);
+            if (from.id().origin() == base_.origin()) {
+                if (from.id() <= tip_) {
+                    return Status::OK.comment("non-monotonous frame");
+                }
+                tip_ = from.id();
+            } else {
+                max_;
+            }
         } else if (meta.is_check(from)) {
             ok = meta.Check(from);
             if (!ok) {
@@ -259,7 +266,6 @@ Status Replica<Store>::Commit::SaveChainlet(Builder& to, OpMeta& meta,
         } else {
             break;
         }
-        ok = from.Next();
     }
     if (ok == Status::ENDOFFRAME) {
         ok = Status::OK;
@@ -365,31 +371,23 @@ Status Replica<Store>::Commit::SaveChain(Builder&, Cursor& chain) {
     IFOK(join_.Write(Key{obj_id, LOG_FORM_UUID}, data));
     IFOK(join_.Write(Key{obj_id, tip_meta.rdt}, data));
 
+    tip_ = tip_meta.id;
+
     return tip_meta.id;
 }
 
 template <typename Store>
-Status Replica<Store>::GetFrame(Frame& object, Uuid id, Uuid rdt, Uuid branch) {
-    if (!open()) {
-        return Status::NOTOPEN;
-    }
-    if (!HasBranch(branch)) {
-        return Status::NOT_FOUND.comment("branch unknown");
-    }
-    Store& store = GetBranch(branch);
+Status Replica<Store>::Commit::GetFrame(Frame& object, Uuid id, Uuid rdt) {
     FORM t = uuid2form(rdt);
     if (t == ZERO_RAW_FORM) {
         return Status::NOTYPE;
     }
     Key key{id, rdt};
-    return store.Read(key, object);
+    return join_.Read(key, object);
 }
 
 template <typename Store>
-Status Replica<Store>::GetMap(Frame& result, Uuid id, Uuid map, Uuid branch) {
-    if (!open()) {
-        return Status::NOTOPEN;
-    }
+Status Replica<Store>::Commit::GetMap(Frame& result, Uuid id, Uuid map) {
     Builder response;
     Builder query;
     query.AppendNewOp(id, map);
@@ -397,9 +395,6 @@ Status Replica<Store>::GetMap(Frame& result, Uuid id, Uuid map, Uuid branch) {
     Cursor qc{query.data()};
     // Status ok = MapperQuery(response, qc, branch);
     MemStore mem;
-    if (!HasBranch(branch)) {
-        return Status::NOT_FOUND.comment("no branch " + branch.str());
-    }
 
     // FIXME all wrong, see @cblp
 
@@ -562,14 +557,18 @@ Status Replica<Store>::Commit::ReceiveQuery(Builder& response, Cursor& c) {
 
 template <typename Store>
 Status Replica<Store>::Commit::Save() {
-    Records save;
-    if (mem_.Release(save)) {
-        // Frames are applied transactionally, all or nothing.
-        // We saw no errors => we may save the changes.
-        return main_.Write(save);
-    } else {
+    if (tip_ == base_) {
         return Status::OK;
     }
+    // FIXME error handling!!!
+    Records save;
+    Frame now = OneOp<Frame>(tip_, ZERO_FORM_UUID);
+    IFOK(mem_.Write(Key::ZERO, now));
+    mem_.Release(save);
+    // Frames are applied transactionally, all or nothing.
+    // We saw no errors => we may save the changes.
+    base_ = tip_ = Uuid::NIL;
+    return main_.Write(save);
 }
 
 template <typename Store>
@@ -578,12 +577,11 @@ Status Replica<Store>::Receive(Builder& resp, Cursor& c, Uuid branch_id) {
     if (!open()) {
         return Status::NOTOPEN;
     }
-    if (!HasBranch(branch_id)) {
+    if (!HasBranch(branch_id.origin())) {
         // TODO 1 such check
         return Status::NOT_FOUND.comment("unknown branch");
     }
-    Store branch_store = GetBranch(branch_id);
-    Commit commit{*this, branch_store, branch_id.origin()};
+    Commit commit{*this, GetBranch(branch_id.origin())};
 
     while (c.valid() && ok) {
         if (c.id() == Uuid::COMMENT) {
@@ -595,7 +593,8 @@ Status Replica<Store>::Receive(Builder& resp, Cursor& c, Uuid branch_id) {
         } else if (c.id().version() == TIME) {
             ok = commit.ReceiveWrites(resp, c);
         } else if (c.id().version() == NAME) {
-            ok = Status::BADVALUE.comment("a runaway annotation");
+            ok = Status::BADVALUE.comment("not an event id " + c.id().str() +
+                                          " (a runaway annotation?)");
         } else if (c.id().version() == HASH) {
             ok = Status::NOT_IMPLEMENTED.comment("no blob support yet");
         } else {

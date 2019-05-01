@@ -51,8 +51,8 @@ class Replica {
     /** the largest feasible timestamp seen */
     Word now_;
 
-    /** the default (home) branch */
-    Uuid home_;
+    /** the default (active) branch/snapshot */
+    Uuid active_;
 
     replica_modes_t mode_{CONSISTENT_MODE};
 
@@ -85,8 +85,6 @@ class Replica {
     /** Open the replica in the current directory (all branches). */
     Status Open();
 
-    Status CreateBranch(Uuid branch_id);
-
     Status ListStores(Uuids &stores) {
         stores.clear();
         for (auto &p : branches_) {
@@ -118,73 +116,100 @@ class Replica {
 
     //  B R A N C H E S / Y A R N S
 
+    // TODO address stores, snapshots by Uuid, branches by yarn_id
+
+    Status CreateBranch(Uuid branch_id);
+    Status CreateSnapshotOffBranch(Uuid point);
+
     Status SplitBranch(Uuid mark);
     Status MergeBranch(Uuid mark);
     Status DropBranch(Uuid branch);
 
     //  H I G H  L E V E L  A C C E S S O R S
 
-    Status GetFrame(Frame &object, Uuid id, Uuid rdt, Uuid branch = Uuid::NIL);
-
-    inline bool HasBranch(Uuid branch) {
-        return branches_.find(branch) != branches_.end();
+    static inline Uuid yarn2branch(Word yarn_id) {
+        return Uuid::Time(NEVER, yarn_id);
     }
 
-    inline Store &GetCurrentBranch() {
-        return branches_.find(Uuid::NIL)->second;
+    inline bool HasBranch(Word yarn) {
+        return branches_.find(yarn2branch(yarn)) != branches_.end();
     }
 
-    inline Store &GetBranch(Uuid branch) {
-        return branches_.find(branch)->second;
+    inline Uuid active_store() const { return active_; }
+
+    inline Store &GetMetaStore() { return GetStore(Uuid::NIL); }
+
+    inline Store &GetActiveStore() { return branches_.find(active_)->second; }
+
+    inline Status SetActiveStore(Uuid store) {
+        auto i = branches_.find(store);
+        assert(i != branches_.end());
+        active_ = store;
+        return Status::OK;  // FIXME bullshit
     }
 
-    Status ReadNames(Names &names, Uuid branch = Uuid::NIL);
-    Status ReadName(Uuid &id, Uuid name, Uuid branch = Uuid::NIL);
+    inline Store &GetStore(Uuid branch) {
+        auto i = branches_.find(branch);
+        assert(i != branches_.end());
+        return i->second;
+    }
 
-    Status WriteName(Uuid key, Uuid value, Uuid branch = Uuid::NIL);
-
-    inline Store &GetMeta() { return GetBranch(Uuid::NIL); }
+    inline Store &GetBranch(Word yarn_id) {
+        return GetStore(Uuid::Time(NEVER, yarn_id));
+    }
 
     inline Status GetChain(Frame &chain, Uuid chain_id);
 
     Status FillAllStates(Store &branch);
 
-    inline Status GetObject(Frame &frame, Uuid id, Uuid rdt,
-                            Uuid branch = Uuid::NIL) {
-        return GetFrame(frame, id, rdt, branch);
-    }
-
-    inline Status GetObjectLog(Frame &frame, Uuid id, Uuid branch = Uuid::NIL) {
-        return GetFrame(frame, id, LOG_FORM_UUID);
-    }
-
-    Status FindObject(Frame &frame, Uuid key, Uuid branch = Uuid::NIL);
-
-    // FIXME old conv, rework
-    Status GetMap(Frame &result, Uuid id, Uuid map, Uuid branch = Uuid::NIL);
-
+    /** A Commit is an ongoing transaction in a branch; in case all ops in a
+     * Frame apply correctly, the Commit is saved. Otherwise, not. Commits are
+     * stack-allocated.
+     *  TODO ensure only 1 open commit per a branch
+     *  TODO read-onlies */
     class Commit {
         Replica &host_;
-        Word yarn_id_;
         MemStore mem_;
         Store &main_;
         CommitStore join_;
 
-        using Iterator = typename CommitStore::Iterator;
-
-        Commit(Replica &host, Store &main_store, Word id)
-            : host_{host},
-              yarn_id_{id},
-              mem_{},
-              main_{main_store},
-              join_{main_store, mem_} {}
-        friend class Replica;
+        Uuid base_;
+        Uuid max_;  // FIXME ensure the closing op is present
+        Uuid tip_;
+        String comment_;
 
        public:
+        using Iterator = typename CommitStore::Iterator;
+
+        Commit(Replica &host, Store &main_store)
+            : host_{host},
+              mem_{},
+              main_{main_store},
+              join_{main_store, mem_},
+              base_{main_store.tip},
+              tip_{base_},
+              comment_{}
+        {}
+
+        Commit(Replica &host, Uuid branch_id)
+            : Commit{host, host.GetStore(branch_id)} {}
+
+        explicit Commit(Replica &host) : Commit{host, host.current_branch()} {}
+
+        friend class Replica;
+
         using Frame = Replica::Frame;
         using Records = Replica::Records;
 
-        inline Word yarn_id() const { return yarn_id_; }
+        inline Uuid base() const { return base_; }
+
+        inline Uuid tip() const { return tip_; }
+
+        inline Uuid Now() { return tip_ = host_.Now(yarn_id()); }
+
+        inline Word yarn_id() const { return base_.origin(); }
+
+        inline Status status() const { return Status{tip(), comment_}; }
 
         /** The last op in the yarn.
          *  Must be something; the first op in a yarn is a meta-record
@@ -209,6 +234,21 @@ class Replica {
         Status FindObjectLog(Frame &frame, Uuid id);
 
         Status CheckEventSanity(const Cursor &op);
+
+        inline Status GetObject(Frame &frame, Uuid id, Uuid rdt) {
+            return GetFrame(frame, id, rdt);
+        }
+
+        Status GetFrame(Frame &object, Uuid id, Uuid rdt);
+
+        inline Status GetObjectLog(Frame &frame, Uuid id) {
+            return GetFrame(frame, id, LOG_FORM_UUID);
+        }
+
+        Status FindObject(Frame &frame, Uuid key);
+
+        // FIXME old conv, rework
+        Status GetMap(Frame &result, Uuid id, Uuid map);
 
         //  T R A N S A C T I O N A L  R E A D S  W R I T E S
 
@@ -292,6 +332,12 @@ class Replica {
             return Status::NOT_IMPLEMENTED.comment("MapWrite");
         }
 
+        Status ReadNames(Names &names);
+
+        Status ReadName(Uuid &id, Uuid name);
+
+        Status WriteName(Uuid key, Uuid value);
+
         //  R E C E I V E S
 
         Status ReceiveQuery(Builder &response, Cursor &c);
@@ -300,9 +346,21 @@ class Replica {
 
         Status Save();
 
+        Status Abort() {
+            base_ = tip_ = Uuid::NIL;
+            return Status::OK;
+        }
+
         inline Status Read(Key key, Frame &into) {
             return join_.Read(key, into);
         }
+
+        Status Close() {
+            return (tip_ > base_ && tip_.origin() == base_.origin()) ? Save()
+                                                                     : Abort();
+        }
+
+        ~Commit() { Close(); }
     };
 
     Status Receive(Builder &response, Cursor &c, Uuid branch = Uuid::NIL);

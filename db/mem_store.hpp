@@ -46,7 +46,7 @@ class InMemoryStore {
         Frame meta = OneOp<Frame>(id, YARN_FORM_UUID);
         Key zero{};
         state_.insert(Record{zero, meta});
-        state_.insert(Record{Key::END, Frame{}});
+        state_.insert(Record{Key::END, Frame{}});  // FIXME WTF?!
         return Status::OK;
     }
 

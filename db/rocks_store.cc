@@ -132,11 +132,13 @@ Status RocksDBStore<Frame>::Create(Uuid id) {
         db_ = SharedPtr{db};
     }
 
+    ColumnFamilyHandle* cfh;
+    auto db = static_pointer_cast<rocksdb::DB>(db_);
     if (id != Uuid::NIL) {
-        ColumnFamilyHandle* cfh;
-        auto db = static_pointer_cast<rocksdb::DB>(db_);
         IFROK(db->CreateColumnFamily(options, id.str(), &cfh));
         cf_.reset(cfh);
+    } else {
+        cf_ = SharedPtr{db->DefaultColumnFamily(), [](void*) {}};
     }
 
     tip = Uuid::NIL;
@@ -174,7 +176,6 @@ Status RocksDBStore<Frame>::Open(Uuid id) {
     if (!id.zero()) {
         return Status::NOT_IMPLEMENTED.comment("use OpenAll for now");
     }
-    // cf_.reset(db->DefaultColumnFamily()); ???
 
     return Status::OK;
 }
@@ -187,14 +188,6 @@ Status RocksDBStore<Frame>::Close() {
     return Status::OK;
 }
 
-/*template <typename Frame>
-Status RocksDBStore<Frame>::Put(Key key, const Frame& state, Uuid branch) {
-    uint64pair be = key.be();
-    rocksdb::Slice k = key2slice(be);
-    auto ok = DB_->Put(wo(), k, state.data());
-    return status(ok);
-}*/
-
 template <typename Frame>
 Status RocksDBStore<Frame>::Write(Key key, const Frame& change) {
     if (!db_) return Status::BAD_STATE.comment("closed");
@@ -206,24 +199,22 @@ Status RocksDBStore<Frame>::Write(Key key, const Frame& change) {
     auto cf = static_pointer_cast<rocksdb::ColumnFamilyHandle>(cf_);
     Slice data{change.data()};
     LOG('w', key, change.data());
-    IFROK(cf ? db->Merge(wo(), cf.get(), key2slice(be), slice(data))
-             : db->Merge(wo(), key2slice(be), slice(data)));
+    IFROK(db->Merge(wo(), cf.get(), key2slice(be), slice(data)));
     return Status::OK;
 }
 
 template <typename Frame>
 Status RocksDBStore<Frame>::Read(Key key, Frame& result) {
+    result.Clear();
     if (!db_) return Status::BAD_STATE.comment("closed");
     if (key == Key::END) {
-        result.Clear();
         return Status::OK;
     }
     uint64pair k = key.be();
     String ret;
     auto db = static_pointer_cast<rocksdb::DB>(db_);
     auto cf = static_pointer_cast<rocksdb::ColumnFamilyHandle>(cf_);
-    auto ok = cf ? db->Get(ro(), cf.get(), key2slice(k), &ret)
-                 : db->Get(ro(), key2slice(k), &ret);
+    auto ok = db->Get(ro(), cf.get(), key2slice(k), &ret);
     if (ok.IsNotFound()) {
         LOG('r', key, "");
         result.Clear();
@@ -238,20 +229,6 @@ Status RocksDBStore<Frame>::Read(Key key, Frame& result) {
     return Status::OK;
 }
 
-/*template <typename Frame>
-Status RocksDBStore<Frame>::Read(Key key, Builder& to, Uuid branch) {
-    uint64pair k = key.be();
-    String ret;
-    auto ok = DB_->Get(ro(), key2slice(k), &ret);
-    if (ok.IsNotFound()) return Status::NOT_FOUND;
-    if (!ok.ok()) {
-        return status(ok);
-    }
-    Cursor c{ret};
-    to.AppendAll(c);  // TODO optimize
-    return Status::OK;
-}*/
-
 template <typename Frame>
 Status RocksDBStore<Frame>::Write(const Records& batch) {
     rocksdb::WriteBatch b;
@@ -260,8 +237,7 @@ Status RocksDBStore<Frame>::Write(const Records& batch) {
         uint64pair k = i->first.be();
         const String& data = i->second.data();
         rocksdb::Slice slice{data};
-        cf ? b.Merge(cf.get(), key2slice(k), slice)
-           : b.Merge(key2slice(k), slice);
+        b.Merge(cf.get(), key2slice(k), slice);
         LOG('m', i->first, data);
     }
     auto db = static_pointer_cast<rocksdb::DB>(db_);
@@ -275,7 +251,7 @@ template <typename Frame>
 RocksDBStore<Frame>::Iterator::Iterator(RocksDBStore& host) {
     auto db = static_pointer_cast<rocksdb::DB>(host.db_);
     auto cf = static_pointer_cast<rocksdb::ColumnFamilyHandle>(host.cf_);
-    auto i = cf ? db->NewIterator(ro(), cf.get()) : db->NewIterator(ro());
+    auto i = db->NewIterator(ro(), cf.get());
     i_ = shared_ptr<rocksdb::Iterator>(i);
 }
 

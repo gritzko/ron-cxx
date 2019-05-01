@@ -50,15 +50,15 @@ add_dependencies(snappy_static snappy_pro)
 
 ExternalProject_Add(
     rocksdb_pro
-    URL https://github.com/facebook/rocksdb/archive/v5.15.10.tar.gz
-    URL_HASH SHA1=452f5a5e7d735f26bd30b837207b4b4527610dba
+    URL https://github.com/facebook/rocksdb/archive/v5.18.3.tar.gz
+    URL_HASH SHA1=dfaaff14d447d9c05f3dbcb84ba6640f4590f634
     UPDATE_COMMAND ""
     PREFIX ${ROCKSDB_PREFIX}
     CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX} --parallel ${CORES} -DWITH_TOOLS=OFF -DWITH_GFLAGS=OFF
     CMAKE_CACHE_ARGS -DWITH_TESTS:BOOL=FALSE
 #    CMAKE_GENERATOR "Unix Makefiles"
     BUILD_COMMAND ${CMAKE_COMMAND} ${CMAKE_ARGS} --build . --target rocksdb
-    INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdb_pro/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
+#    INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdb_pro/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
     BUILD_IN_SOURCE 1
     BUILD_BYPRODUCTS ${DEPS_PREFIX}/lib/librocksdb.a
 )

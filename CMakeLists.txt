@@ -67,13 +67,20 @@ set_property(TARGET rocksdb_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib
 add_dependencies(rocksdb_static rocksdb_pro)
 add_dependencies(rocksdb_pro snappy_pro)
 
+set(BOTAN_CC gcc)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  set(BOTAN_CC clang)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  set(BOTAN_CC gcc)
+endif()
+
 ExternalProject_Add(
     botan_pro
     URL https://botan.randombit.net/releases/Botan-2.9.0.tgz
     URL_HASH SHA1=e6876bc30a1301f56107ac3dc6d395810df08899
     PREFIX ${CRYPTO_PREFIX}
     UPDATE_COMMAND ""
-    CONFIGURE_COMMAND ./configure.py --cxxflags=${CMAKE_CXX_FLAGS} --ldflags=${CMAKE_EXE_LINKER_FLAGS} --prefix=${DEPS_PREFIX} --minimized-build --enable-modules=sha3,sha2_64
+    CONFIGURE_COMMAND ./configure.py --cxxflags=${CMAKE_CXX_FLAGS} --ldflags=${CMAKE_EXE_LINKER_FLAGS} --prefix=${DEPS_PREFIX} --minimized-build --enable-modules=sha3,sha2_64 --cc=${BOTAN_CC}
     BUILD_IN_SOURCE 1
     BUILD_COMMAND make ${MAKE_FLAGS} libbotan-2.a
     INSTALL_COMMAND cp -RL build/include/botan ${DEPS_PREFIX}/include && cp libbotan-2.a ${DEPS_PREFIX}/lib
@@ -306,7 +313,7 @@ add_test(MEMSTORE test22-memstore)
 
 add_executable(test23-rocks_store db/test/rocks.cc)
 add_dependencies(test23-rocks_store swarmdb_shared)
-target_link_libraries(test23-rocks_store swarmdb_shared rocksdb_static gtest_static)
+target_link_libraries(test23-rocks_store swarmdb_shared gtest_static)
 add_test(ROCKSTORE test23-rocks_store)
 
 add_executable(test24-joinstore db/test/joinstore.cc)

@@ -105,6 +105,27 @@ Status Replica<Store>::CreateBranch(Word yarn_id, bool transcendent) {
 }
 
 template <typename Store>
+Status Replica<Store>::ForkBranch(Word new_yarn_id, Word orig_yarn_id) {
+    if (!HasBranch(orig_yarn_id)) {
+        return Status::NOT_FOUND.comment("no such branch: " +
+                                         orig_yarn_id.str());
+    }
+    IFOK(CreateBranch(new_yarn_id));
+    Store& orig = GetBranch(orig_yarn_id);
+    Store& created = GetBranch(new_yarn_id);
+    StoreIterator i{orig};
+    IFOK(i.SeekTo(Key{}));
+
+    while (i.Next()) {
+        Frame f;
+        IFOK(orig.Read(i.key(), f));
+        IFOK(created.Write(i.key(), f));
+    }
+
+    return Status::OK;
+}
+
+template <typename Store>
 Status Replica<Store>::Commit::WriteName(Uuid key, Uuid value) {
     Records w;
     Uuid id = host_.Now(yarn_id());

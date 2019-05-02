@@ -41,6 +41,7 @@ class Replica {
 
     using MemStore = InMemoryStore<Frame>;
     using CommitStore = JoinedStore<Store, MemStore>;
+    using StoreIterator = typename Store::Iterator;
 
     using Names = std::unordered_map<Uuid, Uuid>;
 
@@ -127,6 +128,7 @@ class Replica {
      */
     Status CreateBranch(Word yarn_id, bool transcendent = false);
     Status CreateSnapshotOffBranch(Uuid point);
+    Status ForkBranch(Word new_yarn_id, Word orig_yarn_id);
 
     Status SplitBranch(Uuid mark);
     Status MergeBranch(Uuid mark);

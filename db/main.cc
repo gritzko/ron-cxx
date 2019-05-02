@@ -183,6 +183,39 @@ Status CommandCreate(RonReplica& replica, Args& args) {
     return Status{branch_id, "You started a yarn"};
 }
 
+constexpr const char* FORK_USAGE{
+    "fork [as BranchName]\n"
+    "   fork a branch"};
+
+Status CommandFork(RonReplica& replica, Args& args) {
+    Uuid active = replica.active_store();
+    CHECKARG(active == Uuid::NIL, "can't fork the metadata store");
+    Word active_yarn_id = active.origin();
+
+    Word new_yarn_id = Word::random();
+    Uuid new_branch_id = Uuid::Time(NEVER, new_yarn_id);
+    Uuid tag{};
+    if (!args.empty() && args.back() == "as") {
+        args.pop_back();
+        CHECKARG(args.empty(), "need a name for the branch");
+        tag = Uuid{args.back()};
+        args.pop_back();
+        CHECKARG(tag.is_error(),
+                 "the name must be a name UUID (up to ten Base64 chars)");
+        CHECKARG(tag.value().base64_case() != CAMEL,
+                 "branch names must be CamelCased");
+    }
+    CHECKARG(!args.empty(), CREATE_USAGE);
+
+    IFOK(replica.ForkBranch(new_yarn_id, active_yarn_id));
+    IFOK(replica.SetActiveStore(new_branch_id));
+    if (tag != Uuid::NIL) {
+        Commit c{replica, Uuid::NIL};
+        IFOK(c.WriteName(tag, new_branch_id));
+    }
+    return Status{new_branch_id, "You forked a yarn"};
+}
+
 constexpr const char* TEST_USAGE{
     "test test_file.ron\n"
     "   runs a RON test script\n"};
@@ -569,7 +602,7 @@ Status CommandHelp(RonReplica& replica, Args& args) {
     cout << "swarmdb -- a versioned syncable RON database\n"
          << "\nR E P L I C A   S C O P E D\n"
          << HELP_USAGE << INIT_USAGE << CREATE_USAGE << LIST_USAGE << HOP_USAGE
-         << ON_USAGE << TEST_USAGE << REPAIR_USAGE
+         << ON_USAGE << TEST_USAGE << REPAIR_USAGE << FORK_USAGE
          << "\nB R A N C H  S C O P E D\n"
          << NAME_USAGE << NAMED_USAGE << WRITE_USAGE << DUMP_USAGE
          << "\nO B J E C T  S C O P E D\n"
@@ -614,6 +647,8 @@ Status RunCommands(Args& args) {
 
     if (verb == "create") {
         return CommandCreate(replica, args);
+    } else if (verb == "fork") {
+        return CommandFork(replica, args);
     } else if (verb == "now") {
         return replica.Now();
     } else if (verb == "dump") {

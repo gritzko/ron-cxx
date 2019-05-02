@@ -21,6 +21,7 @@ using Store = RocksDBStore<Frame>;
 using RonReplica = Replica<Store>;
 using Commit = RonReplica::Commit;
 using StoreIterator = typename Store::Iterator;
+using Names = typename RonReplica::Names;
 
 #define CHECKARG(a, x)                     \
     if (a) {                               \
@@ -59,6 +60,30 @@ Status LoadFrame(Frame& target, const string& filename) {
     return LoadFrame(target, fd);
 }
 
+Status ResolveName(Uuid& name, RonReplica& replica,
+                   case_t need_case = NUMERIC) {
+    if (name.version() != NAME) {
+        return Status::OK;
+    }
+    if (name == Uuid::NIL) {
+        return Status::OK;
+    }
+    if (need_case != NUMERIC && name != Uuid::NIL &&
+        name.value().base64_case() != need_case) {
+        return Status::BADARGS.comment(
+            "the name must be in " + CASE_NAMES[need_case] + ": " + name.str());
+    }
+    Commit commit{replica};
+    Names names;
+    IFOK(commit.ReadNames(names));
+    auto i = names.find(name);
+    if (i == names.end()) {
+        return Status::NOT_FOUND.comment("name unknown: " + name.str());
+    }
+    name = i->second;
+    return Status::OK;
+}
+
 Status ScanAsNameArg(Uuid& name, case_t lcase, RonReplica& replica,
                      Args& args) {
     if (args.empty()) {
@@ -92,7 +117,9 @@ Status ScanOnBranchArg(Uuid& branch, RonReplica& replica, Args& args) {
     branch = Uuid{args.back()};
     args.pop_back();
     CHECKARG(branch.is_error(), "bad branch id syntax; must be name/id");
-    CHECKARG(!replica.HasBranch(branch.origin()), "no such branch");
+    IFOK(ResolveName(branch, replica, CAMEL));
+    CHECKARG(branch != Uuid::NIL && !replica.HasBranch(branch.origin()),
+             "no such branch: " + branch.str());
     return Status::OK;
 }
 
@@ -109,6 +136,7 @@ Status ScanOfObjectArg(Uuid& object, RonReplica& replica, Args& args) {
     object = Uuid{args.back()};
     args.pop_back();
     CHECKARG(object.is_error(), "bad id syntax");
+    IFOK(ResolveName(object, replica, SNAKE));
     return Status::OK;
 }
 
@@ -133,18 +161,25 @@ Status CommandCreate(RonReplica& replica, Args& args) {
     // TODO keys
     Word yarn_id = Word::random();
     Uuid branch_id = Uuid::Time(NEVER, yarn_id);
-    IFOK(replica.CreateBranch(yarn_id));
-    IFOK(replica.SetActiveStore(branch_id));
+    Uuid tag{};
     if (!args.empty() && args.back() == "as") {
         args.pop_back();
         CHECKARG(args.empty(), "need a name for the branch");
-        Uuid tag{args.back()};
+        tag = Uuid{args.back()};
+        args.pop_back();
         CHECKARG(tag.is_error(),
                  "the name must be a name UUID (up to ten Base64 chars)");
-        Commit c{replica};
+        CHECKARG(tag.value().base64_case() != CAMEL,
+                 "branch names must be CamelCased");
+    }
+    CHECKARG(!args.empty(), CREATE_USAGE);
+
+    IFOK(replica.CreateBranch(yarn_id));
+    IFOK(replica.SetActiveStore(branch_id));
+    if (tag != Uuid::NIL) {
+        Commit c{replica, Uuid::NIL};
         IFOK(c.WriteName(tag, branch_id));
     }
-
     return Status{branch_id, "You started a yarn"};
 }
 
@@ -402,8 +437,6 @@ Status CommandHashFrame(const string& filename) {
     return Status::OK;
 }
 
-using Names = typename RonReplica::Names;
-
 void reverse_map(Names& to, const Names& from) {
     for (auto& p : from) {
         to[p.second] = p.first;
@@ -512,7 +545,16 @@ constexpr const char* ON_USAGE{
     "   shows the active branch/snapshot (use `hop` to change)\n"};
 
 Status CommandOn(RonReplica& replica, Args& args) {
-    return replica.active_store();
+    Uuid id = replica.active_store();
+    Names seman, names;
+    Commit commit{replica, Uuid::NIL};
+    commit.ReadNames(seman);
+    reverse_map(names, seman);
+    auto i = names.find(id);
+    if (i != names.end()) {
+        id = i->second;
+    }
+    return id;
 }
 
 constexpr const char* REPAIR_USAGE{

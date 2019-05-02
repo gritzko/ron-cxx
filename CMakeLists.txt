@@ -24,12 +24,30 @@ link_directories(${DEPS_PREFIX}/lib/)
 
 file(MAKE_DIRECTORY ${DEPS_PREFIX}/include/ ${DEPS_PREFIX}/lib/)
 
+#  B U I L D  O P T I O N S
+
 include(ProcessorCount)
 ProcessorCount(CORES)
 if(CORES EQUAL 0)
     set(CORES 1)
 endif()
 set(MAKE_FLAGS "-j${CORES}")
+
+set(TEST_CXX_FLAGS "-g")
+set(TEST_LDD_FLAGS "")
+set(BOTAN_CC gcc)
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  set(BOTAN_CC clang)
+  set(TEST_CXX_FLAGS -g -O1 -fsanitize=address,undefined)
+  set(TEST_LDD_FLAGS -fsanitize=address,undefined)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+  set(BOTAN_CC clang)
+  set(TEST_CXX_FLAGS -g -O1 -fsanitize=address,undefined)
+  set(TEST_LDD_FLAGS -fsanitize=address,undefined)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  set(BOTAN_CC gcc)
+endif()
 
 #  D E P E N D E N C I E S
 
@@ -67,12 +85,6 @@ set_property(TARGET rocksdb_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib
 add_dependencies(rocksdb_static rocksdb_pro)
 add_dependencies(rocksdb_pro snappy_pro)
 
-set(BOTAN_CC gcc)
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  set(BOTAN_CC clang)
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(BOTAN_CC gcc)
-endif()
 
 ExternalProject_Add(
     botan_pro
@@ -174,9 +186,6 @@ add_dependencies(ron_static botan_pro)
 set_property(TARGET ron_static PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 #  L I B R O N  U N I T  T E S T S
-
-set(TEST_CXX_FLAGS $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize=address,undefined>)
-set(TEST_LDD_FLAGS $<$<C_COMPILER_ID:Clang>:-fsanitize=address,undefined>)
 
 add_library(ron_test_static STATIC
     ${RON_HEADERS}
@@ -297,28 +306,33 @@ SET_TARGET_PROPERTIES(swarmdb_shared PROPERTIES OUTPUT_NAME swarmdb)
 #  S W A R M D B  U N I T  T E S T S
 
 add_executable(test20-chains db/test/chains.cc)
+target_compile_options(test20-chains PRIVATE ${TEST_CXX_FLAGS})
 add_dependencies(test20-chains swarmdb_shared)
-target_link_libraries(test20-chains swarmdb_shared)
+target_link_libraries(test20-chains PRIVATE ${TEST_LDD_FLAGS} swarmdb_shared)
 add_test(CHAINS test20-chains)
 
 add_executable(test21-mappers db/test/mappers.cc)
+target_compile_options(test21-mappers PRIVATE ${TEST_CXX_FLAGS})
 add_dependencies(test21-mappers swarmdb_shared)
-target_link_libraries(test21-mappers swarmdb_shared)
+target_link_libraries(test21-mappers PRIVATE ${TEST_LDD_FLAGS} swarmdb_shared)
 add_test(MAPPERS test21-mappers)
 
 add_executable(test22-memstore db/test/memstore.cc)
+target_compile_options(test22-memstore PRIVATE ${TEST_CXX_FLAGS})
 add_dependencies(test22-memstore swarmdb_shared)
-target_link_libraries(test22-memstore swarmdb_shared gtest_static)
+target_link_libraries(test22-memstore PRIVATE ${TEST_LDD_FLAGS} swarmdb_shared gtest_static)
 add_test(MEMSTORE test22-memstore)
 
-add_executable(test23-rocks_store db/test/rocks.cc)
-add_dependencies(test23-rocks_store swarmdb_shared)
-target_link_libraries(test23-rocks_store swarmdb_shared gtest_static)
-add_test(ROCKSTORE test23-rocks_store)
+add_executable(test23-rocksstore db/test/rocks.cc)
+target_compile_options(test23-rocksstore PRIVATE ${TEST_CXX_FLAGS})
+add_dependencies(test23-rocksstore swarmdb_shared)
+target_link_libraries(test23-rocksstore PRIVATE ${TEST_LDD_FLAGS} swarmdb_shared gtest_static)
+add_test(ROCKSTORE test23-rocksstore)
 
 add_executable(test24-joinstore db/test/joinstore.cc)
+target_compile_options(test24-joinstore PRIVATE ${TEST_CXX_FLAGS})
 add_dependencies(test24-joinstore swarmdb_shared)
-target_link_libraries(test24-joinstore swarmdb_shared gtest_static)
+target_link_libraries(test24-joinstore PRIVATE ${TEST_LDD_FLAGS} swarmdb_shared gtest_static)
 add_test(JOINSTORE test24-joinstore)
 
 #  S W A R M D B  C L I

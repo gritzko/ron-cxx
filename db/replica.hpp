@@ -109,8 +109,6 @@ class Replica {
 
     const Frame &config() const { return config_; }
 
-    Uuid current_branch() const { return Uuid::NIL; }
-
     Status ReadConfigRecord(Uuid key, Atoms &values);
 
     Status WriteConfigRecord(Uuid key, const Atoms &values);
@@ -202,7 +200,7 @@ class Replica {
         Commit(Replica &host, Uuid branch_id)
             : Commit{host, host.GetStore(branch_id)} {}
 
-        explicit Commit(Replica &host) : Commit{host, host.current_branch()} {}
+        explicit Commit(Replica &host) : Commit{host, host.active_store()} {}
 
         friend class Replica;
 

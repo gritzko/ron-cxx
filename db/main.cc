@@ -106,7 +106,7 @@ Status ScanAsNameArg(Uuid& name, case_t lcase, RonReplica& replica,
 
 Status ScanOnBranchArg(Uuid& branch, RonReplica& replica, Args& args) {
     if (args.empty()) {
-        branch = replica.current_branch();
+        branch = replica.active_store();
         return Status::OK;
     }
     if (args.back() != "on") {
@@ -402,12 +402,13 @@ Status CommandNew(RonReplica& replica, Args& args) {
 
     CHECKARG(!args.empty(), NEW_USAGE);
 
-    Frame new_obj = OneOp<Frame>(replica.Now(), rdt);
+    Frame new_obj =
+        OneOp<Frame>(replica.Now(replica.active_store().origin()), rdt);
     Builder re;
     Cursor cu{new_obj};
 
     Commit c{replica};
-    IFOK(c.WriteNewEvents(re, cu));
+    IFOK(c.SaveChain(re, cu));
     Uuid id = c.tip();  // error for invalids
     if (!name.zero()) {
         IFOK(c.WriteName(name, id));

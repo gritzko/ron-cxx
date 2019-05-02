@@ -352,6 +352,7 @@ class Replica {
 
         Status Save();
 
+        /** as of now, a no-op */
         Status Abort() {
             base_ = tip_ = Uuid::NIL;
             return Status::OK;
@@ -361,10 +362,7 @@ class Replica {
             return join_.Read(key, into);
         }
 
-        Status Close() {
-            return (tip_ > base_ && tip_.origin() == base_.origin()) ? Save()
-                                                                     : Abort();
-        }
+        Status Close() { return tip_ == Uuid::NIL ? Status::OK : Abort(); }
 
         ~Commit() { Close(); }
     };

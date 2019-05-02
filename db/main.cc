@@ -60,8 +60,8 @@ Status LoadFrame(Frame& target, const string& filename) {
     return LoadFrame(target, fd);
 }
 
-Status ResolveName(Uuid& name, RonReplica& replica,
-                   case_t need_case = NUMERIC) {
+Status ResolveName(Uuid& name, RonReplica& replica, case_t need_case = NUMERIC,
+                   bool replica_scoped = false) {
     if (name.version() != NAME) {
         return Status::OK;
     }
@@ -73,7 +73,7 @@ Status ResolveName(Uuid& name, RonReplica& replica,
         return Status::BADARGS.comment(
             "the name must be in " + CASE_NAMES[need_case] + ": " + name.str());
     }
-    Commit commit{replica};
+    Commit commit{replica, replica_scoped ? Uuid::NIL : replica.active_store()};
     Names names;
     IFOK(commit.ReadNames(names));
     auto i = names.find(name);
@@ -117,7 +117,7 @@ Status ScanOnBranchArg(Uuid& branch, RonReplica& replica, Args& args) {
     branch = Uuid{args.back()};
     args.pop_back();
     CHECKARG(branch.is_error(), "bad branch id syntax; must be name/id");
-    IFOK(ResolveName(branch, replica, CAMEL));
+    IFOK(ResolveName(branch, replica, CAMEL, true));
     CHECKARG(branch != Uuid::NIL && !replica.HasBranch(branch.origin()),
              "no such branch: " + branch.str());
     return Status::OK;
@@ -407,13 +407,13 @@ Status CommandNew(RonReplica& replica, Args& args) {
     Builder re;
     Cursor cu{new_obj};
 
-    Commit c{replica};
-    IFOK(c.SaveChain(re, cu));
-    Uuid id = c.tip();  // error for invalids
+    Commit commit{replica};
+    IFOK(commit.SaveChain(re, cu));
+    Uuid id = commit.tip();  // error for invalids
     if (!name.zero()) {
-        IFOK(c.WriteName(name, id));
+        IFOK(commit.WriteName(name, id));
     }
-    // by default, a valid commit applies in the destructor (invalid aborts)
+    IFOK(commit.Save());
     return Status(id, rdt.str() + " object created");
 }
 

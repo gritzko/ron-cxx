@@ -493,6 +493,10 @@ Status CommandHop(RonReplica& replica, Args& args) {
     return Status::NOT_IMPLEMENTED;
 }
 
+Status CommandRepair(RonReplica& replica, Args& args) {
+    return Store::Repair();
+}
+
 Status CommandHelp(RonReplica& replica, Args& args) {
     cout << "swarmdb -- a versioned syncable RON database\n"
             "   \n"
@@ -522,6 +526,8 @@ Status RunCommands(Args& args) {
 
     if (verb == "help" || verb == "--help" || verb == "-help" || verb == "-h") {
         return CommandHelp(replica, args);
+    } else if (verb == "repair") {
+        return CommandRepair(replica, args);
     }
 
     if (verb == "test") {

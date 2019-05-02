@@ -69,6 +69,8 @@ class RocksDBStore {
 
     Status Open(Uuid id);
 
+    static Status Repair();
+
     static Status OpenAll(Branches& branches);
 
     Status Write(Key key, const Frame& change);

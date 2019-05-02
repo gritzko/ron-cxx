@@ -336,6 +336,27 @@ Status RocksDBStore<Frame>::OpenAll(Branches& branches) {
     return Status::OK;
 }
 
+template <class Frame>
+Status RocksDBStore<Frame>::Repair() {
+    Options options;
+    init_options<Frame>(options);
+
+    using CFD = ColumnFamilyDescriptor;
+    vector<ColumnFamilyDescriptor> families;
+    ColumnFamilyOptions cfo{};
+    cfo.merge_operator = make_shared<RDTMerge<Frame>>();
+    vector<std::string> cfnames;
+    IFROK(
+        rocksdb::DB::ListColumnFamilies(options, ROCKSDB_STORE_DIR, &cfnames));
+    for (auto& name : cfnames) {
+        families.push_back(CFD{name, cfo});
+    }
+
+    IFROK(rocksdb::RepairDB(ROCKSDB_STORE_DIR, options, families));
+
+    return Status::OK;
+}
+
 template class RocksDBStore<TextFrame>;
 
 }  // namespace ron

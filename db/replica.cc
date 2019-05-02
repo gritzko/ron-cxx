@@ -328,7 +328,6 @@ Status Replica<Store>::Commit::SaveChain(Builder&, Cursor& chain) {
             // TODO compare
             return Status::REPEAT.comment("event repeat? " + tip_id.str() +
                                           ">=" + id.str());
-            ;
         } else {
             return Status::CONFLICT.comment("can't merge a duplicate-id yarn");
         }

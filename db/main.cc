@@ -528,24 +528,20 @@ Status RunCommands(Args& args) {
         return CommandHelp(replica, args);
     } else if (verb == "repair") {
         return CommandRepair(replica, args);
-    }
-
-    if (verb == "test") {
+    } else if (verb == "test") {
         IFOK(tmp.cd("swarmdb_test"));
         IFOK(replica.CreateReplica());
         IFOK(OpenReplica(replica));
         tmp.back();
-    } else {
-        std::srand(std::time(nullptr));
-        ok = OpenReplica(replica);
-        if (!ok && verb != "init") {
-            return ok;
-        }
+        return CommandTest(replica, args);
+    } else if (verb == "init") {
+        return CommandInit(replica, args);
     }
 
-    if (verb == "init") {
-        return CommandInit(replica, args);
-    } else if (verb == "create") {
+    std::srand(std::time(nullptr));
+    IFOK(OpenReplica(replica));
+
+    if (verb == "create") {
         return CommandCreate(replica, args);
     } else if (verb == "now") {
         return replica.Now();
@@ -553,8 +549,6 @@ Status RunCommands(Args& args) {
         return CommandDump(replica, args);
     } else if (verb == "get") {
         return CommandGetFrame(replica, args);
-    } else if (verb == "test") {
-        return CommandTest(replica, args);
     } else if (verb == "create") {
         // TODO create db there^  create a CF here
     } else if (verb == "new") {
@@ -573,20 +567,6 @@ Status RunCommands(Args& args) {
         return Status::BADARGS.comment(
             "format: swarmdb verb [object] [prepositionals...]");
     }
-    /*
-     } else if (!FLAGS_hash.empty()) {
-     ok = CommandHashFrame(FLAGS_hash);
-     } else if (!FLAGS_query.empty()) {
-     ok = CommandQuery(replica, FLAGS_query);
-     } else if (!FLAGS_get.empty()) {
-     ok = CommandGetFrame(replica, FLAGS_get);
-     } else if (!FLAGS_write.empty()) {
-     ok = CommandWriteNewFrame(replica, FLAGS_write);
-     } else if (!FLAGS_dump.empty()) {
-     } else if (!FLAGS_test.empty()) {
-     ok = CommandTest(replica, FLAGS_test);
-     } else {
-     }*/
 
     replica.Close();
 

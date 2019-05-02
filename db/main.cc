@@ -135,8 +135,9 @@ constexpr const char* CREATE_USAGE{
 
 Status CommandCreate(RonReplica& replica, Args& args) {
     // TODO keys
-    Uuid branch_id = Uuid::Time(NEVER, Word::random());
-    IFOK(replica.CreateBranch(branch_id));
+    Word yarn_id = Word::random();
+    Uuid branch_id = Uuid::Time(NEVER, yarn_id);
+    IFOK(replica.CreateBranch(yarn_id));
     IFOK(replica.SetActiveStore(branch_id));
     if (!args.empty() && args.back() == "as") {
         args.pop_back();
@@ -162,7 +163,7 @@ Status CommandTest(RonReplica& replica, Args& args) {
 
     Word test_name{"test"};
     Uuid test_branch_id = Uuid::Time(NEVER, test_name);
-    IFOK(replica.CreateBranch(Uuid::Time(1, test_name)));
+    IFOK(replica.CreateBranch(test_name));
     IFOK(replica.SetActiveStore(test_branch_id));
 
     Frame tests;

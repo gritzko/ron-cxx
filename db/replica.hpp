@@ -118,7 +118,7 @@ class Replica {
 
     // TODO address stores, snapshots by Uuid, branches by yarn_id
 
-    Status CreateBranch(Uuid branch_id);
+    Status CreateBranch(Word yarn_id);
     Status CreateSnapshotOffBranch(Uuid point);
 
     Status SplitBranch(Uuid mark);
@@ -188,8 +188,7 @@ class Replica {
               join_{main_store, mem_},
               base_{main_store.tip},
               tip_{base_},
-              comment_{}
-        {}
+              comment_{} {}
 
         Commit(Replica &host, Uuid branch_id)
             : Commit{host, host.GetStore(branch_id)} {}

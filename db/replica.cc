@@ -12,22 +12,21 @@ const Uuid Replica<Store>::NOW_UUID{915334634030497792UL, 0};
 
 template <typename Store>
 Status Replica<Store>::CreateReplica() {
-    Store db;
-    // Uuid branch_id{0, origin};
-    // Uuid now = Uuid::Time(Uuid::Now(), 0);
-    IFOK(db.Create(Uuid::NIL));
+    {
+        Store db;
+        IFOK(db.Create(Uuid::NIL));
+    }
 
-    Frame local_names = OneOp<Frame>(Uuid::NIL, LWW_FORM_UUID);
-    IFOK(db.Write(Key{Uuid::NIL, LWW_FORM_UUID}, local_names));
+    Replica re;
+    re.Open();
+
     Uuid now0 = Uuid::Time(Uuid::Now(), ZERO);
-    Frame local_yarn = OneOp<Frame>(now0, YARN_FORM_UUID);
-    IFOK(db.Write(Key{now0, LOG_FORM_UUID}, local_yarn));
-    OpMeta tip_meta{local_yarn.cursor(), OpMeta{}};
+    Commit commit{re};
+    Frame yarn_init = OneOp<Frame>(now0, YARN_FORM_UUID);
+    Cursor c{yarn_init};
     Builder b;
-    tip_meta.Save(b);
-    IFOK(db.Write(Key{now0, META_FORM_UUID}, b.Release()));
-
-    return Status::OK;
+    commit.SaveChain(b, c);
+    return commit.Save();
 }
 
 template <typename Store>
@@ -47,20 +46,22 @@ Status Replica<Store>::Open() {
         if (!mc.valid()) {
             return Status::BADFRAME.comment("tip record is corrupted");
         }
-        store.tip = mc.id();
-        IFOK(store.tip);
-        if (store.tip.origin() != id.origin()) {
-            return Status::BADFRAME.comment("tip record is malformed");
+        Uuid tip = mc.id();
+        if (tip.origin() != id.origin() && id != Uuid::NIL) {
+            return Status::BADFRAME.comment(
+                "tip record is from a different origin; " + tip.str() +
+                " for " + id.str());
         }
+        store.tip = tip;
     }
 
     return Status::OK;
 }
 
 template <typename Store>
-Status Replica<Store>::CreateBranch(Uuid yarn_event) {
-    Word yarn_id = yarn_event.origin();
+Status Replica<Store>::CreateBranch(Word yarn_id) {
     Uuid branch_id = yarn2branch(yarn_id);
+    Uuid event_id = Now(yarn_id);
     if (HasBranch(yarn_id)) {
         return Status::BADARGS.comment("branch already exists");
     }
@@ -70,7 +71,7 @@ Status Replica<Store>::CreateBranch(Uuid yarn_event) {
     branches_.emplace(branch_id, new_branch_tmp);
 
     Commit commit{*this, branch_id};
-    Frame yarn_init = OneOp<Frame>(yarn_event, YARN_FORM_UUID);
+    Frame yarn_init = OneOp<Frame>(event_id, YARN_FORM_UUID);
     Cursor c{yarn_init};
     Builder b;
     commit.SaveChain(b, c);
@@ -224,17 +225,18 @@ Status Replica<Store>::Commit::FindObjectLog(Frame& frame, Uuid id) {
 
 template <typename Store>
 Status Replica<Store>::See(Uuid timestamp) {
+    if (timestamp.version() != TIME) {
+        return Status::BADARGS.comment("not an event: " + timestamp.str());
+    }
     if (timestamp.value() < now_) {
         return Status::OK;
     }
+    if (timestamp.value() >= NEVER) {
+        return Status::BADARGS.comment("an event timestamped NEVER: " +
+                                       timestamp.str());
+    }
+
     now_ = timestamp.value();  // TODO(gritzko) concurrent access
-    /*
-    Builder now_record;
-    now_record.AppendNewOp(Uuid::NIL, Uuid::NIL, now_);
-    save.emplace_back(Key{}, now_record.Release());
-    // TODO sanity/plausibility check
-    // TODO move to Close()
-    */
     return Status::OK;
 }
 
@@ -559,6 +561,14 @@ template <typename Store>
 Status Replica<Store>::Commit::Save() {
     if (tip_ == base_) {
         return Status::OK;
+    }
+    if (base_ != Uuid::NIL && tip_.origin() != base_.origin()) {
+        return Status::BAD_STATE.comment("tip changes origin? " + base_.str() +
+                                         " -> " + tip_.str());
+    }
+    if (tip_ < base_) {
+        return Status::BAD_STATE.comment("tip regresses? " + base_.str() +
+                                         " -> " + tip_.str());
     }
     // FIXME error handling!!!
     Records save;

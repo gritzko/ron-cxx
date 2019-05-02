@@ -36,6 +36,8 @@ class MasterRDT {
             case LOG_RAW_FORM:
                 return log_.Merge(output, inputs);
             case ZERO_RAW_FORM:
+                if (!inputs.empty()) output.AppendAll(inputs.back());
+                return Status::OK;
             case META_META_FORM:
                 return meta_.Merge(output, inputs);
             case YARN_RAW_FORM:

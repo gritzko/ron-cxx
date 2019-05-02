@@ -148,20 +148,6 @@ Status RocksDBStore<Frame>::Create(Uuid id) {
     return Status::OK;
 }
 
-// template <typename Frame>
-// Status RocksDBStore<Frame>::ReadTip() {
-//    Frame now;
-//    IFOK(Read(Key::ZERO, now));
-//    Cursor c{now};
-//    if (c.valid()) {
-//        tip_ = c.id();
-//        return Status::OK;
-//    } else {
-//        tip_ = Uuid{NEVER,ZERO};
-//        return Status::BAD_STATE.comment("malformed 'now' record");
-//    }
-//}
-
 template <typename Frame>
 Status RocksDBStore<Frame>::Open(Uuid id) {
     if (db_) return Status::BAD_STATE.comment("db open already");

@@ -118,7 +118,14 @@ class Replica {
 
     // TODO address stores, snapshots by Uuid, branches by yarn_id
 
-    Status CreateBranch(Word yarn_id);
+    /**
+     * Creates a branch. A branch is a transitive closure of a yarn.
+     * \param yarn_id either crypto-generated or random or anything; we only
+     * need general collision resistance here (mostly in the scope of a
+     * replica). \param transcendent branches are not created by any particular
+     * event but exist by convention, like the `test` branch.
+     */
+    Status CreateBranch(Word yarn_id, bool transcendent = false);
     Status CreateSnapshotOffBranch(Uuid point);
 
     Status SplitBranch(Uuid mark);

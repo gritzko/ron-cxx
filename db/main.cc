@@ -163,7 +163,7 @@ Status CommandTest(RonReplica& replica, Args& args) {
 
     Word test_name{"test"};
     Uuid test_branch_id = Uuid::Time(NEVER, test_name);
-    IFOK(replica.CreateBranch(test_name));
+    IFOK(replica.CreateBranch(test_name, true));
     IFOK(replica.SetActiveStore(test_branch_id));
 
     Frame tests;

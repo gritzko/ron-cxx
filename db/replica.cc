@@ -59,9 +59,9 @@ Status Replica<Store>::Open() {
 }
 
 template <typename Store>
-Status Replica<Store>::CreateBranch(Word yarn_id) {
+Status Replica<Store>::CreateBranch(Word yarn_id, bool transcendent) {
     Uuid branch_id = yarn2branch(yarn_id);
-    Uuid event_id = Now(yarn_id);
+    Uuid event_id = transcendent ? Uuid::Time(0, yarn_id) : Now(yarn_id);
     if (HasBranch(yarn_id)) {
         return Status::BADARGS.comment("branch already exists");
     }
@@ -326,7 +326,9 @@ Status Replica<Store>::Commit::SaveChain(Builder&, Cursor& chain) {
             return ok;
         } else if (id == tip_meta.id) {
             // TODO compare
-            return Status::REPEAT;
+            return Status::REPEAT.comment("event repeat? " + tip_id.str() +
+                                          ">=" + id.str());
+            ;
         } else {
             return Status::CONFLICT.comment("can't merge a duplicate-id yarn");
         }
@@ -335,7 +337,8 @@ Status Replica<Store>::Commit::SaveChain(Builder&, Cursor& chain) {
             return ok;
         }
         if (tip_id >= id) {
-            return Status::REPEAT;
+            return Status::CAUSEBREAK.comment("event reordering? " +
+                                              tip_id.str() + ">=" + id.str());
         }
     }
 

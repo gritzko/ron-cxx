@@ -36,9 +36,9 @@ Status Replica<Store>::Open() {
         return Status::BAD_STATE.comment("already open");
     }
 
-    IFOK(Store::OpenAll(branches_));
+    IFOK(Store::OpenAll(stores_));
 
-    for (auto& i : branches_) {
+    for (auto& i : stores_) {
         Uuid id = i.first;
         Store& store = i.second;
         Frame meta_rec;
@@ -88,7 +88,7 @@ Status Replica<Store>::CreateBranch(Word yarn_id, bool transcendent) {
     const Store& meta = GetMetaStore();
     Store new_branch_tmp{meta.db()};
     IFOK(new_branch_tmp.Create(branch_id));
-    branches_.emplace(branch_id, new_branch_tmp);
+    stores_.emplace(branch_id, new_branch_tmp);
 
     Commit commit{*this, branch_id};
     Frame yarn_init = OneOp<Frame>(event_id, YARN_FORM_UUID);
@@ -123,6 +123,11 @@ Status Replica<Store>::ForkBranch(Word new_yarn_id, Word orig_yarn_id) {
     }
 
     return Status::OK;
+}
+    
+template <typename Store>
+inline Status Replica<Store>::DropStore(Uuid store) {
+    return Status::NOT_IMPLEMENTED;
 }
 
 template <typename Store>
@@ -175,9 +180,9 @@ Status Replica<Store>::GC() {
 
 template <typename Store>
 Status Replica<Store>::Close() {
-    if (!branches_.empty()) {
+    if (!stores_.empty()) {
         GetMetaStore().Close();
-        branches_.clear();
+        stores_.clear();
     }
     return Status::OK;
 }
@@ -625,16 +630,16 @@ Status Replica<Store>::Commit::Save() {
 }
 
 template <typename Store>
-Status Replica<Store>::Receive(Builder& resp, Cursor& c, Uuid branch_id) {
+Status Replica<Store>::Receive(Builder& resp, Cursor& c, Word yarn_id) {
     Status ok = Status::OK;
     if (!open()) {
         return Status::NOTOPEN;
     }
-    if (!HasBranch(branch_id.origin())) {
+    if (!HasBranch(yarn_id)) {
         // TODO 1 such check
         return Status::NOT_FOUND.comment("unknown branch");
     }
-    Commit commit{*this, GetBranch(branch_id.origin())};
+    Commit commit{*this, GetBranch(yarn_id)};
 
     while (c.valid() && ok) {
         if (c.id() == Uuid::COMMENT) {

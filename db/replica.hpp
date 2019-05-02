@@ -69,7 +69,7 @@ class Replica {
      *  private keys etc; it is not replicated unless in cluster
      *  scenarios.
      *   */
-    std::unordered_map<Uuid, Store> branches_;
+    std::unordered_map<Uuid, Store> stores_;
 
     Frame config_;
 
@@ -88,7 +88,7 @@ class Replica {
 
     Status ListStores(Uuids &stores) {
         stores.clear();
-        for (auto &p : branches_) {
+        for (auto &p : stores_) {
             stores.push_back(p.first);
         }
         return Status::OK;
@@ -105,7 +105,7 @@ class Replica {
 
     inline mode_t mode() const { return mode_; }
 
-    inline bool open() const { return !branches_.empty(); }
+    inline bool open() const { return !stores_.empty(); }
 
     const Frame &config() const { return config_; }
 
@@ -130,11 +130,15 @@ class Replica {
 
     Status SplitBranch(Uuid mark);
     Status MergeBranch(Uuid mark);
-    Status DropBranch(Uuid branch);
+
+    Status DropStore(Uuid store);
+    inline Status DropBranch(Word yarn_id) {
+        return DropStore(yarn2branch(yarn_id));
+    }
 
     inline bool HasStore(Uuid store) const {
-        auto i = branches_.find(store);
-        return i != branches_.end();
+        auto i = stores_.find(store);
+        return i != stores_.end();
     }
 
     //  H I G H  L E V E L  A C C E S S O R S
@@ -144,20 +148,20 @@ class Replica {
     }
 
     inline bool HasBranch(Word yarn) {
-        return branches_.find(yarn2branch(yarn)) != branches_.end();
+        return stores_.find(yarn2branch(yarn)) != stores_.end();
     }
 
     inline Uuid active_store() const { return active_; }
 
     inline Store &GetMetaStore() { return GetStore(Uuid::NIL); }
 
-    inline Store &GetActiveStore() { return branches_.find(active_)->second; }
+    inline Store &GetActiveStore() { return stores_.find(active_)->second; }
 
-    inline Status SetActiveStore(Uuid store);
+    Status SetActiveStore(Uuid store);
 
-    inline Store &GetStore(Uuid branch) {
-        auto i = branches_.find(branch);
-        assert(i != branches_.end());
+    inline Store &GetStore(Uuid store_id) {
+        auto i = stores_.find(store_id);
+        assert(i != stores_.end());
         return i->second;
     }
 
@@ -197,8 +201,8 @@ class Replica {
               tip_{base_},
               comment_{} {}
 
-        Commit(Replica &host, Uuid branch_id)
-            : Commit{host, host.GetStore(branch_id)} {}
+        Commit(Replica &host, Uuid store_id)
+            : Commit{host, host.GetStore(store_id)} {}
 
         explicit Commit(Replica &host) : Commit{host, host.active_store()} {}
 
@@ -367,10 +371,9 @@ class Replica {
         ~Commit() { Close(); }
     };
 
-    Status Receive(Builder &response, Cursor &c, Uuid branch = Uuid::NIL);
+    Status Receive(Builder &response, Cursor &c, Word branch = ZERO);
 
-    inline Status ReceiveFrame(Builder &response, Frame frame,
-                               Uuid branch = Uuid::NIL) {
+    inline Status ReceiveFrame(Builder &response, Frame frame, Word branch = ZERO) {
         Cursor c{frame};
         return Receive(response, c, branch);
     }

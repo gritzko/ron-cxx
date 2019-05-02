@@ -225,9 +225,9 @@ Status CommandTest(RonReplica& replica, Args& args) {
     String file = args.back();
     args.pop_back();
 
-    Word test_name{"test"};
-    Uuid test_branch_id = Uuid::Time(NEVER, test_name);
-    IFOK(replica.CreateBranch(test_name, true));
+    Word test_yarn_id{"test"};
+    Uuid test_branch_id = Uuid::Time(NEVER, test_yarn_id);
+    IFOK(replica.CreateBranch(test_yarn_id, true));
     IFOK(replica.SetActiveStore(test_branch_id));
 
     Frame tests;
@@ -258,7 +258,7 @@ Status CommandTest(RonReplica& replica, Args& args) {
             }
             cerr << "?\t" << comment << '\t' << (ok ? OK : FAIL) << endl;
         } else if (term == HEADER) {
-            ok = replica.ReceiveFrame(b, io[i], test_branch_id);
+            ok = replica.ReceiveFrame(b, io[i], test_yarn_id);
             cerr << "!\t" << comment << '\t' << (ok ? OK : FAIL + ok.str())
                  << endl;
         } else {

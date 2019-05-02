@@ -79,6 +79,8 @@ class RocksDBStore {
 
     Status Write(const Records& batch);
 
+    Status Drop();
+
     Status Close();
 
     ~RocksDBStore() { Close(); }

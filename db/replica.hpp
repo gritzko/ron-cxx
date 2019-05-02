@@ -373,7 +373,8 @@ class Replica {
 
     Status Receive(Builder &response, Cursor &c, Word branch = ZERO);
 
-    inline Status ReceiveFrame(Builder &response, Frame frame, Word branch = ZERO) {
+    inline Status ReceiveFrame(Builder &response, Frame frame,
+                               Word branch = ZERO) {
         Cursor c{frame};
         return Receive(response, c, branch);
     }

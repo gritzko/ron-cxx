@@ -216,6 +216,21 @@ Status CommandFork(RonReplica& replica, Args& args) {
     return Status{new_branch_id, "You forked a yarn"};
 }
 
+constexpr const char* DROP_USAGE{
+    "drop [SNAPSHOT|BranchName]\n"
+    "   drop a snapshot or a branch"};
+
+Status CommandDrop(RonReplica& replica, Args& args) {
+    CHECKARG(args.empty(), DROP_USAGE);
+    args.push_back("on");
+    Uuid branch_id;
+    IFOK(ScanOnBranchArg(branch_id, replica, args));
+    if (branch_id == Uuid::NIL) {
+        return Status::BADARGS.comment("can't drop meta store");
+    }
+    return replica.DropStore(branch_id);
+}
+
 constexpr const char* TEST_USAGE{
     "test test_file.ron\n"
     "   runs a RON test script\n"};
@@ -603,7 +618,7 @@ Status CommandHelp(RonReplica& replica, Args& args) {
     cout << "swarmdb -- a versioned syncable RON database\n"
          << "\nR E P L I C A   S C O P E D\n"
          << HELP_USAGE << INIT_USAGE << CREATE_USAGE << LIST_USAGE << HOP_USAGE
-         << ON_USAGE << TEST_USAGE << REPAIR_USAGE << FORK_USAGE
+         << ON_USAGE << TEST_USAGE << REPAIR_USAGE << FORK_USAGE << DROP_USAGE
          << "\nB R A N C H  S C O P E D\n"
          << NAME_USAGE << NAMED_USAGE << WRITE_USAGE << DUMP_USAGE
          << "\nO B J E C T  S C O P E D\n"
@@ -668,6 +683,8 @@ Status RunCommands(Args& args) {
         return CommandWrite(replica, args);
     } else if (verb == "hop") {
         return CommandHop(replica, args);
+    } else if (verb == "drop") {
+        return CommandDrop(replica, args);
     } else if (verb == "on") {
         return CommandOn(replica, args);
     } else {

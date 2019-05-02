@@ -124,10 +124,17 @@ Status Replica<Store>::ForkBranch(Word new_yarn_id, Word orig_yarn_id) {
 
     return Status::OK;
 }
-    
+
 template <typename Store>
 inline Status Replica<Store>::DropStore(Uuid store) {
-    return Status::NOT_IMPLEMENTED;
+    if (!HasStore(store)) {
+        return Status::NOT_FOUND.comment("no such store: " + store.str());
+    }
+    Store& kill = GetStore(store);
+    IFOK(kill.Drop());
+    stores_.erase(store);
+    // TODO consistency checks
+    return Status::OK;
 }
 
 template <typename Store>

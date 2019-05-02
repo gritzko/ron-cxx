@@ -167,6 +167,14 @@ Status RocksDBStore<Frame>::Open(Uuid id) {
 }
 
 template <typename Frame>
+Status RocksDBStore<Frame>::Drop() {
+    auto db = static_pointer_cast<rocksdb::DB>(db_);
+    auto cf = static_pointer_cast<rocksdb::ColumnFamilyHandle>(cf_);
+    IFROK(db->DropColumnFamily(cf.get()));
+    return Close();
+}
+
+template <typename Frame>
 Status RocksDBStore<Frame>::Close() {
     if (!db_.use_count()) return Status::BAD_STATE.comment("already closed");
     cf_.reset();

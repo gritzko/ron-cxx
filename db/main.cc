@@ -38,10 +38,6 @@ constexpr const char* HELP_USAGE{
     "help\n"
     "   print a memo on commands\n"};
 
-constexpr const char* HOP_USAGE{
-    "hop <BranchName|SNAPSHOT>\n"
-    "   switch to another branch or snapshot\n"};
-
 Status LoadFrame(Frame& target, int fd) {
     string tmp;
     constexpr size_t BLOCK = 1 << 12;
@@ -215,7 +211,7 @@ Status CommandDump(RonReplica& replica, Args& args) {
         if (rdt == ZERO_RAW_FORM) return Status::BADARGS.comment("unknown RDT");
     }*/
     if (!replica.open()) return Status::BAD_STATE.comment("db is not open?");
-    StoreIterator i{replica.GetMetaStore()};
+    StoreIterator i{replica.GetActiveStore()};
     IFOK(i.SeekTo(Key{}));
     do {
         cout << i.key().str() << '\t' << i.value().data().str();
@@ -406,19 +402,34 @@ Status CommandHashFrame(const string& filename) {
     return Status::OK;
 }
 
+using Names = typename RonReplica::Names;
+
+void reverse_map(Names& to, const Names& from) {
+    for (auto& p : from) {
+        to[p.second] = p.first;
+    }
+}
+
 constexpr const char* LIST_USAGE{
-    "list [branches|snapshots|stores] [in BranchName]\n"
+    "list [branches|snapshots|stores]\n"
     "   list branches (or snapshots, or all the stores)\n"};
 
 Status CommandList(RonReplica& replica, Args& args) {
-    CHECKARG(args.empty(), LIST_USAGE);
+    string what = "stores";
+    if (!args.empty()) {
+        what = args.back();
+        args.pop_back();
+        CHECKARG(what != "branches" && what != "snapshots" && what != "stores",
+                 LIST_USAGE);
+    }
 
     Uuids stores;
     IFOK(replica.ListStores(stores));
 
-    typename RonReplica::Names names;
+    Names seman, names;
     Commit commit{replica, Uuid::NIL};
-    IFOK(commit.ReadNames(names));
+    IFOK(commit.ReadNames(seman));
+    reverse_map(names, seman);
 
     for (auto& u : stores) {
         cout << u.str() << '\t' << names[u] << '\n';
@@ -486,12 +497,27 @@ Status CommandNamed(RonReplica& replica, Args& args) {
     return Status::OK;
 }
 
+constexpr const char* HOP_USAGE{
+    "hop [on BranchName|on SNAPSHOT]\n"
+    "   hop onto a different branch/snapshot\n"};
+
 Status CommandHop(RonReplica& replica, Args& args) {
-    // 1. exact tag list mech
-    // 2. current branch? LoadFrame?
-    // 3. now/version?
-    return Status::NOT_IMPLEMENTED;
+    Uuid branch;
+    IFOK(ScanOnBranchArg(branch, replica, args));
+    return replica.SetActiveStore(branch);
 }
+
+constexpr const char* ON_USAGE{
+    "on\n"
+    "   shows the active branch/snapshot (use `hop` to change)\n"};
+
+Status CommandOn(RonReplica& replica, Args& args) {
+    return replica.active_store();
+}
+
+constexpr const char* REPAIR_USAGE{
+    "repair\n"
+    "   invoke RocksDB self-repair routines (e.g. after a crash)\n"};
 
 Status CommandRepair(RonReplica& replica, Args& args) {
     return Store::Repair();
@@ -499,10 +525,13 @@ Status CommandRepair(RonReplica& replica, Args& args) {
 
 Status CommandHelp(RonReplica& replica, Args& args) {
     cout << "swarmdb -- a versioned syncable RON database\n"
-            "   \n"
-         << HELP_USAGE << INIT_USAGE << CREATE_USAGE << NEW_USAGE << GET_USAGE
-         << LIST_USAGE << NAME_USAGE << NAMED_USAGE << HOP_USAGE << TEST_USAGE
-         << WRITE_USAGE << DUMP_USAGE;
+         << "\nR E P L I C A   S C O P E D\n"
+         << HELP_USAGE << INIT_USAGE << CREATE_USAGE << LIST_USAGE << HOP_USAGE
+         << ON_USAGE << TEST_USAGE << REPAIR_USAGE
+         << "\nB R A N C H  S C O P E D\n"
+         << NAME_USAGE << NAMED_USAGE << WRITE_USAGE << DUMP_USAGE
+         << "\nO B J E C T  S C O P E D\n"
+         << NEW_USAGE << GET_USAGE;
     return Status::OK;
 }
 
@@ -549,8 +578,6 @@ Status RunCommands(Args& args) {
         return CommandDump(replica, args);
     } else if (verb == "get") {
         return CommandGetFrame(replica, args);
-    } else if (verb == "create") {
-        // TODO create db there^  create a CF here
     } else if (verb == "new") {
         return CommandNew(replica, args);
     } else if (verb == "list") {
@@ -563,6 +590,8 @@ Status RunCommands(Args& args) {
         return CommandWrite(replica, args);
     } else if (verb == "hop") {
         return CommandHop(replica, args);
+    } else if (verb == "on") {
+        return CommandOn(replica, args);
     } else {
         return Status::BADARGS.comment(
             "format: swarmdb verb [object] [prepositionals...]");

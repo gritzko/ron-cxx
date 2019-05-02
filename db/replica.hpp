@@ -132,6 +132,11 @@ class Replica {
     Status MergeBranch(Uuid mark);
     Status DropBranch(Uuid branch);
 
+    inline bool HasStore(Uuid store) const {
+        auto i = branches_.find(store);
+        return i != branches_.end();
+    }
+
     //  H I G H  L E V E L  A C C E S S O R S
 
     static inline Uuid yarn2branch(Word yarn_id) {
@@ -148,12 +153,7 @@ class Replica {
 
     inline Store &GetActiveStore() { return branches_.find(active_)->second; }
 
-    inline Status SetActiveStore(Uuid store) {
-        auto i = branches_.find(store);
-        assert(i != branches_.end());
-        active_ = store;
-        return Status::OK;  // FIXME bullshit
-    }
+    inline Status SetActiveStore(Uuid store);
 
     inline Store &GetStore(Uuid branch) {
         auto i = branches_.find(branch);

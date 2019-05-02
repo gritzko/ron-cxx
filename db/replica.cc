@@ -7,6 +7,7 @@ using namespace std;
 
 template <typename Store>
 const Uuid Replica<Store>::NOW_UUID{915334634030497792UL, 0};
+const Uuid ACTIVE_STORE_UUID{"0000active+0"};
 
 //  L I F E C Y C L E
 
@@ -55,6 +56,25 @@ Status Replica<Store>::Open() {
         store.tip = tip;
     }
 
+    Frame active;
+    if (GetMetaStore().Read(Key{ACTIVE_STORE_UUID, ZERO_RAW_FORM}, active)) {
+        Cursor c{active};
+        if (HasStore(c.ref())) {
+            active_ = c.ref();
+        }
+    }
+
+    return Status::OK;
+}
+
+template <typename Store>
+inline Status Replica<Store>::SetActiveStore(Uuid store) {
+    if (!HasStore(store)) {
+        return Status::NOT_FOUND.comment("no such store: " + store.str());
+    }
+    Frame ac_rec = OneOp<Frame>(Now(), store);
+    IFOK(GetMetaStore().Write(Key{ACTIVE_STORE_UUID, ZERO_RAW_FORM}, ac_rec));
+    active_ = store;
     return Status::OK;
 }
 

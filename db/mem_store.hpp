@@ -97,8 +97,9 @@ class InMemoryStore {
                 return Status::BAD_STATE.comment("invalid iterator");
             }
             if (len_ > 1 && !merged_.empty()) {
+                auto k = key();
                 store_.erase(b_, e_);
-                e_ = store_.insert(Record{key(), std::move(merged_)});
+                e_ = store_.insert(Record{k, std::move(merged_)});
                 ++e_;
             }
             b_ = e_;

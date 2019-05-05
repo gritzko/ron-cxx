@@ -81,26 +81,6 @@ bool TextFrame::Cursor::int_too_big(const Slice& data) {
     return res > 0;
 }
 
-inline char TextFrame::decode_esc(char esc) {
-    switch (esc) {
-        case 'a':
-            return '\a';
-        case 'b':
-            return '\b';
-        case 'f':
-            return '\f';
-        case 'n':
-            return '\n';
-        case 'r':
-            return '\r';
-        case 't':
-            return '\t';
-        case 'v':
-            return '\v';
-        default:
-            return esc;
-    }
-}
 
 Codepoint TextFrame::decode_hex_cp(Slice data) {
     Codepoint ret = 0;

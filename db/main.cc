@@ -614,11 +614,21 @@ Status CommandRepair(RonReplica& replica, Args& args) {
     return Store::Repair();
 }
 
+constexpr const char* VERSION_USAGE{
+    "version\n"
+    "   print versioning info\n"};
+
+Status CommandVersion (RonReplica& replica, Args& args) {
+    cout << "swarmdb v0.0.1\n";
+    return Status::OK;
+}
+
 Status CommandHelp(RonReplica& replica, Args& args) {
     cout << "swarmdb -- a versioned syncable RON database\n"
          << "\nR E P L I C A   S C O P E D\n"
          << HELP_USAGE << INIT_USAGE << CREATE_USAGE << LIST_USAGE << HOP_USAGE
          << ON_USAGE << TEST_USAGE << REPAIR_USAGE << FORK_USAGE << DROP_USAGE
+         << VERSION_USAGE
          << "\nB R A N C H  S C O P E D\n"
          << NAME_USAGE << NAMED_USAGE << WRITE_USAGE << DUMP_USAGE
          << "\nO B J E C T  S C O P E D\n"
@@ -646,6 +656,8 @@ Status RunCommands(Args& args) {
 
     if (verb == "help" || verb == "--help" || verb == "-help" || verb == "-h") {
         return CommandHelp(replica, args);
+    } else if (verb == "version" || verb == "--version" || verb == "-version" || verb == "-v") {
+        return CommandVersion(replica, args);
     } else if (verb == "repair") {
         return CommandRepair(replica, args);
     } else if (verb == "test") {

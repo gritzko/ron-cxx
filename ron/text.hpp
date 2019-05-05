@@ -306,7 +306,7 @@ class TextFrame {
 
     static Codepoint decode_hex_cp(Slice data);
 
-    static char decode_esc(char esc);
+    inline static char decode_esc(char esc);
 
     struct StringIterator {
         Slice data_;
@@ -322,6 +322,27 @@ class TextFrame {
     };
 };
 
+
+inline char TextFrame::decode_esc(char esc) {
+    switch (esc) {
+        case 'a':
+            return '\a';
+        case 'b':
+            return '\b';
+        case 'f':
+            return '\f';
+        case 'n':
+            return '\n';
+        case 'r':
+            return '\r';
+        case 't':
+            return '\t';
+        case 'v':
+            return '\v';
+        default:
+            return esc;
+    }
+}
 }  // namespace ron
 
 namespace std {

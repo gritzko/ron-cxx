@@ -58,6 +58,7 @@ inline TERM chr2term(Char c) {
             return QUERY;
         default:
             assert(false);
+            return QUERY;
     }
 }
 

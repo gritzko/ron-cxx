@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ ! -d build-san ]; then
+    mkdir build-san || exit 2
+fi
+
+cd build-san
+
+CC=clang CXX=clang++ cmake -G Ninja -DCMAKE_CXX_FLAGS="-g -O1 -fsanitize=address,undefined" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" .. || exit 3
+ninja -v || exit 4
+
+ninja test
+

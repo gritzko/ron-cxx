@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ ! -d build-rel ]; then
+    mkdir build-rel || exit 2
+fi
+
+cd build-rel
+
+CC=clang CXX=clang++ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release .. || exit 3
+ninja -v || exit 4
+
+ninja test
+
+./swarmdb -v

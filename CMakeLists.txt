@@ -33,18 +33,13 @@ if(CORES EQUAL 0)
 endif()
 set(MAKE_FLAGS "-j${CORES}")
 
-set(TEST_CXX_FLAGS "-g")
-set(TEST_LDD_FLAGS "")
 set(BOTAN_CC gcc)
-
+set(TEST_CXX_FLAGS -g -O1)
+set(TEST_LDD_FLAGS -g -O1)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(BOTAN_CC clang)
-  set(TEST_CXX_FLAGS -g -O1 -fsanitize=address,undefined)
-  set(TEST_LDD_FLAGS -fsanitize=address,undefined)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
   set(BOTAN_CC clang)
-  set(TEST_CXX_FLAGS -g -O1 -fsanitize=address,undefined)
-  set(TEST_LDD_FLAGS -fsanitize=address,undefined)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(BOTAN_CC gcc)
 endif()
@@ -56,8 +51,8 @@ ExternalProject_Add(
     PREFIX ${snappy_PREFIX}
     URL https://github.com/google/snappy/archive/1.1.7.tar.gz
     URL_HASH SHA1=1ec676b842fc96fd8a95b03c12758935e7f257b0
-    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
-    CMAKE_GENERATOR "Unix Makefiles"
+    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX} -DSNAPPY_BUILD_TESTS=OFF
+#    CMAKE_GENERATOR "Unix Makefiles"
     BUILD_IN_SOURCE 1
     BUILD_BYPRODUCTS ${DEPS_PREFIX}/lib/libsnappy.a
 )
@@ -65,6 +60,7 @@ ExternalProject_Add(
 add_library(snappy_static STATIC IMPORTED)
 set_property(TARGET snappy_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/libsnappy.a)
 add_dependencies(snappy_static snappy_pro)
+add_dependencies(snappy_pro gtest_pro)
 
 ExternalProject_Add(
     rocksdb_pro
@@ -187,37 +183,29 @@ set_property(TARGET ron_static PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 #  L I B R O N  U N I T  T E S T S
 
-add_library(ron_test_static STATIC
-    ${RON_HEADERS}
-    ${RON_SOURCES}
-)
-add_dependencies(ron_test_static botan_pro)
-target_compile_options(ron_test_static PRIVATE ${TEST_CXX_FLAGS})
-set_property(TARGET ron_test_static PROPERTY POSITION_INDEPENDENT_CODE TRUE)
-
 add_executable(test01-uuid ron/test/uuid.cc)
 target_compile_options(test01-uuid PRIVATE ${TEST_CXX_FLAGS})
-target_link_libraries(test01-uuid ${TEST_LDD_FLAGS} ron_test_static gtest_static Threads::Threads)
+target_link_libraries(test01-uuid ${TEST_LDD_FLAGS} ron_static gtest_static Threads::Threads)
 add_test(UUID test01-uuid)
 
 add_executable(test02-text ron/test/text.cc)
 target_compile_options(test02-text PRIVATE ${TEST_CXX_FLAGS})
-target_link_libraries(test02-text ${TEST_LDD_FLAGS} ron_test_static)
+target_link_libraries(test02-text ${TEST_LDD_FLAGS} ron_static)
 add_test(TEXT test02-text)
 
 add_executable(test03-hash ron/test/hash.cc)
 target_compile_options(test03-hash PRIVATE ${TEST_CXX_FLAGS})
-target_link_libraries(test03-hash ${TEST_LDD_FLAGS} ron_test_static botan_static gtest_static Threads::Threads)
+target_link_libraries(test03-hash ${TEST_LDD_FLAGS} ron_static botan_static gtest_static Threads::Threads)
 add_test(HASH test03-hash)
 
 add_executable(test04-meta ron/test/meta.cc)
 target_compile_options(test04-meta PRIVATE ${TEST_CXX_FLAGS})
-target_link_libraries(test04-meta ${TEST_LDD_FLAGS} ron_test_static botan_static)
+target_link_libraries(test04-meta ${TEST_LDD_FLAGS} ron_static botan_static)
 add_test(HASH test04-meta)
 
 add_executable(test05-cp ron/test/cp.cc)
 target_compile_options(test05-cp PRIVATE ${TEST_CXX_FLAGS})
-target_link_libraries(test05-cp ${TEST_LDD_FLAGS} ron_test_static gtest_static Threads::Threads)
+target_link_libraries(test05-cp ${TEST_LDD_FLAGS} ron_static gtest_static Threads::Threads)
 add_test(CODEPOINTS test05-cp)
 
 set(FUZZ_CXX_FLAGS $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>)
@@ -247,7 +235,7 @@ target_include_directories(rdt_headers INTERFACE rdt/)
 
 add_executable(test10-lww rdt/test/lww.cc)
 target_compile_options(test10-lww PRIVATE ${TEST_CXX_FLAGS})
-target_link_libraries(test10-lww PRIVATE ${TEST_LDD_FLAGS} ron_test_static rdt_headers Threads::Threads gtest_static)
+target_link_libraries(test10-lww PRIVATE ${TEST_LDD_FLAGS} ron_static rdt_headers Threads::Threads gtest_static)
 add_test(LWW test10-lww)
 
 #add_executable(test11-metardt rdt/test/meta.cc)
@@ -256,17 +244,17 @@ add_test(LWW test10-lww)
 
 add_executable(test12-mx rdt/test/mx.cc)
 target_compile_options(test12-mx PRIVATE ${TEST_CXX_FLAGS})
-target_link_libraries(test12-mx PRIVATE ${TEST_LDD_FLAGS} ron_test_static rdt_headers)
+target_link_libraries(test12-mx PRIVATE ${TEST_LDD_FLAGS} ron_static rdt_headers)
 add_test(LWW test12-mx)
 
 add_executable(test14-rga rdt/test/rga.cc)
 target_compile_options(test14-rga PRIVATE ${TEST_CXX_FLAGS})
-target_link_libraries(test14-rga PRIVATE ${TEST_LDD_FLAGS} ron_test_static rdt_headers)
+target_link_libraries(test14-rga PRIVATE ${TEST_LDD_FLAGS} ron_static rdt_headers)
 add_test(RGA test14-rga)
 
 add_executable(test15-max rdt/test/max.cc)
 target_compile_options(test15-max PRIVATE ${TEST_CXX_FLAGS})
-target_link_libraries(test15-max PRIVATE ${TEST_LDD_FLAGS} ron_test_static rdt_headers Threads::Threads gtest_static)
+target_link_libraries(test15-max PRIVATE ${TEST_LDD_FLAGS} ron_static rdt_headers Threads::Threads gtest_static)
 add_test(MAX test15-max)
 
 #  S W A R M D B

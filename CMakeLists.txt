@@ -20,9 +20,10 @@ set(BTREE_PREFIX ${DEPS_PREFIX}/build/btree)
 set(GTEST_PREFIX ${DEPS_PREFIX}/build/gtest)
 
 include_directories(${DEPS_PREFIX}/include/)
-link_directories(${DEPS_PREFIX}/lib/)
+link_directories(${DEPS_PREFIX}/${LIBDIR}/)
+set(FIND_LIBRARY_USE_LIB64_PATHS ON)
 
-file(MAKE_DIRECTORY ${DEPS_PREFIX}/include/ ${DEPS_PREFIX}/lib/)
+file(MAKE_DIRECTORY ${DEPS_PREFIX}/include/ ${DEPS_PREFIX}/${LIBDIR}/)
 
 #  B U I L D  O P T I O N S
 
@@ -44,21 +45,44 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(BOTAN_CC gcc)
 endif()
 
+get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
+
+if ("${LIB64}" STREQUAL "TRUE")
+    set(LIBDIR "lib64")
+else()
+    set(LIBDIR "lib")
+endif()
+
 #  D E P E N D E N C I E S
+
+set(FWD_ARGS ${CMAKE_ARGS} --parallel=${CORES} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX})
+
+ExternalProject_Add(
+    gtest_pro
+    PREFIX ${GTEST_PREFIX}
+    CMAKE_ARGS ${FWD_ARGS}
+    URL https://github.com/google/googletest/archive/release-1.8.1.tar.gz
+    URL_HASH SHA1=152b849610d91a9dfa1401293f43230c2e0c33f8
+    BUILD_IN_SOURCE 1
+    UPDATE_COMMAND ""
+    BUILD_BYPRODUCTS ${DEPS_PREFIX}/${LIBDIR}/libgtest.a
+)
+add_library(gtest_static STATIC IMPORTED)
+set_property(TARGET gtest_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/${LIBDIR}/libgtest.a)
+add_dependencies(gtest_static gtest_pro)
 
 ExternalProject_Add(
     snappy_pro
     PREFIX ${snappy_PREFIX}
     URL https://github.com/google/snappy/archive/1.1.7.tar.gz
     URL_HASH SHA1=1ec676b842fc96fd8a95b03c12758935e7f257b0
-    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX} -DSNAPPY_BUILD_TESTS=OFF
-#    CMAKE_GENERATOR "Unix Makefiles"
+    CMAKE_ARGS ${FWD_ARGS} -DSNAPPY_BUILD_TESTS=OFF
     BUILD_IN_SOURCE 1
-    BUILD_BYPRODUCTS ${DEPS_PREFIX}/lib/libsnappy.a
+    BUILD_BYPRODUCTS ${DEPS_PREFIX}/${LIBDIR}/libsnappy.a
 )
 #include_directories(${snappy_PREFIX}/include)
 add_library(snappy_static STATIC IMPORTED)
-set_property(TARGET snappy_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/libsnappy.a)
+set_property(TARGET snappy_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/${LIBDIR}/libsnappy.a)
 add_dependencies(snappy_static snappy_pro)
 add_dependencies(snappy_pro gtest_pro)
 
@@ -68,16 +92,19 @@ ExternalProject_Add(
     URL_HASH SHA1=dfaaff14d447d9c05f3dbcb84ba6640f4590f634
     UPDATE_COMMAND ""
     PREFIX ${ROCKSDB_PREFIX}
-    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX} --parallel ${CORES} -DWITH_TOOLS=OFF -DWITH_GFLAGS=OFF
+    CMAKE_ARGS ${FWD_ARGS} -DWITH_TOOLS=OFF -DFAIL_ON_WARNINGS=OFF -DWITH_GFLAGS=OFF
     CMAKE_CACHE_ARGS -DWITH_TESTS:BOOL=FALSE
 #    CMAKE_GENERATOR "Unix Makefiles"
     BUILD_COMMAND ${CMAKE_COMMAND} ${CMAKE_ARGS} --build . --target rocksdb
+#    because of Mac OS X we have to use cmake install, which builds the shared version of hte library
+#    that increases build time x2, so we are waiting eagerly for https://github.com/facebook/rocksdb/issues/4484
+#    and https://github.com/facebook/rocksdb/pull/4972 to be resolved
 #    INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdb_pro/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
     BUILD_IN_SOURCE 1
-    BUILD_BYPRODUCTS ${DEPS_PREFIX}/lib/librocksdb.a
+    BUILD_BYPRODUCTS ${DEPS_PREFIX}/${LIBDIR}/librocksdb.a
 )
 add_library(rocksdb_static STATIC IMPORTED)
-set_property(TARGET rocksdb_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/librocksdb.a)
+set_property(TARGET rocksdb_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/${LIBDIR}/librocksdb.a)
 add_dependencies(rocksdb_static rocksdb_pro)
 add_dependencies(rocksdb_pro snappy_pro)
 
@@ -126,20 +153,6 @@ ExternalProject_Add(
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ${BTREE_HEADERS} ${DEPS_PREFIX}/include/
     )
-
-ExternalProject_Add(
-    gtest_pro
-    PREFIX ${GTEST_PREFIX}
-    CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX}
-    CMAKE_GENERATOR "Unix Makefiles"
-    URL https://github.com/google/googletest/archive/release-1.8.1.tar.gz
-    URL_HASH SHA1=152b849610d91a9dfa1401293f43230c2e0c33f8
-    BUILD_IN_SOURCE 1
-    BUILD_BYPRODUCTS ${DEPS_PREFIX}/lib/libgtest.a
-)
-add_library(gtest_static STATIC IMPORTED)
-set_property(TARGET gtest_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/libgtest.a)
-add_dependencies(gtest_static gtest_pro)
 
 #  L I B R O N
 
@@ -287,7 +300,7 @@ add_library(swarmdb_shared SHARED
 add_dependencies(swarmdb_shared rocksdb_static)
 add_dependencies(swarmdb_shared dmp_diff_header)
 add_dependencies(swarmdb_shared cpp_btree_header)
-target_link_libraries(swarmdb_shared pthread z bz2 snappy_static botan_static ron_static rocksdb)
+target_link_libraries(swarmdb_shared pthread z bz2 snappy_static botan_static ron_static rocksdb_static)
 set_property(TARGET swarmdb_shared PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 SET_TARGET_PROPERTIES(swarmdb_shared PROPERTIES OUTPUT_NAME swarmdb)
 

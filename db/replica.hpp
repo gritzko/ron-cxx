@@ -354,6 +354,8 @@ class Replica {
 
         Status ReceiveWrites(Builder &resp, Cursor &c);
 
+        Status ReceiveMapWrites(Builder &resp, Cursor &c);
+
         Status Save();
 
         /** as of now, a no-op */

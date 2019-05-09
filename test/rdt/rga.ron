@@ -1,34 +1,28 @@
 @~ 'create an array' !
 @1hTDE6+test :rga ; 1; 2; 5;
-.
 
 @~ 'patch an array' !
 @1hTDEk+test :1hTDE60002+test 3; 4;
-.
 
 @~ 'query the state' !
 @1hTDE6+test :rga ?
-.
 
 @~ 'was it merged' ?
-@1hTDE6+test :rga! 
+@1hTDE6+test :rga, 
     1, 2, 
 @1hTDEk+test 
     3, 4,
 @1hTDE60003+test :1hTDE60002+test
-    5,
-.
+    5;
 
 @~ 'remove the 3' !
 @1hTDEz+test :1hTDEk+test rm;
-.
 
 @~ 'query the state' !
 @1hTDE6+test :rga ?
-.
 
 @~ 'merged again' ?
-@1hTDE6+test :rga! 
+@1hTDE6+test :rga, 
     1, 2, 
 @1hTDEk+test 
     3,
@@ -37,5 +31,4 @@
 @1hTDEk0001+test :1hTDEk+test
     4,
 @1hTDE60003+test :1hTDE60002+test
-    5,
-.
+    5;

@@ -593,6 +593,11 @@ Status Replica<Store>::Commit::ReceiveWrites(Builder& resp, Cursor& c) {
 }
 
 template <typename Store>
+Status Replica<Store>::Commit::ReceiveMapWrites(Builder& resp, Cursor& c) {
+    return Status::NOT_IMPLEMENTED.comment("ReceiveMapWrites");
+}
+
+template <typename Store>
 Status Replica<Store>::Commit::ReceiveQuery(Builder& response, Cursor& c) {
     FORM form = uuid2form(c.ref());
     switch (form) {
@@ -649,22 +654,33 @@ Status Replica<Store>::Receive(Builder& resp, Cursor& c, Word yarn_id) {
     Commit commit{*this, GetBranch(yarn_id)};
 
     while (c.valid() && ok) {
-        if (c.id() == Uuid::COMMENT) {
-            ok = c.Next();
-        } else if (c.term() == QUERY) {
-            ok = commit.ReceiveQuery(resp, c);
-        } else if (c.id().version() == TIME && c.id().origin().payload() != 0) {
-            ok = commit.SaveChain(resp, c);
-        } else if (c.id().version() == TIME) {
-            ok = commit.ReceiveWrites(resp, c);
-        } else if (c.id().version() == NAME) {
-            ok = Status::BADVALUE.comment("not an event id " + c.id().str() +
-                                          " (a runaway annotation?)");
-        } else if (c.id().version() == HASH) {
-            ok = Status::NOT_IMPLEMENTED.comment("no blob support yet");
-        } else {
-            ok = Status::NOT_IMPLEMENTED.comment("unrecognized op pattern");
+
+        switch (c.id().version()) {
+            case TIME:
+                if (c.term()==QUERY) {
+                    ok = commit.ReceiveQuery(resp, c);
+                } else if (c.id().origin().payload() != 0) {
+                    ok = commit.SaveChain(resp, c);
+                } else {
+                    ok = commit.ReceiveWrites(resp, c);
+                }
+                break;
+            case DERIVED:
+                ok = commit.ReceiveMapWrites(resp, c);
+                break;
+            case NAME:
+                if (c.id()==Uuid::COMMENT) {
+                    ok = c.Next();
+                } else {
+                    ok = Status::BADVALUE.comment("not an event id " + c.id().str() +
+                                                  " (a runaway annotation?)");
+                }
+                break;
+            case HASH:
+                ok = Status::NOT_IMPLEMENTED.comment("no blob support yet");
+                break;
         }
+        // ok = Status::NOT_IMPLEMENTED.comment("unrecognized op pattern @"+c.id().str()+":"+c.ref().str());
     }
 
     if (ok) {

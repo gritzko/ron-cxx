@@ -6,7 +6,12 @@ fi
 
 cd build-san
 
-CC=clang CXX=clang++ cmake -G Ninja -DCMAKE_CXX_FLAGS="-g -O1 -fsanitize=address,undefined" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" .. || exit 3
+which clang++ || exit 5
+
+CXX=`which clang++`
+CC=`which clang`
+
+cmake -G Ninja -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_CXX_FLAGS="-g -O1 -fsanitize=address,undefined" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" .. || exit 3
 ninja -v || exit 4
 
 ninja test

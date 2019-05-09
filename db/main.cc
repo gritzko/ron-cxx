@@ -231,6 +231,20 @@ Status CommandDrop(RonReplica& replica, Args& args) {
     return replica.DropStore(branch_id);
 }
 
+Status SplitTests (Frames& tests, const Frame& orig) {
+    Cursor c{orig};
+    Builder b;
+    while (c.valid()) {
+        b.AppendOp(c);
+        if (c.term()!=REDUCED)
+            b.EndChunk(c.term());
+        if (c.Next() && c.id()==Uuid::COMMENT && (c.term()==HEADER||c.term()==QUERY)) {
+            tests.emplace_back(b.Release());
+        }
+    }
+    return Status::OK;
+}
+
 constexpr const char* TEST_USAGE{
     "test test_file.ron\n"
     "   runs a RON test script\n"};
@@ -245,19 +259,18 @@ Status CommandTest(RonReplica& replica, Args& args) {
     IFOK(replica.CreateBranch(test_yarn_id, true));
     IFOK(replica.SetActiveStore(test_branch_id));
 
+    Status ok;
     Frame tests;
-    Status ok = LoadFrame(tests, file);
-    if (!ok) return ok;
+    IFOK(LoadFrame(tests, file));
     Frames io;
-    ok = tests.Split(io);
-    if (!ok) return ok;
+    IFOK(SplitTests(io, tests));
     Builder b;
     static const string OK{"\033[0;32mOK\033[0m\t"};
     static const string FAIL{"\033[1;31mFAIL\033[0m\t"};
     for (int i = 0; ok && i < io.size(); i++) {
         Cursor c = io[i].cursor();
         if (c.id() != Uuid::COMMENT)
-            return Status::BADFRAME.comment("no in/out header");
+            return Status::BADFRAME.comment("not a test header: "+c.id().str());
         TERM term = c.term();
         string comment;
         if (c.size() > 2 && c.has(2, STRING)) comment = c.string(2);
@@ -272,12 +285,13 @@ Status CommandTest(RonReplica& replica, Args& args) {
                 cerr << re.data() << '\n';
             }
             cerr << "?\t" << comment << '\t' << (ok ? OK : FAIL) << endl;
-        } else if (term == HEADER) {
+        } else if (term == HEADER || term == RAW) {
             ok = replica.ReceiveFrame(b, io[i], test_yarn_id);
             cerr << "!\t" << comment << '\t' << (ok ? OK : FAIL + ok.str())
                  << endl;
         } else {
-            return Status::BADFRAME.comment("bad in/out header");
+            cerr << ">>>" << term;
+            return Status::BADFRAME.comment("a test header must be !? or ; in '"+comment+"'");
         }
     }
     return ok;

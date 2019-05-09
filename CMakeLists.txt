@@ -23,8 +23,6 @@ include_directories(${DEPS_PREFIX}/include/)
 link_directories(${DEPS_PREFIX}/${LIBDIR}/)
 set(FIND_LIBRARY_USE_LIB64_PATHS ON)
 
-file(MAKE_DIRECTORY ${DEPS_PREFIX}/include/ ${DEPS_PREFIX}/${LIBDIR}/)
-
 #  B U I L D  O P T I O N S
 
 include(ProcessorCount)
@@ -52,6 +50,8 @@ if ("${LIB64}" STREQUAL "TRUE")
 else()
     set(LIBDIR "lib")
 endif()
+
+file(MAKE_DIRECTORY ${DEPS_PREFIX}/include/ ${DEPS_PREFIX}/${LIBDIR}/)
 
 #  D E P E N D E N C I E S
 

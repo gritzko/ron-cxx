@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.9.4)
 project(RON C CXX)
 include(ExternalProject)
+include(GNUInstallDirs)
 enable_testing()
 FIND_PACKAGE ( Threads REQUIRED )
 
@@ -20,7 +21,7 @@ set(BTREE_PREFIX ${DEPS_PREFIX}/build/btree)
 set(GTEST_PREFIX ${DEPS_PREFIX}/build/gtest)
 
 include_directories(${DEPS_PREFIX}/include/)
-link_directories(${DEPS_PREFIX}/${LIBDIR}/)
+link_directories(${DEPSLIBDIR}/)
 set(FIND_LIBRARY_USE_LIB64_PATHS ON)
 
 #  B U I L D  O P T I O N S
@@ -43,46 +44,72 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(BOTAN_CC gcc)
 endif()
 
-get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
+set(LIBDIR "${CMAKE_INSTALL_LIBDIR}")
+set(DEPSLIBDIR "${DEPS_PREFIX}/${LIBDIR}")
 
-if ("${LIB64}" STREQUAL "TRUE")
-    set(LIBDIR "lib64")
-else()
-    set(LIBDIR "lib")
+file(MAKE_DIRECTORY "${DEPS_PREFIX}/include/" "${DEPS_PREFIX}/${LIBDIR}/")
+
+set(FWD_ARGS ${CMAKE_ARGS} --parallel=${CORES} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_LIBDIR=${LIBDIR} -DCMAKE_INSTALL_PREFIX=${DEPS_PREFIX})
+
+set(ROCKS_CMAKE_ARGS ${FWD_ARGS} -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -DFAIL_ON_WARNINGS=OFF -DWITH_GFLAGS=OFF)
+set(SNAPPY_CMAKE_ARGS ${FWD_ARGS} -DSNAPPY_BUILD_TESTS=OFF)
+
+option(WITH_ASAN "build with ASAN" OFF)
+if(WITH_ASAN)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address")
+  set(ROCKS_CMAKE_ARGS ${ROCKS_CMAKE_ARGS} -DWITH_ASAN=ON)
 endif()
 
-file(MAKE_DIRECTORY ${DEPS_PREFIX}/include/ ${DEPS_PREFIX}/${LIBDIR}/)
+option(WITH_TSAN "build with TSAN" OFF)
+if(WITH_TSAN)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=thread -pie")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fPIC")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread -fPIC")
+  set(ROCKS_CMAKE_ARGS ${ROCKS_CMAKE_ARGS} -DWITH_TSAN=ON)
+endif()
+
+option(WITH_UBSAN "build with UBSAN" OFF)
+if(WITH_UBSAN)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined")
+  set(ROCKS_CMAKE_ARGS ${ROCKS_CMAKE_ARGS} -DWITH_UBSAN=ON)
+endif()
 
 #  D E P E N D E N C I E S
-
-set(FWD_ARGS ${CMAKE_ARGS} --parallel=${CORES} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_PREFIX})
 
 ExternalProject_Add(
     gtest_pro
     PREFIX ${GTEST_PREFIX}
+    INSTALL_DIR ${DEPS_PREFIX}
     CMAKE_ARGS ${FWD_ARGS}
     URL https://github.com/google/googletest/archive/release-1.8.1.tar.gz
     URL_HASH SHA1=152b849610d91a9dfa1401293f43230c2e0c33f8
     BUILD_IN_SOURCE 1
     UPDATE_COMMAND ""
-    BUILD_BYPRODUCTS ${DEPS_PREFIX}/${LIBDIR}/libgtest.a
+    BUILD_BYPRODUCTS ${DEPSLIBDIR}/libgtest.a
 )
 add_library(gtest_static STATIC IMPORTED)
-set_property(TARGET gtest_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/${LIBDIR}/libgtest.a)
+set_property(TARGET gtest_static PROPERTY IMPORTED_LOCATION ${DEPSLIBDIR}/libgtest.a)
 add_dependencies(gtest_static gtest_pro)
+if (EXISTS ${DEPSLIBDIR}/libgtestd.a)
+    file(RENAME ${DEPSLIBDIR}/libgtestd.a ${DEPSLIBDIR}/libgtest.a)
+endif()
 
 ExternalProject_Add(
     snappy_pro
     PREFIX ${snappy_PREFIX}
     URL https://github.com/google/snappy/archive/1.1.7.tar.gz
     URL_HASH SHA1=1ec676b842fc96fd8a95b03c12758935e7f257b0
-    CMAKE_ARGS ${FWD_ARGS} -DSNAPPY_BUILD_TESTS=OFF
+    CMAKE_ARGS ${SNAPPY_CMAKE_ARGS} 
     BUILD_IN_SOURCE 1
-    BUILD_BYPRODUCTS ${DEPS_PREFIX}/${LIBDIR}/libsnappy.a
+    BUILD_BYPRODUCTS ${DEPSLIBDIR}/libsnappy.a
 )
 #include_directories(${snappy_PREFIX}/include)
 add_library(snappy_static STATIC IMPORTED)
-set_property(TARGET snappy_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/${LIBDIR}/libsnappy.a)
+set_property(TARGET snappy_static PROPERTY IMPORTED_LOCATION ${DEPSLIBDIR}/libsnappy.a)
 add_dependencies(snappy_static snappy_pro)
 add_dependencies(snappy_pro gtest_pro)
 
@@ -91,20 +118,19 @@ ExternalProject_Add(
     URL https://github.com/facebook/rocksdb/archive/v5.18.3.tar.gz
     URL_HASH SHA1=dfaaff14d447d9c05f3dbcb84ba6640f4590f634
     UPDATE_COMMAND ""
-    PREFIX ${ROCKSDB_PREFIX}
-    CMAKE_ARGS ${FWD_ARGS} -DWITH_TOOLS=OFF -DFAIL_ON_WARNINGS=OFF -DWITH_GFLAGS=OFF
-    CMAKE_CACHE_ARGS -DWITH_TESTS:BOOL=FALSE
+    PREFIX "${ROCKSDB_PREFIX}"
+    CMAKE_ARGS "${ROCKS_CMAKE_ARGS}"
 #    CMAKE_GENERATOR "Unix Makefiles"
-    BUILD_COMMAND ${CMAKE_COMMAND} ${CMAKE_ARGS} --build . --target rocksdb
+#    BUILD_COMMAND ${CMAKE_COMMAND} ${CMAKE_ARGS} --build . --target rocksdb
 #    because of Mac OS X we have to use cmake install, which builds the shared version of hte library
 #    that increases build time x2, so we are waiting eagerly for https://github.com/facebook/rocksdb/issues/4484
 #    and https://github.com/facebook/rocksdb/pull/4972 to be resolved
 #    INSTALL_COMMAND cp -r ${ROCKSDB_PREFIX}/src/rocksdb_pro/include/rocksdb ${DEPS_PREFIX}/include && cp librocksdb.a ${DEPS_PREFIX}/lib
     BUILD_IN_SOURCE 1
-    BUILD_BYPRODUCTS ${DEPS_PREFIX}/${LIBDIR}/librocksdb.a
+    BUILD_BYPRODUCTS ${DEPSLIBDIR}/librocksdb.a
 )
 add_library(rocksdb_static STATIC IMPORTED)
-set_property(TARGET rocksdb_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/${LIBDIR}/librocksdb.a)
+set_property(TARGET rocksdb_static PROPERTY IMPORTED_LOCATION ${DEPSLIBDIR}/librocksdb.a)
 add_dependencies(rocksdb_static rocksdb_pro)
 add_dependencies(rocksdb_pro snappy_pro)
 
@@ -115,15 +141,15 @@ ExternalProject_Add(
     URL_HASH SHA1=e6876bc30a1301f56107ac3dc6d395810df08899
     PREFIX ${CRYPTO_PREFIX}
     UPDATE_COMMAND ""
-    CONFIGURE_COMMAND ./configure.py --cxxflags=${CMAKE_CXX_FLAGS} --ldflags=${CMAKE_EXE_LINKER_FLAGS} --prefix=${DEPS_PREFIX} --minimized-build --enable-modules=sha3,sha2_64 --cc=${BOTAN_CC}
+    CONFIGURE_COMMAND ./configure.py --cxxflags=${CMAKE_CXX_FLAGS} --ldflags=${CMAKE_EXE_LINKER_FLAGS} --prefix=${DEPS_PREFIX} --minimized-build --enable-modules=sha3,sha2_64 --cc=${BOTAN_CC} --libdir=${LIBDIR}
     BUILD_IN_SOURCE 1
     BUILD_COMMAND make ${MAKE_FLAGS} libbotan-2.a
-    INSTALL_COMMAND cp -RL build/include/botan ${DEPS_PREFIX}/include && cp libbotan-2.a ${DEPS_PREFIX}/lib
-    BUILD_BYPRODUCTS ${DEPS_PREFIX}/lib/libbotan-2.a
+    INSTALL_COMMAND cp -RL build/include/botan ${DEPS_PREFIX}/include && cp libbotan-2.a ${DEPSLIBDIR}
+    BUILD_BYPRODUCTS ${DEPSLIBDIR}/libbotan-2.a
     )
 ExternalProject_Get_Property(botan_pro install_dir)
 add_library(botan_static STATIC IMPORTED db/test/chains.cc)
-set_property(TARGET botan_static PROPERTY IMPORTED_LOCATION ${DEPS_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}botan-2${CMAKE_STATIC_LIBRARY_SUFFIX})
+set_property(TARGET botan_static PROPERTY IMPORTED_LOCATION ${DEPSLIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}botan-2${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 ExternalProject_Add(
     dmp_diff_header

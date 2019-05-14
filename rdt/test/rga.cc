@@ -27,7 +27,7 @@ TEST(Merge, Chain) {
     string abcdef;
     ASSERT_TRUE(IsOK(MergeStrings<TextFrame>(abcdef, RGA_RDT_FORM, Strings{abc, def})));
     string correct = "@1+A :rga! 'a', 'b', 'c', @1000000004+B 'D', 'E', 'F', ";
-    ASSERT_TRUE(despace(abcdef)==despace(correct));
+    ASSERT_EQ(despace(abcdef), despace(correct));
 }
 
 TEST(Merge, Sibling) {
@@ -37,7 +37,7 @@ TEST(Merge, Sibling) {
     string ab;
     ASSERT_TRUE(MergeStrings<TextFrame>(ab, RGA_RDT_FORM, Strings{parent, childA, childB}));
     string correct = "@1+A :rga! @1b+C 'a', @1a+B :1+A 'b', ";
-    ASSERT_TRUE(despace(ab)==despace(correct));
+    ASSERT_EQ(despace(ab), despace(correct));
 }
 
 TEST(Merge, Multitree) {
@@ -48,7 +48,7 @@ TEST(Merge, Multitree) {
     TextFrame::Cursors c{};
     c.push_back(Cursor{childA});
     c.push_back(Cursor{childB});
-    ASSERT_TRUE(reducer.Merge(b, c)==Status::CAUSEBREAK);
+    ASSERT_EQ(reducer.Merge(b, c), Status::CAUSEBREAK);
 }
 
 TEST(Scan, All0) {
@@ -63,7 +63,7 @@ TEST(Scan, All0) {
     ASSERT_TRUE(!tombs[2]);
     ASSERT_TRUE(!tombs[3]);
     ASSERT_TRUE(!tombs[4]);
-    ASSERT_TRUE(tombs.size()==5);
+    ASSERT_EQ(tombs.size(), 5);
 }
 
 TEST(Scan, RM) {

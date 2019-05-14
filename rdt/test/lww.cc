@@ -78,6 +78,18 @@ TEST(LWW, Object) {
     ASSERT_EQ(obj.integer(Uuid{"abc"}), 234);
 }
 
+TEST(RDT, SplitLog) {
+    using Frames = std::vector<Frame>;
+    Frame trivial{" @1lD5lN+A :lww, 'A' 'a', 'B' 'b', @1lD5z+B :1lD5lN0001+A 'C' 'c'; "};
+    Cursors chains;
+    ASSERT_TRUE(SplitLogIntoChains(chains, trivial, Uuid{"1lD5z+A"}));
+    Frames splits;
+    ASSERT_TRUE(Reserialize(splits, chains));
+    ASSERT_TRUE(CompareFrames<Frame>(splits[0], Frame{" @1lD5lN+A :lww, 'A' 'a', 'B' 'b'; "}));
+    ASSERT_TRUE(CompareFrames<Frame>(splits[1], Frame{" @1lD5z+B :1lD5lN0001+A 'C' 'c'; "}));
+    ASSERT_EQ(splits.size(), 2);
+}
+
 int main (int argn, char** args) {
     ::testing::InitGoogleTest(&argn, args);
     return RUN_ALL_TESTS();

@@ -137,6 +137,7 @@ Status MergeFrames(Frame &ret, std::vector<Frame> inputs) {
     return Status::OK;
 }
 
+/** Splits a frame into solid chains (not spans). */
 template <typename Frame>
 Status SplitFrame(const Frame &input, typename Frame::Cursors &chains) {
     using Cursor = typename Frame::Cursor;
@@ -154,10 +155,32 @@ Status SplitFrame(const Frame &input, typename Frame::Cursors &chains) {
 }
 
 template <typename Frame>
-Status ObjectLogIntoState(typename Frame::Builder &into, const Frame input) {
+Status SplitLogIntoChains(typename Frame::Cursors &chains, const Frame &input,
+                          Uuid cutoff = Uuid::NIL) {
+    using Cursor = typename Frame::Cursor;
+    Cursor cur = input.cursor();
+    Cursor nxt = cur;
+    Status ok;
+    while (cur.valid() && cur.id() != cutoff) {
+        Uuid prev = cur.id();
+        while (cur.Next() && cur.ref() == prev && cur.id() != cutoff) {
+            prev = cur.id();
+        }
+        if (cur.valid()) {
+            nxt.Trim(cur);
+        }
+        chains.push_back(nxt);
+        nxt = cur;
+    }
+    return ok == Status::ENDOFFRAME ? Status::OK : ok;
+}
+
+template <typename Frame>
+Status ObjectLogIntoState(typename Frame::Builder &into, const Frame input,
+                          Uuid cutoff = Uuid::NIL) {
     using Cursors = typename Frame::Cursors;
     Cursors chains;
-    Status ok = SplitFrame<Frame>(input, chains);
+    Status ok = SplitLogIntoChains<Frame>(chains, input, cutoff);
     if (!ok) return ok;
     if (chains.empty()) return Status::OK;
     Uuid rdt_id = chains[0].ref();
@@ -166,10 +189,11 @@ Status ObjectLogIntoState(typename Frame::Builder &into, const Frame input) {
 }
 
 template <typename Frame>
-Status ObjectLogToState(Frame &ret, const Frame input) {
+Status ObjectLogToState(Frame &ret, const Frame input,
+                        Uuid cutoff = Uuid::NIL) {
     using Builder = typename Frame::Builder;
     Builder b;
-    Status ok = ObjectLogIntoState<Frame>(b, input);
+    Status ok = ObjectLogIntoState<Frame>(b, input, cutoff);
     if (!ok) {
         return ok;
     }

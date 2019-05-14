@@ -91,5 +91,23 @@ Frame Query(Uuid id, Uuid ref, Ts... args) {
     return b.Release();
 }
 
+template <class Frame>
+Status Reserialize(std::vector<Frame>& into,
+                   std::vector<typename Frame::Cursor>& what) {
+    into.clear();
+    for (auto& c : what) {
+        typename Frame::Builder b;
+        Status ok;
+        do {
+            b.AppendOp(c);
+        } while ((ok = c.Next()));
+        if (ok != Status::ENDOFFRAME) {
+            return ok;
+        }
+        into.emplace_back(b.Release());
+    }
+    return Status::OK;
+}
+
 }  // namespace ron
 #endif

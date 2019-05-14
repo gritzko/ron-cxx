@@ -36,6 +36,7 @@ class Replica {
     using Batch = typename Frame::Batch;
     using Builder = typename Frame::Builder;
     using Cursor = typename Frame::Cursor;
+    using Cursors = std::vector<Cursor>;
 
     using tipmap_t = std::unordered_map<Word, OpMeta>;
 
@@ -251,6 +252,14 @@ class Replica {
 
         Status GetFrame(Frame &object, Uuid id, Uuid rdt);
 
+        inline Status GetObjectVersion (Frame &into, Uuid id, Uuid version) {
+            Frame log;
+            IFOK(FindObjectLog(log, id));
+            Cursors chains;
+            IFOK(SplitLogIntoChains(chains, log, version));
+            return MergeCursors(into, chains);
+        }
+
         inline Status GetObjectLog(Frame &frame, Uuid id) {
             return GetFrame(frame, id, LOG_FORM_UUID);
         }
@@ -353,6 +362,8 @@ class Replica {
         Status ReceiveQuery(Builder &response, Cursor &c);
 
         Status ReceiveWrites(Builder &resp, Cursor &c);
+
+        Status ReceiveMapQuery(Builder &resp, Cursor &c);
 
         Status ReceiveMapWrites(Builder &resp, Cursor &c);
 

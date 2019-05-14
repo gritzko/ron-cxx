@@ -231,14 +231,14 @@ Status CommandDrop(RonReplica& replica, Args& args) {
     return replica.DropStore(branch_id);
 }
 
-Status SplitTests (Frames& tests, const Frame& orig) {
+Status SplitTests(Frames& tests, const Frame& orig) {
     Cursor c{orig};
     Builder b;
     while (c.valid()) {
         b.AppendOp(c);
-        if (c.term()!=REDUCED)
-            b.EndChunk(c.term());
-        if (c.Next() && c.id()==Uuid::COMMENT && (c.term()==HEADER||c.term()==QUERY)) {
+        if (c.term() != REDUCED) b.EndChunk(c.term());
+        if (c.Next() && c.id() == Uuid::COMMENT &&
+            (c.term() == HEADER || c.term() == QUERY)) {
             tests.emplace_back(b.Release());
         }
     }
@@ -270,7 +270,8 @@ Status CommandTest(RonReplica& replica, Args& args) {
     for (int i = 0; ok && i < io.size(); i++) {
         Cursor c = io[i].cursor();
         if (c.id() != Uuid::COMMENT)
-            return Status::BADFRAME.comment("not a test header: "+c.id().str());
+            return Status::BADFRAME.comment("not a test header: " +
+                                            c.id().str());
         TERM term = c.term();
         string comment;
         if (c.size() > 2 && c.has(2, STRING)) comment = c.string(2);
@@ -291,7 +292,8 @@ Status CommandTest(RonReplica& replica, Args& args) {
                  << endl;
         } else {
             cerr << ">>>" << term;
-            return Status::BADFRAME.comment("a test header must be !? or ; in '"+comment+"'");
+            return Status::BADFRAME.comment(
+                "a test header must be !? or ; in '" + comment + "'");
         }
     }
     return ok;
@@ -387,6 +389,27 @@ Status CommandGetFrame(RonReplica& replica, Args& args) {
             return Status::BADVALUE.comment("no string in the first value pos");
         }
     }
+    return Status::OK;
+}
+
+constexpr const char* RECALL_USAGE{
+    "recall 2345+some_ver of 12345+some_obj\n"
+    "   recall the object's historical state\n"
+    };
+
+Status CommandRecall (RonReplica& replica, Args& args) {
+    CHECKARG(args.empty(), RECALL_USAGE);
+    Uuid version{args.back()};
+    args.pop_back();
+    CHECKARG(version.version()!=TIME, RECALL_USAGE);
+    Uuid object;
+    IFOK(ScanOfObjectArg(object, replica, args));
+    CHECKARG(object.version()!=TIME, RECALL_USAGE);
+    CHECKARG(version<object, "version id > object id!");
+    Frame state;
+    Commit commit{replica};
+    IFOK(commit.GetObjectVersion(state, object, version));
+    cout << state.data();
     return Status::OK;
 }
 
@@ -632,7 +655,7 @@ constexpr const char* VERSION_USAGE{
     "version\n"
     "   print versioning info\n"};
 
-Status CommandVersion (RonReplica& replica, Args& args) {
+Status CommandVersion(RonReplica& replica, Args& args) {
     cout << "swarmdb v0.0.1\n";
     return Status::OK;
 }
@@ -642,8 +665,7 @@ Status CommandHelp(RonReplica& replica, Args& args) {
          << "\nR E P L I C A   S C O P E D\n"
          << HELP_USAGE << INIT_USAGE << CREATE_USAGE << LIST_USAGE << HOP_USAGE
          << ON_USAGE << TEST_USAGE << REPAIR_USAGE << FORK_USAGE << DROP_USAGE
-         << VERSION_USAGE
-         << "\nB R A N C H  S C O P E D\n"
+         << VERSION_USAGE << "\nB R A N C H  S C O P E D\n"
          << NAME_USAGE << NAMED_USAGE << WRITE_USAGE << DUMP_USAGE
          << "\nO B J E C T  S C O P E D\n"
          << NEW_USAGE << GET_USAGE;
@@ -670,7 +692,8 @@ Status RunCommands(Args& args) {
 
     if (verb == "help" || verb == "--help" || verb == "-help" || verb == "-h") {
         return CommandHelp(replica, args);
-    } else if (verb == "version" || verb == "--version" || verb == "-version" || verb == "-v") {
+    } else if (verb == "version" || verb == "--version" || verb == "-version" ||
+               verb == "-v") {
         return CommandVersion(replica, args);
     } else if (verb == "repair") {
         return CommandRepair(replica, args);
@@ -707,6 +730,8 @@ Status RunCommands(Args& args) {
         return CommandName(replica, args);
     } else if (verb == "write") {
         return CommandWrite(replica, args);
+    } else if (verb == "recall") {
+        return CommandRecall(replica, args);
     } else if (verb == "hop") {
         return CommandHop(replica, args);
     } else if (verb == "drop") {

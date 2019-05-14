@@ -149,28 +149,31 @@ Status SplitFrame(const Frame &input, typename Frame::Cursors &chains) {
         chains.push_back(nxt);
         nxt = cur;
     }
-    if (ok != Status::ENDOFFRAME) return ok;
+    if (ok != Status::ENDOFFRAME) { return ok; }
     chains.push_back(nxt);
     return Status::OK;
 }
 
 template <typename Frame>
 Status SplitLogIntoChains(typename Frame::Cursors &chains, const Frame &input,
-                          Uuid cutoff = Uuid::NIL) {
+                          Uuid cutoff = Uuid::FATAL) {
     using Cursor = typename Frame::Cursor;
     Cursor cur = input.cursor();
     Cursor nxt = cur;
     Status ok;
-    while (cur.valid() && cur.id() != cutoff) {
-        Uuid prev = cur.id();
-        while (cur.Next() && cur.ref() == prev && cur.id() != cutoff) {
+    Uuid prev{};
+    while (cur.valid() && prev != cutoff) {
+        do {
             prev = cur.id();
-        }
-        if (cur.valid()) {
+            ok = cur.Next();
+        } while (ok && cur.ref() == prev && prev != cutoff);
+        if (ok) {
             nxt.Trim(cur);
+            chains.push_back(nxt);
+            nxt = cur;
+        } else {
+            chains.push_back(nxt);
         }
-        chains.push_back(nxt);
-        nxt = cur;
     }
     return ok == Status::ENDOFFRAME ? Status::OK : ok;
 }

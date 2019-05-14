@@ -148,13 +148,28 @@ void test_ct_log2state () {
     Status ok = ObjectLogToState<Frame>(state, Frame{LOG});
     assert(ok);
     assert(ScanRGA<Frame>(tombs, Frame{state}));
+    assert( tombs[0]); // rga
+    assert(!tombs[1]); // t
+    assert(!tombs[2]); // e
+    assert( tombs[3]); // s
+    assert(!tombs[4]); // x  oopsie
+    assert( tombs[5]); // rm
+    assert(!tombs[6]); // t
+}
+
+void test_ct_log2state_cutoff () {
+    String LOG{"@1000000001+A :rga, 't', 'e', 's', 't', @1000000007+A :1000000004+A rm, @1000000008+A :1000000004+A 'x';"};
+    vector<bool> tombs{};
+    Frame state;
+    Status ok = ObjectLogToState<Frame>(state, Frame{LOG}, Uuid{"1000000007+A"});
+    assert(ok);
+    assert(ScanRGA<Frame>(tombs, Frame{state}));
     assert( tombs[0]);
-    assert(!tombs[1]);
-    assert(!tombs[2]);
-    assert( tombs[3]);
-    assert(!tombs[4]);
-    assert( tombs[5]);
-    assert(!tombs[6]);
+    assert(!tombs[1]); // t
+    assert(!tombs[2]); // e
+    assert( tombs[3]); // s
+    assert( tombs[4]); // rm 
+    assert(!tombs[5]); // t
 }
 
 int main (int argn, char** args) {
@@ -167,5 +182,6 @@ int main (int argn, char** args) {
     test_ct_scan_rm_un();
     test_ct_scan_trash();
     test_ct_log2state();
+    test_ct_log2state_cutoff();
     return 0;
 }

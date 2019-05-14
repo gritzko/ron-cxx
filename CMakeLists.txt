@@ -78,6 +78,17 @@ if(WITH_UBSAN)
   set(ROCKS_CMAKE_ARGS ${ROCKS_CMAKE_ARGS} -DWITH_UBSAN=ON)
 endif()
 
+option (COLOR_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." FALSE)
+if (${COLOR_OUTPUT})
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+       set(CMAKE_CXX_FLAGS "-fdiagnostics-color=always ${CMAKE_CXX_FLAGS}")
+    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+       set(CMAKE_CXX_FLAGS "-fcolor-diagnostics ${CMAKE_CXX_FLAGS}")
+    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+       set(CMAKE_CXX_FLAGS "-fcolor-diagnostics ${CMAKE_CXX_FLAGS}")
+    endif ()
+endif ()
+
 #  D E P E N D E N C I E S
 
 ExternalProject_Add(

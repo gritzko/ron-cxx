@@ -180,7 +180,7 @@ Status SplitLogIntoChains(typename Frame::Cursors &chains, const Frame &input,
 
 template <typename Frame>
 Status ObjectLogIntoState(typename Frame::Builder &into, const Frame input,
-                          Uuid cutoff = Uuid::NIL) {
+                          Uuid cutoff = Uuid::FATAL) {
     using Cursors = typename Frame::Cursors;
     Cursors chains;
     Status ok = SplitLogIntoChains<Frame>(chains, input, cutoff);
@@ -193,7 +193,7 @@ Status ObjectLogIntoState(typename Frame::Builder &into, const Frame input,
 
 template <typename Frame>
 Status ObjectLogToState(Frame &ret, const Frame input,
-                        Uuid cutoff = Uuid::NIL) {
+                        Uuid cutoff = Uuid::FATAL) {
     using Builder = typename Frame::Builder;
     Builder b;
     Status ok = ObjectLogIntoState<Frame>(b, input, cutoff);

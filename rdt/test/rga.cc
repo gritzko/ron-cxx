@@ -1,6 +1,7 @@
 #include <cassert>
 #include "../../ron/ron.hpp"
 #include "../rdt.hpp"
+#include "testutil.hpp"
 #define DEBUG 1
 
 using namespace ron;
@@ -20,27 +21,26 @@ string despace (string& orig) {
     return ret;
 }
 
-void test_chain_merge () {
+TEST(Merge, Chain) {
     string abc = "@1+A :rga! 'a', 'b', 'c', ";
     string def = "@1000000004+B :1000000003+A 'D', 'E', 'F', ";
     string abcdef;
-    Status ok = MergeStrings<TextFrame>(abcdef, RGA_RDT_FORM, Strings{abc, def});
-    assert(ok);
+    ASSERT_TRUE(IsOK(MergeStrings<TextFrame>(abcdef, RGA_RDT_FORM, Strings{abc, def})));
     string correct = "@1+A :rga! 'a', 'b', 'c', @1000000004+B 'D', 'E', 'F', ";
-    assert(despace(abcdef)==despace(correct));
+    ASSERT_EQ(despace(abcdef), despace(correct));
 }
 
-void test_sibling_merge () {
+TEST(Merge, Sibling) {
     string parent = "@1+A :rga!";
     string childA = "@1a+B :1+A 'b';";
     string childB = "@1b+C :1+A 'a';";
     string ab;
-    assert(MergeStrings<TextFrame>(ab, RGA_RDT_FORM, Strings{parent, childA, childB}));
+    ASSERT_TRUE(MergeStrings<TextFrame>(ab, RGA_RDT_FORM, Strings{parent, childA, childB}));
     string correct = "@1+A :rga! @1b+C 'a', @1a+B :1+A 'b', ";
-    assert(despace(ab)==despace(correct));
+    ASSERT_EQ(despace(ab), despace(correct));
 }
 
-void test_multitree () {
+TEST(Merge, Multitree) {
     String childA{"@1a+B :1+A 'b';"};
     String childB{"@1b+C :1+A 'a';"};
     RGArrayRDT<TextFrame> reducer{};
@@ -48,40 +48,40 @@ void test_multitree () {
     TextFrame::Cursors c{};
     c.push_back(Cursor{childA});
     c.push_back(Cursor{childB});
-    assert(reducer.Merge(b, c)==Status::CAUSEBREAK);
+    ASSERT_EQ(reducer.Merge(b, c), Status::CAUSEBREAK);
 }
 
-void test_ct_scan_all0 () {
+TEST(Scan, All0) {
     //  !
     //    a   c
     //      b   d
     String SIMPLE{"@1i08e4+path :rga! 'a', @1i08z+path 'b', @1i08k+path :1i08e4+path 'c', 'd',"};
     vector<bool> tombs{};
-    assert(ScanRGA<Frame>(tombs, Frame{SIMPLE}));
-    assert( tombs[0]);
-    assert(!tombs[1]);
-    assert(!tombs[2]);
-    assert(!tombs[3]);
-    assert(!tombs[4]);
-    assert(tombs.size()==5);
+    ASSERT_TRUE(IsOK(ScanRGA<Frame>(tombs, Frame{SIMPLE})));
+    ASSERT_TRUE( tombs[0]);
+    ASSERT_TRUE(!tombs[1]);
+    ASSERT_TRUE(!tombs[2]);
+    ASSERT_TRUE(!tombs[3]);
+    ASSERT_TRUE(!tombs[4]);
+    ASSERT_EQ(tombs.size(), 5);
 }
 
-void test_ct_scan_rm () {
+TEST(Scan, RM) {
     //  !
     //    a
     //      b
     //        rm d
     String RM{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, @1i08e40003+path :1i08e40002+path 'd',"};
     vector<bool> tombs{};
-    assert(ScanRGA<Frame>(tombs, Frame{RM}));
-    assert( tombs[0]);
-    assert(!tombs[1]);
-    assert( tombs[2]);
-    assert( tombs[3]);
-    assert(!tombs[4]);
+    ASSERT_TRUE(IsOK(ScanRGA<Frame>(tombs, Frame{RM})));
+    ASSERT_TRUE( tombs[0]);
+    ASSERT_TRUE(!tombs[1]);
+    ASSERT_TRUE( tombs[2]);
+    ASSERT_TRUE( tombs[3]);
+    ASSERT_TRUE(!tombs[4]);
 }
 
-void test_ct_scan_rm2 () {
+TEST(Scan, RM2) {
     //  !
     //    a
     //      b
@@ -89,17 +89,16 @@ void test_ct_scan_rm2 () {
     //           rm
     String RMRM{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, rm, @1i08e40003+path :1i08e40002+path 'd',"};
     vector<bool> tombs{};
-    assert(ScanRGA<Frame>(tombs, Frame{RMRM}));
-    assert( tombs[0]);
-    assert( tombs[1]);
-    assert( tombs[2]);
-    assert( tombs[3]);
-    assert( tombs[4]);
-    assert(!tombs[5]);
+    ASSERT_TRUE(IsOK(ScanRGA<Frame>(tombs, Frame{RMRM})));
+    ASSERT_TRUE( tombs[0]);
+    ASSERT_TRUE( tombs[1]);
+    ASSERT_TRUE( tombs[2]);
+    ASSERT_TRUE( tombs[3]);
+    ASSERT_TRUE( tombs[4]);
+    ASSERT_TRUE(!tombs[5]);
 }
 
-
-void test_ct_scan_rm_un () {
+TEST(Scan, RM_UN) {
     //  !
     //    a
     //      b
@@ -108,17 +107,17 @@ void test_ct_scan_rm_un () {
     //              un
     String RMUN{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, rm, un, @1i08e40003+path :1i08e40002+path 'd',"};
     vector<bool> tombs{};
-    assert(ScanRGA<Frame>(tombs, Frame{RMUN}));
-    assert( tombs[0]);
-    assert(!tombs[1]);
-    assert( tombs[2]);
-    assert( tombs[3]);
-    assert( tombs[4]);
-    assert( tombs[5]);
-    assert(!tombs[6]);
+    ASSERT_TRUE(IsOK(ScanRGA<Frame>(tombs, Frame{RMUN})));
+    ASSERT_TRUE( tombs[0]);
+    ASSERT_TRUE(!tombs[1]);
+    ASSERT_TRUE( tombs[2]);
+    ASSERT_TRUE( tombs[3]);
+    ASSERT_TRUE( tombs[4]);
+    ASSERT_TRUE( tombs[5]);
+    ASSERT_TRUE(!tombs[6]);
 }
 
-void test_ct_scan_trash () {
+TEST(Scan, Trash) {
     //  !
     //    a
     //      b
@@ -128,60 +127,49 @@ void test_ct_scan_trash () {
     //                         rm
     String ITSCOMPLEX{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, rm, 'c', @1i08e40003+path :1i08e40002+path 'd', un, rm, rm,"};
     vector<bool> tombs{};
-    assert(ScanRGA<Frame>(tombs, Frame{ITSCOMPLEX}));
-    assert( tombs[0]);
-    assert( tombs[1]);
-    assert( tombs[2]);
-    assert( tombs[3]);
-    assert( tombs[4]);
-    assert( tombs[5]);
-    assert(!tombs[6]);
-    assert( tombs[7]);
-    assert( tombs[8]);
-    assert( tombs[9]);
+    ASSERT_TRUE(IsOK(ScanRGA<Frame>(tombs, Frame{ITSCOMPLEX})));
+    ASSERT_TRUE( tombs[0]);
+    ASSERT_TRUE( tombs[1]);
+    ASSERT_TRUE( tombs[2]);
+    ASSERT_TRUE( tombs[3]);
+    ASSERT_TRUE( tombs[4]);
+    ASSERT_TRUE( tombs[5]);
+    ASSERT_TRUE(!tombs[6]);
+    ASSERT_TRUE( tombs[7]);
+    ASSERT_TRUE( tombs[8]);
+    ASSERT_TRUE( tombs[9]);
 }
 
-void test_ct_log2state () {
+TEST(Log2State, Basic) {
     String LOG{"@1000000001+A :rga, 't', 'e', 's', 't', @1000000007+A :1000000004+A rm, @1000000008+A :1000000004+A 'x';"};
     vector<bool> tombs{};
     Frame state;
-    Status ok = ObjectLogToState<Frame>(state, Frame{LOG});
-    assert(ok);
-    assert(ScanRGA<Frame>(tombs, Frame{state}));
-    assert( tombs[0]); // rga
-    assert(!tombs[1]); // t
-    assert(!tombs[2]); // e
-    assert( tombs[3]); // s
-    assert(!tombs[4]); // x  oopsie
-    assert( tombs[5]); // rm
-    assert(!tombs[6]); // t
+    ASSERT_TRUE(IsOK(ObjectLogToState<Frame>(state, Frame{LOG})));
+    ASSERT_TRUE(IsOK(ScanRGA<Frame>(tombs, Frame{state})));
+    ASSERT_TRUE( tombs[0]); // rga
+    ASSERT_TRUE(!tombs[1]); // t
+    ASSERT_TRUE(!tombs[2]); // e
+    ASSERT_TRUE( tombs[3]); // s
+    ASSERT_TRUE(!tombs[4]); // x  oopsie
+    ASSERT_TRUE( tombs[5]); // rm
+    ASSERT_TRUE(!tombs[6]); // t
 }
 
-void test_ct_log2state_cutoff () {
+TEST(Log2State, Cutoff) {
     String LOG{"@1000000001+A :rga, 't', 'e', 's', 't', @1000000007+A :1000000004+A rm, @1000000008+A :1000000004+A 'x';"};
     vector<bool> tombs{};
     Frame state;
-    Status ok = ObjectLogToState<Frame>(state, Frame{LOG}, Uuid{"1000000007+A"});
-    assert(ok);
-    assert(ScanRGA<Frame>(tombs, Frame{state}));
-    assert( tombs[0]);
-    assert(!tombs[1]); // t
-    assert(!tombs[2]); // e
-    assert( tombs[3]); // s
-    assert( tombs[4]); // rm 
-    assert(!tombs[5]); // t
+    ASSERT_TRUE(IsOK(ObjectLogToState<Frame>(state, Frame{LOG}, Uuid{"1000000007+A"})));
+    ASSERT_TRUE(IsOK(ScanRGA<Frame>(tombs, Frame{state})));
+    ASSERT_TRUE( tombs[0]);
+    ASSERT_TRUE(!tombs[1]); // t
+    ASSERT_TRUE(!tombs[2]); // e
+    ASSERT_TRUE( tombs[3]); // s
+    ASSERT_TRUE( tombs[4]); // rm 
+    ASSERT_TRUE(!tombs[5]); // t
 }
 
-int main (int argn, char** args) {
-    test_chain_merge();
-    test_sibling_merge();
-    test_multitree();
-    test_ct_scan_all0();
-    test_ct_scan_rm();
-    test_ct_scan_rm2();
-    test_ct_scan_rm_un();
-    test_ct_scan_trash();
-    test_ct_log2state();
-    test_ct_log2state_cutoff();
-    return 0;
+int main (int argc, char** args) {
+    ::testing::InitGoogleTest(&argc, args);
+    return RUN_ALL_TESTS();
 }

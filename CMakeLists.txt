@@ -299,7 +299,7 @@ add_test(LWW test12-mx)
 
 add_executable(test14-rga rdt/test/rga.cc)
 target_compile_options(test14-rga PRIVATE ${TEST_CXX_FLAGS})
-target_link_libraries(test14-rga PRIVATE ${TEST_LDD_FLAGS} ron_static rdt_headers)
+target_link_libraries(test14-rga PRIVATE ${TEST_LDD_FLAGS} ron_static rdt_headers gtest_static)
 add_test(RGA test14-rga)
 
 add_executable(test15-max rdt/test/max.cc)

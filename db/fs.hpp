@@ -38,6 +38,8 @@ bool file_exists(const std::string& name) {
     return (stat(name.c_str(), &buffer) == 0);
 }
 
+#define RET_IOFAIL { return Status::IOFAIL.comment(strerror(errno)); }
+
 class TmpDir {
     String cwd_;
     String tmp_;
@@ -46,24 +48,28 @@ class TmpDir {
    public:
     TmpDir() = default;
 
-    Status cd(String name) {
+    Status cd(const String& name) {
         char dir[MAX_PATH_LEN];
-        getcwd(dir, MAX_PATH_LEN);
+        if (NULL==getcwd(dir, MAX_PATH_LEN)) {
+            RET_IOFAIL;
+        }
         cwd_ = String{dir};
         sprintf(dir, "/tmp/%s.XXXXXX", name.c_str());
         if (!mkdtemp(dir)) {
-            return Status::IOFAIL.comment(strerror(errno));
+            RET_IOFAIL;
         }
         tmp_ = String{dir};
         if (chdir(dir)) {
-            return Status::IOFAIL.comment(strerror(errno));
+            RET_IOFAIL;
         }
         return Status::OK;
     }
 
     Status back() {
         if (!cwd_.empty()) {
-            chdir(cwd_.c_str());
+            if (0<chdir(cwd_.c_str())) {
+                RET_IOFAIL;
+            }
         }
         if (!tmp_.empty()) {
             rm_dir(tmp_.c_str());

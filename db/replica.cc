@@ -310,8 +310,6 @@ Status Replica<Store>::Commit::SaveChainlet(Builder& to, OpMeta& meta,
                     return Status::OK.comment("non-monotonous frame");
                 }
                 tip_ = from.id();
-            } else {
-                max_;
             }
         } else if (meta.is_check(from)) {
             ok = meta.Check(from);

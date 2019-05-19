@@ -21,7 +21,7 @@ Status Replica<Store>::CreateReplica() {
     Replica re;
     re.Open();
 
-    Uuid now0 = Uuid::Time(Uuid::Now(), ZERO);
+    Uuid now0 = Uuid::Time(Uuid::Now(), Word::ZERO);
     Commit commit{re};
     Frame yarn_init = OneOp<Frame>(now0, YARN_FORM_UUID);
     Cursor c{yarn_init};
@@ -172,7 +172,7 @@ Status Replica<Store>::Commit::ReadName(Uuid& id, Uuid name) {
 
 template <typename Store>
 Uuid Replica<Store>::Now(Word origin) {
-    if (origin == ZERO) {
+    if (origin == Word::ZERO) {
         origin = active_store().origin();
     }
     Word next = Uuid::HybridTime(time(nullptr));
@@ -234,7 +234,7 @@ Status Replica<Store>::Commit::FindOpMeta(OpMeta& meta, Uuid op_id) {
         }
     }
     if (!cur.valid()) {
-        if (op_id.value() == NEVER) {
+        if (op_id.value() == Word::NEVER) {
             return Status::OK;  // a dirty trick to pick the yarn tip
         }
         return Status::NOT_FOUND.comment("no such op: " + op_id.str());
@@ -263,7 +263,7 @@ Status Replica<Store>::Commit::FindChainHeadMeta(OpMeta& meta, Uuid op_id) {
 
 template <typename Store>
 Status Replica<Store>::Commit::FindYarnTipMeta(OpMeta& meta, Word yarn) {
-    Uuid yarn_end{NEVER, yarn};
+    Uuid yarn_end{Word::NEVER, yarn};
     return FindOpMeta(meta, yarn_end);
 }
 
@@ -284,8 +284,8 @@ Status Replica<Store>::See(Uuid timestamp) {
     if (timestamp.value() < now_) {
         return Status::OK;
     }
-    if (timestamp.value() >= NEVER) {
-        return Status::BADARGS.comment("an event timestamped NEVER: " +
+    if (timestamp.value() >= Word::NEVER) {
+        return Status::BADARGS.comment("an event timestamped Word::NEVER: " +
                                        timestamp.str());
     }
 
@@ -593,8 +593,27 @@ Status Replica<Store>::Commit::ReceiveWrites(Builder& resp, Cursor& c) {
 }
 
 template <typename Store>
-Status Replica<Store>::Commit::ReceiveMapWrites(Builder& resp, Cursor& c) {
-    return Status::NOT_IMPLEMENTED.comment("ReceiveMapWrites");
+Status Replica<Store>::Commit::ReceiveMapQuery(Builder& response, Cursor& c) {
+    FORM form = uuid2form(c.ref());
+    switch (form) {
+        case TXT_MAP_FORM:
+            return host_.txt_.Read(response, c, *this);
+        default:
+            return Status::NOT_IMPLEMENTED.comment("ReceiveMapQuery " +
+                                                   c.ref().str());
+    }
+}
+
+template <typename Store>
+Status Replica<Store>::Commit::ReceiveMapWrites(Builder& response, Cursor& c) {
+    FORM form = uuid2form(c.ref());
+    switch (form) {
+        case TXT_MAP_FORM:
+            return host_.txt_.Write(response, c, *this);
+        default:
+            return Status::NOT_IMPLEMENTED.comment("ReceiveMapWrites " +
+                                                   c.ref().str());
+    }
 }
 
 template <typename Store>
@@ -608,8 +627,6 @@ Status Replica<Store>::Commit::ReceiveQuery(Builder& response, Cursor& c) {
             return QueryObject(response, c);
         case LOG_RAW_FORM:
             return QueryObjectLog(response, c);
-        case TXT_MAP_FORM:
-            return host_.txt_.Read(response, c, *this);
         default:
             return Status::NOT_IMPLEMENTED.comment("unknown query form: " +
                                                    c.ref().str());
@@ -641,6 +658,16 @@ Status Replica<Store>::Commit::Save() {
     return main_.Write(save);
 }
 
+template <class Cursor>
+inline TERM PeekTerm(const Cursor& c) {
+    if (c.term() != REDUCED) {
+        return c.term();
+    }
+    Cursor cp{c};
+    cp.Next();
+    return cp.term();
+}
+
 template <typename Store>
 Status Replica<Store>::Receive(Builder& resp, Cursor& c, Word yarn_id) {
     Status ok = Status::OK;
@@ -654,10 +681,10 @@ Status Replica<Store>::Receive(Builder& resp, Cursor& c, Word yarn_id) {
     Commit commit{*this, GetBranch(yarn_id)};
 
     while (c.valid() && ok) {
-
+        TERM p;
         switch (c.id().version()) {
             case TIME:
-                if (c.term()==QUERY) {
+                if (c.term() == QUERY) {
                     ok = commit.ReceiveQuery(resp, c);
                 } else if (c.id().origin().payload() != 0) {
                     ok = commit.SaveChain(resp, c);
@@ -666,13 +693,19 @@ Status Replica<Store>::Receive(Builder& resp, Cursor& c, Word yarn_id) {
                 }
                 break;
             case DERIVED:
-                ok = commit.ReceiveMapWrites(resp, c);
+                p = PeekTerm(c);
+                if (p == QUERY) {
+                    ok = commit.ReceiveMapQuery(resp, c);
+                } else {
+                    ok = commit.ReceiveMapWrites(resp, c);
+                }
                 break;
             case NAME:
-                if (c.id()==Uuid::COMMENT) {
+                if (c.id() == Uuid::COMMENT) {
                     ok = c.Next();
                 } else {
-                    ok = Status::BADVALUE.comment("not an event id " + c.id().str() +
+                    ok = Status::BADVALUE.comment("not an event id " +
+                                                  c.id().str() +
                                                   " (a runaway annotation?)");
                 }
                 break;
@@ -680,7 +713,8 @@ Status Replica<Store>::Receive(Builder& resp, Cursor& c, Word yarn_id) {
                 ok = Status::NOT_IMPLEMENTED.comment("no blob support yet");
                 break;
         }
-        // ok = Status::NOT_IMPLEMENTED.comment("unrecognized op pattern @"+c.id().str()+":"+c.ref().str());
+        // ok = Status::NOT_IMPLEMENTED.comment("unrecognized op pattern
+        // @"+c.id().str()+":"+c.ref().str());
     }
 
     if (ok) {

@@ -120,10 +120,12 @@ inline RGA_ENTRY entry_type(const Cursor &cur) {
     return ENTRY;
 }
 
+using Booleans = std::vector<bool>;
+
 /** Scans an RGA frame, produces a map of tombstones
  *  (true for invisible/removed ops, false for visibles). */
 template <class Frame>
-Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
+Status ScanRGA(Booleans &tombstones, const Frame &frame) {
     using Cursor = typename Frame::Cursor;
     tombstones.clear();
     RGA_ENTRY state{META_ENTRY};
@@ -150,8 +152,9 @@ Status ScanRGA(std::vector<bool> &tombstones, const Frame &frame) {
             id = cur.id();
             ref = cur.ref();
             et = entry_type(cur);
+            // TODO skip by vv
         } else {
-            id = Uuid::Time(NEVER, 0);
+            id = Uuid::Time(Word::NEVER, 0);
             ref = root;
             et = META_ENTRY;
         }

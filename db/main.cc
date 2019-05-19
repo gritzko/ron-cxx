@@ -160,7 +160,7 @@ constexpr const char* CREATE_USAGE{
 Status CommandCreate(RonReplica& replica, Args& args) {
     // TODO keys
     Word yarn_id = Word::random();
-    Uuid branch_id = Uuid::Time(NEVER, yarn_id);
+    Uuid branch_id = Uuid::Time(Word::NEVER, yarn_id);
     Uuid tag{};
     if (!args.empty() && args.back() == "as") {
         args.pop_back();
@@ -193,7 +193,7 @@ Status CommandFork(RonReplica& replica, Args& args) {
     Word active_yarn_id = active.origin();
 
     Word new_yarn_id = Word::random();
-    Uuid new_branch_id = Uuid::Time(NEVER, new_yarn_id);
+    Uuid new_branch_id = Uuid::Time(Word::NEVER, new_yarn_id);
     Uuid tag{};
     if (!args.empty() && args.back() == "as") {
         args.pop_back();
@@ -255,7 +255,7 @@ Status CommandTest(RonReplica& replica, Args& args) {
     args.pop_back();
 
     Word test_yarn_id{"test"};
-    Uuid test_branch_id = Uuid::Time(NEVER, test_yarn_id);
+    Uuid test_branch_id = Uuid::Time(Word::NEVER, test_yarn_id);
     IFOK(replica.CreateBranch(test_yarn_id, true));
     IFOK(replica.SetActiveStore(test_branch_id));
 
@@ -269,9 +269,10 @@ Status CommandTest(RonReplica& replica, Args& args) {
     static const string FAIL{"\033[1;31mFAIL\033[0m\t"};
     for (int i = 0; ok && i < io.size(); i++) {
         Cursor c = io[i].cursor();
-        if (c.id() != Uuid::COMMENT)
+        if (c.id() != Uuid::COMMENT) {
             return Status::BADFRAME.comment("not a test header: " +
                                             c.id().str());
+        }
         TERM term = c.term();
         string comment;
         if (c.size() > 2 && c.has(2, STRING)) comment = c.string(2);
@@ -329,8 +330,9 @@ Status CommandQuery(RonReplica& replica, const string& name) {
     if (!cur.valid()) return Status::BADARGS.comment("need a query op");
     id = cur.id();
     rdt = cur.ref();
-    if (id == Uuid::FATAL || rdt == Uuid::FATAL)
+    if (id == Uuid::FATAL || rdt == Uuid::FATAL) {
         return Status::BADARGS.comment("not an UUID");
+    }
     Builder result;
     Status ok = replica.Receive(result, cur);
     if (ok) cout << result.data() << '\n';
@@ -668,7 +670,7 @@ Status CommandHelp(RonReplica& replica, Args& args) {
          << VERSION_USAGE << "\nB R A N C H  S C O P E D\n"
          << NAME_USAGE << NAMED_USAGE << WRITE_USAGE << DUMP_USAGE
          << "\nO B J E C T  S C O P E D\n"
-         << NEW_USAGE << GET_USAGE;
+         << NEW_USAGE << GET_USAGE << RECALL_USAGE;
     return Status::OK;
 }
 

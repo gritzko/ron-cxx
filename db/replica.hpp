@@ -101,7 +101,7 @@ class Replica {
 
     ~Replica();
 
-    Uuid Now(Word origin = ZERO);
+    Uuid Now(Word origin = Word::ZERO);
     Status See(Uuid timestamp);
 
     inline mode_t mode() const { return mode_; }
@@ -145,7 +145,7 @@ class Replica {
     //  H I G H  L E V E L  A C C E S S O R S
 
     static inline Uuid yarn2branch(Word yarn_id) {
-        return Uuid::Time(NEVER, yarn_id);
+        return Uuid::Time(Word::NEVER, yarn_id);
     }
 
     inline bool HasBranch(Word yarn) {
@@ -167,7 +167,7 @@ class Replica {
     }
 
     inline Store &GetBranch(Word yarn_id) {
-        return GetStore(Uuid::Time(NEVER, yarn_id));
+        return GetStore(Uuid::Time(Word::NEVER, yarn_id));
     }
 
     inline Status GetChain(Frame &chain, Uuid chain_id);
@@ -341,6 +341,13 @@ class Replica {
 
         Status WriteNewEvents(Builder &, Cursor &chain);
 
+        inline Status NewObject (Uuid rdt) {
+            Frame creation = OneOp<Frame>(Uuid::Time(0,0), rdt);
+            Cursor c{creation};
+            Builder re;
+            return WriteNewEvents(re, c);
+        }
+
         /**
             @version-id :txt 'text' !
 
@@ -384,10 +391,10 @@ class Replica {
         ~Commit() { Close(); }
     };
 
-    Status Receive(Builder &response, Cursor &c, Word branch = ZERO);
+    Status Receive(Builder &response, Cursor &c, Word branch = Word::ZERO);
 
     inline Status ReceiveFrame(Builder &response, Frame frame,
-                               Word branch = ZERO) {
+                               Word branch = Word::ZERO) {
         Cursor c{frame};
         return Receive(response, c, branch);
     }

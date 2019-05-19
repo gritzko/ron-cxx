@@ -57,6 +57,7 @@ union Word {
     static constexpr uint FBS = 64U - PBS;
     static constexpr uint64_t ONE = 1;
     static constexpr uint64_t MAX_VALUE = (ONE << PBS) - 1U;
+    static const Word ZERO;
     static const Word NEVER;
     static constexpr uint64_t MAX_VALUE_30 = (1U << 30U) - 1U;
     static constexpr uint8_t OFFSET6[10] = {
@@ -129,8 +130,6 @@ union Word {
 };
 
 enum half_t { VALUE = 0, ORIGIN = 1 };
-const Word NEVER{uint64_t(63UL << 54)};
-const Word ZERO{};
 
 struct Atom {
     std::pair<Word, Word> words_;

@@ -19,6 +19,8 @@ class InMemoryStore {
     using Builder = typename Frame::Builder;
     using Cursors = typename Frame::Cursors;
 
+    Uuid tip;
+
    private:
     using Map = btree_multimap<Key, Frame>;
     using MapIter = typename Map::iterator;
@@ -40,7 +42,7 @@ class InMemoryStore {
     using Record = std::pair<Key, Frame>;
     using Records = std::vector<Record>;
 
-    InMemoryStore() : state_{} {}
+    InMemoryStore() : tip{Uuid::NIL}, state_{} {}
 
     Status Open(Uuid id) {
         Frame meta = OneOp<Frame>(id, YARN_FORM_UUID);

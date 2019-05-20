@@ -115,6 +115,9 @@ class TextFrame {
             // FIXME check metrics
             return TextFrame::string(data_, atom(idx));
         }
+        inline Slice string_slice(fsize_t idx) const {
+            return data_.slice(atom(idx).origin().range());
+        }
         int64_t integer(fsize_t idx) const {
             assert(type(idx) == INT);
             return int64_t(op_.atom(idx).value());
@@ -321,7 +324,6 @@ class TextFrame {
         inline operator bool() const { return valid(); }
     };
 };
-
 
 inline char TextFrame::decode_esc(char esc) {
     switch (esc) {

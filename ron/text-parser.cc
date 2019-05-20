@@ -60,7 +60,7 @@ Status TextFrame::Cursor::Next() {
     Codepoint cp{0};
     char term{0};
     Slice value, origin;
-    char variety, version;
+    char variety{0}, version{0};
 
     atoms.clear();
     op_.AddAtom(prev_id_.inc());

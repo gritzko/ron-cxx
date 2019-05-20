@@ -22,16 +22,20 @@ static const int CP_en_main = 9;
 bool TextFrame::StringIterator::Next() {
     CharRef p = data_.begin();
     CharRef pe = data_.end();
+    /*if (p==pe) {
+        cp_ = 0;
+        return false;
+    }*/
     CharRef eof = 0;
     Codepoint cp = 0;
     int cs = 0;
 
-#line 32 "ron/cp-parser.cc"
+#line 36 "ron/cp-parser.cc"
     { cs = CP_start; }
 
-#line 19 "ragel/cp-parser.rl"
+#line 23 "ragel/cp-parser.rl"
 
-#line 39 "ron/cp-parser.cc"
+#line 43 "ron/cp-parser.cc"
     {
         if (p == pe) goto _test_eof;
         switch (cs) {
@@ -78,8 +82,9 @@ bool TextFrame::StringIterator::Next() {
             }
                 goto st10;
             tr15 :
-#line 21 "ragel/cp-parser.rl"
+#line 25 "ragel/cp-parser.rl"
             {
+                --p;
                 {
                     p++;
                     cs = 10;
@@ -94,8 +99,9 @@ bool TextFrame::StringIterator::Next() {
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 21 "ragel/cp-parser.rl"
+#line 25 "ragel/cp-parser.rl"
                 {
+                    --p;
                     {
                         p++;
                         cs = 10;
@@ -108,7 +114,7 @@ bool TextFrame::StringIterator::Next() {
             st10:
                 if (++p == pe) goto _test_eof10;
             case 10:
-#line 97 "ron/cp-parser.cc"
+#line 101 "ron/cp-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -136,8 +142,9 @@ bool TextFrame::StringIterator::Next() {
                 cs = 0;
                 goto _out;
             tr16 :
-#line 21 "ragel/cp-parser.rl"
+#line 25 "ragel/cp-parser.rl"
             {
+                --p;
                 {
                     p++;
                     cs = 1;
@@ -150,8 +157,9 @@ bool TextFrame::StringIterator::Next() {
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 21 "ragel/cp-parser.rl"
+#line 25 "ragel/cp-parser.rl"
                 {
+                    --p;
                     {
                         p++;
                         cs = 1;
@@ -162,7 +170,7 @@ bool TextFrame::StringIterator::Next() {
             st1:
                 if (++p == pe) goto _test_eof1;
             case 1:
-#line 136 "ron/cp-parser.cc"
+#line 140 "ron/cp-parser.cc"
                 switch ((*p)) {
                     case 34u:
                         goto tr0;
@@ -263,8 +271,9 @@ bool TextFrame::StringIterator::Next() {
             }
                 goto st6;
             tr17 :
-#line 21 "ragel/cp-parser.rl"
+#line 25 "ragel/cp-parser.rl"
             {
+                --p;
                 {
                     p++;
                     cs = 6;
@@ -279,8 +288,9 @@ bool TextFrame::StringIterator::Next() {
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 21 "ragel/cp-parser.rl"
+#line 25 "ragel/cp-parser.rl"
                 {
+                    --p;
                     {
                         p++;
                         cs = 6;
@@ -293,7 +303,7 @@ bool TextFrame::StringIterator::Next() {
             st6:
                 if (++p == pe) goto _test_eof6;
             case 6:
-#line 252 "ron/cp-parser.cc"
+#line 256 "ron/cp-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr7;
                 goto st0;
             tr9 :
@@ -309,8 +319,9 @@ bool TextFrame::StringIterator::Next() {
             }
                 goto st7;
             tr18 :
-#line 21 "ragel/cp-parser.rl"
+#line 25 "ragel/cp-parser.rl"
             {
+                --p;
                 {
                     p++;
                     cs = 7;
@@ -325,8 +336,9 @@ bool TextFrame::StringIterator::Next() {
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 21 "ragel/cp-parser.rl"
+#line 25 "ragel/cp-parser.rl"
                 {
+                    --p;
                     {
                         p++;
                         cs = 7;
@@ -339,7 +351,7 @@ bool TextFrame::StringIterator::Next() {
             st7:
                 if (++p == pe) goto _test_eof7;
             case 7:
-#line 282 "ron/cp-parser.cc"
+#line 286 "ron/cp-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr8;
                 goto st0;
             tr14 :
@@ -349,8 +361,9 @@ bool TextFrame::StringIterator::Next() {
             }
                 goto st8;
             tr19 :
-#line 21 "ragel/cp-parser.rl"
+#line 25 "ragel/cp-parser.rl"
             {
+                --p;
                 {
                     p++;
                     cs = 8;
@@ -365,8 +378,9 @@ bool TextFrame::StringIterator::Next() {
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 21 "ragel/cp-parser.rl"
+#line 25 "ragel/cp-parser.rl"
                 {
+                    --p;
                     {
                         p++;
                         cs = 8;
@@ -379,7 +393,7 @@ bool TextFrame::StringIterator::Next() {
             st8:
                 if (++p == pe) goto _test_eof8;
             case 8:
-#line 308 "ron/cp-parser.cc"
+#line 312 "ron/cp-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr9;
                 goto st0;
         }
@@ -418,8 +432,9 @@ bool TextFrame::StringIterator::Next() {
         if (p == eof) {
             switch (cs) {
                 case 10:
-#line 21 "ragel/cp-parser.rl"
+#line 25 "ragel/cp-parser.rl"
                 {
+                    --p;
                     {
                         p++;
                         cs = 0;
@@ -431,8 +446,9 @@ bool TextFrame::StringIterator::Next() {
                 {
                     cp = decode_hex_cp(Slice{p - 4, 4});
                 }
-#line 21 "ragel/cp-parser.rl"
+#line 25 "ragel/cp-parser.rl"
                     {
+                        --p;
                         {
                             p++;
                             cs = 0;
@@ -440,18 +456,18 @@ bool TextFrame::StringIterator::Next() {
                         }
                     }
                     break;
-#line 338 "ron/cp-parser.cc"
+#line 342 "ron/cp-parser.cc"
             }
         }
 
     _out : {}
     }
 
-#line 25 "ragel/cp-parser.rl"
+#line 29 "ragel/cp-parser.rl"
 
-    if (cs != 0) {
+    if (cs != CP_error) {
         cp_ = cp;
-        data_.advance(p - data_.begin() - 1);
+        data_.advance(p - data_.begin());
         return true;
     } else {
         cp_ = 0;

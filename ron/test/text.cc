@@ -182,7 +182,8 @@ TEST(TextFrame, UTF16) {
     ASSERT_TRUE(parsed.size()==12);
     
     using StringIterator = typename Frame::StringIterator;
-    StringIterator i{cur.string_slice(2)};
+    Slice pikachu_slice = cur.string_slice(2);
+    StringIterator i{pikachu_slice};
     Codepoints cps;
     while (i) {
         cps.push_back(*i);

@@ -64,20 +64,7 @@ void test_ct_path_fail () {
     c.Next();
     assert(path.AddNext(c)==Status::CAUSEBREAK); //c
 }*/
-/*
-void test_ct_scan_rmun () {
-    string frame{"@1i08e4+path :rga! 'a', 'b', @1i08k+path rm, un, @1i08e40003+path :1i08e40002+path 'd',"};
-    Cursor c{frame};
-    CTScan<Cursor> scan{c};
-    const vector<bool>& tombs = scan.visibility();
-    assert(!tombs[0]);
-    assert(!tombs[1]);
-    assert(!tombs[2]);
-    assert( tombs[3]);
-    assert( tombs[4]);
-    assert(!tombs[5]);
-}
-*/
+
 
 void test_inc_stack () {
     inc_stack<fsize_t> is;
@@ -89,6 +76,13 @@ void test_inc_stack () {
     is.push_back(0);
     assert(is.size()==1001);
     assert(is.span_size()==2);
+    
+    int l=0;
+    for(auto i=is.begin(); i!=is.end(); ++i, ++l) {
+        assert(*i==l%1000);
+    }
+    assert(l==1001);
+    
     is.pop_back();
     is.pop_back();
     assert(is.size()==999);

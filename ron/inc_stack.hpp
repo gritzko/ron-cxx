@@ -16,8 +16,34 @@ class inc_stack {
         span_t(value_t v) : value{v}, size{1} {}
     };
 
-   private:
     using spans_t = std::vector<span_t>;
+
+    class const_iterator {
+        using spans_iter = typename spans_t::const_iterator;
+        spans_iter i_;
+        len_t off_;
+        const_iterator(spans_iter i, len_t offset) : i_{i}, off_{offset} {}
+        friend class inc_stack;
+    public:
+        inline void operator ++ (){
+            ++off_;
+            if (off_==i_->size) {
+                off_ = 0;
+                ++i_;
+            }
+        }
+        inline value_t operator * () {
+            return i_->value + off_;
+        }
+        inline bool operator == (const const_iterator& b) const {
+            return i_==b.i_ && off_==b.off_;
+        }
+        inline bool operator != (const const_iterator& b) const {
+            return i_!=b.i_ || off_!=b.off_;
+        }
+    };
+
+   private:
     spans_t spans_;
     len_t size_;
 
@@ -34,6 +60,13 @@ class inc_stack {
     }
     inline const span_t& front_span() const { return spans_.front(); }
     inline const span_t& back_span() const { return spans_.back(); }
+
+    inline const_iterator begin() const {
+        return const_iterator{spans_.begin(), 0};
+    }
+    inline const_iterator end() const {
+        return const_iterator{spans_.end(), 0};
+    }
 
     void push_back(value_t i) {
         ++size_;

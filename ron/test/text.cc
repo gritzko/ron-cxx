@@ -1,5 +1,5 @@
 #include <iostream>
-#include <cassert>
+#include <gtest/gtest.h>
 #include "../ron.hpp"
 #define DEBUG 1
 
@@ -25,7 +25,7 @@ string pattern (const Frame& frame) {
 }
 
 
-void test_basic_cycle () {
+TEST(TextFrame, basic_cycle ) {
     Builder builder;
     String TIME1{"1+src"};
     String TIME2{"2+orig"};
@@ -38,169 +38,169 @@ void test_basic_cycle () {
     // TODO coverage: uuid, float, int
     TextFrame frame = builder.Release();
     const String &data = frame.data();
-    assert(data.find(TIME1)!=string::npos);
-    assert(data.find(KEY)!=string::npos);
-    assert(data.find(VALUE)!=string::npos);
+    ASSERT_TRUE(data.find(TIME1)!=string::npos);
+    ASSERT_TRUE(data.find(KEY)!=string::npos);
+    ASSERT_TRUE(data.find(VALUE)!=string::npos);
 
     TextFrame::Cursor cursor = frame.cursor();
     const Op& op = cursor.op();
-    assert(op.size()==2);
-    assert(op.ref()==Uuid{LWW});
-    assert(op.id().str()==TIME1);
-    assert(cursor.term()==REDUCED);
-    assert(cursor.Next());
-    assert(cursor.term()==RAW);
-    assert(op.ref()==TIME1);
-    assert(op.id()==TIME2);
-    assert(cursor.string(2)==KEY);
-    assert(cursor.string(3)==VALUE);
-    assert(!cursor.Next());
+    ASSERT_TRUE(op.size()==2);
+    ASSERT_TRUE(op.ref()==Uuid{LWW});
+    ASSERT_TRUE(op.id().str()==TIME1);
+    ASSERT_TRUE(cursor.term()==REDUCED);
+    ASSERT_TRUE(cursor.Next());
+    ASSERT_TRUE(cursor.term()==RAW);
+    ASSERT_TRUE(op.ref()==TIME1);
+    ASSERT_TRUE(op.id()==TIME2);
+    ASSERT_TRUE(cursor.string(2)==KEY);
+    ASSERT_TRUE(cursor.string(3)==VALUE);
+    ASSERT_TRUE(!cursor.Next());
 }
 
-void test_optional_chars () {
+TEST(TextFrame, optional_chars) {
     String TANGLED{"@1A 234 56K;+9223372036854775807'abc' 3, @id 3.1415 >uuid;"};
     String ABC{"abc"};
     Frame opt{TANGLED};
     Cursor copt = opt.cursor();
-    assert(copt.valid());
-    assert(copt.op().size()==4);
-    assert(copt.op().atom(2).type()==ATOM::INT);
-    assert(copt.op().atom(3).type()==ATOM::UUID);
-    assert(copt.op().uuid(3)=="56K");
-    assert(!copt.op().id().zero());
-    assert(copt.op().ref().zero());
+    ASSERT_TRUE(copt.valid());
+    ASSERT_TRUE(copt.op().size()==4);
+    ASSERT_TRUE(copt.op().atom(2).type()==ATOM::INT);
+    ASSERT_TRUE(copt.op().atom(3).type()==ATOM::UUID);
+    ASSERT_TRUE(copt.op().uuid(3)=="56K");
+    ASSERT_TRUE(!copt.op().id().zero());
+    ASSERT_TRUE(copt.op().ref().zero());
 
     Status ok = copt.Next();
-    assert(ok); // start state: space :)
-    assert(copt.op().id()=="1A00000001");
-    assert(copt.op().ref()=="1A");
-    assert(copt.has(2, INT));
-    assert(copt.integer(2)==9223372036854775807L);
-    assert(copt.string(3)==ABC);
-    assert(copt.integer(4)==3);
+    ASSERT_TRUE(ok); // start state: space :)
+    ASSERT_TRUE(copt.op().id()=="1A00000001");
+    ASSERT_TRUE(copt.op().ref()=="1A");
+    ASSERT_TRUE(copt.has(2, INT));
+    ASSERT_TRUE(copt.integer(2)==9223372036854775807L);
+    ASSERT_TRUE(copt.string(3)==ABC);
+    ASSERT_TRUE(copt.integer(4)==3);
 
-    assert(copt.Next());
-    assert(copt.number(2)==3.1415); // :)
+    ASSERT_TRUE(copt.Next());
+    ASSERT_TRUE(copt.number(2)==3.1415); // :)
 
-    assert(!copt.Next());
-    assert(!copt.valid());
+    ASSERT_TRUE(!copt.Next());
+    ASSERT_TRUE(!copt.valid());
 }
 
-void test_signs () {
+TEST(TextFrame, signs ) {
     String SIGNS{"@2:1 -1 ,-1.2, +1.23,-1e+2, -2.0e+1,"};
     Frame signs{SIGNS};
     Cursor cur = signs.cursor();
-    assert(cur.integer(2)==-1);
-    assert(cur.Next());
-    assert(cur.number(2)==-1.2);
-    assert(cur.Next());
-    assert(cur.number(2)==1.23);
-    assert(cur.Next());
-    assert(cur.number(2)==-100.0);
-    assert(cur.Next());
-    assert(cur.number(2)==-20);
-    assert(!cur.Next());
+    ASSERT_TRUE(cur.integer(2)==-1);
+    ASSERT_TRUE(cur.Next());
+    ASSERT_TRUE(cur.number(2)==-1.2);
+    ASSERT_TRUE(cur.Next());
+    ASSERT_TRUE(cur.number(2)==1.23);
+    ASSERT_TRUE(cur.Next());
+    ASSERT_TRUE(cur.number(2)==-100.0);
+    ASSERT_TRUE(cur.Next());
+    ASSERT_TRUE(cur.number(2)==-20);
+    ASSERT_TRUE(!cur.Next());
 }
 
-void test_size_limits () {
+TEST(TextFrame, size_limits ) {
     String OVERLIMIT{"=1,=1000000000000000000001,"};
     Frame toolong{OVERLIMIT};
     Cursor cur = toolong.cursor();
-    assert(cur.valid());
-    assert(!cur.Next());
+    ASSERT_TRUE(cur.valid());
+    ASSERT_TRUE(!cur.Next());
 }
 
-void test_string_escapes () {
+TEST(TextFrame, string_escapes) {
     Builder builder;
     String STR1{"'esc'"};
     String STR2{"=\r\n\t\\="};
     builder.AppendNewOp(Uuid{"1+a"}, Uuid{"2+b"}, STR1, STR2);
     Frame cycle = builder.Release();
     Cursor cc = cycle.cursor();
-    assert(cc.valid());
-    assert(cc.string(2)==STR1);
-    assert(cc.string(3)==STR2);
+    ASSERT_TRUE(cc.valid());
+    ASSERT_TRUE(cc.string(2)==STR1);
+    ASSERT_TRUE(cc.string(3)==STR2);
 
     // FIXME \u
     //Frame good{" 'esc \\'', '\\u0020', '\\r\\n\\t\\\\', "};
     //Cursor cur = good.cursor();
 }
 
-void test_string_metrics () {
+TEST(TextFrame, string_metrics ) {
     String BADUTF8{"@id :ref 'bad string \x80';"};
     Cursor bad{BADUTF8};
-    assert(!bad.valid());
+    ASSERT_TRUE(!bad.valid());
 }
 
-void test_terms() {
+TEST(TextFrame, terms) {
     String COMMAS{"@1+A:2+B 1,2 ,\n,\t4   ,,"};
     Cursor c{COMMAS};
     int i = 1;
     while (c.Next()) i++;
-    assert(i==5);
+    ASSERT_TRUE(i==5);
 }
 
-void test_defaults () {
+TEST(TextFrame, defaults ) {
     Frame::Builder b;
     String RAW{"@12345+test :lww; @1234500001+test :12345+test 'key' 'value';"};
     b.AppendFrame(Frame{RAW});
     Frame nice = b.Release();
     String CORRECT{"@12345+test :lww;\n 'key' 'value';\n"};
-    assert(nice.data()==CORRECT);
+    ASSERT_TRUE(nice.data()==CORRECT);
     Cursor nc = nice.cursor();
-    assert(nc.op().id()==Uuid{"12345+test"});
-    assert(nc.op().ref()==Uuid{"lww"});
+    ASSERT_TRUE(nc.op().id()==Uuid{"12345+test"});
+    ASSERT_TRUE(nc.op().ref()==Uuid{"lww"});
     nc.Next();
-    assert(nc.op().id()==Uuid{"1234500001+test"});
-    assert(nc.op().ref()==Uuid{"12345+test"});
+    ASSERT_TRUE(nc.op().id()==Uuid{"1234500001+test"});
+    ASSERT_TRUE(nc.op().ref()==Uuid{"12345+test"});
 }
 
-void test_span_spread () {
+TEST(TextFrame, span_spread ) {
     String RAW{"@1iDEKK+gYpLcnUnF6 :1iDEKA+gYpLcnUnF6 ('abcd' 4);"};
     Cursor c{RAW};
-    assert(c.valid());
+    ASSERT_TRUE(c.valid());
 }
 
-void test_syntax_errors () {
+TEST(TextFrame, syntax_errors) {
     String INVALID{"@line+ok\n:bad/"};
     Cursor cur{Slice{INVALID}, false};
     Status ok = cur.Next();
     String MSG{"syntax error at line 2 col 5 (offset 13)"};
-    assert(ok.comment()==MSG);
+    ASSERT_TRUE(ok.comment()==MSG);
 }
 
-void test_utf16 () {
+TEST(TextFrame, UTF16) {
     String PIKACHU{"'пикачу\\u0020ピカチュウ'!"};
-    assert(PIKACHU.size()==36);
+    ASSERT_TRUE(PIKACHU.size()==36);
     Frame frame{PIKACHU};
     Cursor cur = frame.cursor();
-    assert(cur.valid());
-    assert(cur.has(2, STRING));
+    ASSERT_TRUE(cur.valid());
+    ASSERT_TRUE(cur.has(2, STRING));
     Atom str = cur.atom(2);
     auto parsed = frame.utf16string(str);
-    assert(parsed==u"пикачу ピカチュウ");
-    assert(parsed.size()==12);
+    ASSERT_TRUE(parsed==u"пикачу ピカチュウ");
+    ASSERT_TRUE(parsed.size()==12);
+    
+    using StringIterator = typename Frame::StringIterator;
+    StringIterator i{cur.string_slice(2)};
+    Codepoints cps;
+    while (i) {
+        cps.push_back(*i);
+        ++i;
+    }
+    ASSERT_EQ(cps.size(), 12);
+    ASSERT_EQ(cps[6], 0x20);
 }
 
-void test_end() {
+TEST(TextFrame, END) {
     String frame{"@1kK7vk+0 :lww ;\n"};
     Cursor c{frame};
-    assert(c.valid());
-    assert(c.Next()==Status::ENDOFFRAME);
+    ASSERT_TRUE(c.valid());
+    ASSERT_EQ(c.Next(), Status::ENDOFFRAME);
 }
 
+
 int main (int argn, char** args) {
-    test_basic_cycle();
-    test_optional_chars();
-    test_signs();
-    test_size_limits();
-    test_string_escapes();
-    test_terms();
-    test_defaults();
-    test_string_metrics();
-    test_span_spread();
-    test_syntax_errors();
-    test_utf16();
-    test_end();
-    return 0;
+    ::testing::InitGoogleTest(&argn, args);
+    return RUN_ALL_TESTS();
 }

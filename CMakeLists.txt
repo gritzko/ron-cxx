@@ -240,7 +240,7 @@ add_test(UUID test01-uuid)
 
 add_executable(test02-text ron/test/text.cc)
 target_compile_options(test02-text PRIVATE ${TEST_CXX_FLAGS})
-target_link_libraries(test02-text ${TEST_LDD_FLAGS} ron_static)
+target_link_libraries(test02-text ${TEST_LDD_FLAGS} ron_static gtest_static Threads::Threads)
 add_test(TEXT test02-text)
 
 add_executable(test03-hash ron/test/hash.cc)
@@ -352,7 +352,7 @@ add_test(CHAINS test20-chains)
 add_executable(test21-mappers db/test/mappers.cc)
 target_compile_options(test21-mappers PRIVATE ${TEST_CXX_FLAGS})
 add_dependencies(test21-mappers swarmdb_shared)
-target_link_libraries(test21-mappers PRIVATE ${TEST_LDD_FLAGS} swarmdb_shared)
+target_link_libraries(test21-mappers PRIVATE ${TEST_LDD_FLAGS} swarmdb_shared gtest_static)
 add_test(MAPPERS test21-mappers)
 
 add_executable(test22-memstore db/test/memstore.cc)

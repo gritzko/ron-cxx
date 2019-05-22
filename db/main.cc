@@ -301,7 +301,7 @@ Status CommandTest(RonReplica& replica, Args& args) {
 }
 
 constexpr const char* DUMP_USAGE{
-    "dump\n"
+    "dump [BranchName]\n"
     "   dumps the database contents to stdout\n"};
 
 Status CommandDump(RonReplica& replica, Args& args) {
@@ -311,7 +311,16 @@ Status CommandDump(RonReplica& replica, Args& args) {
         if (rdt == ZERO_RAW_FORM) return Status::BADARGS.comment("unknown RDT");
     }*/
     if (!replica.open()) return Status::BAD_STATE.comment("db is not open?");
-    StoreIterator i{replica.GetActiveStore()};
+
+    Uuid branch_id = replica.active_store();
+
+    // Get BranchName, if specified
+    if (!args.empty()) {
+      args.push_back("on");
+      IFOK(ScanOnBranchArg(branch_id, replica, args));
+    }
+
+    StoreIterator i{replica.GetStore(branch_id)};
     IFOK(i.SeekTo(Key{}));
     do {
         cout << i.key().str() << '\t' << i.value().data().str();
@@ -453,14 +462,17 @@ Status CommandNew(RonReplica& replica, Args& args) {
     Uuid name;
     IFOK(ScanAsNameArg(name, SNAKE, replica, args));
 
+    Uuid branch_id;
+    IFOK(ScanOnBranchArg(branch_id, replica, args));
+
     CHECKARG(!args.empty(), NEW_USAGE);
 
     Frame new_obj =
-        OneOp<Frame>(replica.Now(replica.active_store().origin()), rdt);
+        OneOp<Frame>(replica.Now(branch_id.origin()), rdt);
     Builder re;
     Cursor cu{new_obj};
 
-    Commit commit{replica};
+    Commit commit{replica, branch_id};
     IFOK(commit.SaveChain(re, cu));
     Uuid id = commit.tip();  // error for invalids
     if (!name.zero()) {
@@ -572,7 +584,12 @@ Status CommandName(RonReplica& replica, Args& args) {
     IFOK(ScanAsNameArg(name, NUMERIC, replica, args));
     CHECKARG(name.zero(), NAME_USAGE);
 
-    Commit commit{replica};
+    Uuid branch_id;
+    IFOK(ScanOnBranchArg(branch_id, replica, args));
+
+    CHECKARG(!args.empty(), NAME_USAGE);
+
+    Commit commit{replica, branch_id};
     Status ok = commit.WriteName(name, id);
     if (ok) {
         ok = ok.comment("assigned name " + name.str() + " to " + id.str());
@@ -598,10 +615,12 @@ Status CommandNamed(RonReplica& replica, Args& args) {
         what = i->second;
         args.pop_back();
     }
-    Uuid branch;
-    IFOK(ScanOnBranchArg(branch, replica, args));
+    Uuid branch_id;
+    IFOK(ScanOnBranchArg(branch_id, replica, args));
 
-    Commit commit{replica};
+    CHECKARG(!args.empty(), NAMED_USAGE);
+
+    Commit commit{replica, branch_id};
 
     typename RonReplica::Names names;
     IFOK(commit.ReadNames(names));

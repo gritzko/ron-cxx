@@ -311,7 +311,9 @@ Status Replica<Store>::Commit::SaveChainlet(Builder& to, OpMeta& meta,
                 }
                 tip_ = from.id();
             } else {
-                max_;
+                if (max_ < from.id()) {
+                    max_ = from.id();
+                }
             }
         } else if (meta.is_check(from)) {
             ok = meta.Check(from);

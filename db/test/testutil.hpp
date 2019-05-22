@@ -2,6 +2,8 @@
 #include "../fs.hpp"
 #define DEBUG 1
 
+namespace ron {
+
 template<class Frame>
 Status Compare(const Frame& a, const Frame& b) {
     Status ok = CompareFrames(a, b);
@@ -17,4 +19,7 @@ Status Compare(const Frame& a, const Frame& b) {
         return ::testing::AssertionSuccess();
     else
         return ::testing::AssertionFailure() << ok.str();
+}
+
+
 }

@@ -5,8 +5,6 @@ namespace ron {
 
 constexpr uint8_t Word::OFFSET6[10];
 constexpr uint64_t Word::LOWER6[11];
-const Word Word::NEVER{uint64_t(63UL << 54)};
-const Word Word::ZERO{0UL};
 const Uuid Uuid::NIL{0, 0};
 const Uuid Uuid::FATAL{Word::MAX_VALUE, Word::MAX_VALUE};
 const Uuid Uuid::NEVER = Uuid::Time(Word::MAX_VALUE, Word::MAX_VALUE);
@@ -85,6 +83,8 @@ Word Uuid::HybridTime(time_t seconds, long int nanos) {
     ret |= nanos / 100;
     return ret;
 }
+
+std::string Uuid::ToString() const { return static_cast<std::string>(str()); }
 
 #include <sys/time.h>
 

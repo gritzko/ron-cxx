@@ -160,7 +160,7 @@ constexpr const char* CREATE_USAGE{
 Status CommandCreate(RonReplica& replica, Args& args) {
     // TODO keys
     Word yarn_id = Word::random();
-    Uuid branch_id = Uuid::Time(Word::NEVER, yarn_id);
+    Uuid branch_id = Uuid::Time(NEVER, yarn_id);
     Uuid tag{};
     if (!args.empty() && args.back() == "as") {
         args.pop_back();
@@ -193,7 +193,7 @@ Status CommandFork(RonReplica& replica, Args& args) {
     Word active_yarn_id = active.origin();
 
     Word new_yarn_id = Word::random();
-    Uuid new_branch_id = Uuid::Time(Word::NEVER, new_yarn_id);
+    Uuid new_branch_id = Uuid::Time(NEVER, new_yarn_id);
     Uuid tag{};
     if (!args.empty() && args.back() == "as") {
         args.pop_back();
@@ -255,7 +255,7 @@ Status CommandTest(RonReplica& replica, Args& args) {
     args.pop_back();
 
     Word test_yarn_id{"test"};
-    Uuid test_branch_id = Uuid::Time(Word::NEVER, test_yarn_id);
+    Uuid test_branch_id = Uuid::Time(NEVER, test_yarn_id);
     IFOK(replica.CreateBranch(test_yarn_id, true));
     IFOK(replica.SetActiveStore(test_branch_id));
 
@@ -396,18 +396,17 @@ Status CommandGetFrame(RonReplica& replica, Args& args) {
 
 constexpr const char* RECALL_USAGE{
     "recall 2345+some_ver of 12345+some_obj\n"
-    "   recall the object's historical state\n"
-    };
+    "   recall the object's historical state\n"};
 
-Status CommandRecall (RonReplica& replica, Args& args) {
+Status CommandRecall(RonReplica& replica, Args& args) {
     CHECKARG(args.empty(), RECALL_USAGE);
     Uuid version{args.back()};
     args.pop_back();
-    CHECKARG(version.version()!=TIME, RECALL_USAGE);
+    CHECKARG(version.version() != TIME, RECALL_USAGE);
     Uuid object;
     IFOK(ScanOfObjectArg(object, replica, args));
-    CHECKARG(object.version()!=TIME, RECALL_USAGE);
-    CHECKARG(version<object, "version id > object id!");
+    CHECKARG(object.version() != TIME, RECALL_USAGE);
+    CHECKARG(version < object, "version id > object id!");
     Frame state;
     Commit commit{replica};
     IFOK(commit.GetObjectVersion(state, object, version));

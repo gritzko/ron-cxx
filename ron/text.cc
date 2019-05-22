@@ -81,7 +81,6 @@ bool TextFrame::Cursor::int_too_big(const Slice& data) {
     return res > 0;
 }
 
-
 Codepoint TextFrame::decode_hex_cp(Slice data) {
     Codepoint ret = 0;
     while (!data.empty()) {

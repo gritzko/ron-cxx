@@ -1,7 +1,6 @@
 #ifndef ron_uuid_hpp
 #define ron_uuid_hpp
 #include <stdint.h>
-#include <iostream>
 #include <string>
 #include <vector>
 #include "const.hpp"
@@ -15,6 +14,7 @@ const String CASE_NAMES[]{"numeric", "snake_case", "ALL~CAPS", "CamelCase"};
 
 union Word {
     uint64_t _64;
+    uint32_t _32[2];
     uint8_t _8[8];
 
     Word(uint64_t value = 0) : _64{value} {}
@@ -57,8 +57,6 @@ union Word {
     static constexpr uint FBS = 64U - PBS;
     static constexpr uint64_t ONE = 1;
     static constexpr uint64_t MAX_VALUE = (ONE << PBS) - 1U;
-    static const Word ZERO;
-    static const Word NEVER;
     static constexpr uint64_t MAX_VALUE_30 = (1U << 30U) - 1U;
     static constexpr uint8_t OFFSET6[10] = {
         PBS - (6 * 1), PBS - (6 * 2), PBS - (6 * 3), PBS - (6 * 4),
@@ -81,8 +79,20 @@ union Word {
     inline fsize_t get30(int pos) const {
         return fsize_t(_64 >> (pos ? 30U : 0U)) & ((1U << 30U) - 1U);
     }
-    inline fsize_t higher() const { return (_64 & PAYLOAD_BITS) >> 30; }
-    inline fsize_t lower() const { return _64 & (PAYLOAD_BITS >> 30); }
+    inline fsize_t higher() const {
+#ifdef __LITTLE_ENDIAN
+        return _32[1];
+#elif
+        return _32[0];
+#endif
+    }
+    inline fsize_t lower() const {
+#ifdef __LITTLE_ENDIAN
+        return _32[0];
+#elif
+        return _32[1];
+#endif
+    }
     inline uint8_t flags() const { return _8[7] >> 4U; }
     inline void zero() { _64 = 0U; }
     void write_base64(String& to) const;
@@ -98,7 +108,7 @@ union Word {
     inline bool operator!=(const Word& b) const { return _64 != b._64; }
     inline Word operator+(const Word& a) const { return Word{_64 + a._64}; }
     inline Word operator+(const uint64_t i) const { return Word{_64 + i}; }
-    inline void operator ++ () { ++_64; }
+    inline void operator++() { ++_64; }
     inline size_t hash() const {
         static constexpr auto _64_hash_fn = std::hash<uint64_t>{};
         return _64_hash_fn(_64);
@@ -129,6 +139,9 @@ union Word {
     inline explicit operator int64_t() const { return *(int64_t*)this; }
     case_t base64_case() const;
 };
+
+const Word NEVER{uint64_t(63UL << 54)};
+const Word ZERO{0UL};
 
 enum half_t { VALUE = 0, ORIGIN = 1 };
 
@@ -217,7 +230,7 @@ struct Uuid : public Atom {
     inline bool operator==(const ron::String& str) const {
         return *this == Uuid{str};
     }
-    inline void operator ++() { ++words_.first; }
+    inline void operator++() { ++words_.first; }
 
     /** Nil UUID as per RFC4122 */
     static const Uuid NIL;
@@ -233,6 +246,8 @@ struct Uuid : public Atom {
 
     static Word HybridTime(time_t seconds, long int nanos = 0);
     static Word Now();
+
+    std::string ToString() const;
 };
 
 using uint64pair = std::pair<uint64_t, uint64_t>;

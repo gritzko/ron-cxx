@@ -21,12 +21,13 @@ Status Replica<Store>::CreateReplica() {
     Replica re;
     re.Open();
 
-    Uuid now0 = Uuid::Time(Uuid::Now(), Word::ZERO);
+    Uuid now0 = Uuid::Time(Uuid::Now(), ZERO);
     Commit commit{re};
     Frame yarn_init = OneOp<Frame>(now0, YARN_FORM_UUID);
     Cursor c{yarn_init};
     Builder b;
     commit.SaveChain(b, c);
+
     return commit.Save();
 }
 
@@ -54,6 +55,7 @@ Status Replica<Store>::Open() {
                 " for " + id.str());
         }
         store.tip = tip;
+        See(tip);
     }
 
     Frame active;
@@ -172,7 +174,7 @@ Status Replica<Store>::Commit::ReadName(Uuid& id, Uuid name) {
 
 template <typename Store>
 Uuid Replica<Store>::Now(Word origin) {
-    if (origin == Word::ZERO) {
+    if (origin == ZERO) {
         origin = active_store().origin();
     }
     Word next = Uuid::HybridTime(time(nullptr));
@@ -234,7 +236,7 @@ Status Replica<Store>::Commit::FindOpMeta(OpMeta& meta, Uuid op_id) {
         }
     }
     if (!cur.valid()) {
-        if (op_id.value() == Word::NEVER) {
+        if (op_id.value() == NEVER) {
             return Status::OK;  // a dirty trick to pick the yarn tip
         }
         return Status::NOT_FOUND.comment("no such op: " + op_id.str());
@@ -263,7 +265,7 @@ Status Replica<Store>::Commit::FindChainHeadMeta(OpMeta& meta, Uuid op_id) {
 
 template <typename Store>
 Status Replica<Store>::Commit::FindYarnTipMeta(OpMeta& meta, Word yarn) {
-    Uuid yarn_end{Word::NEVER, yarn};
+    Uuid yarn_end{NEVER, yarn};
     return FindOpMeta(meta, yarn_end);
 }
 
@@ -284,8 +286,8 @@ Status Replica<Store>::See(Uuid timestamp) {
     if (timestamp.value() < now_) {
         return Status::OK;
     }
-    if (timestamp.value() >= Word::NEVER) {
-        return Status::BADARGS.comment("an event timestamped Word::NEVER: " +
+    if (timestamp.value() >= NEVER) {
+        return Status::BADARGS.comment("an event timestamped NEVER: " +
                                        timestamp.str());
     }
 
@@ -413,7 +415,7 @@ Status Replica<Store>::Commit::SaveChain(Builder&, Cursor& chain) {
         tip_meta.Next(chain, ref_meta);
     }
 
-    if (ref_id != tip_id) {
+    if (ref_id != tip_id) {  // ??!! FIXME
         Builder chain_record;
         tip_meta.Save(chain_record);
         IFOK(join_.Write(Key{id, META_FORM_UUID}, chain_record.Release()));
@@ -546,7 +548,6 @@ Status Replica<Store>::Commit::WriteNewEvents(Builder& resp, Cursor& uc) {
     Uuid now = host_.Now(yarn_id());
     constexpr uint64_t MAXSEQ = 1 << 30;
     while (uc.valid() && uc.id().origin().payload() == 0) {
-        now.inc();
         if (uc.id().origin().payload() != 0) {
             return Status::BAD_STATE.comment("stamped already");
         }
@@ -557,6 +558,7 @@ Status Replica<Store>::Commit::WriteNewEvents(Builder& resp, Cursor& uc) {
         }
         stamp.AppendAmendedOp(uc, RAW, id, ref);
         uc.Next();
+        now.inc();
     }
     Cursor stamped{stamp.data()};
     Status ok;

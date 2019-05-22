@@ -224,7 +224,11 @@ class TextFrame {
         Builder() : prev_{Uuid::NIL}, unterm_{false}, data_{} {}
 
         /** A shortcut method, avoids re-serialization of atoms. */
-        void AppendOp(const Cursor& cur);
+        void AppendOp(const Cursor& cur) {
+            const Op& op = cur.op();
+            WriteSpec(op.id(), op.ref());
+            WriteValues(cur);
+        }
 
         /** RON coding conversion (parsing, re-serialization) */
         template <typename Cursor2>

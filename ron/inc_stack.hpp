@@ -24,22 +24,44 @@ class inc_stack {
         len_t off_;
         const_iterator(spans_iter i, len_t offset) : i_{i}, off_{offset} {}
         friend class inc_stack;
-    public:
-        inline void operator ++ (){
+
+       public:
+        inline void operator++() {
             ++off_;
-            if (off_==i_->size) {
+            if (off_ == i_->size) {
                 off_ = 0;
                 ++i_;
             }
         }
-        inline value_t operator * () {
-            return i_->value + off_;
+        inline value_t operator*() { return i_->value + off_; }
+        inline bool operator==(const const_iterator& b) const {
+            return i_ == b.i_ && off_ == b.off_;
         }
-        inline bool operator == (const const_iterator& b) const {
-            return i_==b.i_ && off_==b.off_;
+        inline bool operator!=(const const_iterator& b) const {
+            return i_ != b.i_ || off_ != b.off_;
         }
-        inline bool operator != (const const_iterator& b) const {
-            return i_!=b.i_ || off_!=b.off_;
+        void operator+=(len_t advance) {
+            while (advance > 0) {
+                if (i_->size <= advance) {
+                    advance -= i_->size;
+                    ++i_;
+                } else {
+                    i_ += advance;
+                    advance = 0;
+                }
+            }
+        }
+        len_t skip_span(len_t max_len) {
+            len_t s = i_->size;
+            if (off_ + max_len < i_->size) {
+                off_ += max_len;
+                return max_len;
+            } else {
+                len_t rest = i_->size - off_;
+                ++i_;
+                off_ = 0;
+                return rest;
+            }
         }
     };
 

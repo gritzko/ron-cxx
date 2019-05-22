@@ -119,7 +119,7 @@ struct OpMeta {
         // see above, check format
         id = load.id();
         chain = id.value();
-        prev = Word::NEVER;
+        prev = NEVER;
         if (load.ref() != META_FORM_UUID) {
             return Status::BADARGS.comment("not a meta record");
         }

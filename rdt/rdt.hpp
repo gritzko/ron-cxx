@@ -149,7 +149,9 @@ Status SplitFrame(const Frame &input, typename Frame::Cursors &chains) {
         chains.push_back(nxt);
         nxt = cur;
     }
-    if (ok != Status::ENDOFFRAME) { return ok; }
+    if (ok != Status::ENDOFFRAME) {
+        return ok;
+    }
     chains.push_back(nxt);
     return Status::OK;
 }

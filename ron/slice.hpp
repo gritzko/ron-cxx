@@ -16,7 +16,7 @@ using Codepoints = std::vector<Codepoint>;
 
 using Char = unsigned char;
 
-using CharRef = const Char*;
+using CharRef = Char const*;
 
 constexpr Codepoint CP_ERROR{0};
 
@@ -41,13 +41,17 @@ using fsize_t = uint32_t;
 /** Max RON frame size is 1<<30 (a frame is atomically processed, so 1GB max) */
 constexpr fsize_t FSIZE_MAX{1 << 30};
 using frange_t = std::pair<fsize_t, fsize_t>;
+/*struct Range {
+    fsize_t offset, length;
+    Range(fsize_t o, fsize_t l) : offset{o}, length{l} {}
+};*/
 
 /** A reference to a raw memory slice. Same function as rocksdb::Slice.
  * Can't use an iterator range cause have to reference raw buffers (file
  * reads, mmaps, whatever the db passes to us...).
  * A Slice does NOT own the memory! */
 struct Slice {
-    const Char* buf_;
+    CharRef buf_;
     fsize_t size_;
 
     explicit Slice(const Char* buf, fsize_t size) : buf_{buf}, size_{size} {}
@@ -75,9 +79,9 @@ struct Slice {
         assert(host.size_ >= range.first + range.second);
     }
 
-    inline const Char* begin() const { return buf_; }
+    inline const CharRef begin() const { return buf_; }
 
-    inline const Char* end() const { return buf_ + size_; }
+    inline const CharRef end() const { return buf_ + size_; }
 
     inline Char operator[](fsize_t idx) const {
         assert(idx < size_);

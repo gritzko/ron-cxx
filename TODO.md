@@ -8,16 +8,18 @@
 - [ ] Replica metadata tests (now, origin, sig)
 - [ ] only one template instantiation, in libswarmdb.so
 - [x] ninja build
-- [ ] CF list, option
+- [x] CF list, option
 - [x] Store{uuid}, not {path}
-- [ ] Replica::See()
+- [x] Replica::See()
 - [ ] kill merged\_ in MemStore
 - [ ] iter key() value() const
 
 ## 1 day
 
+- [ ] String vs Codepoint in Cursor/Builder - document
 - [x] separate map/,  Mapper<Store> not <Frame>
 - [ ]  (MemStore goes to RDT as btree is header-only)
+       still actual: sst, memstore/files, closed notation, swarmdb map
 - [ ] Builder.AppendXyz may fail (Status? exceptions?)
 - [ ] RocksDB frame header stripping
 - [x] CLI args are RON, mapper args too - Op, Frame.GetXxx(atom)

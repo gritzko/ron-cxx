@@ -28,12 +28,6 @@ void TextFrame::Builder::WriteValues(const Cursor& cur) {
     }
 }
 
-void TextFrame::Builder::AppendOp(const Cursor& cur) {
-    const Op& op = cur.op();
-    WriteSpec(op.id(), op.ref());
-    WriteValues(cur);
-}
-
 template <typename Cursor2>
 void TextFrame::Builder::WriteValues(const Cursor2& cur) {
     const Op& op = cur.op();
@@ -51,7 +45,8 @@ void TextFrame::Builder::WriteValues(const Cursor2& cur) {
             case STRING:
                 Write(ATOM_PUNCT[STRING]);
                 range = op.atom(i).origin().range();
-                WriteString(unescape(cur.data().slice(range)));
+                WriteString(unescape(
+                    cur.data().slice(range)));  // FIXME(gritzko) clearly a bug
                 Write(ATOM_PUNCT[STRING]);
                 break;
             case FLOAT:

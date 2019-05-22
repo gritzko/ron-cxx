@@ -104,6 +104,8 @@ inline RGA_ENTRY dec(RGA_ENTRY e) { return RGA_ENTRY(uint8_t(e) - 1); }
 
 const Uuid RM_UUID{986569793370849280UL, 0UL};
 const Uuid UN_UUID{1040894463876005888UL, 0UL};
+const Uuid IN_UUID{"in"};
+const Uuid EQ_UUID{"eq"};
 
 template <typename Cursor>
 inline RGA_ENTRY entry_type(const Cursor &cur) {
@@ -154,7 +156,7 @@ Status ScanRGA(Booleans &tombstones, const Frame &frame) {
             et = entry_type(cur);
             // TODO skip by vv
         } else {
-            id = Uuid::Time(Word::NEVER, 0);
+            id = Uuid::Time(NEVER, 0);
             ref = root;
             et = META_ENTRY;
         }

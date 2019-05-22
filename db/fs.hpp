@@ -1,3 +1,5 @@
+#ifndef RON_FS_HPP
+#define RON_FS_HPP
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -7,7 +9,8 @@
 #include "../ron/ron.hpp"
 
 using namespace std;
-using namespace ron;
+
+namespace ron {
 
 struct MPS {
     bool operator()(char ch) const { return ch == '\\' || ch == '/'; }
@@ -38,7 +41,8 @@ bool file_exists(const std::string& name) {
     return (stat(name.c_str(), &buffer) == 0);
 }
 
-#define RET_IOFAIL { return Status::IOFAIL.comment(strerror(errno)); }
+#define RET_IOFAIL \
+    { return Status::IOFAIL.comment(strerror(errno)); }
 
 class TmpDir {
     String cwd_;
@@ -50,7 +54,7 @@ class TmpDir {
 
     Status cd(const String& name) {
         char dir[MAX_PATH_LEN];
-        if (NULL==getcwd(dir, MAX_PATH_LEN)) {
+        if (nullptr == getcwd(dir, MAX_PATH_LEN)) {
             RET_IOFAIL;
         }
         cwd_ = String{dir};
@@ -67,7 +71,7 @@ class TmpDir {
 
     Status back() {
         if (!cwd_.empty()) {
-            if (0<chdir(cwd_.c_str())) {
+            if (0 < chdir(cwd_.c_str())) {
                 RET_IOFAIL;
             }
         }
@@ -79,3 +83,7 @@ class TmpDir {
 
     ~TmpDir() { back(); }
 };
+
+}  // namespace ron
+
+#endif

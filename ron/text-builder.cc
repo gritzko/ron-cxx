@@ -31,7 +31,7 @@ void TextFrame::Builder::WriteValues(const Cursor& cur) {
 template <typename Cursor2>
 void TextFrame::Builder::WriteValues(const Cursor2& cur) {
     const Op& op = cur.op();
-    frange_t range;
+    Range range;
     for (fsize_t i = 2; i < op.size(); i++) {
         Write(' ');
         switch (op.type(i)) {

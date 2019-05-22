@@ -40,11 +40,14 @@ using fsize_t = uint32_t;
 
 /** Max RON frame size is 1<<30 (a frame is atomically processed, so 1GB max) */
 constexpr fsize_t FSIZE_MAX{1 << 30};
-using frange_t = std::pair<fsize_t, fsize_t>;
-/*struct Range {
+
+struct Range {
+    // fsize_t offset, length;
+    // Range(fsize_t o, fsize_t l) : offset{o}, length{l} {}
     fsize_t offset, length;
     Range(fsize_t o, fsize_t l) : offset{o}, length{l} {}
-};*/
+    Range() : Range{0, 0} {}
+};
 
 /** A reference to a raw memory slice. Same function as rocksdb::Slice.
  * Can't use an iterator range cause have to reference raw buffers (file
@@ -69,14 +72,14 @@ struct Slice {
     Slice(const Slice& orig) = default;
     Slice(const String& data)
         : Slice{CharRef(data.data()), static_cast<fsize_t>(data.size())} {}
-    Slice(const String& str, const frange_t& range)
-        : buf_{reinterpret_cast<CharRef>(str.data()) + range.first},
-          size_{range.second} {
-        assert(str.size() >= range.first + range.second);
+    Slice(const String& str, const Range& range)
+        : buf_{reinterpret_cast<CharRef>(str.data()) + range.offset},
+          size_{range.length} {
+        assert(str.size() >= range.offset + range.length);
     }
-    Slice(Slice host, frange_t range)
-        : Slice{host.buf_ + range.first, range.second} {
-        assert(host.size_ >= range.first + range.second);
+    Slice(Slice host, Range range)
+        : Slice{host.buf_ + range.offset, range.length} {
+        assert(host.size_ >= range.offset + range.length);
     }
 
     inline const CharRef begin() const { return buf_; }
@@ -137,15 +140,15 @@ struct Slice {
         return String{reinterpret_cast<const String::value_type*>(buf_), size_};
     }
 
-    inline frange_t range_of(Slice sub) const {
+    inline Range range_of(Slice sub) const {
         assert(sub.begin() >= begin());
         assert(end() >= sub.end());
-        return frange_t{sub.buf_ - buf_, sub.size_};
+        return Range{static_cast<fsize_t>(sub.buf_ - buf_), sub.size_};
     }
 
-    inline Slice slice(frange_t range) const {
-        assert(size_ >= range.second + range.first);
-        return Slice{buf_ + range.first, range.second};
+    inline Slice slice(Range range) const {
+        assert(size_ >= range.length + range.offset);
+        return Slice{buf_ + range.offset, range.length};
     }
 };
 

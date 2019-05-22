@@ -45,11 +45,11 @@ class TextFrame {
         Slice data_;
         Op op_;
         int pos_;
-        int at_;
-        int off_;
+        fsize_t at_;
+        fsize_t off_;
         int cs;
         Uuid prev_id_;
-        int line_;
+        fsize_t line_;
 
         static constexpr int RON_FULL_STOP = 255;
         static constexpr int SPEC_SIZE = 2;  // open RON
@@ -99,9 +99,9 @@ class TextFrame {
         }
         const Slice data() const { return data_; }
         const Slice at_data() const {
-            return data_.slice(frange_t{at_, off_ - at_});
+            return data_.slice(Range{at_, off_ - at_});
         }
-        inline Slice slice(frange_t range) const { return data().slice(range); }
+        inline Slice slice(Range range) const { return data().slice(range); }
         inline const Uuid& id() const { return op_.id(); }
         inline const Uuid& ref() const { return op_.ref(); }
         inline fsize_t size() const { return op_.size(); }

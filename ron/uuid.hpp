@@ -41,9 +41,9 @@ union Word {
         _64 <<= 30U;
         _64 |= length;
     }
-    Word(FLAGS flags, frange_t range)
-        : _64{(uint64_t(flags) << 60U) | (uint64_t(range.first) << 30U) |
-              range.second} {}
+    Word(FLAGS flags, Range range)
+        : _64{(uint64_t(flags) << 60U) | (uint64_t(range.offset) << 30U) |
+              range.length} {}
 
     explicit operator uint64_t() const { return _64; }
 
@@ -121,9 +121,10 @@ union Word {
         return letters;
     }
     bool is_all_digits() const;
-    inline frange_t range() const {
-        return frange_t{(_64 >> 30U) & Word::MAX_VALUE_30,
-                        _64 & Word::MAX_VALUE_30};
+    inline Range range() const {
+        // return Range{higher(), lower()};
+        return Range{fsize_t((_64 >> 30U) & Word::MAX_VALUE_30),
+                     fsize_t(_64 & Word::MAX_VALUE_30)};
     }
     inline int64_t integer() const { return (int64_t)_64; }
     inline double number() const { return *(double*)&_64; }
@@ -164,13 +165,13 @@ struct Atom {
         return half ? words_.second : words_.first;
     }
     inline VARIANT variant() const { return VARIANT(ofb() >> 2U); }
-    static Atom String(frange_t range) {
+    static Atom String(Range range) {
         return Atom{0, Word{STRING_ATOM, range}};
     }
-    static Atom Float(double value, frange_t range) {
+    static Atom Float(double value, Range range) {
         return Atom{Word{value}, Word{FLOAT_ATOM, range}};
     }
-    static Atom Integer(int64_t value, frange_t range) {
+    static Atom Integer(int64_t value, Range range) {
         return Atom{Word{value}, Word{INT_ATOM, range}};
     }
     inline ATOM type() const {

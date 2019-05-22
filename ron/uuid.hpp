@@ -16,6 +16,8 @@ union Word {
     uint64_t _64;
     uint32_t _32[2];
     uint8_t _8[8];
+    Codepoint codepoint_[2];
+    Range range_;
 
     Word(uint64_t value = 0) noexcept : _64{value} {}
 #ifdef __LITTLE_ENDIAN
@@ -43,7 +45,7 @@ union Word {
     explicit Word(const char* word)
         : Word{0, Slice{word, (fsize_t)strlen(word)}} {}
 
-    explicit Word(Range range) noexcept : Word{range.offset, range.length} {}
+    explicit Word(Range range) noexcept : Word{range.end(), range.offset()} {}
 
     explicit operator uint64_t() const { return _64; }
 
@@ -107,7 +109,10 @@ union Word {
     }
     bool is_all_digits() const;
     inline Range range() const {
-        return Range{AsSize(MOST_SIGNIFICANT) & (FSIZE_MAX - 1), AsSize(LEAST_SIGNIFICANT)};
+        return Range::AtFor(
+            AsSize(LEAST_SIGNIFICANT),
+            (AsSize(MOST_SIGNIFICANT) - AsSize(LEAST_SIGNIFICANT)) &
+                (FSIZE_MAX - 1));
     }
     inline int64_t integer() const { return (int64_t)_64; }
     inline double number() const { return *(double*)&_64; }
@@ -124,9 +129,15 @@ union Word {
     case_t base64_case() const;
     Integer& AsInteger() { return *(Integer*)this; }
     Float& AsFloat() { return *(Float*)this; }
-    Codepoint& AsCodepoint() { return (Codepoint&)_32[LEAST_SIGNIFICANT]; }
-    inline fsize_t& AsSize(HALF which) { return _32[which]; }
-    inline fsize_t  AsSize(HALF which) const { return _32[which]; }
+    Codepoint& AsCodepoint(HALF which = LEAST_SIGNIFICANT) {
+        return (Codepoint&)_32[which];
+    }
+    inline fsize_t& AsSize(HALF which = LEAST_SIGNIFICANT) {
+        return _32[which];
+    }
+    inline fsize_t AsSize(HALF which = LEAST_SIGNIFICANT) const {
+        return _32[which] & (FSIZE_MAX - 1);
+    }
 };
 
 const Word NEVER{uint64_t(63UL << 54U)};
@@ -141,6 +152,8 @@ struct Atom {
     Atom(uint64_t value, uint64_t origin) : words_{Word{value}, Word{origin}} {}
     inline Word value() const { return words_.first; }
     inline Word origin() const { return words_.second; }
+    inline Word& value() { return words_.first; }
+    inline Word& origin() { return words_.second; }
     // value flag bits
     inline uint8_t vfb() const { return value().flags(); }
     // origin flag bits
@@ -154,12 +167,6 @@ struct Atom {
     }
     static inline Atom String(Codepoint cp, Range range, fsize_t offset) {
         return Atom{Word{offset, cp}, Word{range} | STRING_FLAGS};
-    }
-    static inline Atom Float(double value, Range range) {
-        return Atom{Word{value}, Word{range} | FLOAT_FLAGS};
-    }
-    static inline Atom Integer(int64_t value, Range range) {
-        return Atom{Word{value}, Word{range} | INT_FLAGS};
     }
     Atom(ATOM type, Range range)
         : Atom{ZERO, Word{range} | (uint64_t(type) << 62U)} {}

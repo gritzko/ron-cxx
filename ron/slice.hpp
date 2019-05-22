@@ -7,6 +7,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "portable_endian.hpp"
 
 namespace ron {
 
@@ -40,11 +41,46 @@ using fsize_t = uint32_t;
 
 /** Max RON frame size is 1<<30 (a frame is atomically processed, so 1GB max) */
 constexpr fsize_t FSIZE_MAX{1U << 30U};
+constexpr fsize_t FSIZE_BITS{FSIZE_MAX - 1};
 
-struct Range {
-    fsize_t offset, length;
-    Range(fsize_t o, fsize_t l) : offset{o}, length{l} {}
+/** A [from,till) byte range. Limited to 2^30 bytes due to FSIZE_MAX. */
+class Range {
+    fsize_t limits_[2];
+
+public:
+
+    Range(fsize_t from_offset, fsize_t till_offset)
+#ifdef __LITTLE_ENDIAN
+        : limits_{from_offset, till_offset}
+#elif
+        : limits_{till_offset, from_offset}
+#endif
+        {}
+
+    static inline Range FroTo(fsize_t from_offset, fsize_t till_offset) {
+        return Range{from_offset, till_offset};
+    }
+    static inline Range AtFor(fsize_t at_offset, fsize_t for_length) {
+        return Range{at_offset, at_offset + for_length};
+    }
     Range() : Range{0, 0} {}
+    inline fsize_t from() const { return limits_[LEAST_SIGNIFICANT]; }
+    inline fsize_t till() const { return limits_[MOST_SIGNIFICANT]; }
+    inline fsize_t safe_from() const {
+        assert(valid());
+        return from() & FSIZE_BITS;
+    }
+    inline fsize_t safe_till() const {
+        assert(valid());
+        return till() & FSIZE_BITS;
+    }
+    inline fsize_t offset() const { return from(); }
+    inline fsize_t begin() const { return from(); }
+    inline fsize_t end() const { return till(); }
+    inline fsize_t length() const { return till() - from(); }
+    inline fsize_t size() const { return till() - from(); }
+    inline bool empty() const { return till() == from(); }
+    inline bool valid() const { return till() >= from(); }
 };
 
 /** A reference to a raw memory slice. Same function as rocksdb::Slice.
@@ -54,6 +90,7 @@ struct Range {
 struct Slice {
     CharRef buf_;
     fsize_t size_;
+    //Range range_;
 
     explicit Slice(const Char* buf, fsize_t size) : buf_{buf}, size_{size} {}
     explicit Slice(const char* buf, size_t size)
@@ -71,13 +108,13 @@ struct Slice {
     Slice(const String& data)
         : Slice{CharRef(data.data()), static_cast<fsize_t>(data.size())} {}
     Slice(const String& str, const Range& range)
-        : buf_{reinterpret_cast<CharRef>(str.data()) + range.offset},
-          size_{range.length} {
-        assert(str.size() >= range.offset + range.length);
+        : buf_{reinterpret_cast<CharRef>(str.data()) + range.offset()},
+          size_{range.length()} {
+        assert(str.size() >= range.offset() + range.length());
     }
     Slice(Slice host, Range range)
-        : Slice{host.buf_ + range.offset, range.length} {
-        assert(host.size_ >= range.offset + range.length);
+        : Slice{host.buf_ + range.offset(), range.length()} {
+        assert(host.size_ >= range.end());
     }
 
     inline const CharRef begin() const { return buf_; }
@@ -141,12 +178,12 @@ struct Slice {
     inline Range range_of(Slice sub) const {
         assert(sub.begin() >= begin());
         assert(end() >= sub.end());
-        return Range{static_cast<fsize_t>(sub.buf_ - buf_), sub.size_};
+        return Range::AtFor(static_cast<fsize_t>(sub.buf_ - buf_), sub.size_);
     }
 
     inline Slice slice(Range range) const {
-        assert(size_ >= range.length + range.offset);
-        return Slice{buf_ + range.offset, range.length};
+        assert(size_ >= range.end());
+        return Slice{buf_ + range.offset(), range.length()};
     }
 };
 

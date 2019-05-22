@@ -23,18 +23,51 @@ class TextFrame {
 
     const String& data() const { return data_; }
 
-    /** Primary value parser: STRINGs */
-    static inline bool ParseCodepoint(Atom& atom, Slice data);
+    /** Primary value parser: STRINGs.
+     *  Puts the codepoint to atom.value().AsCodepoint();
+     *  advances the range start at atom.origin().AsSize(LEAST_SIGNIFICANT) */
+    static inline bool ParseCodepoint(Atom& atom, Slice data) {
+        return ParseEscapedUtf8Codepoint(
+            atom.value().codepoint_[LEAST_SIGNIFICANT], atom.origin().range_,
+            data.begin());
+    }
+
     /** Primary value parser: UUIDs */
     static inline bool ParseUuid(Atom& atom, Slice data) { return true; }
-    /** Primary value parser: FLOATs */
+
+    /** Primary value parser: FLOATs;
+     *  puts the value to atom.value().AsFloat() */
     static inline bool ParseNumber(Atom& atom, Slice data);
+
     /** Primary value parser: INTs */
     static inline bool ParseInteger(Atom& atom, Slice data);
 
-    static inline String ParseToUtf8(Atom& atom, Slice data);
-    static inline Codepoints ParseToCodepoints(Atom& atom, Slice data);
+    static String ParseToUtf8(Atom& atom, Slice data) {
+        String ret;
+        /*Codepoint cp;
+        while (!atom.origin().range_.empty() && ParseEscapedUtf8Codepoint(cp,
+        atom, data)) { push_back_utf8(ret, cp);
+        }*/
+        return ret;
+        // empty:  from==(till&FSIZE_BITS)   ++from   =>  & is optimized
+    }
 
+    static Codepoints ParseToCodepoints(Atom& atom, Slice data) {
+        Codepoints ret;
+        Codepoint& cp = atom.value().AsCodepoint();
+        while (ParseCodepoint(atom, data)) {
+            ret.push_back(cp);
+        }
+        return ret;
+    }
+
+    /** Parses a codepoint (escaped UTF8), saves to cp, consumes the range. */
+    static inline bool ParseEscapedUtf8Codepoint(Codepoint& cp, Range& range,
+                                                 CharRef buf) {
+        // shortcut ASCII
+        // dive for complex things
+        return false;
+    }
 
     //    KILLL THIS!!!
     static String unescape(const Slice& data);
@@ -114,7 +147,7 @@ class TextFrame {
         }
         const Slice data() const { return data_; }
         const Slice at_data() const {
-            return data_.slice(Range{at_, off_ - at_});
+            return data_.slice(Range::FroTo(at_, off_));
         }
         inline Slice slice(Range range) const { return data().slice(range); }
         inline const Uuid& id() const { return op_.id(); }

@@ -316,8 +316,8 @@ Status CommandDump(RonReplica& replica, Args& args) {
 
     // Get BranchName, if specified
     if (!args.empty()) {
-      args.push_back("on");
-      IFOK(ScanOnBranchArg(branch_id, replica, args));
+        args.push_back("on");
+        IFOK(ScanOnBranchArg(branch_id, replica, args));
     }
 
     StoreIterator i{replica.GetStore(branch_id)};
@@ -467,8 +467,7 @@ Status CommandNew(RonReplica& replica, Args& args) {
 
     CHECKARG(!args.empty(), NEW_USAGE);
 
-    Frame new_obj =
-        OneOp<Frame>(replica.Now(branch_id.origin()), rdt);
+    Frame new_obj = OneOp<Frame>(replica.Now(branch_id.origin()), rdt);
     Builder re;
     Cursor cu{new_obj};
 

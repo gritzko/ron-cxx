@@ -85,7 +85,7 @@ void push_back_cp(u16string& res, iterator b, iterator e) {
 }
 
 u16string TextFrame::utf16string(Atom str_atom) const {
-    assert(str_atom.origin().flags() == STRING_ATOM);
+    assert(str_atom.origin().flags() == STRING << 2);
 
     Range range = str_atom.origin().range();
     fsize_t offset = range.offset, size = range.length;
@@ -145,11 +145,19 @@ u16string TextFrame::utf16string(Atom str_atom) const {
                 } else
                     goto tr13;
                 goto tr10;
+            tr3 :
+#line 7 "ragel/././utf8-grammar.rl"
+            {
+                cp = (cp << 6) | ((*p) & 0x3f);
+            }
+                goto st10;
             tr10 :
 #line 18 "ragel/string-parser.rl"
             {
                 cp = p;
             }
+#line 8 "ragel/././utf8-grammar.rl"
+                { cp = (*p); }
                 goto st10;
             tr15 :
 #line 19 "ragel/string-parser.rl"
@@ -158,6 +166,8 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             }
 #line 18 "ragel/string-parser.rl"
                 { cp = p; }
+#line 8 "ragel/././utf8-grammar.rl"
+                { cp = (*p); }
                 goto st10;
             tr20 :
 #line 16 "ragel/string-parser.rl"
@@ -166,19 +176,25 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             }
 #line 18 "ragel/string-parser.rl"
                 { cp = p; }
+#line 8 "ragel/././utf8-grammar.rl"
+                { cp = (*p); }
                 goto st10;
             tr25 :
-#line 13 "ragel/string-parser.rl"
+#line 61 "ragel/./text-grammar.rl"
             {
-                push_back_uniesc(ret, uniesc, p);
+                cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 13 "ragel/string-parser.rl"
+                { push_back_uniesc(ret, uniesc, p); }
 #line 18 "ragel/string-parser.rl"
                 { cp = p; }
+#line 8 "ragel/././utf8-grammar.rl"
+                { cp = (*p); }
                 goto st10;
             st10:
                 if (++p == pe) goto _test_eof10;
             case 10:
-#line 174 "ron/string-parser.cc"
+#line 188 "ron/string-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -234,10 +250,12 @@ u16string TextFrame::utf16string(Atom str_atom) const {
                 { esc = p; }
                 goto st1;
             tr26 :
-#line 13 "ragel/string-parser.rl"
+#line 61 "ragel/./text-grammar.rl"
             {
-                push_back_uniesc(ret, uniesc, p);
+                cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 13 "ragel/string-parser.rl"
+                { push_back_uniesc(ret, uniesc, p); }
 #line 12 "ragel/string-parser.rl"
                 { uniesc = p; }
 #line 15 "ragel/string-parser.rl"
@@ -246,31 +264,38 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             st1:
                 if (++p == pe) goto _test_eof1;
             case 1:
-#line 233 "ron/string-parser.cc"
+#line 249 "ron/string-parser.cc"
                 switch ((*p)) {
                     case 34u:
-                        goto st11;
+                        goto tr0;
                     case 39u:
-                        goto st11;
+                        goto tr0;
                     case 47u:
-                        goto st11;
+                        goto tr0;
                     case 92u:
-                        goto st11;
+                        goto tr0;
                     case 98u:
-                        goto st11;
+                        goto tr0;
                     case 110u:
-                        goto st11;
+                        goto tr0;
                     case 114u:
-                        goto st11;
+                        goto tr0;
                     case 116u:
-                        goto st11;
+                        goto tr0;
                     case 117u:
                         goto st5;
                 }
                 goto st0;
+            tr0 :
+#line 60 "ragel/./text-grammar.rl"
+            {
+                cp = decode_esc((*p));
+            }
+                goto st11;
             st11:
                 if (++p == pe) goto _test_eof11;
             case 11:
+#line 270 "ron/string-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -294,11 +319,19 @@ u16string TextFrame::utf16string(Atom str_atom) const {
                 } else
                     goto tr23;
                 goto tr20;
+            tr4 :
+#line 7 "ragel/././utf8-grammar.rl"
+            {
+                cp = (cp << 6) | ((*p) & 0x3f);
+            }
+                goto st2;
             tr12 :
 #line 18 "ragel/string-parser.rl"
             {
                 cp = p;
             }
+#line 9 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0x1f; }
                 goto st2;
             tr17 :
 #line 19 "ragel/string-parser.rl"
@@ -307,6 +340,8 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             }
 #line 18 "ragel/string-parser.rl"
                 { cp = p; }
+#line 9 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0x1f; }
                 goto st2;
             tr22 :
 #line 16 "ragel/string-parser.rl"
@@ -315,26 +350,40 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             }
 #line 18 "ragel/string-parser.rl"
                 { cp = p; }
+#line 9 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0x1f; }
                 goto st2;
             tr27 :
-#line 13 "ragel/string-parser.rl"
+#line 61 "ragel/./text-grammar.rl"
             {
-                push_back_uniesc(ret, uniesc, p);
+                cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 13 "ragel/string-parser.rl"
+                { push_back_uniesc(ret, uniesc, p); }
 #line 18 "ragel/string-parser.rl"
                 { cp = p; }
+#line 9 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0x1f; }
                 goto st2;
             st2:
                 if (++p == pe) goto _test_eof2;
             case 2:
-#line 297 "ron/string-parser.cc"
-                if (128u <= (*p) && (*p) <= 191u) goto st10;
+#line 332 "ron/string-parser.cc"
+                if (128u <= (*p) && (*p) <= 191u) goto tr3;
                 goto st0;
+            tr5 :
+#line 7 "ragel/././utf8-grammar.rl"
+            {
+                cp = (cp << 6) | ((*p) & 0x3f);
+            }
+                goto st3;
             tr13 :
 #line 18 "ragel/string-parser.rl"
             {
                 cp = p;
             }
+#line 10 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0xf; }
                 goto st3;
             tr18 :
 #line 19 "ragel/string-parser.rl"
@@ -343,6 +392,8 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             }
 #line 18 "ragel/string-parser.rl"
                 { cp = p; }
+#line 10 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0xf; }
                 goto st3;
             tr23 :
 #line 16 "ragel/string-parser.rl"
@@ -351,26 +402,34 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             }
 #line 18 "ragel/string-parser.rl"
                 { cp = p; }
+#line 10 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0xf; }
                 goto st3;
             tr28 :
-#line 13 "ragel/string-parser.rl"
+#line 61 "ragel/./text-grammar.rl"
             {
-                push_back_uniesc(ret, uniesc, p);
+                cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 13 "ragel/string-parser.rl"
+                { push_back_uniesc(ret, uniesc, p); }
 #line 18 "ragel/string-parser.rl"
                 { cp = p; }
+#line 10 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0xf; }
                 goto st3;
             st3:
                 if (++p == pe) goto _test_eof3;
             case 3:
-#line 327 "ron/string-parser.cc"
-                if (128u <= (*p) && (*p) <= 191u) goto st2;
+#line 376 "ron/string-parser.cc"
+                if (128u <= (*p) && (*p) <= 191u) goto tr4;
                 goto st0;
             tr14 :
 #line 18 "ragel/string-parser.rl"
             {
                 cp = p;
             }
+#line 11 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 7; }
                 goto st4;
             tr19 :
 #line 19 "ragel/string-parser.rl"
@@ -379,6 +438,8 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             }
 #line 18 "ragel/string-parser.rl"
                 { cp = p; }
+#line 11 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 7; }
                 goto st4;
             tr24 :
 #line 16 "ragel/string-parser.rl"
@@ -387,20 +448,26 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             }
 #line 18 "ragel/string-parser.rl"
                 { cp = p; }
+#line 11 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 7; }
                 goto st4;
             tr29 :
-#line 13 "ragel/string-parser.rl"
+#line 61 "ragel/./text-grammar.rl"
             {
-                push_back_uniesc(ret, uniesc, p);
+                cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 13 "ragel/string-parser.rl"
+                { push_back_uniesc(ret, uniesc, p); }
 #line 18 "ragel/string-parser.rl"
                 { cp = p; }
+#line 11 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 7; }
                 goto st4;
             st4:
                 if (++p == pe) goto _test_eof4;
             case 4:
-#line 357 "ron/string-parser.cc"
-                if (128u <= (*p) && (*p) <= 191u) goto st3;
+#line 416 "ron/string-parser.cc"
+                if (128u <= (*p) && (*p) <= 191u) goto tr5;
                 goto st0;
             st5:
                 if (++p == pe) goto _test_eof5;
@@ -506,11 +573,6 @@ u16string TextFrame::utf16string(Atom str_atom) const {
     _test_eof : {}
         if (p == eof) {
             switch (cs) {
-                case 12:
-#line 13 "ragel/string-parser.rl"
-                {
-                    push_back_uniesc(ret, uniesc, p);
-                } break;
                 case 11:
 #line 16 "ragel/string-parser.rl"
                 {
@@ -521,7 +583,15 @@ u16string TextFrame::utf16string(Atom str_atom) const {
                 {
                     push_back_cp(ret, cp, p);
                 } break;
-#line 467 "ron/string-parser.cc"
+                case 12:
+#line 61 "ragel/./text-grammar.rl"
+                {
+                    cp = decode_hex_cp(Slice{p - 4, 4});
+                }
+#line 13 "ragel/string-parser.rl"
+                    { push_back_uniesc(ret, uniesc, p); }
+                    break;
+#line 528 "ron/string-parser.cc"
             }
         }
 

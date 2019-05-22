@@ -23,6 +23,20 @@ class TextFrame {
 
     const String& data() const { return data_; }
 
+    /** Primary value parser: STRINGs */
+    static inline bool ParseCodepoint(Atom& atom, Slice data);
+    /** Primary value parser: UUIDs */
+    static inline bool ParseUuid(Atom& atom, Slice data) { return true; }
+    /** Primary value parser: FLOATs */
+    static inline bool ParseNumber(Atom& atom, Slice data);
+    /** Primary value parser: INTs */
+    static inline bool ParseInteger(Atom& atom, Slice data);
+
+    static inline String ParseToUtf8(Atom& atom, Slice data);
+    static inline Codepoints ParseToCodepoints(Atom& atom, Slice data);
+
+
+    //    KILLL THIS!!!
     static String unescape(const Slice& data);
     static inline String string(Slice data, const Atom& a) {
         Slice esc = data.slice(a.origin().range());
@@ -37,6 +51,7 @@ class TextFrame {
     inline String string(const Atom& a) { return string(data_, a); }
     inline int64_t integer(const Atom& a) { return integer(data_, a); }
     inline double number(const Atom& a) { return number(data_, a); }
+    //    END OF KILL
 
     //  P A R S I N G
 
@@ -309,7 +324,7 @@ class TextFrame {
 
     // V A L U E  D E C O D E R S
 
-    std::u16string utf16string(Atom range) const;
+    // std::u16string utf16string(Atom range) const;
 
     static Codepoint decode_hex_cp(Slice data);
 

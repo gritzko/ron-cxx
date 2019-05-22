@@ -16,19 +16,23 @@
     action end_int {
         Slice the_int(intb, p);
         if (the_int.size()>=19 && int_too_big(the_int)) { cs = 0; fbreak; }
-        op_.AddAtom(Atom::Integer(parse_int(the_int), body.range_of(the_int))); 
+        //op_.AddAtom(Atom::Integer(parse_int(the_int), body.range_of(the_int))); 
+        // TODO atoms.emplace();
+        op_.AddAtom(Atom{INT, body.range_of(the_int)});
         uuidb = nullptr; // sabotage uuid
     }
     action begin_string { strb = p; }
     action end_string { 
         Slice the_str{strb,p};
-        op_.AddAtom(Atom::String(body.range_of(the_str))); 
+        //op_.AddAtom(Atom::String(body.range_of(the_str))); 
+        op_.AddAtom(Atom{STRING, body.range_of(the_str)});
     }
     action begin_float { floatb = p; }
     action end_float { 
         Slice the_float{floatb,p};
         if (the_float.size() > 24) { cs = 0; fbreak; }
-        op_.AddAtom(Atom::Float(parse_float(the_float), body.range_of(the_float))); 
+        //op_.AddAtom(Atom::Float(parse_float(the_float), body.range_of(the_float))); 
+        op_.AddAtom(Atom{STRING, body.range_of(the_float)});
     }
     action end_quoted_uuid {
         if (word_too_big(value) || word_too_big(origin)) { cs = 0; fbreak; }

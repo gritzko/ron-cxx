@@ -23,22 +23,20 @@ enum RON : uint8_t {
 constexpr Char SPEC_PUNCT[] = "*#@:";
 enum SPEC : uint8_t { TYPE = 0, OBJECT = 1, EVENT = 2, REF = 3 };
 
-enum VARIANT { RON_UUID = 0, RON_ATOM = 1, RFC4122_UUID = 2, RESERVED = 3 };
-
 constexpr Char UUID_PUNCT[] = "$%+-";
 enum UUID : uint8_t { NAME = 0, HASH = 1, TIME = 2, DERIVED = 3 };
 
 constexpr Char ATOM_PUNCT[] = ">='^";
 enum ATOM : uint8_t { UUID = 0, BUF = 0, INT = 1, STRING = 2, FLOAT = 3 };
 
-enum FLAGS : uint8_t {
-    INT_ATOM = (RON_ATOM << 2U) | ATOM::INT,
-    STRING_ATOM = (RON_ATOM << 2U) | ATOM::STRING,
-    FLOAT_ATOM = (RON_ATOM << 2U) | ATOM::FLOAT,
-    NAME_UUID = (RON_UUID << 2U) | NAME,
-    HASH_UUID = (RON_UUID << 2U) | HASH,
-    TIME_UUID = (RON_UUID << 2U) | TIME,
-    DERIVED_UUID = (RON_UUID << 2U) | DERIVED
+using Integer = int64_t;
+using Float = double;
+
+enum ATOM_FLAGS : uint64_t {
+    UUID_FLAGS = uint64_t(ATOM::STRING) << 62U,
+    INT_FLAGS = uint64_t(ATOM::STRING) << 62U,
+    STRING_FLAGS = uint64_t(ATOM::STRING) << 62U,
+    FLOAT_FLAGS = uint64_t(ATOM::STRING) << 62U,
 };
 
 constexpr Char HEX_PUNCT[] = "0123456789abcdef";

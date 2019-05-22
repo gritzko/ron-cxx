@@ -218,7 +218,6 @@ list(APPEND RON_SOURCES
     ron/op.cc
     ron/text.cc
     ron/text-parser.cc
-    ron/string-parser.cc
     ron/text-builder.cc
     ron/cp-parser.cc
     ron/hash.cc

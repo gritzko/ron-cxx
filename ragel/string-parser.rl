@@ -95,10 +95,10 @@ namespace ron {
 
     u16string TextFrame::utf16string(Atom str_atom) const {
 
-        assert(str_atom.origin().flags()==STRING_ATOM);
+        assert(str_atom.origin().flags()==STRING<<2);
 
-        frange_t range = str_atom.origin().range();
-        fsize_t offset = range.first, size = range.second;
+        Range range = str_atom.origin().range();
+        fsize_t offset = range.offset, size = range.length;
 
         u16string ret;
         ret.reserve(size);

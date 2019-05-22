@@ -17,13 +17,19 @@ union Word {
     uint32_t _32[2];
     uint8_t _8[8];
 
-    Word(uint64_t value = 0) : _64{value} {}
-    Word(uint8_t flags, const Slice& data) {
-        _64 = flags & 0xfU;
+    Word(uint64_t value = 0) noexcept : _64{value} {}
+#ifdef __LITTLE_ENDIAN
+    Word(uint32_t higher, uint32_t lower) noexcept : _32{lower, higher} {}
+#elif
+    Word(uint32_t higher, uint32_t lower) noexcept : _32{higher, lower} {}
+#endif
+    /** A trusty parsing constructor; expects a valid Base64x64 value. */
+    explicit Word(uint8_t flags, const Slice& data) : _64{flags & 0xfU} {
+        assert(data.size() <= MAX_BASE64_SIZE);
         int i = 0;
         while (i < data.size()) {
             _64 <<= Word::BASE64_BITS;
-            _64 |= ABC[data[i]];  // TODO inapprop chars
+            _64 |= ABC[data[i]];
             i++;
         }
         while (i < Word::MAX_BASE64_SIZE) {
@@ -31,25 +37,19 @@ union Word {
             i++;
         }
     }
-    Word(const String& word) : Word{0, Slice{word}} {}
+    /** A trusty parsing constructor. */
+    explicit Word(const String& word) : Word{0, Slice{word}} {}
+    /** A trusty parsing constructor. */
     explicit Word(const char* word)
         : Word{0, Slice{word, (fsize_t)strlen(word)}} {}
-    Word(ATOM atype, fsize_t offset, fsize_t length) {
-        _64 = atype;
-        _64 <<= 30U;
-        _64 |= offset;
-        _64 <<= 30U;
-        _64 |= length;
-    }
-    Word(FLAGS flags, Range range)
-        : _64{(uint64_t(flags) << 60U) | (uint64_t(range.offset) << 30U) |
-              range.length} {}
+
+    explicit Word(Range range) noexcept : Word{range.offset, range.length} {}
 
     explicit operator uint64_t() const { return _64; }
 
     // payload bit size
     static constexpr uint PBS = 60;
-    static constexpr int BASE64_BITS = 6;
+    static constexpr uint BASE64_BITS = 6;
     static constexpr uint BASE64_WORD_LEN = PBS / BASE64_BITS;
     // max base64 char size
     static constexpr int MAX_BASE64_SIZE = PBS / BASE64_BITS;
@@ -76,23 +76,6 @@ union Word {
                                             (ONE << (PBS - 9 * 6)) - 1,
                                             0};
 
-    inline fsize_t get30(int pos) const {
-        return fsize_t(_64 >> (pos ? 30U : 0U)) & ((1U << 30U) - 1U);
-    }
-    inline fsize_t higher() const {
-#ifdef __LITTLE_ENDIAN
-        return _32[1];
-#elif
-        return _32[0];
-#endif
-    }
-    inline fsize_t lower() const {
-#ifdef __LITTLE_ENDIAN
-        return _32[0];
-#elif
-        return _32[1];
-#endif
-    }
     inline uint8_t flags() const { return _8[7] >> 4U; }
     inline void zero() { _64 = 0U; }
     void write_base64(String& to) const;
@@ -109,6 +92,8 @@ union Word {
     inline Word operator+(const Word& a) const { return Word{_64 + a._64}; }
     inline Word operator+(const uint64_t i) const { return Word{_64 + i}; }
     inline void operator++() { ++_64; }
+    inline Word operator|(uint64_t mask) const { return Word{_64 | mask}; }
+    inline Word operator&(uint64_t mask) const { return Word{_64 & mask}; }
     inline size_t hash() const {
         static constexpr auto _64_hash_fn = std::hash<uint64_t>{};
         return _64_hash_fn(_64);
@@ -122,9 +107,7 @@ union Word {
     }
     bool is_all_digits() const;
     inline Range range() const {
-        // return Range{higher(), lower()};
-        return Range{fsize_t((_64 >> 30U) & Word::MAX_VALUE_30),
-                     fsize_t(_64 & Word::MAX_VALUE_30)};
+        return Range{AsSize(MOST_SIGNIFICANT) & (FSIZE_MAX - 1), AsSize(LEAST_SIGNIFICANT)};
     }
     inline int64_t integer() const { return (int64_t)_64; }
     inline double number() const { return *(double*)&_64; }
@@ -139,17 +122,22 @@ union Word {
     explicit Word(int64_t val) : _64{*(uint64_t*)&val} {}
     inline explicit operator int64_t() const { return *(int64_t*)this; }
     case_t base64_case() const;
+    Integer& AsInteger() { return *(Integer*)this; }
+    Float& AsFloat() { return *(Float*)this; }
+    Codepoint& AsCodepoint() { return (Codepoint&)_32[LEAST_SIGNIFICANT]; }
+    inline fsize_t& AsSize(HALF which) { return _32[which]; }
+    inline fsize_t  AsSize(HALF which) const { return _32[which]; }
 };
 
-const Word NEVER{uint64_t(63UL << 54)};
+const Word NEVER{uint64_t(63UL << 54U)};
 const Word ZERO{0UL};
 
 enum half_t { VALUE = 0, ORIGIN = 1 };
 
 struct Atom {
     std::pair<Word, Word> words_;
-    Atom() : words_{0, 0} {}
     Atom(Word value, Word origin) : words_{value, origin} {}
+    Atom() : words_{ZERO, ZERO} {}
     Atom(uint64_t value, uint64_t origin) : words_{Word{value}, Word{origin}} {}
     inline Word value() const { return words_.first; }
     inline Word origin() const { return words_.second; }
@@ -164,21 +152,18 @@ struct Atom {
     inline const Word& operator[](half_t half) const {
         return half ? words_.second : words_.first;
     }
-    inline VARIANT variant() const { return VARIANT(ofb() >> 2U); }
-    static Atom String(Range range) {
-        return Atom{0, Word{STRING_ATOM, range}};
+    static inline Atom String(Codepoint cp, Range range, fsize_t offset) {
+        return Atom{Word{offset, cp}, Word{range} | STRING_FLAGS};
     }
-    static Atom Float(double value, Range range) {
-        return Atom{Word{value}, Word{FLOAT_ATOM, range}};
+    static inline Atom Float(double value, Range range) {
+        return Atom{Word{value}, Word{range} | FLOAT_FLAGS};
     }
-    static Atom Integer(int64_t value, Range range) {
-        return Atom{Word{value}, Word{INT_ATOM, range}};
+    static inline Atom Integer(int64_t value, Range range) {
+        return Atom{Word{value}, Word{range} | INT_FLAGS};
     }
-    inline ATOM type() const {
-        uint8_t fb = ofb();
-        if ((fb >> 2U) == 0) return ATOM::UUID;
-        return (ATOM)(fb & 3U);
-    }
+    Atom(ATOM type, Range range)
+        : Atom{ZERO, Word{range} | (uint64_t(type) << 62U)} {}
+    inline ATOM type() const { return (ATOM)(origin()._64 >> 62U); }
 };
 
 struct Uuid : public Atom {
@@ -198,7 +183,7 @@ struct Uuid : public Atom {
     inline Word& word(int a, int i) { return Atom::word(i); }
     void write_base64(ron::String& to) const;
     ron::String str() const;
-    inline bool zero() const { return value() == 0; }
+    inline bool zero() const { return value() == ZERO; }
     inline bool is_ambiguous() const {
         return origin().is_zero() && value().is_all_digits();
     }

@@ -39,11 +39,9 @@ using Strings16 = std::vector<String16>;
 using fsize_t = uint32_t;
 
 /** Max RON frame size is 1<<30 (a frame is atomically processed, so 1GB max) */
-constexpr fsize_t FSIZE_MAX{1 << 30};
+constexpr fsize_t FSIZE_MAX{1U << 30U};
 
 struct Range {
-    // fsize_t offset, length;
-    // Range(fsize_t o, fsize_t l) : offset{o}, length{l} {}
     fsize_t offset, length;
     Range(fsize_t o, fsize_t l) : offset{o}, length{l} {}
     Range() : Range{0, 0} {}

@@ -64,7 +64,7 @@ bool TextFrame::StringIterator::Next() {
                     goto tr13;
                 goto tr10;
             tr0 :
-#line 56 "ragel/./text-grammar.rl"
+#line 60 "ragel/./text-grammar.rl"
             {
                 cp = decode_esc((*p));
             }
@@ -95,7 +95,7 @@ bool TextFrame::StringIterator::Next() {
                 { cp = (*p); }
                 goto st10;
             tr20 :
-#line 57 "ragel/./text-grammar.rl"
+#line 61 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -153,7 +153,7 @@ bool TextFrame::StringIterator::Next() {
             }
                 goto st1;
             tr21 :
-#line 57 "ragel/./text-grammar.rl"
+#line 61 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -284,7 +284,7 @@ bool TextFrame::StringIterator::Next() {
                 { cp = (*p) & 0x1f; }
                 goto st6;
             tr22 :
-#line 57 "ragel/./text-grammar.rl"
+#line 61 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -332,7 +332,7 @@ bool TextFrame::StringIterator::Next() {
                 { cp = (*p) & 0xf; }
                 goto st7;
             tr23 :
-#line 57 "ragel/./text-grammar.rl"
+#line 61 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -374,7 +374,7 @@ bool TextFrame::StringIterator::Next() {
                 { cp = (*p) & 7; }
                 goto st8;
             tr24 :
-#line 57 "ragel/./text-grammar.rl"
+#line 61 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -442,7 +442,7 @@ bool TextFrame::StringIterator::Next() {
                     }
                 } break;
                 case 11:
-#line 57 "ragel/./text-grammar.rl"
+#line 61 "ragel/./text-grammar.rl"
                 {
                     cp = decode_hex_cp(Slice{p - 4, 4});
                 }

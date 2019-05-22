@@ -119,4 +119,14 @@
 
 #endif
 
+enum HALF : uint8_t {
+#ifdef __LITTLE_ENDIAN
+    MOST_SIGNIFICANT = 1,
+    LEAST_SIGNIFICANT = 0,
+#elif
+    MOST_SIGNIFICANT = 0,
+    LEAST_SIGNIFICANT = 1,
+#endif
+};
+
 #endif

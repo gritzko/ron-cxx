@@ -218,7 +218,7 @@ class Replica {
 
         inline Uuid Now() { return tip_ = host_.Now(yarn_id()); }
 
-        inline Word yarn_id() const { return base_.origin(); }
+        inline Word yarn_id() const { return base_.origin; }
 
         inline Status status() const { return Status{tip(), comment_}; }
 

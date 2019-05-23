@@ -28,19 +28,19 @@ class TextFrame {
      *  advances the range start at atom.origin().AsSize(LEAST_SIGNIFICANT) */
     static inline bool ParseCodepoint(Atom& atom, Slice data) {
         return ParseEscapedUtf8Codepoint(
-            atom.value().codepoint_[LEAST_SIGNIFICANT], atom.origin().range_,
+            atom.value.as_codepoint[LEAST_SIGNIFICANT], atom.origin.range_,
             data.begin());
     }
 
     /** Primary value parser: UUIDs */
-    static inline bool ParseUuid(Atom& atom, Slice data) { return true; }
+    static inline Uuid ParseUuid(Slice data) { return Uuid{data}; }
 
     /** Primary value parser: FLOATs;
      *  puts the value to atom.value().AsFloat() */
-    static inline bool ParseNumber(Atom& atom, Slice data);
+    static Float ParseFloat(Slice data);
 
     /** Primary value parser: INTs */
-    static inline bool ParseInteger(Atom& atom, Slice data);
+    static Integer ParseInteger(Slice range);
 
     static String ParseToUtf8(Atom& atom, Slice data) {
         String ret;
@@ -54,7 +54,7 @@ class TextFrame {
 
     static Codepoints ParseToCodepoints(Atom& atom, Slice data) {
         Codepoints ret;
-        Codepoint& cp = atom.value().AsCodepoint();
+        Codepoint& cp = atom.value.AsCodepoint();
         while (ParseCodepoint(atom, data)) {
             ret.push_back(cp);
         }
@@ -69,21 +69,26 @@ class TextFrame {
         return false;
     }
 
+    bool ParseAtom(Atom& a) {
+        /*Slice range{data_, a.origin().range_.safe()};
+        switch (a.type()) {
+            case INT:
+                a.value().as_integer = ParseInteger(range);
+                return true;
+            case FLOAT:
+                a.value().as_float = ParseFloat(range);
+                return true;
+        }*/
+        return true;
+    }
+
     //    KILLL THIS!!!
     static String unescape(const Slice& data);
     static inline String string(Slice data, const Atom& a) {
-        Slice esc = data.slice(a.origin().range());
+        Slice esc = data.slice(a.origin.range());
         return unescape(esc);
     }
-    static inline int64_t integer(Slice data, const Atom& a) {
-        return static_cast<int64_t>(a.value());
-    }
-    static inline double number(Slice data, const Atom& a) {
-        return static_cast<double>(a.value());
-    }
     inline String string(const Atom& a) { return string(data_, a); }
-    inline int64_t integer(const Atom& a) { return integer(data_, a); }
-    inline double number(const Atom& a) { return number(data_, a); }
     //    END OF KILL
 
     //  P A R S I N G
@@ -101,9 +106,6 @@ class TextFrame {
 
         static constexpr int RON_FULL_STOP = 255;
         static constexpr int SPEC_SIZE = 2;  // open RON
-
-        static int64_t parse_int(Slice data);
-        static double parse_float(Slice data);
 
        public:
         explicit Cursor(const Slice data, bool advance = true)
@@ -161,15 +163,15 @@ class TextFrame {
             return TextFrame::string(data_, atom(idx));
         }
         inline Slice string_slice(fsize_t idx) const {
-            return data_.slice(atom(idx).origin().range());
+            return data_.slice(atom(idx).origin.range());
         }
         int64_t integer(fsize_t idx) const {
             assert(type(idx) == INT);
-            return int64_t(op_.atom(idx).value());
+            return int64_t(op_.atom(idx).value);
         }
         double number(fsize_t idx) const {
             assert(type(idx) == FLOAT);
-            return double(op_.atom(idx).value());
+            return double(op_.atom(idx).value);
         }
         Uuid uuid(fsize_t idx) const {
             assert(type(idx) == UUID);

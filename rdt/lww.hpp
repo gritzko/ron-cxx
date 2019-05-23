@@ -30,7 +30,7 @@ class LastWriteWinsRDT {
         auto scan = input.cursor();
         do {
             if (scan.op().size() < 3) continue;
-            Slice key{input.data(), scan.op().atom(2).origin().range()};
+            Slice key{input.data(), scan.op().atom(2).origin.range()};
             last[key] = scan.op().id();
         } while (scan.Next());
 
@@ -40,7 +40,7 @@ class LastWriteWinsRDT {
         }
         do {  // TODO maybe check op pattern here
             if (filter.op().size() < 3) continue;
-            Slice key{input.data(), filter.op().atom(2).origin().range()};
+            Slice key{input.data(), filter.op().atom(2).origin.range()};
             if (last[key] == filter.op().id()) {
                 output.AppendOp(filter);
             }

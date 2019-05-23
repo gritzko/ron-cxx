@@ -31,8 +31,8 @@ struct Key {
     explicit Key(uint64pair b) : bits{b} {}  // NOLINT
 
     Key(Uuid id, FORM form) {
-        bits.first = id.origin()._64 & Word::PAYLOAD_BITS;
-        bits.second = id.value()._64 & Word::PAYLOAD_BITS;
+        bits.first = id.origin._64 & Word::PAYLOAD_BITS;
+        bits.second = id.value._64 & Word::PAYLOAD_BITS;
         bits.second |= bits.first << 60;
         bits.first >>= 4;
         bits.first |= uint64_t(form) << 56;

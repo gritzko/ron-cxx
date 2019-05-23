@@ -51,21 +51,21 @@ class LWWObject {
         return i->second;
     }
 
-    inline int64_t integer(Uuid key) {
+    /*inline int64_t integer(Uuid key) {
         Atom a = atom(key, INT);
         return Uuid::NIL == a ? 0 : data_.integer(a);
-    }
+    }*/
 
     inline Uuid uuid(Uuid key) { return Uuid{atom(key, UUID)}; }
 
     inline double number(Uuid key) {
         Atom a = atom(key, FLOAT);
-        return Uuid::NIL == a ? std::nan("") : data_.number(a);
+        return Uuid::NIL == Uuid{a} ? std::nan("") : data_.number(a);
     }
 
     inline String string(Uuid key) {
         Atom a = atom(key, STRING);
-        return Uuid::NIL == a ? "" : data_.string(a);
+        return Uuid::NIL == Uuid{a} ? "" : data_.string(a);
     }
 };
 

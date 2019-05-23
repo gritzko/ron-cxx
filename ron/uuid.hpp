@@ -16,7 +16,9 @@ union Word {
     uint64_t _64;
     uint32_t _32[2];
     uint8_t _8[8];
-    Codepoint codepoint_[2];
+    int64_t as_integer;
+    double as_float;
+    Codepoint as_codepoint[2];
     Range range_;
 
     Word(uint64_t value = 0) noexcept : _64{value} {}
@@ -109,13 +111,10 @@ union Word {
     }
     bool is_all_digits() const;
     inline Range range() const {
-        return Range::AtFor(
-            AsSize(LEAST_SIGNIFICANT),
-            (AsSize(MOST_SIGNIFICANT) - AsSize(LEAST_SIGNIFICANT)) &
-                (FSIZE_MAX - 1));
+        static_assert(sizeof(Range) == sizeof(Word), "both must be 64 bits");
+        return Range::FroTo(AsSize(LEAST_SIGNIFICANT),
+                            AsSize(MOST_SIGNIFICANT) & FSIZE_BITS);
     }
-    inline int64_t integer() const { return (int64_t)_64; }
-    inline double number() const { return *(double*)&_64; }
     inline static Word random() {
         auto i = (uint64_t)rand();
         i <<= 30;
@@ -146,31 +145,16 @@ const Word ZERO{0UL};
 enum half_t { VALUE = 0, ORIGIN = 1 };
 
 struct Atom {
-    std::pair<Word, Word> words_;
-    Atom(Word value, Word origin) : words_{value, origin} {}
-    Atom() : words_{ZERO, ZERO} {}
-    Atom(uint64_t value, uint64_t origin) : words_{Word{value}, Word{origin}} {}
-    inline Word value() const { return words_.first; }
-    inline Word origin() const { return words_.second; }
-    inline Word& value() { return words_.first; }
-    inline Word& origin() { return words_.second; }
-    // value flag bits
-    inline uint8_t vfb() const { return value().flags(); }
-    // origin flag bits
-    inline uint8_t ofb() const { return origin().flags(); }
-    inline Word& word(int i) { return i ? words_.second : words_.first; }
-    inline Word& operator[](half_t half) {
-        return half ? words_.second : words_.first;
-    }
-    inline const Word& operator[](half_t half) const {
-        return half ? words_.second : words_.first;
-    }
+    Word origin, value;
+    Atom(Word val, Word orig) : value{val}, origin{orig} {}
+    Atom() : Atom{ZERO, ZERO} {}
+    Atom(uint64_t value, uint64_t origin) : Atom{Word{value}, Word{origin}} {}
     static inline Atom String(Codepoint cp, Range range, fsize_t offset) {
         return Atom{Word{offset, cp}, Word{range} | STRING_FLAGS};
     }
     Atom(ATOM type, Range range)
         : Atom{ZERO, Word{range} | (uint64_t(type) << 62U)} {}
-    inline ATOM type() const { return (ATOM)(origin()._64 >> 62U); }
+    inline ATOM type() const { return (ATOM)(origin._64 >> 62U); }
 };
 
 struct Uuid : public Atom {
@@ -185,16 +169,17 @@ struct Uuid : public Atom {
     explicit Uuid(const char* buf)
         : Uuid{Slice{buf, static_cast<fsize_t>(strlen(buf))}} {}
     explicit Uuid(const Atom& a) : Atom{a} {}
-    inline enum UUID version() const { return (enum UUID)(ofb() & 3U); }
-    inline uint8_t variety() const { return vfb(); }
-    inline Word& word(int a, int i) { return Atom::word(i); }
+    inline enum UUID version() const {
+        return (enum UUID)(origin.flags() & 3U);
+    }
+    inline uint8_t variety() const { return value.flags(); }
     void write_base64(ron::String& to) const;
     ron::String str() const;
-    inline bool zero() const { return value() == ZERO; }
+    inline bool zero() const { return value == ZERO; }
     inline bool is_ambiguous() const {
-        return origin().is_zero() && value().is_all_digits();
+        return origin.is_zero() && value.is_all_digits();
     }
-    inline bool is_error() const { return origin() == Word::MAX_VALUE; }
+    inline bool is_error() const { return origin == Word::MAX_VALUE; }
     static Uuid Time(Word value, Word origin) {
         return Uuid{value, (uint64_t(origin) & Word::PAYLOAD_BITS) |
                                (uint64_t(UUID::TIME) << Word::PBS)};
@@ -203,27 +188,30 @@ struct Uuid : public Atom {
         return Uuid{value, (uint64_t(origin) & Word::PAYLOAD_BITS) |
                                (uint64_t(UUID::DERIVED) << Word::PBS)};
     }
-    inline Uuid derived() const { return Derived(value(), origin()); }
-    inline Uuid event() const { return Time(value(), origin()); }
+    inline Uuid derived() const { return Derived(value, origin); }
+    inline Uuid event() const { return Time(value, origin); }
     inline Uuid inc(uint64_t by = 1UL) const {
-        return Uuid{value().inc(by), origin()};
+        return Uuid{value.inc(by), origin};
     }
-    inline Uuid dec() const { return Uuid{value().dec(), origin()}; }
-    inline bool operator<(const Uuid& b) const { return words_ < b.words_; }
-    inline bool operator>(const Uuid& b) const { return words_ > b.words_; }
-    inline bool operator==(const Uuid& b) const { return words_ == b.words_; }
-    inline bool operator==(const Atom& b) const { return words_ == b.words_; }
+    inline Uuid dec() const { return Uuid{value.dec(), origin}; }
+
+    inline bool operator<(const Uuid& b) const {
+        return value < b.value || (value == b.value && origin < b.origin);
+    }
+    inline bool operator>(const Uuid& b) const { return b < *this; }
+    inline bool operator==(const Uuid& b) const {
+        return value == b.value && origin == b.origin;
+    }
+    inline bool operator!=(const Uuid& b) const { return !(*this == b); }
+    inline bool operator<=(const Uuid& b) const { return !(b < *this); }
+    inline bool operator>=(const Uuid& b) const { return !(*this < b); }
+
     inline bool operator==(const char* b) const { return *this == Uuid{b}; }
-    inline bool operator!=(const Uuid& b) const { return words_ != b.words_; }
-    inline bool operator<=(const Uuid& b) const { return words_ <= b.words_; }
-    inline bool operator>=(const Uuid& b) const { return words_ >= b.words_; }
-    inline Uuid operator+(uint64_t i) const {
-        return Uuid{value() + i, origin()};
-    }
+    inline Uuid operator+(uint64_t i) const { return Uuid{value + i, origin}; }
     inline bool operator==(const ron::String& str) const {
         return *this == Uuid{str};
     }
-    inline void operator++() { ++words_.first; }
+    inline void operator++() { ++value; }
 
     /** Nil UUID as per RFC4122 */
     static const Uuid NIL;
@@ -263,7 +251,7 @@ struct hash<ron::Word> {
 template <>
 struct hash<ron::Uuid> {
     size_t operator()(ron::Uuid const& uuid) const noexcept {
-        return uuid.value().hash() ^ (uuid.origin().hash() << 1U);
+        return uuid.value.hash() ^ (uuid.origin.hash() << 1U);
     }
 };
 

@@ -52,7 +52,7 @@ static const Uuid MAP_IDS[] = {CHAIN_MAP_ID, META_MAP_ID, OP_MAP_ID,
 inline Uuid map2uuid(MAP e) { return MAP_IDS[e]; }
 
 inline MAP uuid2map(const Uuid& u) {
-    switch (uint8_t(u.value()._64 >> 52)) {
+    switch (uint8_t(u.value._64 >> 52)) {
         case uint8_t(CHAIN_MAP_NAME >> 52):
             return u == CHAIN_MAP_ID ? CHAIN_MAP : MAP_COUNT;
         case uint8_t(META_MAP_NAME >> 52):

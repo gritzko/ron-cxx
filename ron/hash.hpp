@@ -107,7 +107,7 @@ struct Stream {
         return Status::OK;
     }
     inline Status WriteAtom(const Atom& atom) {
-        uint64pair tmp{atom.value().be(), atom.origin().be()};
+        uint64pair tmp{atom.value.be(), atom.origin.be()};
         return Write(Slice{(char*)&tmp, sizeof(uint64pair)});
     }
     inline Status WriteHash(const SHA2& data) {
@@ -116,8 +116,8 @@ struct Stream {
     }
     inline Status WriteUuid(const Uuid& uuid) { return WriteAtom(uuid); }
     inline Status WriteAtomRangeless(const Atom& atom) {
-        uint64pair tmp{atom.value().be(),
-                       htobe64(atom.origin()._64 & Word::FLAG_BITS)};
+        uint64pair tmp{atom.value.be(),
+                       htobe64(atom.origin._64 & Word::FLAG_BITS)};
         return Write(Slice{(char*)&tmp, sizeof(uint64pair)});
     }
     inline void close(void* result) { sink_.final((uint8_t*)result); }

@@ -10,7 +10,7 @@ void TextFrame::Builder::WriteValues(const Cursor& cur) {
         Write(' ');
         switch (atom.type()) {
             case INT:
-                Write(cur.slice(atom.origin().range()));
+                Write(cur.slice(atom.origin.range()));
                 break;
             case UUID:
                 if (op.uuid(i).is_ambiguous()) Write(ATOM_PUNCT[UUID]);
@@ -18,11 +18,11 @@ void TextFrame::Builder::WriteValues(const Cursor& cur) {
                 break;
             case STRING:
                 Write(ATOM_PUNCT[STRING]);
-                Write(cur.slice(atom.origin().range()));
+                Write(cur.slice(atom.origin.range()));
                 Write(ATOM_PUNCT[STRING]);
                 break;
             case FLOAT:
-                Write(cur.slice(atom.origin().range()));
+                Write(cur.slice(atom.origin.range()));
                 break;
         }
     }
@@ -34,9 +34,10 @@ void TextFrame::Builder::WriteValues(const Cursor2& cur) {
     Range range;
     for (fsize_t i = 2; i < op.size(); i++) {
         Write(' ');
+        // FIXME(gritzko) parse the values!
         switch (op.type(i)) {
             case INT:
-                WriteInt(op.atom(i).value().integer());
+                WriteInt(op.atom(i).value.as_integer);
                 break;
             case UUID:
                 if (op.uuid(i).is_ambiguous()) Write(ATOM_PUNCT[UUID]);
@@ -44,13 +45,13 @@ void TextFrame::Builder::WriteValues(const Cursor2& cur) {
                 break;
             case STRING:
                 Write(ATOM_PUNCT[STRING]);
-                range = op.atom(i).origin().range();
+                range = op.atom(i).origin.range();
                 WriteString(unescape(
                     cur.data().slice(range)));  // FIXME(gritzko) clearly a bug
                 Write(ATOM_PUNCT[STRING]);
                 break;
             case FLOAT:
-                WriteFloat(op.atom(i).value().number());
+                WriteFloat(op.atom(i).value.as_float);
                 break;
         }
     }

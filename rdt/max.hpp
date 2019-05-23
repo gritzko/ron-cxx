@@ -19,7 +19,7 @@ class MaxRDT {
             return b.id() > a.id();
         }
         if (b.size() == 2) return false;
-        return a.atom(2).words_ < b.atom(2).words_;
+        return static_cast<Uuid>(a.atom(2)) < static_cast<Uuid>(b.atom(2));
     }
 
    public:

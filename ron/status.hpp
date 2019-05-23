@@ -27,13 +27,13 @@ class Status {
     }
 
     operator bool() const {
-        return code_[ORIGIN] != Word::PAYLOAD_BITS;  // not an error
+        return code().origin != Word::PAYLOAD_BITS;  // not an error
     }
 
     bool operator==(const Status& b) const { return code() == b.code(); }
     bool operator!=(const Status& b) const { return code() != b.code(); }
 
-    String str() const { return code().value().str() + "\t" + comment(); }
+    String str() const { return code().value.str() + "\t" + comment(); }
 
     static const Status OK;
     static const Status ENDOFFRAME;

@@ -4,7 +4,7 @@ using namespace std;
 
 namespace ron {
 
-int64_t TextFrame::Cursor::parse_int(Slice range) {
+Integer TextFrame::ParseInteger(Slice range) {
     CharRef i = range.begin();
     bool neg = false;
     if (*i == '-') {
@@ -23,7 +23,7 @@ int64_t TextFrame::Cursor::parse_int(Slice range) {
     return ret;
 }
 
-double TextFrame::Cursor::parse_float(Slice range) {
+Float TextFrame::ParseFloat(Slice range) {
     char fs[32];  // FIXME size limits
     memcpy(fs, range.begin(), range.size());
     fs[range.size()] = 0;

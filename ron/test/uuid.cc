@@ -9,11 +9,11 @@ using namespace std;
 
 
 TEST(Word, Case) {
-    ASSERT_TRUE(Uuid::NIL.value().base64_case()==NUMERIC);
-    ASSERT_TRUE(Uuid{"2134"}.value().base64_case()==NUMERIC);
-    ASSERT_TRUE(Uuid{"ABC~DEFZ"}.value().base64_case()==CAPS);
-    ASSERT_TRUE(Uuid{"Abc_Def"}.value().base64_case()==CAMEL);
-    ASSERT_TRUE(Uuid{"abc_xyz"}.value().base64_case()==SNAKE);
+    ASSERT_TRUE(Uuid::NIL.value.base64_case()==NUMERIC);
+    ASSERT_TRUE(Uuid{"2134"}.value.base64_case()==NUMERIC);
+    ASSERT_TRUE(Uuid{"ABC~DEFZ"}.value.base64_case()==CAPS);
+    ASSERT_TRUE(Uuid{"Abc_Def"}.value.base64_case()==CAMEL);
+    ASSERT_TRUE(Uuid{"abc_xyz"}.value.base64_case()==SNAKE);
 }
 
 
@@ -22,7 +22,7 @@ TEST (Uuid, All) {
     ASSERT_TRUE(sizeof(Uuid)==16);
 
     Uuid u1{"0000000001"};
-    ASSERT_TRUE(u1.value()==1);
+    ASSERT_TRUE(u1.value==1);
     ASSERT_TRUE(u1.str()=="0000000001");
     //ASSERT_TRUE(u1.variant()==0); // FIXME
     ASSERT_TRUE(u1.version()==UUID::NAME);

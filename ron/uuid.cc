@@ -51,11 +51,11 @@ void Uuid::write_base64(ron::String& ret) const {
         ret.push_back(BASE_PUNCT[vrt]);
         ret.push_back('/');
     }
-    words_.first.write_base64(ret);
+    value.write_base64(ret);
     int schm = version();
-    if (schm != 0 || !origin().is_zero()) {
+    if (schm != 0 || !origin.is_zero()) {
         ret.push_back(UUID_PUNCT[schm]);
-        words_.second.write_base64(ret);
+        origin.write_base64(ret);
     }
 }
 

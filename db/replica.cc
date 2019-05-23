@@ -49,7 +49,7 @@ Status Replica<Store>::Open() {
             return Status::BADFRAME.comment("tip record is corrupted");
         }
         Uuid tip = mc.id();
-        if (tip.origin() != id.origin() && id != Uuid::NIL) {
+        if (tip.origin != id.origin && id != Uuid::NIL) {
             return Status::BADFRAME.comment(
                 "tip record is from a different origin; " + tip.str() +
                 " for " + id.str());
@@ -175,7 +175,7 @@ Status Replica<Store>::Commit::ReadName(Uuid& id, Uuid name) {
 template <typename Store>
 Uuid Replica<Store>::Now(Word origin) {
     if (origin == ZERO) {
-        origin = active_store().origin();
+        origin = active_store().origin;
     }
     Word next = Uuid::HybridTime(time(nullptr));
     now_ = next > now_ ? next : now_.inc();
@@ -223,7 +223,7 @@ Status Replica<Store>::Commit::FindOpMeta(OpMeta& meta, Uuid op_id) {
     }
     // seek to the op
     while (cur.Next()) {
-        if (cur.id().origin() != op_id.origin()) {
+        if (cur.id().origin != op_id.origin) {
             continue;
         }
         if (cur.ref() != meta.id) {
@@ -236,7 +236,7 @@ Status Replica<Store>::Commit::FindOpMeta(OpMeta& meta, Uuid op_id) {
         }
     }
     if (!cur.valid()) {
-        if (op_id.value() == NEVER) {
+        if (op_id.value == NEVER) {
             return Status::OK;  // a dirty trick to pick the yarn tip
         }
         return Status::NOT_FOUND.comment("no such op: " + op_id.str());
@@ -255,8 +255,7 @@ Status Replica<Store>::Commit::FindChainHeadMeta(OpMeta& meta, Uuid op_id) {
     if (!metac.valid()) {
         return Status::BAD_STATE.comment("unparseable meta record?!");
     }
-    if (metac.id().origin() != op_id.origin() ||
-        metac.ref() != META_FORM_UUID) {
+    if (metac.id().origin != op_id.origin || metac.ref() != META_FORM_UUID) {
         return Status::NOT_FOUND.comment("no such yarn?");
     }
     ok = meta.Load(metac);
@@ -283,15 +282,15 @@ Status Replica<Store>::See(Uuid timestamp) {
     if (timestamp.version() != TIME) {
         return Status::BADARGS.comment("not an event: " + timestamp.str());
     }
-    if (timestamp.value() < now_) {
+    if (timestamp.value < now_) {
         return Status::OK;
     }
-    if (timestamp.value() >= NEVER) {
+    if (timestamp.value >= NEVER) {
         return Status::BADARGS.comment("an event timestamped NEVER: " +
                                        timestamp.str());
     }
 
-    now_ = timestamp.value();  // TODO(gritzko) concurrent access
+    now_ = timestamp.value;  // TODO(gritzko) concurrent access
     return Status::OK;
 }
 
@@ -307,7 +306,7 @@ Status Replica<Store>::Commit::SaveChainlet(Builder& to, OpMeta& meta,
             IFOK(CheckEventSanity(from));
             meta.Next(from, meta);
             to.AppendOp(from);
-            if (from.id().origin() == base_.origin()) {
+            if (from.id().origin == base_.origin) {
                 if (from.id() <= tip_) {
                     return Status::OK.comment("non-monotonous frame");
                 }
@@ -373,7 +372,7 @@ Status Replica<Store>::Commit::SaveChain(Builder&, Cursor& chain) {
     // find the last op on the yarn (the tip) and its metadata
     OpMeta tip_meta;
     Uuid& tip_id = tip_meta.id;
-    ok = FindYarnTipMeta(tip_meta, id.origin());
+    ok = FindYarnTipMeta(tip_meta, id.origin);
     if (chain.ref() == YARN_FORM_UUID) {
         // actually, it is the first op on the yarn
         if (ok == Status::NOT_FOUND) {
@@ -549,14 +548,14 @@ Status Replica<Store>::Commit::WriteNewEvents(Builder& resp, Cursor& uc) {
     Builder stamp;
     Uuid now = host_.Now(yarn_id());
     constexpr uint64_t MAXSEQ = 1 << 30;
-    while (uc.valid() && uc.id().origin().payload() == 0) {
-        if (uc.id().origin().payload() != 0) {
+    while (uc.valid() && uc.id().origin.payload() == 0) {
+        if (uc.id().origin.payload() != 0) {
             return Status::BAD_STATE.comment("stamped already");
         }
-        Uuid id{now.value()._64, now.origin()};
+        Uuid id{now.value._64, now.origin};
         Uuid ref{uc.ref()};
-        if (ref.origin() == 0 && ref.value() < MAXSEQ) {
-            ref = Uuid{now.value()._64 + uc.ref().value()._64, now.origin()};
+        if (ref.origin == 0 && ref.value < MAXSEQ) {
+            ref = Uuid{now.value._64 + uc.ref().value._64, now.origin};
         }
         stamp.AppendAmendedOp(uc, RAW, id, ref);
         uc.Next();
@@ -643,7 +642,7 @@ Status Replica<Store>::Commit::Save() {
     if (tip_ == base_) {
         return Status::OK;
     }
-    if (base_ != Uuid::NIL && tip_.origin() != base_.origin()) {
+    if (base_ != Uuid::NIL && tip_.origin != base_.origin) {
         return Status::BAD_STATE.comment("tip changes origin? " + base_.str() +
                                          " -> " + tip_.str());
     }
@@ -690,7 +689,7 @@ Status Replica<Store>::Receive(Builder& resp, Cursor& c, Word yarn_id) {
             case TIME:
                 if (c.term() == QUERY) {
                     ok = commit.ReceiveQuery(resp, c);
-                } else if (c.id().origin().payload() != 0) {
+                } else if (c.id().origin.payload() != 0) {
                     ok = commit.SaveChain(resp, c);
                 } else {
                     ok = commit.ReceiveWrites(resp, c);

@@ -249,8 +249,8 @@ Uuid::Uuid(Slice data) noexcept {
 
     if (cs && value.size() <= Word::MAX_BASE64_SIZE &&
         origin.size() <= Word::MAX_BASE64_SIZE) {
-        words_.first = Word{ABC[variety], value};
-        words_.second = Word{ABC[version], origin};
+        this->value = Word{ABC[variety], value};
+        this->origin = Word{ABC[version], origin};
     } else {
         *this = FATAL;
     }

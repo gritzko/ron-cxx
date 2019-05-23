@@ -69,7 +69,7 @@ Status ResolveName(Uuid& name, RonReplica& replica, case_t need_case = NUMERIC,
         return Status::OK;
     }
     if (need_case != NUMERIC && name != Uuid::NIL &&
-        name.value().base64_case() != need_case) {
+        name.value.base64_case() != need_case) {
         return Status::BADARGS.comment(
             "the name must be in " + CASE_NAMES[need_case] + ": " + name.str());
     }
@@ -98,7 +98,7 @@ Status ScanAsNameArg(Uuid& name, case_t lcase, RonReplica& replica,
     name = Uuid{args.back()};
     CHECKARG(name.is_error(), "must be a UUID");
     CHECKARG(name.version() != NAME, "must be a NAME UUID");
-    CHECKARG(lcase != NUMERIC && name.value().base64_case() != lcase,
+    CHECKARG(lcase != NUMERIC && name.value.base64_case() != lcase,
              "use " + CASE_NAMES[lcase]);
     args.pop_back();
     return Status::OK;
@@ -118,7 +118,7 @@ Status ScanOnBranchArg(Uuid& branch, RonReplica& replica, Args& args) {
     args.pop_back();
     CHECKARG(branch.is_error(), "bad branch id syntax; must be name/id");
     IFOK(ResolveName(branch, replica, CAMEL, true));
-    CHECKARG(branch != Uuid::NIL && !replica.HasBranch(branch.origin()),
+    CHECKARG(branch != Uuid::NIL && !replica.HasBranch(branch.origin),
              "no such branch: " + branch.str());
     return Status::OK;
 }
@@ -169,7 +169,7 @@ Status CommandCreate(RonReplica& replica, Args& args) {
         args.pop_back();
         CHECKARG(tag.is_error(),
                  "the name must be a name UUID (up to ten Base64 chars)");
-        CHECKARG(tag.value().base64_case() != CAMEL,
+        CHECKARG(tag.value.base64_case() != CAMEL,
                  "branch names must be CamelCased");
     }
     CHECKARG(!args.empty(), CREATE_USAGE);
@@ -190,7 +190,7 @@ constexpr const char* FORK_USAGE{
 Status CommandFork(RonReplica& replica, Args& args) {
     Uuid active = replica.active_store();
     CHECKARG(active == Uuid::NIL, "can't fork the metadata store");
-    Word active_yarn_id = active.origin();
+    Word active_yarn_id = active.origin;
 
     Word new_yarn_id = Word::random();
     Uuid new_branch_id = Uuid::Time(NEVER, new_yarn_id);
@@ -202,7 +202,7 @@ Status CommandFork(RonReplica& replica, Args& args) {
         args.pop_back();
         CHECKARG(tag.is_error(),
                  "the name must be a name UUID (up to ten Base64 chars)");
-        CHECKARG(tag.value().base64_case() != CAMEL,
+        CHECKARG(tag.value.base64_case() != CAMEL,
                  "branch names must be CamelCased");
     }
     CHECKARG(!args.empty(), CREATE_USAGE);
@@ -467,7 +467,7 @@ Status CommandNew(RonReplica& replica, Args& args) {
 
     CHECKARG(!args.empty(), NEW_USAGE);
 
-    Frame new_obj = OneOp<Frame>(replica.Now(branch_id.origin()), rdt);
+    Frame new_obj = OneOp<Frame>(replica.Now(branch_id.origin), rdt);
     Builder re;
     Cursor cu{new_obj};
 
@@ -495,12 +495,12 @@ Status CommandHashFrame(const string& filename) {
         const Uuid& ref = cur.ref();
         if (id.version() == TIME) {
             SHA2 sha2prev, sha2ref;
-            auto ti = tips.find(id.origin());
+            auto ti = tips.find(id.origin);
             if (ti == tips.end()) {
-                // hash_root(id.origin(), sha2prev);
-                sha2prev = SHA2{Uuid{0, id.origin()}};
+                // hash_root(id.origin, sha2prev);
+                sha2prev = SHA2{Uuid{0, id.origin}};
             } else {
-                sha2prev = hashes[Uuid{ti->second, id.origin()}];
+                sha2prev = hashes[Uuid{ti->second, id.origin}];
             }
             if (ref.version() == TIME) {
                 auto ri = hashes.find(ref);
@@ -513,7 +513,7 @@ Status CommandHashFrame(const string& filename) {
             }
             SHA2 sha2;
             hash_op<Frame>(cur, sha2, sha2prev, sha2ref);
-            tips[id.origin()] = id.value();  // TODO causality checks
+            tips[id.origin] = id.value;  // TODO causality checks
             hashes[id] = sha2;
             report.AppendNewOp(OpMeta::SHA2_UUID, id, sha2.base64());
         } else if (id == OpMeta::SHA2_UUID && cur.size() > 2 &&
@@ -523,8 +523,7 @@ Status CommandHashFrame(const string& filename) {
             auto hi = hashes.find(id);
             if (hi == hashes.end()) {
                 hashes[id] = hash;
-                if (id.value() > tips[id.origin()])
-                    tips[id.origin()] = id.value();
+                if (id.value > tips[id.origin]) tips[id.origin] = id.value;
             } else if (!hash.matches(hi->second)) {
                 return Status::HASHBREAK;
             }
@@ -627,7 +626,7 @@ Status CommandNamed(RonReplica& replica, Args& args) {
     for (auto& p : names) {
         Uuid id = p.second;
         Uuid name = p.first;
-        if (what == NUMERIC || what == name.value().base64_case()) {
+        if (what == NUMERIC || what == name.value.base64_case()) {
             cout << p.second.str() << '\t' << p.first.str() << '\n';
         }
     }

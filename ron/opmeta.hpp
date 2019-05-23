@@ -51,8 +51,8 @@ struct OpMeta {
         : id{op.id()},
           rdt{op.ref()},
           object{id},
-          prev{prev.id.value()},
-          chain{id.value()} {
+          prev{prev.id.value},
+          chain{id.value} {
         assert(id.version() == TIME);
         assert(rdt.version() == NAME);
         hash = SHA2::OpMerkleHash(op, prev.hash, SHA2{rdt});
@@ -60,7 +60,7 @@ struct OpMeta {
 
     template <typename Cursor>
     inline bool is_next(const Cursor& cur) const {
-        return cur.id().version() == TIME && cur.id().origin() == id.origin() &&
+        return cur.id().version() == TIME && cur.id().origin == id.origin &&
                cur.id() > id && cur.ref() == id;
     }
 
@@ -76,12 +76,12 @@ struct OpMeta {
      */
     template <class Cursor>
     Status Next(const Cursor& op, const OpMeta& refd) {
-        assert(op.id().origin() == id.origin() && op.id() > id);
-        prev = id.value();
+        assert(op.id().origin == id.origin && op.id() > id);
+        prev = id.value;
         id = op.id();
         Uuid ref = op.ref();
-        if (ref.origin() != id.origin() || prev != ref.value()) {
-            chain = id.value();
+        if (ref.origin != id.origin || prev != ref.value) {
+            chain = id.value;
         }
         rdt = refd.rdt;
         object = refd.object;
@@ -118,7 +118,7 @@ struct OpMeta {
     Status Load(const Cursor& load) {
         // see above, check format
         id = load.id();
-        chain = id.value();
+        chain = id.value;
         prev = NEVER;
         if (load.ref() != META_FORM_UUID) {
             return Status::BADARGS.comment("not a meta record");
@@ -135,9 +135,9 @@ struct OpMeta {
         return Status::OK;
     }
 
-    inline bool is_head() const { return chain == id.value(); }
+    inline bool is_head() const { return chain == id.value; }
 
-    inline Uuid chain_id() const { return Uuid::Time(chain, id.origin()); }
+    inline Uuid chain_id() const { return Uuid::Time(chain, id.origin); }
 };
 
 }  // namespace ron

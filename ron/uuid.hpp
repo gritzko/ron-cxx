@@ -13,31 +13,32 @@ enum case_t : uint8_t { NUMERIC = 0, SNAKE = 1, CAPS = 2, CAMEL = 3 };
 const String CASE_NAMES[]{"numeric", "snake_case", "ALL~CAPS", "CamelCase"};
 
 union Word {
-    uint64_t _64;
-    uint32_t _32[2];
-    uint8_t _8[8];
+    uint64_t as_u64;
+    uint32_t as_u32[2];
+    uint8_t as_u8[8];
     int64_t as_integer;
     double as_float;
     Codepoint as_codepoint[2];
-    Range range_;
+    Range as_range;
+    fsize_t as_size[2];
 
-    Word(uint64_t value = 0) noexcept : _64{value} {}
+    Word(uint64_t value = 0) noexcept : as_u64{value} {}
 #ifdef __LITTLE_ENDIAN
-    Word(uint32_t higher, uint32_t lower) noexcept : _32{lower, higher} {}
+    Word(uint32_t higher, uint32_t lower) noexcept : as_u32{lower, higher} {}
 #elif
     Word(uint32_t higher, uint32_t lower) noexcept : _32{higher, lower} {}
 #endif
     /** A trusty parsing constructor; expects a valid Base64x64 value. */
-    explicit Word(uint8_t flags, const Slice& data) : _64{flags & 0xfU} {
+    explicit Word(uint8_t flags, const Slice& data) : as_u64{flags & 0xfU} {
         assert(data.size() <= MAX_BASE64_SIZE);
         int i = 0;
         while (i < data.size()) {
-            _64 <<= Word::BASE64_BITS;
-            _64 |= ABC[data[i]];
+            as_u64 <<= Word::BASE64_BITS;
+            as_u64 |= ABC[data[i]];
             i++;
         }
         while (i < Word::MAX_BASE64_SIZE) {
-            _64 <<= Word::BASE64_BITS;
+            as_u64 <<= Word::BASE64_BITS;
             i++;
         }
     }
@@ -47,9 +48,9 @@ union Word {
     explicit Word(const char* word)
         : Word{0, Slice{word, (fsize_t)strlen(word)}} {}
 
-    explicit Word(Range range) noexcept : Word{range.end(), range.offset()} {}
+    explicit Word(Range range) noexcept : as_range{range} {}
 
-    explicit operator uint64_t() const { return _64; }
+    explicit operator uint64_t() const { return as_u64; }
 
     // payload bit size
     static constexpr uint PBS = 60;
@@ -80,40 +81,38 @@ union Word {
                                             (ONE << (PBS - 9 * 6)) - 1,
                                             0};
 
-    inline uint8_t flags() const { return _8[7] >> 4U; }
-    inline void zero() { _64 = 0U; }
+    inline uint8_t flags() const { return as_u8[7] >> 4U; }
+    inline void zero() { as_u64 = 0U; }
     void write_base64(String& to) const;
-    inline uint64_t payload() const { return _64 & MAX_VALUE; }
-    inline bool is_zero() const { return _64 == 0U; }
-    inline Word inc(uint64_t by = 1UL) const { return Word{_64 + by}; }
-    inline Word dec() const { return Word{_64 - 1U}; }
-    inline bool operator<(const Word& b) const { return _64 < b._64; }
-    inline bool operator>(const Word& b) const { return _64 > b._64; }
-    inline bool operator>=(const Word& b) const { return _64 >= b._64; }
-    inline bool operator<=(const Word& b) const { return _64 <= b._64; }
-    inline bool operator==(const Word& b) const { return _64 == b._64; }
-    inline bool operator!=(const Word& b) const { return _64 != b._64; }
-    inline Word operator+(const Word& a) const { return Word{_64 + a._64}; }
-    inline Word operator+(const uint64_t i) const { return Word{_64 + i}; }
-    inline void operator++() { ++_64; }
-    inline Word operator|(uint64_t mask) const { return Word{_64 | mask}; }
-    inline Word operator&(uint64_t mask) const { return Word{_64 & mask}; }
+    inline uint64_t payload() const { return as_u64 & MAX_VALUE; }
+    inline bool is_zero() const { return as_u64 == 0U; }
+    inline Word inc(uint64_t by = 1UL) const { return Word{as_u64 + by}; }
+    inline Word dec() const { return Word{as_u64 - 1U}; }
+    inline bool operator<(const Word& b) const { return as_u64 < b.as_u64; }
+    inline bool operator>(const Word& b) const { return as_u64 > b.as_u64; }
+    inline bool operator>=(const Word& b) const { return as_u64 >= b.as_u64; }
+    inline bool operator<=(const Word& b) const { return as_u64 <= b.as_u64; }
+    inline bool operator==(const Word& b) const { return as_u64 == b.as_u64; }
+    inline bool operator!=(const Word& b) const { return as_u64 != b.as_u64; }
+    inline Word operator+(const Word& a) const {
+        return Word{as_u64 + a.as_u64};
+    }
+    inline Word operator+(const uint64_t i) const { return Word{as_u64 + i}; }
+    inline void operator++() { ++as_u64; }
+    inline Word operator|(uint64_t mask) const { return Word{as_u64 | mask}; }
+    inline Word operator&(uint64_t mask) const { return Word{as_u64 & mask}; }
+
     inline size_t hash() const {
         static constexpr auto _64_hash_fn = std::hash<uint64_t>{};
-        return _64_hash_fn(_64);
+        return _64_hash_fn(as_u64);
     }
-    inline uint64_t be() const { return htobe64(_64); }
+    inline uint64_t be() const { return htobe64(as_u64); }
+    inline Range range() const { return as_range.safe(); }
     String str() const {
         String letters{};
         letters.reserve(BASE64_WORD_LEN);
         write_base64(letters);
         return letters;
-    }
-    bool is_all_digits() const;
-    inline Range range() const {
-        static_assert(sizeof(Range) == sizeof(Word), "both must be 64 bits");
-        return Range::FroTo(AsSize(LEAST_SIGNIFICANT),
-                            AsSize(MOST_SIGNIFICANT) & FSIZE_BITS);
     }
     inline static Word random() {
         auto i = (uint64_t)rand();
@@ -121,22 +120,14 @@ union Word {
         i ^= (uint64_t)rand();
         return Word{i & MAX_VALUE};
     }
-    explicit Word(double val) : _64{*(uint64_t*)&val} {}
-    inline explicit operator double() const { return *(double*)this; }
-    explicit Word(int64_t val) : _64{*(uint64_t*)&val} {}
-    inline explicit operator int64_t() const { return *(int64_t*)this; }
+
+    explicit Word(double val) : as_u64{*(uint64_t*)&val} {}
+    inline explicit operator double() const { return as_float; }
+    explicit Word(int64_t val) : as_u64{*(uint64_t*)&val} {}
+    inline explicit operator int64_t() const { return as_integer; }
+
     case_t base64_case() const;
-    Integer& AsInteger() { return *(Integer*)this; }
-    Float& AsFloat() { return *(Float*)this; }
-    Codepoint& AsCodepoint(HALF which = LEAST_SIGNIFICANT) {
-        return (Codepoint&)_32[which];
-    }
-    inline fsize_t& AsSize(HALF which = LEAST_SIGNIFICANT) {
-        return _32[which];
-    }
-    inline fsize_t AsSize(HALF which = LEAST_SIGNIFICANT) const {
-        return _32[which] & (FSIZE_MAX - 1);
-    }
+    bool is_all_digits() const;
 };
 
 const Word NEVER{uint64_t(63UL << 54U)};
@@ -154,7 +145,7 @@ struct Atom {
     }
     Atom(ATOM type, Range range)
         : Atom{ZERO, Word{range} | (uint64_t(type) << 62U)} {}
-    inline ATOM type() const { return (ATOM)(origin._64 >> 62U); }
+    inline ATOM type() const { return (ATOM)(origin.as_u64 >> 62U); }
 };
 
 struct Uuid : public Atom {

@@ -77,6 +77,9 @@ class Range {
         assert(valid());
         return end() & FSIZE_BITS;
     }
+    inline Range safe() const {
+        return Range{begin() & FSIZE_BITS, end() & FSIZE_BITS};
+    }
     inline fsize_t offset(fsize_t idx = 0) const {
         assert(begin() + idx < end());
         return begin() + idx;

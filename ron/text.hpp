@@ -28,8 +28,8 @@ class TextFrame {
      *  advances the range start at atom.origin().AsSize(LEAST_SIGNIFICANT) */
     static inline bool ParseCodepoint(Atom& atom, Slice data) {
         return ParseEscapedUtf8Codepoint(
-            atom.value.as_codepoint[LEAST_SIGNIFICANT], atom.origin.range_,
-            data.begin());
+            atom.value.as_codepoint[LEAST_SIGNIFICANT],
+            data.slice(atom.origin.range()));
     }
 
     /** Primary value parser: UUIDs */
@@ -54,7 +54,7 @@ class TextFrame {
 
     static Codepoints ParseToCodepoints(Atom& atom, Slice data) {
         Codepoints ret;
-        Codepoint& cp = atom.value.AsCodepoint();
+        Codepoint& cp = atom.value.as_codepoint[LEAST_SIGNIFICANT];
         while (ParseCodepoint(atom, data)) {
             ret.push_back(cp);
         }
@@ -62,8 +62,8 @@ class TextFrame {
     }
 
     /** Parses a codepoint (escaped UTF8), saves to cp, consumes the range. */
-    static inline bool ParseEscapedUtf8Codepoint(Codepoint& cp, Range& range,
-                                                 CharRef buf) {
+    static inline Codepoint ParseEscapedUtf8Codepoint(Codepoint& cp,
+                                                      Slice data) {
         // shortcut ASCII
         // dive for complex things
         return false;

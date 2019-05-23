@@ -117,7 +117,7 @@ struct Stream {
     inline Status WriteUuid(const Uuid& uuid) { return WriteAtom(uuid); }
     inline Status WriteAtomRangeless(const Atom& atom) {
         uint64pair tmp{atom.value.be(),
-                       htobe64(atom.origin._64 & Word::FLAG_BITS)};
+                       htobe64(atom.origin.as_u64 & Word::FLAG_BITS)};
         return Write(Slice{(char*)&tmp, sizeof(uint64pair)});
     }
     inline void close(void* result) { sink_.final((uint8_t*)result); }

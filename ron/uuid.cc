@@ -19,7 +19,7 @@ inline case_t char_case(uint64_t v) {
 
 case_t Word::base64_case() const {
     case_t ret = NUMERIC;
-    uint64_t u = _64;
+    uint64_t u = as_u64;
     for (int i = 0; i < 10 && u != 3; ++i, u >>= 6) {
         ret = case_t(ret | char_case(u));
     }
@@ -29,18 +29,18 @@ case_t Word::base64_case() const {
 void Word::write_base64(String& to) const {
     size_t len = 0;
     do {
-        to.push_back(BASE_PUNCT[0x3fU & (_64 >> OFFSET6[len])]);
+        to.push_back(BASE_PUNCT[0x3fU & (as_u64 >> OFFSET6[len])]);
         len++;
-    } while (_64 & LOWER6[len]);
+    } while (as_u64 & LOWER6[len]);
 }
 
 bool Word::is_all_digits() const {
     size_t len = 0;
     do {
-        Char next = BASE_PUNCT[0x3fU & (_64 >> OFFSET6[len])];
+        Char next = BASE_PUNCT[0x3fU & (as_u64 >> OFFSET6[len])];
         if (!isdigit(next)) return false;
         len++;
-    } while (_64 & LOWER6[len]);
+    } while (as_u64 & LOWER6[len]);
     return true;
 }
 

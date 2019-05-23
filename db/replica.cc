@@ -552,10 +552,10 @@ Status Replica<Store>::Commit::WriteNewEvents(Builder& resp, Cursor& uc) {
         if (uc.id().origin.payload() != 0) {
             return Status::BAD_STATE.comment("stamped already");
         }
-        Uuid id{now.value._64, now.origin};
+        Uuid id{now.value.as_u64, now.origin};
         Uuid ref{uc.ref()};
         if (ref.origin == 0 && ref.value < MAXSEQ) {
-            ref = Uuid{now.value._64 + uc.ref().value._64, now.origin};
+            ref = Uuid{now.value.as_u64 + uc.ref().value.as_u64, now.origin};
         }
         stamp.AppendAmendedOp(uc, RAW, id, ref);
         uc.Next();

@@ -16,8 +16,8 @@ Uuid::Uuid(Slice data) noexcept {
 
 #line 9 "ragel/uuid-parser.rl"
 
-    CharRef pb = data.buf_;
-    CharRef pe = pb + data.size_;
+    CharRef pb = data.begin();
+    CharRef pe = data.end();
     CharRef p = pb;
     CharRef eof = pe;
     CharRef uuidb{p}, wordb{p};

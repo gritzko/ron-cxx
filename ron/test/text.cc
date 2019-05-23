@@ -76,11 +76,11 @@ TEST(TextFrame, optional_chars) {
     ASSERT_TRUE(copt.op().ref()=="1A");
     ASSERT_TRUE(copt.has(2, INT));
     //ASSERT_TRUE(copt.integer(2)==9223372036854775807L);
-    ASSERT_TRUE(copt.string(3)==ABC);
-    ASSERT_TRUE(copt.integer(4)==3);
+    ASSERT_EQ(copt.string(3), ABC);
+    ASSERT_EQ(copt.integer(4), 3);
 
     ASSERT_TRUE(copt.Next());
-    ASSERT_TRUE(copt.number(2)==3.1415); // :)
+    ASSERT_EQ(copt.number(2), 3.1415); // :)
 
     ASSERT_TRUE(!copt.Next());
     ASSERT_TRUE(!copt.valid());
@@ -92,13 +92,13 @@ TEST(TextFrame, signs ) {
     Cursor cur = signs.cursor();
     ASSERT_EQ(cur.integer(2), -1);
     ASSERT_TRUE(cur.Next());
-    ASSERT_TRUE(cur.number(2)==-1.2);
+    ASSERT_EQ(cur.number(2), -1.2);
     ASSERT_TRUE(cur.Next());
-    ASSERT_TRUE(cur.number(2)==1.23);
+    ASSERT_EQ(cur.number(2), 1.23);
     ASSERT_TRUE(cur.Next());
-    ASSERT_TRUE(cur.number(2)==-100.0);
+    ASSERT_EQ(cur.number(2), -100.0);
     ASSERT_TRUE(cur.Next());
-    ASSERT_TRUE(cur.number(2)==-20);
+    ASSERT_EQ(cur.number(2), -20);
     ASSERT_TRUE(!cur.Next());
 }
 

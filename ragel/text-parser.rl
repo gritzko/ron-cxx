@@ -35,10 +35,10 @@ Status TextFrame::Cursor::Next () {
         return Status::ENDOFFRAME;
     }
 
-    Slice body{data()};
-    CharRef pb = body.buf_;
+    Slice body{data_};
+    CharRef pb = body.begin();
     CharRef p = pb + off_;
-    CharRef pe = pb + body.size();
+    CharRef pe = body.end();
     CharRef eof = pe;
     CharRef lineb = pb;
     CharRef intb{p};

@@ -29,7 +29,7 @@ bool TextFrame::StringIterator::Next () {
     }%%
     if (cs!=CP_error) {
         cp_ = cp;
-        data_.advance(p-data_.begin());
+        data_.consume(p-data_.begin());
         return true;
     } else {
         cp_ = 0;

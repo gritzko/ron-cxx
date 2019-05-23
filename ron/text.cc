@@ -25,8 +25,8 @@ int64_t TextFrame::Cursor::parse_int(Slice range) {
 
 double TextFrame::Cursor::parse_float(Slice range) {
     char fs[32];  // FIXME size limits
-    memcpy(fs, range.buf_, range.size_);
-    fs[range.size_] = 0;
+    memcpy(fs, range.begin(), range.size());
+    fs[range.size()] = 0;
     double ret = strtod(fs, nullptr);
     return ret;
 }

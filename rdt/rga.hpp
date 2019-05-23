@@ -78,7 +78,9 @@ class RGArrayRDT {
                 }
         }
 
-        return ++added == 1 << inputs.size() ? Status::OK : Status::CAUSEBREAK;
+        return ++added == 1 << inputs.size()
+                   ? Status::OK
+                   : Status::CAUSEBREAK.comment("unattacheable pieces");
     }
 
     Status GC(Builder &output, const Frame &input) const {

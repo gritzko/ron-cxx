@@ -31,7 +31,7 @@ struct SHA2 {
     static SHA2 OpMerkleHash(Cursor& cur, const SHA2& prev, const SHA2& ref);
 
     static bool valid(Slice base64) {
-        if (base64.size_ != BASE64_SIZE) return false;
+        if (base64.size() != BASE64_SIZE) return false;
         for (int i = 0; i < BASE64_SIZE; i++)
             if (ABC64[base64[i]] < 0) return false;
         return (ABC64[base64[BASE64_SIZE - 1]] & 3) == 0;
@@ -103,7 +103,7 @@ struct Stream {
     Stream() : sink_{} {}
     Stream(sink_t sink) : sink_{sink} {}
     Status Write(Slice data) {
-        sink_.update((uint8_t*)data.buf_, data.size_);
+        sink_.update((uint8_t*)data.begin(), data.size());
         return Status::OK;
     }
     inline Status WriteAtom(const Atom& atom) {

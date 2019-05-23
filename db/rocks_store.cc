@@ -18,7 +18,7 @@ String ROCKSDB_STORE_DIR{".swarmdb"};
 //  C O N V E R S I O N S
 
 static inline rocksdb::Slice slice(ron::Slice slice) {
-    return rocksdb::Slice{(const char*)slice.data(), slice.size()};
+    return rocksdb::Slice{(const char*)slice.begin(), slice.size()};
 }
 
 static inline ron::Slice slice(rocksdb::Slice slice) {

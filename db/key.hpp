@@ -46,7 +46,7 @@ struct Key {
 
     static Key be(Slice data) {
         assert(data.size() == sizeof(bits));
-        auto b = *reinterpret_cast<const uint64pair*>(data.data());
+        auto b = *reinterpret_cast<const uint64pair*>(data.begin());
         return Key{uint64pair{be64toh(b.first), be64toh(b.second)}};
     }
 

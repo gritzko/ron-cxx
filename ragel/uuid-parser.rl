@@ -7,8 +7,8 @@ namespace ron {
         %% machine UUID;
         %% write data;
 
-        CharRef pb = data.buf_;
-        CharRef pe = pb+data.size_;
+        CharRef pb = data.begin();
+        CharRef pe = data.end();
         CharRef p = pb;
         CharRef eof = pe;
         CharRef uuidb{p}, wordb{p};

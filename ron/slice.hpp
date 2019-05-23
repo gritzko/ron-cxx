@@ -47,15 +47,18 @@ constexpr fsize_t FSIZE_BITS{FSIZE_MAX - 1};
 class Range {
     fsize_t limits_[2];
 
-public:
-
+   public:
     Range(fsize_t from_offset, fsize_t till_offset)
 #ifdef __LITTLE_ENDIAN
-        : limits_{from_offset, till_offset}
+        : limits_ {
+        from_offset, till_offset
+    }
 #elif
-        : limits_{till_offset, from_offset}
+        : limits_ {
+        till_offset, from_offset
+    }
 #endif
-        {}
+    {}
 
     static inline Range FroTo(fsize_t from_offset, fsize_t till_offset) {
         return Range{from_offset, till_offset};
@@ -64,95 +67,91 @@ public:
         return Range{at_offset, at_offset + for_length};
     }
     Range() : Range{0, 0} {}
-    inline fsize_t from() const { return limits_[LEAST_SIGNIFICANT]; }
-    inline fsize_t till() const { return limits_[MOST_SIGNIFICANT]; }
-    inline fsize_t safe_from() const {
+    inline fsize_t begin() const { return limits_[LEAST_SIGNIFICANT]; }
+    inline fsize_t end() const { return limits_[MOST_SIGNIFICANT]; }
+    inline fsize_t safe_begin() const {
         assert(valid());
-        return from() & FSIZE_BITS;
+        return begin() & FSIZE_BITS;
     }
-    inline fsize_t safe_till() const {
+    inline fsize_t safe_end() const {
         assert(valid());
-        return till() & FSIZE_BITS;
+        return end() & FSIZE_BITS;
     }
-    inline fsize_t offset() const { return from(); }
-    inline fsize_t begin() const { return from(); }
-    inline fsize_t end() const { return till(); }
-    inline fsize_t length() const { return till() - from(); }
-    inline fsize_t size() const { return till() - from(); }
-    inline bool empty() const { return till() == from(); }
-    inline bool valid() const { return till() >= from(); }
+    inline fsize_t offset(fsize_t idx = 0) const {
+        assert(begin() + idx < end());
+        return begin() + idx;
+    }
+    inline fsize_t size() const {
+        assert(valid());
+        return end() - begin();
+    }
+    inline fsize_t length() const { return size(); }
+    inline bool empty() const { return begin() == end(); }
+    inline bool valid() const { return end() >= begin(); }
+    inline void consume(fsize_t length) {
+        limits_[LEAST_SIGNIFICANT] += length;
+        assert(valid());
+    }
+    inline void shorten(fsize_t by_length) {
+        limits_[MOST_SIGNIFICANT] -= by_length;
+        assert(valid());
+    }
+    inline void resize(fsize_t new_size) {
+        limits_[MOST_SIGNIFICANT] = limits_[LEAST_SIGNIFICANT] + new_size;
+    }
+    inline void operator++() { consume(1); }
 };
 
 /** A reference to a raw memory slice. Same function as rocksdb::Slice.
  * Can't use an iterator range cause have to reference raw buffers (file
  * reads, mmaps, whatever the db passes to us...).
  * A Slice does NOT own the memory! */
-struct Slice {
+class Slice {
     CharRef buf_;
-    fsize_t size_;
-    //Range range_;
+    Range range_;
 
-    explicit Slice(const Char* buf, fsize_t size) : buf_{buf}, size_{size} {}
-    explicit Slice(const char* buf, size_t size)
-        : buf_{reinterpret_cast<const Char*>(buf)},
-          size_{static_cast<fsize_t>(size)} {
+   public:
+    Slice(CharRef data, Range range) : buf_{data}, range_{range} {}
+
+    Slice(CharRef buf, fsize_t size) : buf_{buf}, range_{0, size} {}
+
+    Slice(const char* buf, size_t size)
+        : Slice{reinterpret_cast<const Char*>(buf),
+                static_cast<fsize_t>(size)} {
         assert(size <= FSIZE_MAX);
     }
+
     Slice(const Char* from, const Char* till)
-        : buf_{from}, size_{static_cast<fsize_t>(till - from)} {
+        : Slice{from, static_cast<fsize_t>(till - from)} {
         assert(till >= from);
         assert(till - from <= FSIZE_MAX);
     }
-    Slice() : buf_{nullptr}, size_{0} {}
+    Slice() : Slice{nullptr, (fsize_t)0} {}
     Slice(const Slice& orig) = default;
     Slice(const String& data)
         : Slice{CharRef(data.data()), static_cast<fsize_t>(data.size())} {}
+
     Slice(const String& str, const Range& range)
-        : buf_{reinterpret_cast<CharRef>(str.data()) + range.offset()},
-          size_{range.length()} {
-        assert(str.size() >= range.offset() + range.length());
-    }
-    Slice(Slice host, Range range)
-        : Slice{host.buf_ + range.offset(), range.length()} {
-        assert(host.size_ >= range.end());
+        : buf_{reinterpret_cast<CharRef>(str.data())}, range_{range} {
+        assert(str.size() >= range.end());
     }
 
-    inline const CharRef begin() const { return buf_; }
-
-    inline const CharRef end() const { return buf_ + size_; }
-
-    inline Char operator[](fsize_t idx) const {
-        assert(idx < size_);
-        return buf_[idx];
-    }
-
-    inline void operator++() {
-        assert(size_ > 0);
-        ++buf_;
-        --size_;
-    }
-
-    inline void advance(fsize_t sz) {
-        assert(sz <= size_);
-        buf_ += sz;
-        size_ -= sz;
-    }
-
-    inline Char operator*() const {
-        assert(size_ > 0);
-        return *buf_;
-    }
-
-    inline const Char* data() const { return buf_; }
-    inline fsize_t size() const { return size_; }
-    inline bool empty() const { return size_ == 0; }
+    inline const CharRef begin() const { return buf_ + range_.begin(); }
+    inline const CharRef end() const { return buf_ + range_.end(); }
+    inline Char at(fsize_t idx) const { return buf_[range_.offset(idx)]; }
+    inline Char operator[](fsize_t idx) const { return at(idx); }
+    inline void operator++() { ++range_; }
+    inline void consume(fsize_t sz) { range_.consume(sz); }
+    inline Char operator*() const { return *begin(); }
+    inline fsize_t size() const { return range_.size(); }
+    inline bool empty() const { return range_.empty(); }
 
     bool operator==(const Slice b) const {
-        return size() == b.size() && memcmp(buf_, b.buf_, size()) == 0;
+        return size() == b.size() && memcmp(begin(), b.begin(), size()) == 0;
     }
 
     bool same(const Slice b) const {
-        return buf_ == b.buf_ && size_ == b.size_;
+        return begin() == b.begin() && end() == b.end();
     }
 
     size_t hash() const {
@@ -160,31 +159,42 @@ struct Slice {
         static constexpr auto SZ_HASH_FN = std::hash<size_t>{};
         static constexpr auto CHAR_HASH_FN = std::hash<char>{};
         size_t ret = 0;
-        fsize_t c = size_ >> SHIFT;
-        auto szbuf = reinterpret_cast<const size_t*>(buf_);
+        fsize_t c = size() >> SHIFT;
+        auto szbuf = reinterpret_cast<const size_t*>(begin());
         for (fsize_t i = 0; i < c; i++) {
             ret ^= SZ_HASH_FN(szbuf[i]);
         }
-        for (fsize_t i = c << SHIFT; i < size_; i++) {
-            ret ^= CHAR_HASH_FN(buf_[i]);
+        for (fsize_t i = c << SHIFT; i < size(); i++) {
+            ret ^= CHAR_HASH_FN(at(i));
         }
         return ret;
     }
 
     inline String str() const {
-        return String{reinterpret_cast<const String::value_type*>(buf_), size_};
+        return String{reinterpret_cast<const String::value_type*>(buf_),
+                      range_.begin(), range_.end()};
     }
 
     inline Range range_of(Slice sub) const {
         assert(sub.begin() >= begin());
         assert(end() >= sub.end());
-        return Range::AtFor(static_cast<fsize_t>(sub.buf_ - buf_), sub.size_);
+        return Range::AtFor(static_cast<fsize_t>(sub.begin() - begin()),
+                            sub.size());
     }
 
     inline Slice slice(Range range) const {
-        assert(size_ >= range.end());
-        return Slice{buf_ + range.offset(), range.length()};
+        assert(size() >= range.end());
+        Range subrange =
+            Range::AtFor(range_.offset(range.begin()), range.size());
+        return Slice{buf_, subrange};
     }
+
+    inline Slice CutOff(Slice b) {
+        assert(buf_ == b.buf_);
+        return Slice{buf_, Range::FroTo(range_.begin(), b.range_.begin())};
+    }
+
+    inline void Resize(fsize_t new_size) { range_.resize(new_size); }
 };
 
 }  // namespace ron

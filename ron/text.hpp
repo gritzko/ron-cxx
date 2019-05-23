@@ -17,7 +17,7 @@ class TextFrame {
     TextFrame() : data_{} {}
     explicit TextFrame(String data) : data_{std::move(data)} {}
     explicit TextFrame(Slice data)
-        : data_{(const char*)data.data(), data.size()} {}
+        : data_{(const char*)data.begin(), data.size()} {}
 
     void operator=(const TextFrame& orig) { data_ = orig.data_; }
 
@@ -125,10 +125,7 @@ class TextFrame {
         Cursor(const Cursor& b) = default;
         const Op& op() const { return op_; }
         Status Next();
-        void Trim(const Cursor& b) {
-            assert(b.at_ <= data_.size());
-            data_.size_ = (fsize_t)b.at_;
-        }
+        void Trim(const Cursor& b) { data_.Resize(b.at_); }
         Status SkipChain() {
             Uuid i;
             Status ok;
@@ -198,7 +195,7 @@ class TextFrame {
 
         inline void Write(char c) { data_.push_back(c); }
         inline void Write(Slice data) {
-            data_.append((String::value_type*)data.buf_, data.size());
+            data_.append((String::value_type*)data.begin(), data.size());
         }
         void WriteInt(int64_t value);
         void WriteFloat(double value);

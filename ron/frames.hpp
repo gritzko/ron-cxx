@@ -108,5 +108,19 @@ Status Reserialize(std::vector<Frame>& into,
     return Status::OK;
 }
 
+template <class Cursor>
+class Amended {
+    const Cursor& cur_;
+    Uuid id_, ref_;
+
+   public:
+    Amended(const Cursor& c, Uuid id, Uuid ref) : cur_{c}, id_{id}, ref_{ref} {}
+    inline Uuid id() const { return id_; }
+    inline Uuid ref() const { return ref_; }
+    inline fsize_t size() const { return cur_.size(); }
+    inline Slice data(Atom a) const { return cur_.data(a); }
+    inline const Atoms& op() const { return cur_.op(); }
+};
+
 }  // namespace ron
 #endif

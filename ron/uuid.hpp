@@ -246,6 +246,7 @@ using Uuids = std::vector<Uuid>;
 
 constexpr int OP_ID_IDX{0};
 constexpr int OP_REF_IDX{1};
+#define A2U(a) static_cast<Uuid>(a)
 
 }  // namespace ron
 

@@ -557,10 +557,12 @@ Status Replica<Store>::Commit::WriteNewEvents(Builder& resp, Cursor& uc) {
         if (ref.origin == 0 && ref.value < MAXSEQ) {
             ref = Uuid{now.value.as_u64 + uc.ref().value.as_u64, now.origin};
         }
-        stamp.AppendAmendedOp(uc, RAW, id, ref);
+        Amended<Cursor> amended{uc, id, ref};
+        stamp.AppendOp(amended);
         uc.Next();
         now.inc();
     }
+    stamp.EndChunk(RAW);
     Cursor stamped{stamp.data()};
     Status ok;
     while (stamped.valid() && ok) {

@@ -20,7 +20,6 @@ class TextFrame {
     void operator=(const TextFrame& orig) { data_ = orig.data_; }
 
     const String& data() const { return data_; }
-
     inline Slice atom_data(Atom a) const {
         return Slice{data_.data(), a.safe_origin().as_range};
     }
@@ -136,6 +135,9 @@ class TextFrame {
             return has(idx, UUID) && uuid(idx) == id;
         }
         const Slice data() const { return data_; }
+        inline Slice data(Atom a) const {
+            return Slice{data_.data(), a.safe_origin().as_range};
+        }
         const Slice at_data() const {
             return data_.slice(Range::FroTo(at_, off_));
         }
@@ -200,7 +202,7 @@ class TextFrame {
         }
         void WriteInt(int64_t value);
         void WriteFloat(double value);
-        void WriteUuid(const Uuid value);
+        void WriteUuid(Uuid value);
         void WriteString(const String& value);
 
         void escape(String& escaped, const Slice& unescaped);
@@ -261,44 +263,77 @@ class TextFrame {
             prev_ = id;
         }
 
-        void WriteValues(const Cursor& cur);
+        Result WriteValues(const Cursor& cur);
 
         template <typename Cursor2>
-        void WriteValues(const Cursor2& cur);
+        Result WriteValues(const Cursor2& cur) {
+            const Atoms& op = cur.op();
+            for (fsize_t i = 2; i < op.size(); i++) {
+                Write(' ');
+                switch (op[i].type()) {
+                    case INT:
+                        WriteInt(op[i].value.as_integer);
+                        break;
+                    case UUID:
+                        if (A2U(op[i]).is_ambiguous()) Write(ATOM_PUNCT[UUID]);
+                        WriteUuid(A2U(op[i]));
+                        break;
+                    case STRING:
+                        Write(ATOM_PUNCT[STRING]);
+                        WriteString(
+                            unescape(cur.data(op[i])));  // FIXME(gritzko)
+                        Write(ATOM_PUNCT[STRING]);
+                        break;
+                    case FLOAT:
+                        WriteFloat(op[i].value.as_float);
+                        break;
+                }
+            }
+            return OK;
+        }
 
        public:
         Builder() : prev_{Uuid::NIL}, unterm_{false}, data_{} {}
 
-        /** A shortcut method, avoids re-serialization of atoms. */
-        void AppendOp(const Cursor& cur) {
+        //  A P I   M E T H O D S
+
+        template <class Cursor2>
+        Result AppendOp(const Cursor2& cur) {
             WriteSpec(cur.id(), cur.ref());
             WriteValues(cur);
+            return OK;
         }
 
-        /** RON coding conversion (parsing, re-serialization) */
-        template <typename Cursor2>
-        void AppendOp(const Cursor& cur);
-
-        // template <typename Cursor2>
-        void AppendAmendedOp(const Cursor& cur, TERM newterm, const Uuid& newid,
-                             const Uuid& newref);
+        /** A shortcut method, avoids re-serialization of atoms. */
+        Result AppendOp(const Cursor& cur) {
+            const Atoms& op = cur.op();
+            WriteSpec(A2U(op[OP_ID_IDX]), A2U(op[OP_REF_IDX]));
+            return WriteValues(cur);
+        }
 
         /**  */
-        inline void EndChunk(TERM term = RAW) {
+        inline Result EndChunk(TERM term = RAW) {
             assert(term != REDUCED);
             unterm_ = true;  // empty chunks are OK
             WriteTerm(term);
+            return OK;
         }
 
-        void Release(String& to) {
+        Result EndFrame() {
+            Write(FRAME_TERM);
+            return OK;
+        }
+
+        Result Release(String& to) {
             if (unterm_) {
                 EndChunk();
             }
             std::swap(data_, to);
             data_.clear();
+            return OK;
         }
 
-        void Release(TextFrame& to) { Release(to.data_); }
+        Result Release(TextFrame& to) { return Release(to.data_); }
 
         TextFrame Release() {
             TextFrame ret;
@@ -309,6 +344,8 @@ class TextFrame {
         const String& data() const { return data_; }
 
         bool empty() const { return data_.empty(); }
+
+        //  E N D   O F   A P I
 
         /** A convenience API method to add an op with any number of atoms. */
         template <typename... Ts>

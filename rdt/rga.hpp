@@ -60,26 +60,25 @@ class RGArrayRDT {
         auto max = std::min_element(inputs.begin(), inputs.end(), id_cmp);
         uint64_t added{0}, b{1};  // TODO refs[MAX_INPUTS]
         PCursor i;
-        for (i = inputs.begin(), b = 1; i != inputs.end(); i++, b <<= 1) {
+        for (i = inputs.begin(), b = 1; i != inputs.end(); i++, b <<= 1U) {
             if (i->id() == max->id()) {
                 m.Add(i);
                 added |= b;
             }
         }
 
-        TERM term = HEADER;
         while (!m.empty()) {
             auto &cur = m.current();
-            output.AppendAmendedOp(cur, term, cur.id(), cur.ref());
-            term = REDUCED;
+            output.AppendOp(cur);
             const Uuid id = cur.id();
             m.Next();
-            for (i = inputs.begin(), b = 1; i != inputs.end(); i++, b <<= 1)
+            for (i = inputs.begin(), b = 1; i != inputs.end(); i++, b <<= 1U)
                 if ((b & added) == 0 && i->ref() == id) {
                     m.Add(i);
                     added |= b;
                 }
         }
+        output.EndChunk(RAW);
 
         return ++added == 1 << inputs.size()
                    ? Status::OK

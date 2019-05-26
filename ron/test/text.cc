@@ -1,6 +1,8 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include "../ron.hpp"
+#include "../uuid.hpp"
+
 #define DEBUG 1
 
 using namespace ron;
@@ -14,12 +16,12 @@ string pattern (const Frame& frame) {
     string ret;
     auto c = frame.cursor();
     do {
-        if (c.op().size()) ret.push_back('@');
-        if (c.op().size()>1) ret.push_back(':');
-        for(int i=2; i<c.op().size(); i++) {
-            ret.push_back(ATOM_PUNCT[c.op().atom(i).type()]);
+        if (c.size()) ret.push_back('@');
+        if (c.size()>1) ret.push_back(':');
+        for(int i=2; i<c.size(); i++) {
+            ret.push_back(ATOM_PUNCT[c.atom(i).type()]);
         }
-        ret.push_back(TERM_PUNCT[c.op().term()]);
+        ret.push_back(TERM_PUNCT[c.term()]);
     } while (c.Next());
     return ret;
 }
@@ -63,19 +65,23 @@ TEST(TextFrame, optional_chars) {
     Frame opt{TANGLED};
     Cursor copt = opt.cursor();
     ASSERT_TRUE(copt.valid());
-    ASSERT_TRUE(copt.op().size()==4);
-    ASSERT_TRUE(copt.op().atom(2).type()==ATOM::INT);
-    ASSERT_TRUE(copt.op().atom(3).type()==ATOM::UUID);
-    ASSERT_TRUE(copt.op().uuid(3)=="56K");
-    ASSERT_TRUE(!copt.op().id().zero());
-    ASSERT_TRUE(copt.op().ref().zero());
+    ASSERT_TRUE(copt.size()==4);
+    ASSERT_EQ(copt.atom(0), Uuid{"1A"});
+    ASSERT_EQ(copt.id(), Uuid{"1A"});
+    ASSERT_TRUE(copt.atom(2).type()==ATOM::INT);
+    ASSERT_EQ(copt.atom(2).value.as_integer, 234);
+    ASSERT_TRUE(copt.atom(3).type()==ATOM::UUID);
+    ASSERT_TRUE(copt.uuid(3)=="56K");
+    ASSERT_TRUE(!copt.id().zero());
+    ASSERT_TRUE(copt.ref().zero());
 
     Status ok = copt.Next();
     ASSERT_TRUE(ok); // start state: space :)
-    ASSERT_TRUE(copt.op().id()=="1A00000001");
-    ASSERT_TRUE(copt.op().ref()=="1A");
+    ASSERT_TRUE(copt.id()=="1A00000001");
+    ASSERT_TRUE(copt.ref()=="1A");
     ASSERT_TRUE(copt.has(2, INT));
-    //ASSERT_TRUE(copt.integer(2)==9223372036854775807L);
+    
+    ASSERT_TRUE(copt.integer(2)==9223372036854775807L);
     ASSERT_EQ(copt.string(3), ABC);
     ASSERT_EQ(copt.integer(4), 3);
 
@@ -84,6 +90,30 @@ TEST(TextFrame, optional_chars) {
 
     ASSERT_TRUE(!copt.Next());
     ASSERT_TRUE(!copt.valid());
+
+    Cursor unparsed{TANGLED, 0};
+    ASSERT_TRUE(unparsed.Next());
+    ASSERT_EQ(unparsed.size(), 4);
+    ASSERT_EQ(unparsed.atom(2).value.as_integer, 0);
+    ASSERT_TRUE(OK==unparsed.ParseAtoms());
+    ASSERT_EQ(unparsed.atom(2).value.as_integer, 234);
+    unparsed.Next();
+    ASSERT_EQ(unparsed.atom(3).value.cp, 0);
+
+    Atom abc_atom = unparsed.atom(3);
+    ASSERT_EQ(abc_atom.value.cp, 0);
+    ASSERT_EQ(abc_atom.value.as_size[MOST_SIGNIFICANT], 3);
+    opt.ParseCodepoint(abc_atom);
+    ASSERT_EQ(abc_atom.value.cp, ABC[0]);
+    ASSERT_EQ(abc_atom.value.cp_size, 2);
+    opt.ParseCodepoint(abc_atom);
+    ASSERT_EQ(abc_atom.value.cp, ABC[1]);
+    ASSERT_EQ(abc_atom.value.cp_size, 1);
+    opt.ParseCodepoint(abc_atom);
+    ASSERT_EQ(abc_atom.value.cp, ABC[2]);
+    ASSERT_EQ(abc_atom.value.cp_size, 0);
+
+    // SAFE:  (c&UPPER3) ^ (c&UPPER1)  &&  c!='\\'
 }
 
 TEST(TextFrame, signs ) {
@@ -148,11 +178,11 @@ TEST(TextFrame, defaults ) {
     String CORRECT{"@12345+test :lww;\n 'key' 'value';\n"};
     ASSERT_TRUE(nice.data()==CORRECT);
     Cursor nc = nice.cursor();
-    ASSERT_TRUE(nc.op().id()==Uuid{"12345+test"});
-    ASSERT_TRUE(nc.op().ref()==Uuid{"lww"});
+    ASSERT_TRUE(nc.id()==Uuid{"12345+test"});
+    ASSERT_TRUE(nc.ref()==Uuid{"lww"});
     nc.Next();
-    ASSERT_TRUE(nc.op().id()==Uuid{"1234500001+test"});
-    ASSERT_TRUE(nc.op().ref()==Uuid{"12345+test"});
+    ASSERT_TRUE(nc.id()==Uuid{"1234500001+test"});
+    ASSERT_TRUE(nc.ref()==Uuid{"12345+test"});
 }
 
 TEST(TextFrame, span_spread ) {
@@ -200,6 +230,50 @@ TEST(TextFrame, END) {
     ASSERT_EQ(c.Next(), Status::ENDOFFRAME);
 }
 
+TEST(TextFrame, Spans) {
+    String str{"@1lNBfg+0 :1lNBf+0 rm(3);"};
+    String frame{str};
+    Cursor c{frame};
+    Builder b;
+    ASSERT_TRUE(c.valid());
+    ASSERT_EQ(c.type(2), ATOM::UUID);
+    ASSERT_EQ(c.uuid(2), Uuid{"rm"});
+    b.AppendOp(c);
+    ASSERT_TRUE(c.Next());
+    ASSERT_EQ(c.type(2), ATOM::UUID);
+    ASSERT_EQ(c.uuid(2), Uuid{"rm"});
+    b.AppendOp(c);
+    ASSERT_TRUE(c.Next());
+    ASSERT_EQ(c.type(2), ATOM::UUID);
+    ASSERT_EQ(c.uuid(2), Uuid{"rm"});
+    b.AppendOp(c);
+    ASSERT_FALSE(c.Next());
+
+    String str2;
+    b.Release(str2);
+    ASSERT_EQ(str, str2);
+}
+
+TEST(TextFrame, Spreads) {
+    String str{"@1lNBvg+0 :1lNBf+0 ('aㅂц' 3);\n"};
+    String frame{str};
+    Builder b;
+    Cursor c{frame};
+    ASSERT_TRUE(c.valid());
+    ASSERT_EQ(c.string(2), "a");
+    b.AppendOp(c);
+    ASSERT_TRUE(c.Next());
+    ASSERT_EQ(c.string(2), "ㅂ");
+    b.AppendOp(c);
+    ASSERT_TRUE(c.Next());
+    ASSERT_EQ(c.string(2), "ц");
+    b.AppendOp(c);
+    ASSERT_FALSE(c.Next());
+
+    String str2;
+    b.Release(str2);
+    ASSERT_EQ(str, str2);
+}
 
 int main (int argn, char** args) {
     ::testing::InitGoogleTest(&argn, args);

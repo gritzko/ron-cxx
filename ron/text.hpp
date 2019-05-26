@@ -5,6 +5,7 @@
 #include "op.hpp"
 #include "slice.hpp"
 #include "status.hpp"
+#include "uuid.hpp"
 
 namespace ron {
 
@@ -12,8 +13,6 @@ class TextFrame {
     String data_;
 
    public:
-    typedef std::vector<TextFrame> Batch;
-
     TextFrame() : data_{} {}
     explicit TextFrame(String data) : data_{std::move(data)} {}
     explicit TextFrame(Slice data)
@@ -23,63 +22,55 @@ class TextFrame {
 
     const String& data() const { return data_; }
 
-    /** Primary value parser: STRINGs.
-     *  Puts the codepoint to atom.value().AsCodepoint();
-     *  advances the range start at atom.origin().AsSize(LEAST_SIGNIFICANT) */
-    static inline bool ParseCodepoint(Atom& atom, Slice data) {
-        return ParseEscapedUtf8Codepoint(
-            atom.value.as_codepoint[LEAST_SIGNIFICANT],
-            data.slice(atom.origin.range()));
+    inline Slice atom_data(Atom a) const {
+        return Slice{data_.data(), a.safe_origin().as_range};
+    }
+
+    //  A T O M  P A R S E R S  (part of the interface)
+
+    /** Parses a codepoint (escaped UTF8), saves to atom.value.cp,
+     *  consumes the origin range, decreases atom.value.cp_size.
+     *  (inline shortcut) */
+    inline Result ParseCodepoint(Atom& atom) const {
+        return ParseEscapedUtf8Codepoint(atom);
+    }
+
+    /** Parses a codepoint (escaped UTF8), saves to atom.value.cp,
+     *  consumes the origin range, decreases atom.value.cp_size
+     *  (full parser). */
+    Result ParseEscapedUtf8Codepoint(Atom& atom) const {
+        return NOT_IMPLEMENTED;
     }
 
     /** Primary value parser: UUIDs */
-    static inline Uuid ParseUuid(Slice data) { return Uuid{data}; }
+    inline Result ParseUuid(Atom& atom) { return OK; }
 
     /** Primary value parser: FLOATs;
-     *  puts the value to atom.value().AsFloat() */
-    static Float ParseFloat(Slice data);
+     *  puts the value to atom.value().as_float */
+    Result ParseFloat(Atom& atom);
 
     /** Primary value parser: INTs */
-    static Integer ParseInteger(Slice range);
+    Result ParseInteger(Atom& atom);
 
-    static String ParseToUtf8(Atom& atom, Slice data) {
-        String ret;
-        /*Codepoint cp;
-        while (!atom.origin().range_.empty() && ParseEscapedUtf8Codepoint(cp,
-        atom, data)) { push_back_utf8(ret, cp);
-        }*/
-        return ret;
-        // empty:  from==(till&FSIZE_BITS)   ++from   =>  & is optimized
+    Result ParseCodepoints(Codepoints& ret, Atom cp_string_atom) {
+        Result code;
+        do {
+            ret.push_back(cp_string_atom.value.cp);
+        } while (OK == (code = ParseCodepoint(cp_string_atom)));
+        return code;
     }
 
-    static Codepoints ParseToCodepoints(Atom& atom, Slice data) {
-        Codepoints ret;
-        Codepoint& cp = atom.value.as_codepoint[LEAST_SIGNIFICANT];
-        while (ParseCodepoint(atom, data)) {
-            ret.push_back(cp);
-        }
-        return ret;
-    }
-
-    /** Parses a codepoint (escaped UTF8), saves to cp, consumes the range. */
-    static inline Codepoint ParseEscapedUtf8Codepoint(Codepoint& cp,
-                                                      Slice data) {
-        // shortcut ASCII
-        // dive for complex things
-        return false;
-    }
-
-    bool ParseAtom(Atom& a) {
-        /*Slice range{data_, a.origin().range_.safe()};
+    inline Result ParseAtom(Atom& a) {
         switch (a.type()) {
             case INT:
-                a.value().as_integer = ParseInteger(range);
-                return true;
+                return ParseInteger(a);
             case FLOAT:
-                a.value().as_float = ParseFloat(range);
-                return true;
-        }*/
-        return true;
+                return ParseFloat(a);
+            case STRING:
+                return ParseCodepoint(a);
+            case UUID:
+                return ParseUuid(a);
+        }
     }
 
     //    KILLL THIS!!!
@@ -167,11 +158,11 @@ class TextFrame {
         }
         int64_t integer(fsize_t idx) const {
             assert(type(idx) == INT);
-            return int64_t(op_.atom(idx).value);
+            return op_.atom(idx).value.as_integer;
         }
         double number(fsize_t idx) const {
             assert(type(idx) == FLOAT);
-            return double(op_.atom(idx).value);
+            return op_.atom(idx).value.as_float;
         }
         Uuid uuid(fsize_t idx) const {
             assert(type(idx) == UUID);
@@ -185,11 +176,13 @@ class TextFrame {
         static inline bool word_too_big(const Slice data) {
             return data.size() > Word::MAX_BASE64_SIZE;
         }
+        Result ParseAtoms() { return OK; }
     };
 
     //  S E R I A L I Z A T I O N
 
     class Builder {
+        // Atoms op_;
         Uuid prev_;
         bool unterm_;
         /** Frame data (builder owns the memory) */

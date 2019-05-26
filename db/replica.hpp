@@ -33,7 +33,6 @@ class Replica {
     using Frame = typename Store::Frame;
     using Record = std::pair<Key, Frame>;
     using Records = std::vector<Record>;
-    using Batch = typename Frame::Batch;
     using Builder = typename Frame::Builder;
     using Cursor = typename Frame::Cursor;
     using Cursors = std::vector<Cursor>;

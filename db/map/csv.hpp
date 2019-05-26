@@ -32,7 +32,7 @@ Status CSVMapper<Commit>::Read(Builder& response, Cursor& query, Commit& commit)
             }
             if (x.type() == INT) {
                 // FIXME cant use this, depends on locale and other shit
-                csv.append(std::to_string((int64_t)x.value));
+                csv.append(std::to_string(x.value.as_integer));
             } else {
                 csv.append("NOT_IMPLEMENTED");
             }

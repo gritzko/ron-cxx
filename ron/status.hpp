@@ -74,6 +74,11 @@ class Status {
         }                \
     }
 
+/** Status(above) is a bit too heavy; use Result for inner loops */
+using Result = Word;
+const Result OK{0UL};
+const Result NOT_IMPLEMENTED{"NOTIMPLTED"};
+
 }  // namespace ron
 
 #endif

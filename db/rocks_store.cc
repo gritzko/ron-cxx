@@ -46,7 +46,6 @@ class RDTMerge : public rocksdb::MergeOperator {
     MasterRDT<Frame> reducer_;
 
    public:
-    using Batch = typename Frame::Batch;
     using Builder = typename Frame::Builder;
     using Cursor = typename Frame::Cursor;
     using Cursors = typename Frame::Cursors;

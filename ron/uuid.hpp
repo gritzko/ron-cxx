@@ -21,6 +21,10 @@ union Word {
     Codepoint as_codepoint[2];
     Range as_range;
     fsize_t as_size[2];
+    struct {
+        Codepoint cp;
+        fsize_t cp_size;
+    };
 
     Word(uint64_t value = 0) noexcept : as_u64{value} {}
 #ifdef __LITTLE_ENDIAN
@@ -29,7 +33,8 @@ union Word {
     Word(uint32_t higher, uint32_t lower) noexcept : _32{higher, lower} {}
 #endif
     /** A trusty parsing constructor; expects a valid Base64x64 value. */
-    explicit Word(uint8_t flags, const Slice& data) : as_u64{flags & 0xfU} {
+    explicit Word(uint8_t flags, const Slice& data) noexcept
+        : as_u64{flags & 0xfU} {
         assert(data.size() <= MAX_BASE64_SIZE);
         int i = 0;
         while (i < data.size()) {
@@ -45,7 +50,7 @@ union Word {
     /** A trusty parsing constructor. */
     explicit Word(const String& word) : Word{0, Slice{word}} {}
     /** A trusty parsing constructor. */
-    explicit Word(const char* word)
+    explicit Word(const char* word) noexcept
         : Word{0, Slice{word, (fsize_t)strlen(word)}} {}
 
     explicit Word(Range range) noexcept : as_range{range} {}
@@ -122,9 +127,7 @@ union Word {
     }
 
     explicit Word(double val) : as_u64{*(uint64_t*)&val} {}
-    inline explicit operator double() const { return as_float; }
     explicit Word(int64_t val) : as_u64{*(uint64_t*)&val} {}
-    inline explicit operator int64_t() const { return as_integer; }
 
     case_t base64_case() const;
     bool is_all_digits() const;
@@ -146,6 +149,13 @@ struct Atom {
     Atom(ATOM type, Range range)
         : Atom{ZERO, Word{range} | (uint64_t(type) << 62U)} {}
     inline ATOM type() const { return (ATOM)(origin.as_u64 >> 62U); }
+    inline Word safe_origin() const {
+        constexpr uint64_t mask = (uint64_t(FSIZE_BITS) << 32) | FSIZE_BITS;
+        return Word{origin.as_u64 & mask};
+    }
+    inline bool operator==(const Atom& b) const {
+        return value == b.value && origin == b.origin;
+    }
 };
 
 struct Uuid : public Atom {

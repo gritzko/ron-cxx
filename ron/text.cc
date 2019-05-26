@@ -4,7 +4,8 @@ using namespace std;
 
 namespace ron {
 
-Integer TextFrame::ParseInteger(Slice range) {
+Result TextFrame::ParseInteger(Atom& a) {
+    Slice range = atom_data(a);
     CharRef i = range.begin();
     bool neg = false;
     if (*i == '-') {
@@ -13,22 +14,23 @@ Integer TextFrame::ParseInteger(Slice range) {
     } else if (*i == '+') {
         i++;
     }
-    int64_t ret = 0;
+    int64_t& ret = a.value.as_integer;
     while (i < range.end()) {
         ret *= 10;
         ret += *i - '0';
         i++;
     }
     if (neg) ret = -ret;
-    return ret;
+    return OK;
 }
 
-Float TextFrame::ParseFloat(Slice range) {
+Result TextFrame::ParseFloat(Atom& a) {
+    Slice range = atom_data(a);
     char fs[32];  // FIXME size limits
     memcpy(fs, range.begin(), range.size());
     fs[range.size()] = 0;
-    double ret = strtod(fs, nullptr);
-    return ret;
+    a.value.as_float = strtod(fs, nullptr);
+    return OK;
 }
 
 String TextFrame::unescape(const Slice& data) {

@@ -13,13 +13,16 @@ Status TxtMapper<Commit>::Read(Builder& response, Cursor& query, Commit& branch)
     IFOK( branch.Read(Key{id, RGA_RDT_FORM}, state) );
     vector<bool> tombs;
     ScanRGA<Frame>(tombs, state);
+    Codepoints weave;
     // now, walk em both
     String text;
     Cursor c = state.cursor();
     fsize_t pos = 0;
     while (c.valid()) {
         if (!tombs[pos]) {
-            text.append(c.string(2));
+            // FIXME may send directly to the Builder?
+            //push_utf8(text, c.atom(2).cp); // NO NO NO NO NO
+            // check STRING, cp_size()==1, add as a Slice !!!!
         }
         c.Next();
         pos++;

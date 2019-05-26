@@ -140,12 +140,18 @@ enum half_t { VALUE = 0, ORIGIN = 1 };
 
 struct Atom {
     Word origin, value;
+
     Atom(Word val, Word orig) : value{val}, origin{orig} {}
     Atom() : Atom{ZERO, ZERO} {}
     Atom(uint64_t value, uint64_t origin) : Atom{Word{value}, Word{origin}} {}
-    static inline Atom String(Codepoint cp, Range range, fsize_t offset) {
-        return Atom{Word{offset, cp}, Word{range} | STRING_FLAGS};
+
+    static inline Atom String(Codepoint cp, Range range, fsize_t cp_size) {
+        return Atom{Word{cp_size, cp}, Word{range} | STRING_FLAGS};
     }
+    static inline Atom Integer(Integer i, Range range) {
+        return Atom{Word{i}, Word{range} | INT_FLAGS};
+    }
+
     Atom(ATOM type, Range range)
         : Atom{ZERO, Word{range} | (uint64_t(type) << 62U)} {}
     inline ATOM type() const { return (ATOM)(origin.as_u64 >> 62U); }

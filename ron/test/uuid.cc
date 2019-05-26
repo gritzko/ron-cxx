@@ -7,6 +7,30 @@
 using namespace ron;
 using namespace std;
 
+TEST(Word, BitLayout) {
+
+    Word w;
+
+    ASSERT_EQ(sizeof(Word), 8);
+
+    w.cp = 'a';
+    ASSERT_EQ(w.cp, 'a');
+    ASSERT_EQ(w.as_u32[LEAST_SIGNIFICANT], (int)'a');
+
+}
+
+TEST(Atom, BitLayout) {
+
+    Atom str = Atom::String('a', Range{0,1}, 0);
+    ASSERT_EQ(str.value.cp, 'a');
+
+    Atom i = Atom::Integer(-1, Range(0,1));
+    ASSERT_EQ(i.value.as_integer, -1);
+    ASSERT_EQ(i.safe_origin().as_range, Range(0,1));
+
+    ASSERT_NE(Range(0,1), Range(0,2));
+
+}
 
 TEST(Word, Case) {
     ASSERT_TRUE(Uuid::NIL.value.base64_case()==NUMERIC);

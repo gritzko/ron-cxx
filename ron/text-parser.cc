@@ -17,7 +17,7 @@ static const int RON_en_main = 74;
 #line 8 "ragel/text-parser.rl"
 
 Status TextFrame::Cursor::Next() {
-    Atoms& atoms = op_.atoms_;
+    Atoms& atoms = op_;
 
     int line = line_;
 
@@ -63,8 +63,8 @@ Status TextFrame::Cursor::Next() {
     char variety{0}, version{0};
 
     atoms.clear();
-    op_.AddAtom(prev_id_.inc());
-    op_.AddAtom(prev_id_);
+    op_.push_back(prev_id_.inc());
+    op_.push_back(prev_id_);
 
     // std::cerr<<"starting with "<<cs<<" ["<<p<<"]\n";
 
@@ -105,10 +105,10 @@ Status TextFrame::Cursor::Next() {
                     goto _out;
                 }
             }
-            // op_.AddAtom(Atom::Integer(parse_int(the_int),
+            // op_.push_back(Atom::Integer(parse_int(the_int),
             // body.range_of(the_int)));
             // TODO atoms.emplace();
-            op_.AddAtom(Atom{INT, body.range_of(the_int)});
+            op_.push_back(Atom{INT, body.range_of(the_int)});
             uuidb = nullptr;  // sabotage uuid
         }
 #line 49 "ragel/./text-grammar.rl"
@@ -134,9 +134,9 @@ Status TextFrame::Cursor::Next() {
                     goto _out;
                 }
             }
-            // op_.AddAtom(Atom::Float(parse_float(the_float),
+            // op_.push_back(Atom::Float(parse_float(the_float),
             // body.range_of(the_float)));
-            op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+            op_.push_back(Atom{STRING, body.range_of(the_float)});
         }
 #line 49 "ragel/./text-grammar.rl"
             {
@@ -166,7 +166,7 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Uuid{variety, value, version, origin});
+                op_.push_back(Uuid{variety, value, version, origin});
             }
 #line 49 "ragel/./text-grammar.rl"
             {
@@ -196,7 +196,7 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                op_.AddAtom(Uuid{variety, value, version, origin});
+                op_.push_back(Uuid{variety, value, version, origin});
             }
 #line 49 "ragel/./text-grammar.rl"
             {
@@ -221,10 +221,10 @@ Status TextFrame::Cursor::Next() {
                     goto _out;
                 }
             }
-            // op_.AddAtom(Atom::Integer(parse_int(the_int),
+            // op_.push_back(Atom::Integer(parse_int(the_int),
             // body.range_of(the_int)));
             // TODO atoms.emplace();
-            op_.AddAtom(Atom{INT, body.range_of(the_int)});
+            op_.push_back(Atom{INT, body.range_of(the_int)});
             uuidb = nullptr;  // sabotage uuid
         }
 #line 14 "ragel/././uuid-grammar.rl"
@@ -242,7 +242,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
             }
 #line 49 "ragel/./text-grammar.rl"
@@ -274,7 +274,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
             }
 #line 49 "ragel/./text-grammar.rl"
@@ -306,7 +306,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
             }
 #line 49 "ragel/./text-grammar.rl"
@@ -332,9 +332,9 @@ Status TextFrame::Cursor::Next() {
                     goto _out;
                 }
             }
-            // op_.AddAtom(Atom::Float(parse_float(the_float),
+            // op_.push_back(Atom::Float(parse_float(the_float),
             // body.range_of(the_float)));
-            op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+            op_.push_back(Atom{STRING, body.range_of(the_float)});
         }
 #line 17 "ragel/././uuid-grammar.rl"
             { origin = Slice{wordb, p}; }
@@ -351,7 +351,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
             }
 #line 49 "ragel/./text-grammar.rl"
@@ -377,9 +377,9 @@ Status TextFrame::Cursor::Next() {
                     goto _out;
                 }
             }
-            // op_.AddAtom(Atom::Float(parse_float(the_float),
+            // op_.push_back(Atom::Float(parse_float(the_float),
             // body.range_of(the_float)));
-            op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+            op_.push_back(Atom{STRING, body.range_of(the_float)});
         }
 #line 14 "ragel/././uuid-grammar.rl"
             { value = Slice{wordb, p}; }
@@ -396,7 +396,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
             }
 #line 49 "ragel/./text-grammar.rl"
@@ -418,7 +418,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
             {}
 #line 9 "ragel/./text-grammar.rl"
-            { op_.SetId(Uuid{variety, value, version, origin}); }
+            { op_[0] = Uuid{variety, value, version, origin}; }
 #line 49 "ragel/./text-grammar.rl"
             {
                 term = (*p);
@@ -438,7 +438,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
             {}
 #line 12 "ragel/./text-grammar.rl"
-            { op_.SetRef(Uuid{variety, value, version, origin}); }
+            { op_[1] = Uuid{variety, value, version, origin}; }
 #line 49 "ragel/./text-grammar.rl"
             {
                 term = (*p);
@@ -458,7 +458,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
             {}
 #line 12 "ragel/./text-grammar.rl"
-            { op_.SetRef(Uuid{variety, value, version, origin}); }
+            { op_[1] = Uuid{variety, value, version, origin}; }
 #line 49 "ragel/./text-grammar.rl"
             {
                 term = (*p);
@@ -478,7 +478,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
             {}
 #line 9 "ragel/./text-grammar.rl"
-            { op_.SetId(Uuid{variety, value, version, origin}); }
+            { op_[0] = Uuid{variety, value, version, origin}; }
 #line 49 "ragel/./text-grammar.rl"
             {
                 term = (*p);
@@ -556,10 +556,10 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Integer(parse_int(the_int),
+                // op_.push_back(Atom::Integer(parse_int(the_int),
                 // body.range_of(the_int)));
                 // TODO atoms.emplace();
-                op_.AddAtom(Atom{INT, body.range_of(the_int)});
+                op_.push_back(Atom{INT, body.range_of(the_int)});
                 uuidb = nullptr;  // sabotage uuid
             }
                 goto st1;
@@ -575,9 +575,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
                 goto st1;
             tr86 :
@@ -597,7 +597,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
                 goto st1;
             tr96 :
@@ -617,7 +617,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
                 goto st1;
             tr112 :
@@ -632,10 +632,10 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Integer(parse_int(the_int),
+                // op_.push_back(Atom::Integer(parse_int(the_int),
                 // body.range_of(the_int)));
                 // TODO atoms.emplace();
-                op_.AddAtom(Atom{INT, body.range_of(the_int)});
+                op_.push_back(Atom{INT, body.range_of(the_int)});
                 uuidb = nullptr;  // sabotage uuid
             }
 #line 14 "ragel/././uuid-grammar.rl"
@@ -653,7 +653,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st1;
@@ -675,7 +675,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st1;
@@ -697,7 +697,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st1;
@@ -713,9 +713,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
 #line 17 "ragel/././uuid-grammar.rl"
                 { origin = Slice{wordb, p}; }
@@ -732,7 +732,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st1;
@@ -748,9 +748,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
 #line 14 "ragel/././uuid-grammar.rl"
                 { value = Slice{wordb, p}; }
@@ -767,7 +767,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st1;
@@ -779,7 +779,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 9 "ragel/./text-grammar.rl"
-                { op_.SetId(Uuid{variety, value, version, origin}); }
+                { op_[0] = Uuid{variety, value, version, origin}; }
                 goto st1;
             tr192 :
 #line 14 "ragel/././uuid-grammar.rl"
@@ -789,7 +789,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 12 "ragel/./text-grammar.rl"
-                { op_.SetRef(Uuid{variety, value, version, origin}); }
+                { op_[1] = Uuid{variety, value, version, origin}; }
                 goto st1;
             tr202 :
 #line 17 "ragel/././uuid-grammar.rl"
@@ -799,7 +799,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 12 "ragel/./text-grammar.rl"
-                { op_.SetRef(Uuid{variety, value, version, origin}); }
+                { op_[1] = Uuid{variety, value, version, origin}; }
                 goto st1;
             tr212 :
 #line 17 "ragel/././uuid-grammar.rl"
@@ -809,7 +809,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 9 "ragel/./text-grammar.rl"
-                { op_.SetId(Uuid{variety, value, version, origin}); }
+                { op_[0] = Uuid{variety, value, version, origin}; }
                 goto st1;
             st1:
                 if (++p == pe) goto _test_eof1;
@@ -907,16 +907,16 @@ Status TextFrame::Cursor::Next() {
 #line 25 "ragel/./text-grammar.rl"
                 {
                     Slice the_str{strb, p};
-                    // op_.AddAtom(Atom::String(body.range_of(the_str)));
-                    op_.AddAtom(Atom{STRING, body.range_of(the_str)});
+                    // op_.push_back(Atom::String(body.range_of(the_str)));
+                    op_.push_back(Atom{STRING, body.range_of(the_str)});
                 }
                 goto st3;
             tr8 :
 #line 25 "ragel/./text-grammar.rl"
             {
                 Slice the_str{strb, p};
-                // op_.AddAtom(Atom::String(body.range_of(the_str)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_str)});
+                // op_.push_back(Atom::String(body.range_of(the_str)));
+                op_.push_back(Atom{STRING, body.range_of(the_str)});
             }
                 goto st3;
             tr163 :
@@ -927,8 +927,8 @@ Status TextFrame::Cursor::Next() {
 #line 25 "ragel/./text-grammar.rl"
                 {
                     Slice the_str{strb, p};
-                    // op_.AddAtom(Atom::String(body.range_of(the_str)));
-                    op_.AddAtom(Atom{STRING, body.range_of(the_str)});
+                    // op_.push_back(Atom::String(body.range_of(the_str)));
+                    op_.push_back(Atom{STRING, body.range_of(the_str)});
                 }
                 goto st3;
             st3:
@@ -982,10 +982,10 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Integer(parse_int(the_int),
+                // op_.push_back(Atom::Integer(parse_int(the_int),
                 // body.range_of(the_int)));
                 // TODO atoms.emplace();
-                op_.AddAtom(Atom{INT, body.range_of(the_int)});
+                op_.push_back(Atom{INT, body.range_of(the_int)});
                 uuidb = nullptr;  // sabotage uuid
             }
 #line 54 "ragel/./text-grammar.rl"
@@ -1008,9 +1008,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
 #line 54 "ragel/./text-grammar.rl"
                 {
@@ -1037,7 +1037,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
 #line 54 "ragel/./text-grammar.rl"
                 {
@@ -1064,7 +1064,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
 #line 54 "ragel/./text-grammar.rl"
                 {
@@ -1086,10 +1086,10 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Integer(parse_int(the_int),
+                // op_.push_back(Atom::Integer(parse_int(the_int),
                 // body.range_of(the_int)));
                 // TODO atoms.emplace();
-                op_.AddAtom(Atom{INT, body.range_of(the_int)});
+                op_.push_back(Atom{INT, body.range_of(the_int)});
                 uuidb = nullptr;  // sabotage uuid
             }
 #line 14 "ragel/././uuid-grammar.rl"
@@ -1107,7 +1107,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
 #line 54 "ragel/./text-grammar.rl"
@@ -1136,7 +1136,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
 #line 54 "ragel/./text-grammar.rl"
@@ -1165,7 +1165,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
 #line 54 "ragel/./text-grammar.rl"
@@ -1188,9 +1188,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
 #line 17 "ragel/././uuid-grammar.rl"
                 { origin = Slice{wordb, p}; }
@@ -1207,7 +1207,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
 #line 54 "ragel/./text-grammar.rl"
@@ -1230,9 +1230,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
 #line 14 "ragel/././uuid-grammar.rl"
                 { value = Slice{wordb, p}; }
@@ -1249,7 +1249,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
 #line 54 "ragel/./text-grammar.rl"
@@ -1268,7 +1268,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 12 "ragel/./text-grammar.rl"
-                { op_.SetRef(Uuid{variety, value, version, origin}); }
+                { op_[1] = Uuid{variety, value, version, origin}; }
 #line 54 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
@@ -1285,7 +1285,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 12 "ragel/./text-grammar.rl"
-                { op_.SetRef(Uuid{variety, value, version, origin}); }
+                { op_[1] = Uuid{variety, value, version, origin}; }
 #line 54 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
@@ -1362,10 +1362,10 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Integer(parse_int(the_int),
+                // op_.push_back(Atom::Integer(parse_int(the_int),
                 // body.range_of(the_int)));
                 // TODO atoms.emplace();
-                op_.AddAtom(Atom{INT, body.range_of(the_int)});
+                op_.push_back(Atom{INT, body.range_of(the_int)});
                 uuidb = nullptr;  // sabotage uuid
             }
                 goto st5;
@@ -1381,9 +1381,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
                 goto st5;
             tr87 :
@@ -1403,7 +1403,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
                 goto st5;
             tr97 :
@@ -1423,7 +1423,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
                 goto st5;
             tr113 :
@@ -1438,10 +1438,10 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Integer(parse_int(the_int),
+                // op_.push_back(Atom::Integer(parse_int(the_int),
                 // body.range_of(the_int)));
                 // TODO atoms.emplace();
-                op_.AddAtom(Atom{INT, body.range_of(the_int)});
+                op_.push_back(Atom{INT, body.range_of(the_int)});
                 uuidb = nullptr;  // sabotage uuid
             }
 #line 14 "ragel/././uuid-grammar.rl"
@@ -1459,7 +1459,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st5;
@@ -1481,7 +1481,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st5;
@@ -1503,7 +1503,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st5;
@@ -1519,9 +1519,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
 #line 17 "ragel/././uuid-grammar.rl"
                 { origin = Slice{wordb, p}; }
@@ -1538,7 +1538,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st5;
@@ -1554,9 +1554,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
 #line 14 "ragel/././uuid-grammar.rl"
                 { value = Slice{wordb, p}; }
@@ -1573,7 +1573,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st5;
@@ -1585,7 +1585,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 9 "ragel/./text-grammar.rl"
-                { op_.SetId(Uuid{variety, value, version, origin}); }
+                { op_[0] = Uuid{variety, value, version, origin}; }
                 goto st5;
             tr193 :
 #line 14 "ragel/././uuid-grammar.rl"
@@ -1595,7 +1595,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 12 "ragel/./text-grammar.rl"
-                { op_.SetRef(Uuid{variety, value, version, origin}); }
+                { op_[1] = Uuid{variety, value, version, origin}; }
                 goto st5;
             tr203 :
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1605,7 +1605,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 12 "ragel/./text-grammar.rl"
-                { op_.SetRef(Uuid{variety, value, version, origin}); }
+                { op_[1] = Uuid{variety, value, version, origin}; }
                 goto st5;
             tr213 :
 #line 17 "ragel/././uuid-grammar.rl"
@@ -1615,7 +1615,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 9 "ragel/./text-grammar.rl"
-                { op_.SetId(Uuid{variety, value, version, origin}); }
+                { op_[0] = Uuid{variety, value, version, origin}; }
                 goto st5;
             st5:
                 if (++p == pe) goto _test_eof5;
@@ -1729,16 +1729,16 @@ Status TextFrame::Cursor::Next() {
 #line 25 "ragel/./text-grammar.rl"
                 {
                     Slice the_str{strb, p};
-                    // op_.AddAtom(Atom::String(body.range_of(the_str)));
-                    op_.AddAtom(Atom{STRING, body.range_of(the_str)});
+                    // op_.push_back(Atom::String(body.range_of(the_str)));
+                    op_.push_back(Atom{STRING, body.range_of(the_str)});
                 }
                 goto st8;
             tr34 :
 #line 25 "ragel/./text-grammar.rl"
             {
                 Slice the_str{strb, p};
-                // op_.AddAtom(Atom::String(body.range_of(the_str)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_str)});
+                // op_.push_back(Atom::String(body.range_of(the_str)));
+                op_.push_back(Atom{STRING, body.range_of(the_str)});
             }
                 goto st8;
             tr39 :
@@ -1758,8 +1758,8 @@ Status TextFrame::Cursor::Next() {
 #line 25 "ragel/./text-grammar.rl"
                 {
                     Slice the_str{strb, p};
-                    // op_.AddAtom(Atom::String(body.range_of(the_str)));
-                    op_.AddAtom(Atom{STRING, body.range_of(the_str)});
+                    // op_.push_back(Atom::String(body.range_of(the_str)));
+                    op_.push_back(Atom{STRING, body.range_of(the_str)});
                 }
                 goto st8;
             st8:
@@ -2158,10 +2158,10 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Integer(parse_int(the_int),
+                // op_.push_back(Atom::Integer(parse_int(the_int),
                 // body.range_of(the_int)));
                 // TODO atoms.emplace();
-                op_.AddAtom(Atom{INT, body.range_of(the_int)});
+                op_.push_back(Atom{INT, body.range_of(the_int)});
                 uuidb = nullptr;  // sabotage uuid
             }
                 goto st25;
@@ -2177,9 +2177,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
                 goto st25;
             tr90 :
@@ -2199,7 +2199,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
                 goto st25;
             tr99 :
@@ -2219,7 +2219,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
                 goto st25;
             tr116 :
@@ -2234,10 +2234,10 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Integer(parse_int(the_int),
+                // op_.push_back(Atom::Integer(parse_int(the_int),
                 // body.range_of(the_int)));
                 // TODO atoms.emplace();
-                op_.AddAtom(Atom{INT, body.range_of(the_int)});
+                op_.push_back(Atom{INT, body.range_of(the_int)});
                 uuidb = nullptr;  // sabotage uuid
             }
 #line 14 "ragel/././uuid-grammar.rl"
@@ -2255,7 +2255,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st25;
@@ -2277,7 +2277,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st25;
@@ -2299,7 +2299,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st25;
@@ -2315,9 +2315,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
 #line 17 "ragel/././uuid-grammar.rl"
                 { origin = Slice{wordb, p}; }
@@ -2334,7 +2334,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st25;
@@ -2350,9 +2350,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
 #line 14 "ragel/././uuid-grammar.rl"
                 { value = Slice{wordb, p}; }
@@ -2369,7 +2369,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st25;
@@ -2381,7 +2381,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 9 "ragel/./text-grammar.rl"
-                { op_.SetId(Uuid{variety, value, version, origin}); }
+                { op_[0] = Uuid{variety, value, version, origin}; }
                 goto st25;
             tr196 :
 #line 14 "ragel/././uuid-grammar.rl"
@@ -2391,7 +2391,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 12 "ragel/./text-grammar.rl"
-                { op_.SetRef(Uuid{variety, value, version, origin}); }
+                { op_[1] = Uuid{variety, value, version, origin}; }
                 goto st25;
             tr205 :
 #line 17 "ragel/././uuid-grammar.rl"
@@ -2401,7 +2401,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 12 "ragel/./text-grammar.rl"
-                { op_.SetRef(Uuid{variety, value, version, origin}); }
+                { op_[1] = Uuid{variety, value, version, origin}; }
                 goto st25;
             tr216 :
 #line 17 "ragel/././uuid-grammar.rl"
@@ -2411,7 +2411,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 9 "ragel/./text-grammar.rl"
-                { op_.SetId(Uuid{variety, value, version, origin}); }
+                { op_[0] = Uuid{variety, value, version, origin}; }
                 goto st25;
             st25:
                 if (++p == pe) goto _test_eof25;
@@ -2504,10 +2504,10 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Integer(parse_int(the_int),
+                // op_.push_back(Atom::Integer(parse_int(the_int),
                 // body.range_of(the_int)));
                 // TODO atoms.emplace();
-                op_.AddAtom(Atom{INT, body.range_of(the_int)});
+                op_.push_back(Atom{INT, body.range_of(the_int)});
                 uuidb = nullptr;  // sabotage uuid
             }
                 goto st28;
@@ -2523,9 +2523,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
                 goto st28;
             tr91 :
@@ -2545,7 +2545,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
                 goto st28;
             tr100 :
@@ -2565,7 +2565,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
                 goto st28;
             tr117 :
@@ -2580,10 +2580,10 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Integer(parse_int(the_int),
+                // op_.push_back(Atom::Integer(parse_int(the_int),
                 // body.range_of(the_int)));
                 // TODO atoms.emplace();
-                op_.AddAtom(Atom{INT, body.range_of(the_int)});
+                op_.push_back(Atom{INT, body.range_of(the_int)});
                 uuidb = nullptr;  // sabotage uuid
             }
 #line 14 "ragel/././uuid-grammar.rl"
@@ -2601,7 +2601,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st28;
@@ -2623,7 +2623,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st28;
@@ -2645,7 +2645,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st28;
@@ -2661,9 +2661,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
 #line 17 "ragel/././uuid-grammar.rl"
                 { origin = Slice{wordb, p}; }
@@ -2680,7 +2680,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st28;
@@ -2696,9 +2696,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
 #line 14 "ragel/././uuid-grammar.rl"
                 { value = Slice{wordb, p}; }
@@ -2715,7 +2715,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st28;
@@ -2727,7 +2727,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 9 "ragel/./text-grammar.rl"
-                { op_.SetId(Uuid{variety, value, version, origin}); }
+                { op_[0] = Uuid{variety, value, version, origin}; }
                 goto st28;
             tr197 :
 #line 14 "ragel/././uuid-grammar.rl"
@@ -2737,7 +2737,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 12 "ragel/./text-grammar.rl"
-                { op_.SetRef(Uuid{variety, value, version, origin}); }
+                { op_[1] = Uuid{variety, value, version, origin}; }
                 goto st28;
             tr206 :
 #line 17 "ragel/././uuid-grammar.rl"
@@ -2747,7 +2747,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 12 "ragel/./text-grammar.rl"
-                { op_.SetRef(Uuid{variety, value, version, origin}); }
+                { op_[1] = Uuid{variety, value, version, origin}; }
                 goto st28;
             tr217 :
 #line 17 "ragel/././uuid-grammar.rl"
@@ -2757,7 +2757,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 9 "ragel/./text-grammar.rl"
-                { op_.SetId(Uuid{variety, value, version, origin}); }
+                { op_[0] = Uuid{variety, value, version, origin}; }
                 goto st28;
             st28:
                 if (++p == pe) goto _test_eof28;
@@ -2940,10 +2940,10 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Integer(parse_int(the_int),
+                // op_.push_back(Atom::Integer(parse_int(the_int),
                 // body.range_of(the_int)));
                 // TODO atoms.emplace();
-                op_.AddAtom(Atom{INT, body.range_of(the_int)});
+                op_.push_back(Atom{INT, body.range_of(the_int)});
                 uuidb = nullptr;  // sabotage uuid
             }
                 goto st32;
@@ -2959,9 +2959,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
                 goto st32;
             tr92 :
@@ -2981,7 +2981,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
                 goto st32;
             tr101 :
@@ -3001,7 +3001,7 @@ Status TextFrame::Cursor::Next() {
                             goto _out;
                         }
                     }
-                    op_.AddAtom(Uuid{variety, value, version, origin});
+                    op_.push_back(Uuid{variety, value, version, origin});
                 }
                 goto st32;
             tr120 :
@@ -3016,10 +3016,10 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Integer(parse_int(the_int),
+                // op_.push_back(Atom::Integer(parse_int(the_int),
                 // body.range_of(the_int)));
                 // TODO atoms.emplace();
-                op_.AddAtom(Atom{INT, body.range_of(the_int)});
+                op_.push_back(Atom{INT, body.range_of(the_int)});
                 uuidb = nullptr;  // sabotage uuid
             }
 #line 14 "ragel/././uuid-grammar.rl"
@@ -3037,7 +3037,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st32;
@@ -3059,7 +3059,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st32;
@@ -3081,7 +3081,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st32;
@@ -3097,9 +3097,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
 #line 17 "ragel/././uuid-grammar.rl"
                 { origin = Slice{wordb, p}; }
@@ -3116,7 +3116,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st32;
@@ -3132,9 +3132,9 @@ Status TextFrame::Cursor::Next() {
                         goto _out;
                     }
                 }
-                // op_.AddAtom(Atom::Float(parse_float(the_float),
+                // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{STRING, body.range_of(the_float)});
             }
 #line 14 "ragel/././uuid-grammar.rl"
                 { value = Slice{wordb, p}; }
@@ -3151,7 +3151,7 @@ Status TextFrame::Cursor::Next() {
                                 goto _out;
                             }
                         }
-                        op_.AddAtom(Uuid{variety, value, version, origin});
+                        op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
                 goto st32;
@@ -3163,7 +3163,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 9 "ragel/./text-grammar.rl"
-                { op_.SetId(Uuid{variety, value, version, origin}); }
+                { op_[0] = Uuid{variety, value, version, origin}; }
                 goto st32;
             tr198 :
 #line 14 "ragel/././uuid-grammar.rl"
@@ -3173,7 +3173,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 12 "ragel/./text-grammar.rl"
-                { op_.SetRef(Uuid{variety, value, version, origin}); }
+                { op_[1] = Uuid{variety, value, version, origin}; }
                 goto st32;
             tr207 :
 #line 17 "ragel/././uuid-grammar.rl"
@@ -3183,7 +3183,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 12 "ragel/./text-grammar.rl"
-                { op_.SetRef(Uuid{variety, value, version, origin}); }
+                { op_[1] = Uuid{variety, value, version, origin}; }
                 goto st32;
             tr218 :
 #line 17 "ragel/././uuid-grammar.rl"
@@ -3193,7 +3193,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 9 "ragel/./text-grammar.rl"
-                { op_.SetId(Uuid{variety, value, version, origin}); }
+                { op_[0] = Uuid{variety, value, version, origin}; }
                 goto st32;
             st32:
                 if (++p == pe) goto _test_eof32;
@@ -4196,7 +4196,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 9 "ragel/./text-grammar.rl"
-                { op_.SetId(Uuid{variety, value, version, origin}); }
+                { op_[0] = Uuid{variety, value, version, origin}; }
 #line 54 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
@@ -4213,7 +4213,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 9 "ragel/./text-grammar.rl"
-                { op_.SetId(Uuid{variety, value, version, origin}); }
+                { op_[0] = Uuid{variety, value, version, origin}; }
 #line 54 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
@@ -4279,7 +4279,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 9 "ragel/./text-grammar.rl"
-                { op_.SetId(Uuid{variety, value, version, origin}); }
+                { op_[0] = Uuid{variety, value, version, origin}; }
                 goto st64;
             tr215 :
 #line 17 "ragel/././uuid-grammar.rl"
@@ -4289,7 +4289,7 @@ Status TextFrame::Cursor::Next() {
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
 #line 9 "ragel/./text-grammar.rl"
-                { op_.SetId(Uuid{variety, value, version, origin}); }
+                { op_[0] = Uuid{variety, value, version, origin}; }
                 goto st64;
             st64:
                 if (++p == pe) goto _test_eof64;
@@ -4932,13 +4932,13 @@ Status TextFrame::Cursor::Next() {
     off_ = p - pb;
     line_ = line;
 
-    if (op_.size()) prev_id_ = op_.id();
+    if (op_.size()) prev_id_ = id();
 
     // std::cerr << "ending with [" <<p<<"] state "<<cs<<" "<<op_.size()<<"
     // atoms "<<(pe-p)<<" bytes left, prev_id_ "<<prev_id_.str()<<'\n';
 
     if (term && cs != RON_error) {
-        op_.term_ = chr2term(term);  // FIXME gen a fn
+        term_ = chr2term(term);  // FIXME gen a fn
         return Status::OK;
     } else if (cs >= RON_first_final) {
         cs = RON_error;

@@ -1,15 +1,12 @@
 #ifndef RON_RDT_MERGE_HPP
 #define RON_RDT_MERGE_HPP
 
-#include "../ron/op.hpp"
 #include "../ron/status.hpp"
 
 namespace ron {
 
-using less_t = bool (*)(const Op& a, const Op& b);
-
 // asc-sorting iterator heap
-template <typename Frame, less_t Less>
+template <typename Frame, typename Frame::Cursor::Comparator Less>
 class MergeCursor {
     using Cursor = typename Frame::Cursor;
     using Frames = std::vector<Frame>;
@@ -33,30 +30,34 @@ class MergeCursor {
     // no more ops
     bool empty() const { return size() == 0; }
     // returns the current op
-    const Op& op() const { return cursors_.front()->op(); }
+    const Atoms& op() const { return cursors_.front()->op(); }
     const Frame& frame() const { return cursors_.front()->frame(); }
     const Cursor& current() const { return *cursors_.front(); }
 
    private:
-    static inline int up(int idx) { return ((idx + 1) >> 1) - 1; }
+    static inline fsize_t up(fsize_t idx) { return ((idx + 1) >> 1U) - 1; }
 
-    static inline int left(int idx) { return ((idx + 1) << 1) - 1; }
+    static inline fsize_t left(fsize_t idx) { return ((idx + 1) << 1U) - 1; }
 
-    static inline int right(int idx) { return (idx + 1) << 1; }
+    static inline fsize_t right(fsize_t idx) { return (idx + 1) << 1U; }
 
-    inline const Op& op(int idx) const { return cursors_[idx]->op(); }
+    inline const Cursor& op(fsize_t idx) const { return cursors_[idx]; }
 
-    inline int size() const { return (int)cursors_.size(); }
+    inline fsize_t size() const { return (fsize_t)cursors_.size(); }
 
-    inline bool less_than(int a, int b) const { return Less(op(a), op(b)); }
+    inline bool less_than(fsize_t a, fsize_t b) const {
+        return Less(*cursors_[a], *cursors_[b]);
+    }
 
-    inline void swap(int a, int b) { std::swap(cursors_[a], cursors_[b]); }
+    inline void swap(fsize_t a, fsize_t b) {
+        std::swap(cursors_[a], cursors_[b]);
+    }
 
-    void pop(int idx) {
+    void pop(fsize_t idx) {
         if (idx == 0) {
             return;
         }
-        int u = up(idx);
+        fsize_t u = up(idx);
         if (less_than(u, idx)) {
             return;
         }
@@ -64,9 +65,9 @@ class MergeCursor {
         pop(u);
     }
 
-    void push(int idx) {
-        int l = left(idx);
-        int r = right(idx);
+    void push(fsize_t idx) {
+        fsize_t l = left(idx);
+        fsize_t r = right(idx);
         if (r < size() && less_than(r, idx)) {  // r is an option
             if (less_than(l, r)) {
                 swap(l, idx);
@@ -103,8 +104,8 @@ class MergeCursor {
     // advances to the next op
     // @return non-empty
     bool Next() {
-        Uuid id = op().id();
-        while (step() && op().id() == id)
+        Uuid id{op()[OP_ID_IDX]};
+        while (step() && Uuid{op()[OP_ID_IDX]} == id)
             ;  // idempotency
         return size() > 0;
     }

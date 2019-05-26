@@ -2,7 +2,6 @@
 
 #ifndef ron_open_text_hpp
 #define ron_open_text_hpp
-#include "op.hpp"
 #include "slice.hpp"
 #include "status.hpp"
 #include "uuid.hpp"
@@ -87,7 +86,8 @@ class TextFrame {
     class Cursor {
         /** Frame data; the cursor does not own the memory */
         Slice data_;
-        Op op_;
+        Atoms op_;
+        TERM term_;
         int pos_;
         fsize_t at_;
         fsize_t off_;
@@ -116,7 +116,7 @@ class TextFrame {
         explicit Cursor(const TextFrame& host, bool advance = true)
             : Cursor{host.data_, advance} {}
         Cursor(const Cursor& b) = default;
-        const Op& op() const { return op_; }
+        const Atoms& op() const { return op_; }
         Status Next();
         void Trim(const Cursor& b) { data_.Resize(b.at_); }
         Status SkipChain() {
@@ -140,14 +140,18 @@ class TextFrame {
             return data_.slice(Range::FroTo(at_, off_));
         }
         inline Slice slice(Range range) const { return data().slice(range); }
-        inline const Uuid& id() const { return op_.id(); }
-        inline const Uuid& ref() const { return op_.ref(); }
+        inline const Uuid id() const {
+            return static_cast<Uuid>(atom(OP_ID_IDX));
+        }
+        inline const Uuid ref() const {
+            return static_cast<Uuid>(atom(OP_REF_IDX));
+        }
         inline fsize_t size() const { return op_.size(); }
         inline ATOM type(fsize_t idx) const {
             assert(size() > idx);
-            return op_.type(idx);
+            return op_[idx].type();
         }
-        inline TERM term() const { return op_.term(); }
+        inline TERM term() const { return term_; }
         String string(fsize_t idx) const {
             assert(type(idx) == STRING);
             // FIXME check metrics
@@ -156,27 +160,29 @@ class TextFrame {
         inline Slice string_slice(fsize_t idx) const {
             return data_.slice(atom(idx).origin.range());
         }
-        int64_t integer(fsize_t idx) const {
+        inline int64_t integer(fsize_t idx) const {
             assert(type(idx) == INT);
-            return op_.atom(idx).value.as_integer;
+            return op_[idx].value.as_integer;
         }
-        double number(fsize_t idx) const {
+        inline double number(fsize_t idx) const {
             assert(type(idx) == FLOAT);
-            return op_.atom(idx).value.as_float;
+            return op_[idx].value.as_float;
         }
-        Uuid uuid(fsize_t idx) const {
+        inline Uuid uuid(fsize_t idx) const {
             assert(type(idx) == UUID);
-            return op_.uuid(idx);
+            return static_cast<Uuid>(op_[idx]);
         }
-        Atom atom(fsize_t idx) const {  // TODO inherit Op! skip boilerplate
+        inline Atom atom(fsize_t idx) const {
             assert(size() > idx);
-            return op_.atom(idx);
+            return op_[idx];
         }
         static bool int_too_big(const Slice& data);
         static inline bool word_too_big(const Slice data) {
             return data.size() > Word::MAX_BASE64_SIZE;
         }
         Result ParseAtoms() { return OK; }
+
+        using Comparator = bool (*)(const Cursor& a, const Cursor& b);
     };
 
     //  S E R I A L I Z A T I O N
@@ -265,8 +271,7 @@ class TextFrame {
 
         /** A shortcut method, avoids re-serialization of atoms. */
         void AppendOp(const Cursor& cur) {
-            const Op& op = cur.op();
-            WriteSpec(op.id(), op.ref());
+            WriteSpec(cur.id(), cur.ref());
             WriteValues(cur);
         }
 

@@ -7,41 +7,41 @@
     include UTF8 "./utf8-grammar.rl";
 
     action end_id {
-        op_.SetId(Uuid{variety, value, version, origin});
+        op_[0] = Uuid{variety, value, version, origin};
     }
     action end_ref {
-        op_.SetRef(Uuid{variety, value, version, origin});
+        op_[1] = Uuid{variety, value, version, origin};
     }
     action begin_int { intb = p; }
     action end_int {
         Slice the_int(intb, p);
         if (the_int.size()>=19 && int_too_big(the_int)) { cs = 0; fbreak; }
-        //op_.AddAtom(Atom::Integer(parse_int(the_int), body.range_of(the_int))); 
+        //op_.push_back(Atom::Integer(parse_int(the_int), body.range_of(the_int))); 
         // TODO atoms.emplace();
-        op_.AddAtom(Atom{INT, body.range_of(the_int)});
+        op_.push_back(Atom{INT, body.range_of(the_int)});
         uuidb = nullptr; // sabotage uuid
     }
     action begin_string { strb = p; }
     action end_string { 
         Slice the_str{strb,p};
-        //op_.AddAtom(Atom::String(body.range_of(the_str))); 
-        op_.AddAtom(Atom{STRING, body.range_of(the_str)});
+        //op_.push_back(Atom::String(body.range_of(the_str))); 
+        op_.push_back(Atom{STRING, body.range_of(the_str)});
     }
     action begin_float { floatb = p; }
     action end_float { 
         Slice the_float{floatb,p};
         if (the_float.size() > 24) { cs = 0; fbreak; }
-        //op_.AddAtom(Atom::Float(parse_float(the_float), body.range_of(the_float))); 
-        op_.AddAtom(Atom{STRING, body.range_of(the_float)});
+        //op_.push_back(Atom::Float(parse_float(the_float), body.range_of(the_float))); 
+        op_.push_back(Atom{STRING, body.range_of(the_float)});
     }
     action end_quoted_uuid {
         if (word_too_big(value) || word_too_big(origin)) { cs = 0; fbreak; }
-        op_.AddAtom(Uuid{variety, value, version, origin}); 
+        op_.push_back(Uuid{variety, value, version, origin}); 
     }
     action end_bare_uuid { 
         if (uuidb!=nullptr) { // " 123 " is an int, not an UUID
             if (word_too_big(value) || word_too_big(origin)) { cs = 0; fbreak; }
-            op_.AddAtom(Uuid{variety, value, version, origin}); 
+            op_.push_back(Uuid{variety, value, version, origin}); 
         }
     }
     action begin_span {}

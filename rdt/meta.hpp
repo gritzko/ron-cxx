@@ -11,13 +11,14 @@ namespace ron {
 // maybe to update span lengths? chain-based records are likely more efficient
 template <class Frame>
 class MetaRDT {
-    static bool less_than(const Op &a, const Op &b) {
-        return a.id() == b.id() ? a.ref() > b.ref() : a.id() < b.id();
-    }
-    typedef MergeCursor<Frame, less_than> MCursor;
     using Builder = typename Frame::Builder;
     using Cursor = typename Frame::Cursor;
     using Cursors = typename Frame::Cursors;
+
+    static bool less_than(const Cursor &a, const Cursor &b) {
+        return a.id() == b.id() ? a.ref() > b.ref() : a.id() < b.id();
+    }
+    typedef MergeCursor<Frame, less_than> MCursor;
 
    public:
     Status Merge(typename Frame::Builder &output, Cursors &inputs) const {

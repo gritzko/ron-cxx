@@ -61,7 +61,7 @@ Status Replica<Store>::Open() {
     Frame active;
     if (GetMetaStore().Read(Key{ACTIVE_STORE_UUID, ZERO_RAW_FORM}, active)) {
         Cursor c{active};
-        if (HasStore(c.ref())) {
+        if (c.valid() && HasStore(c.ref())) {
             active_ = c.ref();
         }
     }

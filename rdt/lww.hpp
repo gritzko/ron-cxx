@@ -8,11 +8,14 @@ namespace ron {
 
 template <class Frame>
 class LastWriteWinsRDT {
-    static bool less_than(const Op &a, const Op &b) { return a.id() < b.id(); }
-    typedef MergeCursor<Frame, less_than> MCursor;
     using Builder = typename Frame::Builder;
     using Cursor = typename Frame::Cursor;
     using Cursors = typename Frame::Cursors;
+
+    static bool less_than(const Cursor &a, const Cursor &b) {
+        return a.id() < b.id();
+    }
+    typedef MergeCursor<Frame, less_than> MCursor;
 
    public:
     Status Merge(typename Frame::Builder &output, Cursors &inputs) const {
@@ -29,9 +32,9 @@ class LastWriteWinsRDT {
         std::unordered_map<Slice, Uuid> last;
         auto scan = input.cursor();
         do {
-            if (scan.op().size() < 3) continue;
-            Slice key{input.data(), scan.op().atom(2).origin.as_range};
-            last[key] = scan.op().id();
+            if (scan.size() < 3) continue;
+            Slice key{input.data(), scan.atom(2).origin.as_range};
+            last[key] = scan.id();
         } while (scan.Next());
 
         auto filter = input.cursor();
@@ -39,9 +42,9 @@ class LastWriteWinsRDT {
             output.AppendOp(filter);
         }
         do {  // TODO maybe check op pattern here
-            if (filter.op().size() < 3) continue;
-            Slice key{input.data(), filter.op().atom(2).origin.as_range};
-            if (last[key] == filter.op().id()) {
+            if (filter.size() < 3) continue;
+            Slice key{input.data(), filter.atom(2).origin.as_range};
+            if (last[key] == filter.id()) {
                 output.AppendOp(filter);
             }
         } while (filter.Next());

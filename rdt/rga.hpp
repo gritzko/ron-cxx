@@ -16,12 +16,15 @@ using namespace std;
  * We call it use "RGA" cause every RDT here is a CT (in the broad sense). */
 template <class Frame>
 class RGArrayRDT {
-    static bool less_than(const Op &a, const Op &b) { return b.id() < a.id(); }
-    using MCursor = MergeCursor<Frame, less_than>;
     using Builder = typename Frame::Builder;
     using Cursor = typename Frame::Cursor;
     using Cursors = typename Frame::Cursors;
     using PCursor = typename Cursors::iterator;
+
+    static bool less_than(const Cursor &a, const Cursor &b) {
+        return b.id() < a.id();
+    }
+    using MCursor = MergeCursor<Frame, less_than>;
 
     struct {
         bool operator()(const Cursor &a, const Cursor &b) const {

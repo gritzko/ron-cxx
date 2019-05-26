@@ -2,7 +2,6 @@
 #define RON_MERKLE_HPP
 #include <botan/sha2_64.h>
 #include "encdec.hpp"
-#include "op.hpp"
 #include "status.hpp"
 #include "uuid.hpp"
 
@@ -94,6 +93,7 @@ struct SHA2 {
     inline uint32_t known_bits() const { return known_bits_; }
 
     static const SHA2 ZERO;
+    static const Uuid FORM_ID;
 };
 
 // a binary stream of RON primitives
@@ -132,13 +132,12 @@ typedef Stream<Botan::SHA_512_256> SHA2Stream;
 template <typename Cursor, typename SomeStream>
 void WriteOpHashable(const Cursor& cursor, SomeStream& stream,
                      const SHA2& prev_hash, const SHA2& ref_hash) {
-    const Op& op = cursor.op();
-    stream.WriteUuid(op.id());
+    stream.WriteUuid(cursor.id());
     stream.WriteHash(prev_hash);
-    stream.WriteUuid(op.ref());
+    stream.WriteUuid(cursor.ref());
     stream.WriteHash(ref_hash);
-    for (fsize_t i = 2; i < op.size(); i++) {
-        const Atom& atom = op.atom(i);
+    for (fsize_t i = 2; i < cursor.size(); i++) {
+        const Atom& atom = cursor.atom(i);
         switch (atom.type()) {
             case UUID:
                 stream.WriteAtom(atom);

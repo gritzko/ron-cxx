@@ -9,7 +9,7 @@ namespace ron {
 
 Status TextFrame::Cursor::Next () {
 
-    Atoms& atoms = op_.atoms_;
+    Atoms& atoms = op_;
 
     int line=line_;
 
@@ -52,8 +52,8 @@ Status TextFrame::Cursor::Next () {
     char variety{0}, version{0};
 
     atoms.clear();
-    op_.AddAtom(prev_id_.inc());
-    op_.AddAtom(prev_id_);
+    op_.push_back(prev_id_.inc());
+    op_.push_back(prev_id_);
 
     //std::cerr<<"starting with "<<cs<<" ["<<p<<"]\n";
 
@@ -66,12 +66,12 @@ Status TextFrame::Cursor::Next () {
     off_ = p-pb;
     line_ = line;
 
-    if (op_.size()) prev_id_ = op_.id();
+    if (op_.size()) prev_id_ = id();
 
     //std::cerr << "ending with [" <<p<<"] state "<<cs<<" "<<op_.size()<<" atoms "<<(pe-p)<<" bytes left, prev_id_ "<<prev_id_.str()<<'\n';
 
     if (term && cs!=RON_error) {
-        op_.term_ = chr2term(term); // FIXME gen a fn
+        term_ = chr2term(term); // FIXME gen a fn
         return Status::OK;
     } else if (cs>=RON_first_final) {
         cs = RON_error;

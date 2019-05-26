@@ -4,17 +4,16 @@
 namespace ron {
 
 void TextFrame::Builder::WriteValues(const Cursor& cur) {
-    const Op& op = cur.op();
-    for (fsize_t i = 2; i < op.size(); i++) {
-        const Atom& atom = op.atom(i);
+    for (fsize_t i = 2; i < cur.size(); i++) {
+        const Atom& atom = cur.atom(i);
         Write(' ');
         switch (atom.type()) {
             case INT:
                 Write(cur.slice(atom.origin.range()));
                 break;
             case UUID:
-                if (op.uuid(i).is_ambiguous()) Write(ATOM_PUNCT[UUID]);
-                WriteUuid(op.uuid(i));
+                if (cur.uuid(i).is_ambiguous()) Write(ATOM_PUNCT[UUID]);
+                WriteUuid(cur.uuid(i));
                 break;
             case STRING:
                 Write(ATOM_PUNCT[STRING]);
@@ -30,28 +29,27 @@ void TextFrame::Builder::WriteValues(const Cursor& cur) {
 
 template <typename Cursor2>
 void TextFrame::Builder::WriteValues(const Cursor2& cur) {
-    const Op& op = cur.op();
     Range range;
-    for (fsize_t i = 2; i < op.size(); i++) {
+    for (fsize_t i = 2; i < cur.size(); i++) {
         Write(' ');
         // FIXME(gritzko) parse the values!
-        switch (op.type(i)) {
+        switch (cur.atom(i).type()) {
             case INT:
-                WriteInt(op.atom(i).value.as_integer);
+                WriteInt(cur.atom(i).value.as_integer);
                 break;
             case UUID:
-                if (op.uuid(i).is_ambiguous()) Write(ATOM_PUNCT[UUID]);
-                WriteUuid(op.uuid(i));
+                if (cur.uuid(i).is_ambiguous()) Write(ATOM_PUNCT[UUID]);
+                WriteUuid(cur.uuid(i));
                 break;
             case STRING:
                 Write(ATOM_PUNCT[STRING]);
-                range = op.atom(i).origin.range();
+                range = cur.atom(i).origin.range();
                 WriteString(unescape(
                     cur.data().slice(range)));  // FIXME(gritzko) clearly a bug
                 Write(ATOM_PUNCT[STRING]);
                 break;
             case FLOAT:
-                WriteFloat(op.atom(i).value.as_float);
+                WriteFloat(cur.atom(i).value.as_float);
                 break;
         }
     }
@@ -61,7 +59,6 @@ void TextFrame::Builder::WriteValues(const Cursor2& cur) {
 void TextFrame::Builder::AppendAmendedOp(const Cursor& cur, TERM newterm,
                                          const Uuid& newid,
                                          const Uuid& newref) {
-    const Op& op = cur.op();
     WriteSpec(newid, newref);
     WriteValues(cur);
     WriteTerm(newterm);
@@ -69,8 +66,7 @@ void TextFrame::Builder::AppendAmendedOp(const Cursor& cur, TERM newterm,
 
 template <typename Cursor2>
 void TextFrame::Builder::AppendOp(const Cursor& cur) {
-    const Op& op = cur.op();
-    WriteSpec(op.id(), op.ref());
+    WriteSpec(cur.id(), cur.ref());
     WriteValues(cur);
 }
 

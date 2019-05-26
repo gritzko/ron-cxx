@@ -34,12 +34,14 @@ mxidx_t readmxidx(const Cursor &read) {
 
 template <class Frame>
 class MatrixRDT {
-    static bool less_than(const Op &a, const Op &b) { return a.id() < b.id(); }
-
-    typedef MergeCursor<Frame, less_than> MCursor;
     using Builder = typename Frame::Builder;
     using Cursor = typename Frame::Cursor;
     using Cursors = typename Frame::Cursors;
+
+    static bool less_than(const Cursor &a, const Cursor &b) {
+        return a.id() < b.id();
+    }
+    typedef MergeCursor<Frame, less_than> MCursor;
 
    public:
     typedef std::unordered_map<mxidx_t, Atom> mx_t;

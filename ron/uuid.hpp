@@ -244,6 +244,9 @@ using Spec = std::pair<Uuid, Uuid>;
 using Atoms = std::vector<Atom>;
 using Uuids = std::vector<Uuid>;
 
+constexpr int OP_ID_IDX{0};
+constexpr int OP_REF_IDX{1};
+
 }  // namespace ron
 
 namespace std {

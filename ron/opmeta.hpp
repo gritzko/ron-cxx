@@ -25,12 +25,6 @@ struct OpMeta {
     /** chain id */
     Word chain;
 
-    static Uuid SHA2_UUID;
-    static Uuid OBJ_UUID;
-    static Uuid RDT_UUID;
-    static Uuid PREV_UUID;
-    static Uuid HEAD_UUID;
-
     OpMeta(const OpMeta& orig) = default;
 
     /** Nil op metadata @0:0; */

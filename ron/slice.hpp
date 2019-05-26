@@ -103,10 +103,10 @@ class Range {
         limits_[MOST_SIGNIFICANT] = limits_[LEAST_SIGNIFICANT] + new_size;
     }
     inline void operator++() { consume(1); }
-    inline bool operator == (const Range& b) const {
+    inline bool operator==(const Range& b) const {
         return *(uint64_t*)limits_ == *(uint64_t*)(b.limits_);
     }
-    inline bool operator != (const Range& b) const { return !(*this==b); }
+    inline bool operator!=(const Range& b) const { return !(*this == b); }
 };
 
 /** A reference to a raw memory slice. Same function as rocksdb::Slice.

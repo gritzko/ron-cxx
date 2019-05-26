@@ -45,15 +45,14 @@ TEST(TextFrame, basic_cycle ) {
     ASSERT_TRUE(data.find(VALUE)!=string::npos);
 
     TextFrame::Cursor cursor = frame.cursor();
-    const Op& op = cursor.op();
-    ASSERT_EQ(op.size(), 2);
-    ASSERT_TRUE(op.ref()==Uuid{LWW});
-    ASSERT_TRUE(op.id().str()==TIME1);
+    ASSERT_EQ(cursor.size(), 2);
+    ASSERT_TRUE(cursor.ref()==Uuid{LWW});
+    ASSERT_TRUE(cursor.id().str()==TIME1);
     ASSERT_TRUE(cursor.term()==REDUCED);
     ASSERT_TRUE(cursor.Next());
     ASSERT_TRUE(cursor.term()==RAW);
-    ASSERT_TRUE(op.ref()==TIME1);
-    ASSERT_TRUE(op.id()==TIME2);
+    ASSERT_TRUE(cursor.ref()==TIME1);
+    ASSERT_TRUE(cursor.id()==TIME2);
     ASSERT_TRUE(cursor.string(2)==KEY);
     ASSERT_TRUE(cursor.string(3)==VALUE);
     ASSERT_TRUE(!cursor.Next());

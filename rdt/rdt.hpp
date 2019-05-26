@@ -1,7 +1,6 @@
 #ifndef RON_RDT_HPP
 #define RON_RDT_HPP
 
-#include "../ron/op.hpp"
 #include "../ron/status.hpp"
 #include "log.hpp"
 #include "lww.hpp"

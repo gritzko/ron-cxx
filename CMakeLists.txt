@@ -197,7 +197,6 @@ list(APPEND RON_HEADERS
     ron/const.hpp
     ron/encdec.hpp
     ron/uuid.hpp
-    ron/op.hpp
     ron/text.hpp
     ron/frames.hpp
     ron/status.hpp
@@ -215,7 +214,6 @@ list(APPEND RON_SOURCES
     ron/status.cc
     ron/uuid.cc
     ron/uuid-parser.cc
-    ron/op.cc
     ron/text.cc
     ron/text-parser.cc
     ron/text-builder.cc

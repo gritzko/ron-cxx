@@ -515,7 +515,7 @@ Status CommandHashFrame(const string& filename) {
             hash_op<Frame>(cur, sha2, sha2prev, sha2ref);
             tips[id.origin] = id.value;  // TODO causality checks
             hashes[id] = sha2;
-            report.AppendNewOp(SHA2::FORM_ID, id, sha2.base64());
+            report.AppendOp(Op{SHA2::FORM_ID, id, sha2.base64()});
         } else if (id == SHA2::FORM_ID && cur.size() > 2 &&
                    cur.type(2) == STRING) {
             string base64 = cur.string(2);

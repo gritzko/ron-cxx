@@ -5,6 +5,7 @@
 #include "slice.hpp"
 #include "status.hpp"
 #include "uuid.hpp"
+#include "encdec.hpp"
 
 namespace ron {
 
@@ -117,6 +118,10 @@ class TextFrame {
         Cursor(const Cursor& b) = default;
         const Atoms& op() const { return op_; }
         Status Next();
+        Result NextCodepoint(Atom& c) const {
+            return NOT_IMPLEMENTED;
+        }
+
         void Trim(const Cursor& b) { data_.Resize(b.at_); }
         Status SkipChain() {
             Uuid i;
@@ -197,6 +202,9 @@ class TextFrame {
         String data_;
 
         inline void Write(char c) { data_.push_back(c); }
+        inline void WriteCodepoint(Codepoint cp) {
+            utf8append(data_, cp);
+        }
         inline void Write(Slice data) {
             data_.append((String::value_type*)data.begin(), data.size());
         }
@@ -206,38 +214,6 @@ class TextFrame {
         void WriteString(const String& value);
 
         void escape(String& escaped, const Slice& unescaped);
-
-        // terminates the op
-        void WriteAtoms() {}
-
-        template <typename... Ts>
-        void WriteAtoms(int64_t value, Ts... args) {
-            Write(' ');
-            WriteInt(value);
-            WriteAtoms(args...);
-        }
-
-        template <typename... Ts>
-        void WriteAtoms(Uuid value, Ts... args) {
-            Write(value.is_ambiguous() ? ' ' : ATOM_PUNCT[UUID]);
-            WriteUuid(value);
-            WriteAtoms(args...);
-        }
-
-        template <typename... Ts>
-        void WriteAtoms(double value, Ts... args) {
-            Write(' ');
-            WriteFloat(value);
-            WriteAtoms(args...);
-        }
-
-        template <typename... Ts>
-        void WriteAtoms(const String& value, Ts... args) {
-            Write(ATOM_PUNCT[STRING]);
-            WriteString(value);
-            Write(ATOM_PUNCT[STRING]);
-            WriteAtoms(args...);
-        }
 
         inline void WriteTerm(TERM term = REDUCED) {
             if (unterm_) {
@@ -269,23 +245,26 @@ class TextFrame {
         Result WriteValues(const Cursor2& cur) {
             const Atoms& op = cur.op();
             for (fsize_t i = 2; i < op.size(); i++) {
+                Atom a = op[i];
                 Write(' ');
-                switch (op[i].type()) {
+                switch (a.type()) {
                     case INT:
-                        WriteInt(op[i].value.as_integer);
+                        WriteInt(a.value.as_integer);
                         break;
                     case UUID:
-                        if (A2U(op[i]).is_ambiguous()) Write(ATOM_PUNCT[UUID]);
-                        WriteUuid(A2U(op[i]));
+                        if (A2U(a).is_ambiguous()) Write(ATOM_PUNCT[UUID]);
+                        WriteUuid(A2U(a));
                         break;
                     case STRING:
                         Write(ATOM_PUNCT[STRING]);
-                        WriteString(
-                            unescape(cur.data(op[i])));  // FIXME(gritzko)
+                        while (a.value.cp_size) {
+                            WriteCodepoint(a.value.cp);
+                            cur.NextCodepoint(a);
+                        }
                         Write(ATOM_PUNCT[STRING]);
                         break;
                     case FLOAT:
-                        WriteFloat(op[i].value.as_float);
+                        WriteFloat(a.value.as_float);
                         break;
                 }
             }
@@ -346,14 +325,6 @@ class TextFrame {
         bool empty() const { return data_.empty(); }
 
         //  E N D   O F   A P I
-
-        /** A convenience API method to add an op with any number of atoms. */
-        template <typename... Ts>
-        void AppendNewOp(Uuid id, Uuid ref, Ts... args) {
-            WriteSpec(id, ref);
-            Write(' ');
-            WriteAtoms(args...);
-        }
 
         /** A convenience method to add all ops from the cursor. */
         template <typename Cur>

@@ -1,53 +1,103 @@
-#ifndef ron_frame_hpp
-#define ron_frame_hpp
+#ifndef ron_op_hpp
+#define ron_op_hpp
 #include <cassert>
 #include <vector>
+#include "status.hpp"
 #include "uuid.hpp"
+#include "encdec.hpp"
 
 namespace ron {
-
-typedef std::vector<Atom> Atoms;
 
 // An op in the nominal RON (open) coding.
 // That's the internal format
 struct Op {
     Atoms atoms_;
-    TERM term_;
+    Codepoints strings_;
 
-    Op(const Op& op) : atoms_{op.atoms_}, term_{op.term_} {}
-    explicit Op(TERM term) : atoms_{}, term_{term} { atoms_.reserve(4); }
-    explicit Op() : Op{TERM::RAW} {}
-    Op(const Uuid& id, const Uuid& ref) : Op{TERM::HEADER} {
+    const Atoms& op() const { return atoms_; }
+    inline Uuid id() const { return A2U(atoms_[0]); }
+    inline Uuid ref() const { return A2U(atoms_[1]); }
+
+    Result NextCodepoint(Atom& a) const {
+        if (!a.value.cp_size) { return OUTOFRANGE; }
+        a.value.cp = strings_[a.origin.as_range.begin()];
+        --a.value.cp_size;
+        ++a.origin.as_range;
+        return OK;
+    }
+
+    // terminates the op
+    void WriteAtoms() {}
+
+    template <typename... Ts>
+    void WriteAtoms(Integer value, Ts... args) {
+        atoms_.push_back(Atom::Integer(value));
+        WriteAtoms(args...);
+    }
+
+    template <typename... Ts>
+    void WriteAtoms(Uuid value, Ts... args) {
+        atoms_.push_back(value);
+        WriteAtoms(args...);
+    }
+
+    template <typename... Ts>
+    void WriteAtoms(Float value, Ts... args) {
+        atoms_.push_back(Atom::Float(value));
+        WriteAtoms(args...);
+    }
+
+    template <typename... Ts>
+    void WriteAtoms(const String& value, Ts... args) {
+        fsize_t b = strings_.size();
+        Result re = ParseUtf8(strings_, value);
+        fsize_t cp_size = strings_.size() - b;
+        Range range{b, FSIZE(strings_.size())};
+        atoms_.push_back(Atom::String(strings_[b], range,cp_size));
+        WriteAtoms(args...);
+    }
+
+    /** A convenience API method to add an op with any number of atoms. */
+    template <typename... Ts>
+    Op(Uuid id, Uuid ref, Ts... args) {
+        atoms_.clear();
         atoms_.push_back(id);
         atoms_.push_back(ref);
+        WriteAtoms(args...);
     }
-    Op(const Uuid& id, const Uuid& ref, const Atom& v0) : Op{id, ref} {
-        atoms_.push_back(v0);
-        term_ = TERM::RAW;
+
+    template <typename... Ts>
+    Op(const String& id, const String& ref, Ts... args)
+        : Op{Uuid{id}, Uuid{ref}, args...} {}
+
+    template<class Cursor>
+    Result WriteValues(const Cursor& cur) {
+        const Atoms& op = cur.op();
+        for(fsize_t i=2; i<op.size(); ++i) {
+            Atom a = op[i];
+            if (a.type()!=STRING) {
+                atoms_.push_back(a);
+                continue;
+            }
+            fsize_t b = strings_.size();
+            fsize_t cp_size{0};
+            while (a.value.cp_size) { // Oopsie!!! FIXME
+                strings_.push_back(a.value.cp);
+                cur.NextCodepoint(a);
+                ++cp_size;
+            }
+            Range range{b, FSIZE(strings_.size())};
+            atoms_.push_back(Atom::String(strings_[b], range, cp_size));
+        }
+        return OK;
     }
-    Op(const Uuid& id, const Uuid& ref, const Atom& v0, const Atom& v1)
-        : Op{id, ref, v0} {
-        atoms_.push_back(v1);
+
+    template<class Cursor>
+    static Op Amend(Uuid id, Uuid ref, const Cursor& cur) {
+        Op ret{id, ref};
+        ret.WriteValues(cur);
+        return ret;
     }
-    inline TERM term() const { return term_; }
-    const Uuid& id() const { return (Uuid&)atoms_[0]; }
-    const Uuid& ref() const { return (Uuid&)atoms_[1]; }
-    const Atom& atom(fsize_t idx) const { return atoms_[idx]; }
-    inline ATOM type(fsize_t idx) const { return atom(idx).type(); }
-    inline Uuid uuid(fsize_t idx) const {
-        return reinterpret_cast<const Uuid&>(atoms_[idx]);
-    }
-    fsize_t size() const { return (fsize_t)atoms_.size(); }
-    Atoms& data() { return atoms_; }
-    void SetId(const Uuid& ev) {
-        atoms_.reserve(1);
-        atoms_[0] = ev;
-    }
-    void SetRef(const Uuid& ref) {
-        atoms_.reserve(2);
-        atoms_[1] = ref;
-    }
-    inline void AddAtom(Atom value) { atoms_.push_back(value); }
 };
 
 }  // namespace ron

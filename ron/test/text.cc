@@ -2,15 +2,16 @@
 #include <gtest/gtest.h>
 #include "../ron.hpp"
 #include "../uuid.hpp"
+#include "../op.hpp"
 
 #define DEBUG 1
 
 using namespace ron;
 using namespace std;
 
-typedef TextFrame Frame;
-typedef Frame::Cursor Cursor;
-typedef Frame::Builder Builder;
+using Frame = TextFrame;
+using Cursor = Frame::Cursor;
+using Builder = typename Frame::Builder;
 
 string pattern (const Frame& frame) {
     string ret;
@@ -26,6 +27,20 @@ string pattern (const Frame& frame) {
     return ret;
 }
 
+TEST(TextFrame, NewOp) {
+    Uuid id{"1lQA32+0"};
+    Builder b;
+    b.AppendOp(Op{ id, LWW_FORM_UUID });
+    b.AppendOp(Op{ id.inc(), id, Uuid{"int"}, 1L });
+    ++id;
+    b.AppendOp(Op{ id.inc(), id, Uuid{"float"}, 3.1415 });
+    ++id;
+    b.AppendOp(Op{ id.inc(), id, Uuid{"string"}, "юникод" });
+    b.EndChunk(RAW);
+    String correct{"@1lQA32+0 :lww,\n int 1,\n float 3.1415,\n string 'юникод';\n"};
+    ASSERT_EQ(b.data(), correct);
+}
+
 
 TEST(TextFrame, basic_cycle ) {
     Builder builder;
@@ -34,8 +49,8 @@ TEST(TextFrame, basic_cycle ) {
     String LWW{"lww"};
     String KEY{"key"};
     String VALUE{"value"};
-    builder.AppendNewOp(Uuid{TIME1}, Uuid{LWW});
-    builder.AppendNewOp(Uuid{TIME2}, Uuid{TIME1}, KEY, VALUE);
+    builder.AppendOp(Op{TIME1, LWW});
+    builder.AppendOp(Op{TIME2, TIME1, KEY, VALUE});
     // TODO escaping
     // TODO coverage: uuid, float, int
     TextFrame frame = builder.Release();
@@ -143,7 +158,7 @@ TEST(TextFrame, string_escapes) {
     Builder builder;
     String STR1{"'esc'"};
     String STR2{"=\r\n\t\\="};
-    builder.AppendNewOp(Uuid{"1+a"}, Uuid{"2+b"}, STR1, STR2);
+    builder.AppendOp(Op{"1+a", "2+b", STR1, STR2});
     Frame cycle = builder.Release();
     Cursor cc = cycle.cursor();
     ASSERT_TRUE(cc.valid());

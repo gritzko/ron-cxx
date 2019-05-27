@@ -8,9 +8,9 @@
 using namespace ron;
 using namespace std;
 
-typedef TextFrame Frame;
-typedef Frame::Cursor Cursor;
-typedef Frame::Builder Builder;
+using Frame = TextFrame;
+using Cursor = Frame::Cursor;
+using Builder = typename Frame::Builder;
 
 struct IOSink {
     int out;
@@ -19,12 +19,12 @@ struct IOSink {
         write(out, buf, size);
     }
 };
-typedef Stream<IOSink> IOStream;
+using IOStream = Stream<IOSink>;
 
 TEST (SHA2, Serialization) {
     Builder builder;
-    builder.AppendNewOp(Uuid{"1+src"}, Uuid{"lww"});
-    builder.AppendNewOp(Uuid{"2+orig"}, Uuid{"1+src"}, "key", "value");
+    builder.AppendOp(Op{"1+src", "lww"});
+    builder.AppendOp(Op{"2+orig", "1+src", "key", "value"});
     TextFrame frame = builder.Release();
     const string &data = frame.data();
     Cursor cur = frame.cursor();

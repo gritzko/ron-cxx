@@ -5,6 +5,7 @@
 #include <vector>
 #include "status.hpp"
 #include "uuid.hpp"
+#include "op.hpp"
 
 namespace ron {
 
@@ -58,8 +59,8 @@ Status CompareWithCursors(Cursor a, Cursor b) {
         a.Next();
         b.Next();
     }
-    while (a.valid() && a.id() == Uuid::COMMENT) a.Next();
-    while (b.valid() && b.id() == Uuid::COMMENT) b.Next();
+    while (a.valid() && a.id() == Uuid::COMMENT) { a.Next(); }
+    while (b.valid() && b.id() == Uuid::COMMENT) { b.Next(); }
     if (a.valid() || b.valid())
         return Status::BADFRAME.comment("one frame is longer");
     return Status::OK;
@@ -77,7 +78,7 @@ template <typename Frame, class... Ts>
 Frame OneOp(Uuid id, Uuid ref, Ts... args) {
     using Builder = typename Frame::Builder;
     Builder b;
-    b.AppendNewOp(id, ref, args...);
+    b.AppendOp(Op{id, ref, args...});
     return b.Release();
 }
 
@@ -85,7 +86,7 @@ template <typename Frame, class... Ts>
 Frame Query(Uuid id, Uuid ref, Ts... args) {
     using Builder = typename Frame::Builder;
     Builder b;
-    b.AppendNewOp(id, ref, args...);
+    b.AppendOp(Op{id, ref, args...});
     b.EndChunk(QUERY);
     return b.Release();
 }
@@ -107,20 +108,6 @@ Status Reserialize(std::vector<Frame>& into,
     }
     return Status::OK;
 }
-
-template <class Cursor>
-class Amended {
-    const Cursor& cur_;
-    Uuid id_, ref_;
-
-   public:
-    Amended(const Cursor& c, Uuid id, Uuid ref) : cur_{c}, id_{id}, ref_{ref} {}
-    inline Uuid id() const { return id_; }
-    inline Uuid ref() const { return ref_; }
-    inline fsize_t size() const { return cur_.size(); }
-    inline Slice data(Atom a) const { return cur_.data(a); }
-    inline const Atoms& op() const { return cur_.op(); }
-};
 
 }  // namespace ron
 #endif

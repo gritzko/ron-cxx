@@ -450,7 +450,7 @@ template <typename Store>
 Status Replica<Store>::Commit::GetMap(Frame& result, Uuid id, Uuid map) {
     Builder response;
     Builder query;
-    query.AppendNewOp(id, map);
+    query.AppendOp(Op{id, map});
     query.EndChunk(QUERY);
     Cursor qc{query.data()};
     // Status ok = MapperQuery(response, qc, branch);
@@ -557,8 +557,7 @@ Status Replica<Store>::Commit::WriteNewEvents(Builder& resp, Cursor& uc) {
         if (ref.origin == 0 && ref.value < MAXSEQ) {
             ref = Uuid{now.value.as_u64 + uc.ref().value.as_u64, now.origin};
         }
-        Amended<Cursor> amended{uc, id, ref};
-        stamp.AppendOp(amended);
+        stamp.AppendOp(Op::Amend(id, ref, uc));
         uc.Next();
         now.inc();
     }

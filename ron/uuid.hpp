@@ -145,11 +145,14 @@ struct Atom {
     Atom() : Atom{ZERO, ZERO} {}
     Atom(uint64_t value, uint64_t origin) : Atom{Word{value}, Word{origin}} {}
 
-    static inline Atom String(Codepoint cp, Range range, fsize_t cp_size) {
+    static inline Atom String(Codepoint cp, Range range={}, fsize_t cp_size=0) {
         return Atom{Word{cp_size, cp}, Word{range} | STRING_FLAGS};
     }
-    static inline Atom Integer(Integer i, Range range) {
+    static inline Atom Integer(Integer i, Range range={}) {
         return Atom{Word{i}, Word{range} | INT_FLAGS};
+    }
+    static inline Atom Float(Float value, Range range=Range{}) {
+        return Atom{Word{value}, Word{range} | FLOAT_FLAGS};
     }
 
     Atom(ATOM type, Range range)
@@ -253,6 +256,7 @@ using Result = Word;
 const Result OK{0UL};
 const Result NOT_IMPLEMENTED{"NOTIMPLTED"};
 const Result BADSYNTAX{"BADSYNTAX"};
+const Result OUTOFRANGE{"OUTOFRANGE"};
 
 }  // namespace ron
 

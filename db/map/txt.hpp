@@ -27,7 +27,7 @@ Status TxtMapper<Commit>::Read(Builder& response, Cursor& query, Commit& branch)
         c.Next();
         pos++;
     }
-    response.AppendNewOp(id.derived(), TXT_MAP_ID, text);
+    response.AppendOp(Op{id.derived(), TXT_MAP_ID, text});
     query.Next(); // consume the query
     return Status::OK;
 }
@@ -40,7 +40,7 @@ Status TxtMapper<Commit>::ReadVersion(Builder &response, Cursor &query, Commit &
     IFOK(branch.GetObjectVersion(snapshot, id, RGA_FORM_UUID, version));
     String string;
     frame2string(string, snapshot);
-    response.AppendNewOp(id, TXT_MAP_ID, string);
+    response.AppendOp(Op{id, TXT_MAP_ID, string});
     return Status::OK;
 }
 
@@ -90,7 +90,7 @@ Status TxtMapper<Commit>::WriteDiffs(const Ids& ids, const Diffs& dmp, Commit& b
                     i += l;
                     Uuid prev = *i;
                     while (l--) {
-                        patch.AppendNewOp(now, prev, RM_UUID);
+                        patch.AppendOp(Op{now, prev, RM_UUID});
                         prev = now;
                         ++now;
                     }

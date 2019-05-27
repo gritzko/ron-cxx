@@ -3,10 +3,16 @@
 #include "../uuid.hpp"
 #include "../text.hpp"
 #include "../encdec.hpp"
+#include "../op.hpp"
+#include "../form.hpp"
 #define DEBUG 1
 
 using namespace ron;
 using namespace std;
+
+using Frame = TextFrame;
+using Cursor = typename Frame::Cursor;
+using Builder = typename Frame::Builder;
 
 TEST(Codepoint, UTF8) {
     String latin{"ABC"};

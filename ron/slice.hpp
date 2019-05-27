@@ -38,6 +38,7 @@ using Strings16 = std::vector<String16>;
 
 /** Frame size or any other size limited by frame size (e.g. string length) */
 using fsize_t = uint32_t;
+#define FSIZE(s) static_cast<fsize_t>(s)
 
 /** Max RON frame size is 1<<30 (a frame is atomically processed, so 1GB max) */
 constexpr fsize_t FSIZE_MAX{1U << 30U};

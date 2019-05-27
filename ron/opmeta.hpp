@@ -5,6 +5,7 @@
 #include "hash.hpp"
 #include "slice.hpp"
 #include "status.hpp"
+#include "op.hpp"
 
 namespace ron {
 
@@ -105,7 +106,7 @@ struct OpMeta {
 
     template <class Builder>
     void Save(Builder& save) {
-        save.AppendNewOp(id, META_FORM_UUID, object, rdt, hash.base64());
+        save.AppendOp(Op{id, META_FORM_UUID, object, rdt, hash.base64()});
     }
 
     template <class Cursor>

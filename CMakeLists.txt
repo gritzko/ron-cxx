@@ -219,6 +219,7 @@ list(APPEND RON_SOURCES
     ron/text-builder.cc
     ron/cp-parser.cc
     ron/hash.cc
+    ron/utf8-parser.cc
     )
 
 add_library(ron_static STATIC

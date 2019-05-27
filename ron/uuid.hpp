@@ -1,6 +1,6 @@
 #ifndef ron_uuid_hpp
 #define ron_uuid_hpp
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include "const.hpp"
@@ -51,7 +51,7 @@ union Word {
     explicit Word(const String& word) : Word{0, Slice{word}} {}
     /** A trusty parsing constructor. */
     explicit Word(const char* word) noexcept
-        : Word{0, Slice{word, (fsize_t)strlen(word)}} {}
+        : Word{0, Slice{word, static_cast<fsize_t>(strlen(word))}} {}
 
     explicit Word(Range range) noexcept : as_range{range} {}
 
@@ -120,14 +120,14 @@ union Word {
         return letters;
     }
     inline static Word random() {
-        auto i = (uint64_t)rand();
+        auto i = static_cast<uint64_t>(rand());
         i <<= 30;
-        i ^= (uint64_t)rand();
+        i ^= static_cast<uint64_t>(rand());
         return Word{i & MAX_VALUE};
     }
 
-    explicit Word(double val) : as_u64{*(uint64_t*)&val} {}
-    explicit Word(int64_t val) : as_u64{*(uint64_t*)&val} {}
+    explicit Word(double val) : as_float{val} {}
+    explicit Word(int64_t val) : as_integer{val} {}
 
     case_t base64_case() const;
     bool is_all_digits() const;
@@ -154,7 +154,7 @@ struct Atom {
 
     Atom(ATOM type, Range range)
         : Atom{ZERO, Word{range} | (uint64_t(type) << 62U)} {}
-    inline ATOM type() const { return (ATOM)(origin.as_u64 >> 62U); }
+    inline ATOM type() const { return static_cast<ATOM>(origin.as_u64 >> 62U); }
     inline Word safe_origin() const {
         constexpr uint64_t mask = (uint64_t(FSIZE_BITS) << 32) | FSIZE_BITS;
         return Word{origin.as_u64 & mask};
@@ -247,6 +247,12 @@ using Uuids = std::vector<Uuid>;
 constexpr int OP_ID_IDX{0};
 constexpr int OP_REF_IDX{1};
 #define A2U(a) static_cast<Uuid>(a)
+
+/** Status(above) is a bit too heavy; use Result for inner loops */
+using Result = Word;
+const Result OK{0UL};
+const Result NOT_IMPLEMENTED{"NOTIMPLTED"};
+const Result BADSYNTAX{"BADSYNTAX"};
 
 }  // namespace ron
 

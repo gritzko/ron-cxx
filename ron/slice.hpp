@@ -66,7 +66,7 @@ class Range {
     static inline Range AtFor(fsize_t at_offset, fsize_t for_length) {
         return Range{at_offset, at_offset + for_length};
     }
-    Range() : Range{0, 0} {}
+    Range() : Range{0U, 0U} {}
     inline fsize_t begin() const { return limits_[LEAST_SIGNIFICANT]; }
     inline fsize_t end() const { return limits_[MOST_SIGNIFICANT]; }
     inline fsize_t safe_begin() const {

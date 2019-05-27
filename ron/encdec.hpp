@@ -3,8 +3,11 @@
 #include <cstdint>
 #include <string>
 #include "slice.hpp"
+#include "status.hpp"
 
 namespace ron {
+
+Result ParseUtf8(Codepoints& into, const String& from);
 
 template <uint8_t bit_width, CharRef coding>
 void encode(String& coded, Slice raw, int bit_size) {

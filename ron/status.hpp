@@ -14,8 +14,8 @@ class Status {
    public:
     Status() : code_{0, 0} {}
     explicit Status(uint64_t err_code) : code_{err_code, Word::PAYLOAD_BITS} {}
-    Status(Uuid code, const String& comment = "")
-        : code_{code}, comment_{comment} {}
+    Status(Uuid code, String comment = "")
+        : code_{code}, comment_{std::move(comment)} {}
 
     inline explicit operator Uuid() const { return code_; }
 
@@ -73,11 +73,6 @@ class Status {
             return ok;   \
         }                \
     }
-
-/** Status(above) is a bit too heavy; use Result for inner loops */
-using Result = Word;
-const Result OK{0UL};
-const Result NOT_IMPLEMENTED{"NOTIMPLTED"};
 
 }  // namespace ron
 

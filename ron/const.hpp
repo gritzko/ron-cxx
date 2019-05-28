@@ -33,10 +33,10 @@ using Integer = int64_t;
 using Float = double;
 
 enum ATOM_FLAGS : uint64_t {
-    UUID_FLAGS = uint64_t(ATOM::STRING) << 62U,
-    INT_FLAGS = uint64_t(ATOM::STRING) << 62U,
+    UUID_FLAGS = uint64_t(ATOM::UUID) << 62U,
+    INT_FLAGS = uint64_t(ATOM::INT) << 62U,
     STRING_FLAGS = uint64_t(ATOM::STRING) << 62U,
-    FLOAT_FLAGS = uint64_t(ATOM::STRING) << 62U,
+    FLOAT_FLAGS = uint64_t(ATOM::FLOAT) << 62U,
 };
 
 constexpr Char HEX_PUNCT[] = "0123456789abcdef";

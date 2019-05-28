@@ -31,9 +31,9 @@ TEST(TextFrame, NewOp) {
     Uuid id{"1lQA32+0"};
     Builder b;
     b.AppendOp(Op{ id, LWW_FORM_UUID });
-    b.AppendOp(Op{ id.inc(), id, Uuid{"int"}, 1L });
+    b.AppendOp(Op{ id.inc(), id, Uuid{"int"}, (Integer)1 });
     ++id;
-    b.AppendOp(Op{ id.inc(), id, Uuid{"float"}, 3.1415 });
+    b.AppendOp(Op{ id.inc(), id, Uuid{"float"}, (Float)3.1415 });
     ++id;
     b.AppendOp(Op{ id.inc(), id, Uuid{"string"}, "юникод" });
     b.EndChunk(RAW);

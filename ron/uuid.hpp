@@ -58,13 +58,13 @@ union Word {
     explicit operator uint64_t() const { return as_u64; }
 
     // payload bit size
-    static constexpr uint PBS = 60;
-    static constexpr uint BASE64_BITS = 6;
-    static constexpr uint BASE64_WORD_LEN = PBS / BASE64_BITS;
+    static constexpr uint32_t PBS = 60;
+    static constexpr uint32_t BASE64_BITS = 6;
+    static constexpr uint32_t BASE64_WORD_LEN = PBS / BASE64_BITS;
     // max base64 char size
     static constexpr int MAX_BASE64_SIZE = PBS / BASE64_BITS;
     // flag bit size
-    static constexpr uint FBS = 64U - PBS;
+    static constexpr uint32_t FBS = 64U - PBS;
     static constexpr uint64_t ONE = 1;
     static constexpr uint64_t MAX_VALUE = (ONE << PBS) - 1U;
     static constexpr uint64_t MAX_VALUE_30 = (1U << 30U) - 1U;
@@ -126,15 +126,15 @@ union Word {
         return Word{i & MAX_VALUE};
     }
 
-    explicit Word(double val) : as_float{val} {}
-    explicit Word(int64_t val) : as_integer{val} {}
+    explicit Word(Float val) : as_float{val} {}
+    explicit Word(Integer val) : as_integer{val} {}
 
     case_t base64_case() const;
     bool is_all_digits() const;
 };
 
 const Word NEVER{uint64_t(63UL << 54U)};
-const Word ZERO{0UL};
+const Word ZERO{uint64_t{0}};
 
 enum half_t { VALUE = 0, ORIGIN = 1 };
 
@@ -253,7 +253,7 @@ constexpr int OP_REF_IDX{1};
 
 /** Status(above) is a bit too heavy; use Result for inner loops */
 using Result = Word;
-const Result OK{0UL};
+const Result OK{"0"};
 const Result NOT_IMPLEMENTED{"NOTIMPLTED"};
 const Result BADSYNTAX{"BADSYNTAX"};
 const Result OUTOFRANGE{"OUTOFRANGE"};

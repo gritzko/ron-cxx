@@ -206,6 +206,7 @@ list(APPEND RON_HEADERS
     ron/portable_endian.hpp
     ron/vv.hpp
     ron/opmeta.hpp
+    ron/op.hpp
     ron/inc_stack.hpp
     ron/form.hpp
 )

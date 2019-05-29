@@ -180,7 +180,7 @@ u16string TextFrame::utf16string(Atom str_atom) const {
                 { cp = (*p); }
                 goto st10;
             tr25 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -250,7 +250,7 @@ u16string TextFrame::utf16string(Atom str_atom) const {
                 { esc = p; }
                 goto st1;
             tr26 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -287,7 +287,7 @@ u16string TextFrame::utf16string(Atom str_atom) const {
                 }
                 goto st0;
             tr0 :
-#line 60 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_esc((*p));
             }
@@ -354,7 +354,7 @@ u16string TextFrame::utf16string(Atom str_atom) const {
                 { cp = (*p) & 0x1f; }
                 goto st2;
             tr27 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -406,7 +406,7 @@ u16string TextFrame::utf16string(Atom str_atom) const {
                 { cp = (*p) & 0xf; }
                 goto st3;
             tr28 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -452,7 +452,7 @@ u16string TextFrame::utf16string(Atom str_atom) const {
                 { cp = (*p) & 7; }
                 goto st4;
             tr29 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -584,7 +584,7 @@ u16string TextFrame::utf16string(Atom str_atom) const {
                     push_back_cp(ret, cp, p);
                 } break;
                 case 12:
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
                 {
                     cp = decode_hex_cp(Slice{p - 4, 4});
                 }

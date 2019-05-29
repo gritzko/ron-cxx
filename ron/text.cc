@@ -4,7 +4,7 @@ using namespace std;
 
 namespace ron {
 
-Result TextFrame::ParseInteger(Atom& a) {
+Result TextFrame::Cursor::ParseInteger(Atom& a) {
     Slice range = atom_data(a);
     CharRef i = range.begin();
     bool neg = false;
@@ -24,7 +24,7 @@ Result TextFrame::ParseInteger(Atom& a) {
     return OK;
 }
 
-Result TextFrame::ParseFloat(Atom& a) {
+Result TextFrame::Cursor::ParseFloat(Atom& a) {
     Slice range = atom_data(a);
     char fs[32];  // FIXME size limits
     memcpy(fs, range.begin(), range.size());

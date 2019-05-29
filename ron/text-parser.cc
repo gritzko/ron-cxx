@@ -58,6 +58,7 @@ Status TextFrame::Cursor::Next() {
     CharRef uuidb{p};
     CharRef wordb{p};
     Codepoint cp{0};
+    fsize_t cp_size{0};
     char term{0};
     Slice value, origin;
     char variety{0}, version{0};
@@ -68,12 +69,12 @@ Status TextFrame::Cursor::Next() {
 
     // std::cerr<<"starting with "<<cs<<" ["<<p<<"]\n";
 
-#line 80 "ron/text-parser.cc"
+#line 81 "ron/text-parser.cc"
     {
         if (p == pe) goto _test_eof;
         switch (cs) {
         tr220 :
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
         {
             if ((*p) == '\n') {
                 line++;
@@ -82,7 +83,7 @@ Status TextFrame::Cursor::Next() {
         }
             goto st74;
         tr14 :
-#line 49 "ragel/./text-grammar.rl"
+#line 54 "ragel/./text-grammar.rl"
         {
             term = (*p);
             pos_++;
@@ -111,7 +112,7 @@ Status TextFrame::Cursor::Next() {
             op_.push_back(Atom{INT, body.range_of(the_int)});
             uuidb = nullptr;  // sabotage uuid
         }
-#line 49 "ragel/./text-grammar.rl"
+#line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -123,7 +124,7 @@ Status TextFrame::Cursor::Next() {
             }
             goto st74;
         tr70 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
         {
             Slice the_float{floatb, p};
             if (the_float.size() > 24) {
@@ -136,9 +137,9 @@ Status TextFrame::Cursor::Next() {
             }
             // op_.push_back(Atom::Float(parse_float(the_float),
             // body.range_of(the_float)));
-            op_.push_back(Atom{STRING, body.range_of(the_float)});
+            op_.push_back(Atom{FLOAT, body.range_of(the_float)});
         }
-#line 49 "ragel/./text-grammar.rl"
+#line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -156,7 +157,7 @@ Status TextFrame::Cursor::Next() {
         }
 #line 18 "ragel/././uuid-grammar.rl"
             {}
-#line 37 "ragel/./text-grammar.rl"
+#line 39 "ragel/./text-grammar.rl"
             {
                 if (word_too_big(value) || word_too_big(origin)) {
                     cs = 0;
@@ -168,7 +169,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 op_.push_back(Uuid{variety, value, version, origin});
             }
-#line 49 "ragel/./text-grammar.rl"
+#line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -186,7 +187,7 @@ Status TextFrame::Cursor::Next() {
         }
 #line 18 "ragel/././uuid-grammar.rl"
             {}
-#line 37 "ragel/./text-grammar.rl"
+#line 39 "ragel/./text-grammar.rl"
             {
                 if (word_too_big(value) || word_too_big(origin)) {
                     cs = 0;
@@ -198,7 +199,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 op_.push_back(Uuid{variety, value, version, origin});
             }
-#line 49 "ragel/./text-grammar.rl"
+#line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -231,7 +232,7 @@ Status TextFrame::Cursor::Next() {
             { value = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
             {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                     if (word_too_big(value) || word_too_big(origin)) {
@@ -245,7 +246,7 @@ Status TextFrame::Cursor::Next() {
                     op_.push_back(Uuid{variety, value, version, origin});
                 }
             }
-#line 49 "ragel/./text-grammar.rl"
+#line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -263,7 +264,7 @@ Status TextFrame::Cursor::Next() {
         }
 #line 18 "ragel/././uuid-grammar.rl"
             {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                     if (word_too_big(value) || word_too_big(origin)) {
@@ -277,7 +278,7 @@ Status TextFrame::Cursor::Next() {
                     op_.push_back(Uuid{variety, value, version, origin});
                 }
             }
-#line 49 "ragel/./text-grammar.rl"
+#line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -295,7 +296,7 @@ Status TextFrame::Cursor::Next() {
         }
 #line 18 "ragel/././uuid-grammar.rl"
             {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                     if (word_too_big(value) || word_too_big(origin)) {
@@ -309,7 +310,7 @@ Status TextFrame::Cursor::Next() {
                     op_.push_back(Uuid{variety, value, version, origin});
                 }
             }
-#line 49 "ragel/./text-grammar.rl"
+#line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -321,7 +322,7 @@ Status TextFrame::Cursor::Next() {
             }
             goto st74;
         tr142 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
         {
             Slice the_float{floatb, p};
             if (the_float.size() > 24) {
@@ -334,13 +335,13 @@ Status TextFrame::Cursor::Next() {
             }
             // op_.push_back(Atom::Float(parse_float(the_float),
             // body.range_of(the_float)));
-            op_.push_back(Atom{STRING, body.range_of(the_float)});
+            op_.push_back(Atom{FLOAT, body.range_of(the_float)});
         }
 #line 17 "ragel/././uuid-grammar.rl"
             { origin = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
             {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                     if (word_too_big(value) || word_too_big(origin)) {
@@ -354,7 +355,7 @@ Status TextFrame::Cursor::Next() {
                     op_.push_back(Uuid{variety, value, version, origin});
                 }
             }
-#line 49 "ragel/./text-grammar.rl"
+#line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -366,7 +367,7 @@ Status TextFrame::Cursor::Next() {
             }
             goto st74;
         tr150 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
         {
             Slice the_float{floatb, p};
             if (the_float.size() > 24) {
@@ -379,13 +380,13 @@ Status TextFrame::Cursor::Next() {
             }
             // op_.push_back(Atom::Float(parse_float(the_float),
             // body.range_of(the_float)));
-            op_.push_back(Atom{STRING, body.range_of(the_float)});
+            op_.push_back(Atom{FLOAT, body.range_of(the_float)});
         }
 #line 14 "ragel/././uuid-grammar.rl"
             { value = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
             {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                     if (word_too_big(value) || word_too_big(origin)) {
@@ -399,7 +400,7 @@ Status TextFrame::Cursor::Next() {
                     op_.push_back(Uuid{variety, value, version, origin});
                 }
             }
-#line 49 "ragel/./text-grammar.rl"
+#line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -419,7 +420,7 @@ Status TextFrame::Cursor::Next() {
             {}
 #line 9 "ragel/./text-grammar.rl"
             { op_[0] = Uuid{variety, value, version, origin}; }
-#line 49 "ragel/./text-grammar.rl"
+#line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -439,7 +440,7 @@ Status TextFrame::Cursor::Next() {
             {}
 #line 12 "ragel/./text-grammar.rl"
             { op_[1] = Uuid{variety, value, version, origin}; }
-#line 49 "ragel/./text-grammar.rl"
+#line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -459,7 +460,7 @@ Status TextFrame::Cursor::Next() {
             {}
 #line 12 "ragel/./text-grammar.rl"
             { op_[1] = Uuid{variety, value, version, origin}; }
-#line 49 "ragel/./text-grammar.rl"
+#line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -479,7 +480,7 @@ Status TextFrame::Cursor::Next() {
             {}
 #line 9 "ragel/./text-grammar.rl"
             { op_[0] = Uuid{variety, value, version, origin}; }
-#line 49 "ragel/./text-grammar.rl"
+#line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
                 pos_++;
@@ -493,7 +494,7 @@ Status TextFrame::Cursor::Next() {
         st74:
             if (++p == pe) goto _test_eof74;
             case 74:
-#line 377 "ron/text-parser.cc"
+#line 378 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr220;
@@ -564,7 +565,7 @@ Status TextFrame::Cursor::Next() {
             }
                 goto st1;
             tr71 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -577,7 +578,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
                 goto st1;
             tr86 :
@@ -587,7 +588,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 37 "ragel/./text-grammar.rl"
+#line 39 "ragel/./text-grammar.rl"
                 {
                     if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
@@ -607,7 +608,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 37 "ragel/./text-grammar.rl"
+#line 39 "ragel/./text-grammar.rl"
                 {
                     if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
@@ -642,7 +643,7 @@ Status TextFrame::Cursor::Next() {
                 { value = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -664,7 +665,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -686,7 +687,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -702,7 +703,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st1;
             tr143 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -715,13 +716,13 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
 #line 17 "ragel/././uuid-grammar.rl"
                 { origin = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -737,7 +738,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st1;
             tr151 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -750,13 +751,13 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
 #line 14 "ragel/././uuid-grammar.rl"
                 { value = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -814,7 +815,7 @@ Status TextFrame::Cursor::Next() {
             st1:
                 if (++p == pe) goto _test_eof1;
             case 1:
-#line 612 "ron/text-parser.cc"
+#line 613 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -842,27 +843,32 @@ Status TextFrame::Cursor::Next() {
 #line 24 "ragel/./text-grammar.rl"
             {
                 strb = p;
+                cp_size = 0;
             }
 #line 8 "ragel/././utf8-grammar.rl"
                 { cp = (*p); }
                 goto st2;
             tr7 :
-#line 8 "ragel/././utf8-grammar.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                cp = (*p);
+                cp_size++;
             }
+#line 8 "ragel/././utf8-grammar.rl"
+                { cp = (*p); }
                 goto st2;
             tr156 :
-#line 60 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_esc((*p));
             }
                 goto st2;
             tr162 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
 #line 8 "ragel/././utf8-grammar.rl"
                 { cp = (*p); }
                 goto st2;
@@ -875,7 +881,7 @@ Status TextFrame::Cursor::Next() {
             st2:
                 if (++p == pe) goto _test_eof2;
             case 2:
-#line 662 "ron/text-parser.cc"
+#line 671 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -884,7 +890,7 @@ Status TextFrame::Cursor::Next() {
                     case 39u:
                         goto tr8;
                     case 92u:
-                        goto st51;
+                        goto tr9;
                 }
                 if ((*p) < 224u) {
                     if ((*p) > 191u) {
@@ -903,38 +909,51 @@ Status TextFrame::Cursor::Next() {
 #line 24 "ragel/./text-grammar.rl"
             {
                 strb = p;
+                cp_size = 0;
             }
 #line 25 "ragel/./text-grammar.rl"
                 {
                     Slice the_str{strb, p};
                     // op_.push_back(Atom::String(body.range_of(the_str)));
-                    op_.push_back(Atom{STRING, body.range_of(the_str)});
+                    Atom a = Atom{STRING, body.range_of(the_str)};
+                    a.value.cp_size = cp_size;
+                    op_.push_back(a);
                 }
                 goto st3;
             tr8 :
-#line 25 "ragel/./text-grammar.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                Slice the_str{strb, p};
-                // op_.push_back(Atom::String(body.range_of(the_str)));
-                op_.push_back(Atom{STRING, body.range_of(the_str)});
-            }
-                goto st3;
-            tr163 :
-#line 61 "ragel/./text-grammar.rl"
-            {
-                cp = decode_hex_cp(Slice{p - 4, 4});
+                cp_size++;
             }
 #line 25 "ragel/./text-grammar.rl"
                 {
                     Slice the_str{strb, p};
                     // op_.push_back(Atom::String(body.range_of(the_str)));
-                    op_.push_back(Atom{STRING, body.range_of(the_str)});
+                    Atom a = Atom{STRING, body.range_of(the_str)};
+                    a.value.cp_size = cp_size;
+                    op_.push_back(a);
+                }
+                goto st3;
+            tr163 :
+#line 66 "ragel/./text-grammar.rl"
+            {
+                cp = decode_hex_cp(Slice{p - 4, 4});
+            }
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
+#line 25 "ragel/./text-grammar.rl"
+                {
+                    Slice the_str{strb, p};
+                    // op_.push_back(Atom::String(body.range_of(the_str)));
+                    Atom a = Atom{STRING, body.range_of(the_str)};
+                    a.value.cp_size = cp_size;
+                    op_.push_back(a);
                 }
                 goto st3;
             st3:
                 if (++p == pe) goto _test_eof3;
             case 3:
-#line 716 "ron/text-parser.cc"
+#line 739 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr13;
@@ -962,7 +981,7 @@ Status TextFrame::Cursor::Next() {
                 if (9u <= (*p) && (*p) <= 10u) goto tr13;
                 goto st0;
             tr13 :
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -988,7 +1007,7 @@ Status TextFrame::Cursor::Next() {
                 op_.push_back(Atom{INT, body.range_of(the_int)});
                 uuidb = nullptr;  // sabotage uuid
             }
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -997,7 +1016,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st4;
             tr69 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -1010,9 +1029,9 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1027,7 +1046,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 37 "ragel/./text-grammar.rl"
+#line 39 "ragel/./text-grammar.rl"
                 {
                     if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
@@ -1039,7 +1058,7 @@ Status TextFrame::Cursor::Next() {
                     }
                     op_.push_back(Uuid{variety, value, version, origin});
                 }
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1054,7 +1073,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 37 "ragel/./text-grammar.rl"
+#line 39 "ragel/./text-grammar.rl"
                 {
                     if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
@@ -1066,7 +1085,7 @@ Status TextFrame::Cursor::Next() {
                     }
                     op_.push_back(Uuid{variety, value, version, origin});
                 }
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1096,7 +1115,7 @@ Status TextFrame::Cursor::Next() {
                 { value = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -1110,7 +1129,7 @@ Status TextFrame::Cursor::Next() {
                         op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1125,7 +1144,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -1139,7 +1158,7 @@ Status TextFrame::Cursor::Next() {
                         op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1154,7 +1173,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -1168,7 +1187,7 @@ Status TextFrame::Cursor::Next() {
                         op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1177,7 +1196,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st4;
             tr141 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -1190,13 +1209,13 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
 #line 17 "ragel/././uuid-grammar.rl"
                 { origin = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -1210,7 +1229,7 @@ Status TextFrame::Cursor::Next() {
                         op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1219,7 +1238,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st4;
             tr149 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -1232,13 +1251,13 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
 #line 14 "ragel/././uuid-grammar.rl"
                 { value = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -1252,7 +1271,7 @@ Status TextFrame::Cursor::Next() {
                         op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1269,7 +1288,7 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 12 "ragel/./text-grammar.rl"
                 { op_[1] = Uuid{variety, value, version, origin}; }
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1286,7 +1305,7 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 12 "ragel/./text-grammar.rl"
                 { op_[1] = Uuid{variety, value, version, origin}; }
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1297,7 +1316,7 @@ Status TextFrame::Cursor::Next() {
             st4:
                 if (++p == pe) goto _test_eof4;
             case 4:
-#line 991 "ron/text-parser.cc"
+#line 1014 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr13;
@@ -1342,7 +1361,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr21;
                 goto st0;
             tr24 :
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -1370,7 +1389,7 @@ Status TextFrame::Cursor::Next() {
             }
                 goto st5;
             tr72 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -1383,7 +1402,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
                 goto st5;
             tr87 :
@@ -1393,7 +1412,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 37 "ragel/./text-grammar.rl"
+#line 39 "ragel/./text-grammar.rl"
                 {
                     if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
@@ -1413,7 +1432,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 37 "ragel/./text-grammar.rl"
+#line 39 "ragel/./text-grammar.rl"
                 {
                     if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
@@ -1448,7 +1467,7 @@ Status TextFrame::Cursor::Next() {
                 { value = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -1470,7 +1489,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -1492,7 +1511,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -1508,7 +1527,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st5;
             tr144 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -1521,13 +1540,13 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
 #line 17 "ragel/././uuid-grammar.rl"
                 { origin = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -1543,7 +1562,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st5;
             tr152 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -1556,13 +1575,13 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
 #line 14 "ragel/././uuid-grammar.rl"
                 { value = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -1620,7 +1639,7 @@ Status TextFrame::Cursor::Next() {
             st5:
                 if (++p == pe) goto _test_eof5;
             case 5:
-#line 1230 "ron/text-parser.cc"
+#line 1253 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr24;
@@ -1664,27 +1683,32 @@ Status TextFrame::Cursor::Next() {
 #line 24 "ragel/./text-grammar.rl"
             {
                 strb = p;
+                cp_size = 0;
             }
 #line 8 "ragel/././utf8-grammar.rl"
                 { cp = (*p); }
                 goto st7;
             tr33 :
-#line 8 "ragel/././utf8-grammar.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                cp = (*p);
+                cp_size++;
             }
+#line 8 "ragel/././utf8-grammar.rl"
+                { cp = (*p); }
                 goto st7;
             tr43 :
-#line 60 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_esc((*p));
             }
                 goto st7;
             tr49 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
 #line 8 "ragel/././utf8-grammar.rl"
                 { cp = (*p); }
                 goto st7;
@@ -1697,7 +1721,7 @@ Status TextFrame::Cursor::Next() {
             st7:
                 if (++p == pe) goto _test_eof7;
             case 7:
-#line 1295 "ron/text-parser.cc"
+#line 1326 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -1706,7 +1730,7 @@ Status TextFrame::Cursor::Next() {
                     case 39u:
                         goto tr34;
                     case 92u:
-                        goto st12;
+                        goto tr35;
                 }
                 if ((*p) < 224u) {
                     if ((*p) > 191u) {
@@ -1725,24 +1749,33 @@ Status TextFrame::Cursor::Next() {
 #line 24 "ragel/./text-grammar.rl"
             {
                 strb = p;
+                cp_size = 0;
             }
 #line 25 "ragel/./text-grammar.rl"
                 {
                     Slice the_str{strb, p};
                     // op_.push_back(Atom::String(body.range_of(the_str)));
-                    op_.push_back(Atom{STRING, body.range_of(the_str)});
+                    Atom a = Atom{STRING, body.range_of(the_str)};
+                    a.value.cp_size = cp_size;
+                    op_.push_back(a);
                 }
                 goto st8;
             tr34 :
-#line 25 "ragel/./text-grammar.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                Slice the_str{strb, p};
-                // op_.push_back(Atom::String(body.range_of(the_str)));
-                op_.push_back(Atom{STRING, body.range_of(the_str)});
+                cp_size++;
             }
+#line 25 "ragel/./text-grammar.rl"
+                {
+                    Slice the_str{strb, p};
+                    // op_.push_back(Atom::String(body.range_of(the_str)));
+                    Atom a = Atom{STRING, body.range_of(the_str)};
+                    a.value.cp_size = cp_size;
+                    op_.push_back(a);
+                }
                 goto st8;
             tr39 :
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -1751,21 +1784,25 @@ Status TextFrame::Cursor::Next() {
             }
                 goto st8;
             tr50 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
 #line 25 "ragel/./text-grammar.rl"
                 {
                     Slice the_str{strb, p};
                     // op_.push_back(Atom::String(body.range_of(the_str)));
-                    op_.push_back(Atom{STRING, body.range_of(the_str)});
+                    Atom a = Atom{STRING, body.range_of(the_str)};
+                    a.value.cp_size = cp_size;
+                    op_.push_back(a);
                 }
                 goto st8;
             st8:
                 if (++p == pe) goto _test_eof8;
             case 8:
-#line 1358 "ron/text-parser.cc"
+#line 1403 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr39;
@@ -1794,7 +1831,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr40;
                 goto st0;
             tr40 :
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -1805,7 +1842,7 @@ Status TextFrame::Cursor::Next() {
             st10:
                 if (++p == pe) goto _test_eof10;
             case 10:
-#line 1397 "ron/text-parser.cc"
+#line 1442 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr40;
@@ -1817,7 +1854,7 @@ Status TextFrame::Cursor::Next() {
                 if (9u <= (*p) && (*p) <= 10u) goto tr40;
                 goto st0;
             tr42 :
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -1828,7 +1865,7 @@ Status TextFrame::Cursor::Next() {
             st11:
                 if (++p == pe) goto _test_eof11;
             case 11:
-#line 1419 "ron/text-parser.cc"
+#line 1464 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr42;
@@ -1849,18 +1886,27 @@ Status TextFrame::Cursor::Next() {
 #line 24 "ragel/./text-grammar.rl"
             {
                 strb = p;
+                cp_size = 0;
+            }
+                goto st12;
+            tr35 :
+#line 49 "ragel/./text-grammar.rl"
+            {
+                cp_size++;
             }
                 goto st12;
             tr51 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
                 goto st12;
             st12:
                 if (++p == pe) goto _test_eof12;
             case 12:
-#line 1443 "ron/text-parser.cc"
+#line 1498 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 34u:
                         goto tr43;
@@ -1952,21 +1998,26 @@ Status TextFrame::Cursor::Next() {
 #line 24 "ragel/./text-grammar.rl"
             {
                 strb = p;
+                cp_size = 0;
             }
 #line 9 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 0x1f; }
                 goto st18;
             tr36 :
-#line 9 "ragel/././utf8-grammar.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                cp = (*p) & 0x1f;
+                cp_size++;
             }
+#line 9 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0x1f; }
                 goto st18;
             tr52 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
 #line 9 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 0x1f; }
                 goto st18;
@@ -1979,28 +2030,33 @@ Status TextFrame::Cursor::Next() {
             st18:
                 if (++p == pe) goto _test_eof18;
             case 18:
-#line 1557 "ron/text-parser.cc"
+#line 1620 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr55;
                 goto st0;
             tr31 :
 #line 24 "ragel/./text-grammar.rl"
             {
                 strb = p;
+                cp_size = 0;
             }
 #line 10 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 0xf; }
                 goto st19;
             tr37 :
-#line 10 "ragel/././utf8-grammar.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                cp = (*p) & 0xf;
+                cp_size++;
             }
+#line 10 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0xf; }
                 goto st19;
             tr53 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
 #line 10 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 0xf; }
                 goto st19;
@@ -2013,35 +2069,40 @@ Status TextFrame::Cursor::Next() {
             st19:
                 if (++p == pe) goto _test_eof19;
             case 19:
-#line 1585 "ron/text-parser.cc"
+#line 1656 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr56;
                 goto st0;
             tr32 :
 #line 24 "ragel/./text-grammar.rl"
             {
                 strb = p;
+                cp_size = 0;
             }
 #line 11 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 7; }
                 goto st20;
             tr38 :
-#line 11 "ragel/././utf8-grammar.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                cp = (*p) & 7;
+                cp_size++;
             }
+#line 11 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 7; }
                 goto st20;
             tr54 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
 #line 11 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 7; }
                 goto st20;
             st20:
                 if (++p == pe) goto _test_eof20;
             case 20:
-#line 1609 "ron/text-parser.cc"
+#line 1688 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr57;
                 goto st0;
             tr20 :
@@ -2049,13 +2110,13 @@ Status TextFrame::Cursor::Next() {
             {
                 intb = p;
             }
-#line 30 "ragel/./text-grammar.rl"
+#line 32 "ragel/./text-grammar.rl"
                 { floatb = p; }
                 goto st21;
             st21:
                 if (++p == pe) goto _test_eof21;
             case 21:
-#line 1623 "ron/text-parser.cc"
+#line 1702 "ron/text-parser.cc"
                 if (48u <= (*p) && (*p) <= 57u) goto st22;
                 goto st0;
             st22:
@@ -2138,7 +2199,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr69;
                 goto st0;
             tr76 :
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -2166,7 +2227,7 @@ Status TextFrame::Cursor::Next() {
             }
                 goto st25;
             tr73 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -2179,7 +2240,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
                 goto st25;
             tr90 :
@@ -2189,7 +2250,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 37 "ragel/./text-grammar.rl"
+#line 39 "ragel/./text-grammar.rl"
                 {
                     if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
@@ -2209,7 +2270,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 37 "ragel/./text-grammar.rl"
+#line 39 "ragel/./text-grammar.rl"
                 {
                     if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
@@ -2244,7 +2305,7 @@ Status TextFrame::Cursor::Next() {
                 { value = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -2266,7 +2327,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -2288,7 +2349,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -2304,7 +2365,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st25;
             tr146 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -2317,13 +2378,13 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
 #line 17 "ragel/././uuid-grammar.rl"
                 { origin = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -2339,7 +2400,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st25;
             tr153 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -2352,13 +2413,13 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
 #line 14 "ragel/././uuid-grammar.rl"
                 { value = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -2416,7 +2477,7 @@ Status TextFrame::Cursor::Next() {
             st25:
                 if (++p == pe) goto _test_eof25;
             case 25:
-#line 1890 "ron/text-parser.cc"
+#line 1969 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr76;
@@ -2441,7 +2502,7 @@ Status TextFrame::Cursor::Next() {
             st26:
                 if (++p == pe) goto _test_eof26;
             case 26:
-#line 1911 "ron/text-parser.cc"
+#line 1990 "ron/text-parser.cc"
                 if (48u <= (*p) && (*p) <= 57u) goto st27;
                 goto st0;
             tr78 :
@@ -2453,7 +2514,7 @@ Status TextFrame::Cursor::Next() {
             st27:
                 if (++p == pe) goto _test_eof27;
             case 27:
-#line 1923 "ron/text-parser.cc"
+#line 2002 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr59;
@@ -2484,7 +2545,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr59;
                 goto st0;
             tr80 :
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -2512,7 +2573,7 @@ Status TextFrame::Cursor::Next() {
             }
                 goto st28;
             tr74 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -2525,7 +2586,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
                 goto st28;
             tr91 :
@@ -2535,7 +2596,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 37 "ragel/./text-grammar.rl"
+#line 39 "ragel/./text-grammar.rl"
                 {
                     if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
@@ -2555,7 +2616,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 37 "ragel/./text-grammar.rl"
+#line 39 "ragel/./text-grammar.rl"
                 {
                     if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
@@ -2590,7 +2651,7 @@ Status TextFrame::Cursor::Next() {
                 { value = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -2612,7 +2673,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -2634,7 +2695,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -2650,7 +2711,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st28;
             tr147 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -2663,13 +2724,13 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
 #line 17 "ragel/././uuid-grammar.rl"
                 { origin = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -2685,7 +2746,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st28;
             tr154 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -2698,13 +2759,13 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
 #line 14 "ragel/././uuid-grammar.rl"
                 { value = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -2762,7 +2823,7 @@ Status TextFrame::Cursor::Next() {
             st28:
                 if (++p == pe) goto _test_eof28;
             case 28:
-#line 2148 "ron/text-parser.cc"
+#line 2227 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr80;
@@ -2800,7 +2861,7 @@ Status TextFrame::Cursor::Next() {
             st29:
                 if (++p == pe) goto _test_eof29;
             case 29:
-#line 2185 "ron/text-parser.cc"
+#line 2264 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr83;
@@ -2857,7 +2918,7 @@ Status TextFrame::Cursor::Next() {
             st30:
                 if (++p == pe) goto _test_eof30;
             case 30:
-#line 2230 "ron/text-parser.cc"
+#line 2309 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr93;
@@ -2880,7 +2941,7 @@ Status TextFrame::Cursor::Next() {
             st31:
                 if (++p == pe) goto _test_eof31;
             case 31:
-#line 2252 "ron/text-parser.cc"
+#line 2331 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr94;
@@ -2920,7 +2981,7 @@ Status TextFrame::Cursor::Next() {
                     goto st31;
                 goto st0;
             tr102 :
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -2948,7 +3009,7 @@ Status TextFrame::Cursor::Next() {
             }
                 goto st32;
             tr75 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -2961,7 +3022,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
                 goto st32;
             tr92 :
@@ -2971,7 +3032,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 37 "ragel/./text-grammar.rl"
+#line 39 "ragel/./text-grammar.rl"
                 {
                     if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
@@ -2991,7 +3052,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 37 "ragel/./text-grammar.rl"
+#line 39 "ragel/./text-grammar.rl"
                 {
                     if (word_too_big(value) || word_too_big(origin)) {
                         cs = 0;
@@ -3026,7 +3087,7 @@ Status TextFrame::Cursor::Next() {
                 { value = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -3048,7 +3109,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -3070,7 +3131,7 @@ Status TextFrame::Cursor::Next() {
             }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -3086,7 +3147,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st32;
             tr148 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -3099,13 +3160,13 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
 #line 17 "ragel/././uuid-grammar.rl"
                 { origin = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -3121,7 +3182,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st32;
             tr155 :
-#line 31 "ragel/./text-grammar.rl"
+#line 33 "ragel/./text-grammar.rl"
             {
                 Slice the_float{floatb, p};
                 if (the_float.size() > 24) {
@@ -3134,13 +3195,13 @@ Status TextFrame::Cursor::Next() {
                 }
                 // op_.push_back(Atom::Float(parse_float(the_float),
                 // body.range_of(the_float)));
-                op_.push_back(Atom{STRING, body.range_of(the_float)});
+                op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
 #line 14 "ragel/././uuid-grammar.rl"
                 { value = Slice{wordb, p}; }
 #line 18 "ragel/././uuid-grammar.rl"
                 {}
-#line 41 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     if (uuidb != nullptr) {  // " 123 " is an int, not an UUID
                         if (word_too_big(value) || word_too_big(origin)) {
@@ -3198,7 +3259,7 @@ Status TextFrame::Cursor::Next() {
             st32:
                 if (++p == pe) goto _test_eof32;
             case 32:
-#line 2485 "ron/text-parser.cc"
+#line 2564 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr102;
@@ -3215,7 +3276,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr102;
                 goto st0;
             tr103 :
-#line 30 "ragel/./text-grammar.rl"
+#line 32 "ragel/./text-grammar.rl"
             {
                 floatb = p;
             }
@@ -3223,11 +3284,11 @@ Status TextFrame::Cursor::Next() {
             st33:
                 if (++p == pe) goto _test_eof33;
             case 33:
-#line 2506 "ron/text-parser.cc"
+#line 2585 "ron/text-parser.cc"
                 if (48u <= (*p) && (*p) <= 57u) goto st34;
                 goto st0;
             tr104 :
-#line 30 "ragel/./text-grammar.rl"
+#line 32 "ragel/./text-grammar.rl"
             {
                 floatb = p;
             }
@@ -3235,7 +3296,7 @@ Status TextFrame::Cursor::Next() {
             st34:
                 if (++p == pe) goto _test_eof34;
             case 34:
-#line 2518 "ron/text-parser.cc"
+#line 2597 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 46u:
                         goto st23;
@@ -3303,7 +3364,7 @@ Status TextFrame::Cursor::Next() {
             st38:
                 if (++p == pe) goto _test_eof38;
             case 38:
-#line 2576 "ron/text-parser.cc"
+#line 2655 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr108;
@@ -3337,7 +3398,7 @@ Status TextFrame::Cursor::Next() {
             st39:
                 if (++p == pe) goto _test_eof39;
             case 39:
-#line 2609 "ron/text-parser.cc"
+#line 2688 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr83;
@@ -3386,7 +3447,7 @@ Status TextFrame::Cursor::Next() {
             {
                 intb = p;
             }
-#line 30 "ragel/./text-grammar.rl"
+#line 32 "ragel/./text-grammar.rl"
                 { floatb = p; }
 #line 6 "ragel/././uuid-grammar.rl"
                 {
@@ -3401,7 +3462,7 @@ Status TextFrame::Cursor::Next() {
             st40:
                 if (++p == pe) goto _test_eof40;
             case 40:
-#line 2662 "ron/text-parser.cc"
+#line 2741 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr109;
@@ -3464,7 +3525,7 @@ Status TextFrame::Cursor::Next() {
             st41:
                 if (++p == pe) goto _test_eof41;
             case 41:
-#line 2710 "ron/text-parser.cc"
+#line 2789 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr121;
@@ -3487,7 +3548,7 @@ Status TextFrame::Cursor::Next() {
             st42:
                 if (++p == pe) goto _test_eof42;
             case 42:
-#line 2732 "ron/text-parser.cc"
+#line 2811 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr122;
@@ -3535,7 +3596,7 @@ Status TextFrame::Cursor::Next() {
             st43:
                 if (++p == pe) goto _test_eof43;
             case 43:
-#line 2768 "ron/text-parser.cc"
+#line 2847 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr130;
@@ -3569,7 +3630,7 @@ Status TextFrame::Cursor::Next() {
             st44:
                 if (++p == pe) goto _test_eof44;
             case 44:
-#line 2801 "ron/text-parser.cc"
+#line 2880 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr131;
@@ -3722,7 +3783,7 @@ Status TextFrame::Cursor::Next() {
             st47:
                 if (++p == pe) goto _test_eof47;
             case 47:
-#line 2922 "ron/text-parser.cc"
+#line 3001 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr121;
@@ -3745,7 +3806,7 @@ Status TextFrame::Cursor::Next() {
             st48:
                 if (++p == pe) goto _test_eof48;
             case 48:
-#line 2944 "ron/text-parser.cc"
+#line 3023 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr141;
@@ -3844,7 +3905,7 @@ Status TextFrame::Cursor::Next() {
             st50:
                 if (++p == pe) goto _test_eof50;
             case 50:
-#line 3024 "ron/text-parser.cc"
+#line 3103 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr131;
@@ -3894,18 +3955,27 @@ Status TextFrame::Cursor::Next() {
 #line 24 "ragel/./text-grammar.rl"
             {
                 strb = p;
+                cp_size = 0;
+            }
+                goto st51;
+            tr9 :
+#line 49 "ragel/./text-grammar.rl"
+            {
+                cp_size++;
             }
                 goto st51;
             tr164 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
                 goto st51;
             st51:
                 if (++p == pe) goto _test_eof51;
             case 51:
-#line 3071 "ron/text-parser.cc"
+#line 3160 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 34u:
                         goto tr156;
@@ -3997,21 +4067,26 @@ Status TextFrame::Cursor::Next() {
 #line 24 "ragel/./text-grammar.rl"
             {
                 strb = p;
+                cp_size = 0;
             }
 #line 9 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 0x1f; }
                 goto st57;
             tr10 :
-#line 9 "ragel/././utf8-grammar.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                cp = (*p) & 0x1f;
+                cp_size++;
             }
+#line 9 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0x1f; }
                 goto st57;
             tr165 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
 #line 9 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 0x1f; }
                 goto st57;
@@ -4024,28 +4099,33 @@ Status TextFrame::Cursor::Next() {
             st57:
                 if (++p == pe) goto _test_eof57;
             case 57:
-#line 3185 "ron/text-parser.cc"
+#line 3282 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr168;
                 goto st0;
             tr5 :
 #line 24 "ragel/./text-grammar.rl"
             {
                 strb = p;
+                cp_size = 0;
             }
 #line 10 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 0xf; }
                 goto st58;
             tr11 :
-#line 10 "ragel/././utf8-grammar.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                cp = (*p) & 0xf;
+                cp_size++;
             }
+#line 10 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 0xf; }
                 goto st58;
             tr166 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
 #line 10 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 0xf; }
                 goto st58;
@@ -4058,35 +4138,40 @@ Status TextFrame::Cursor::Next() {
             st58:
                 if (++p == pe) goto _test_eof58;
             case 58:
-#line 3213 "ron/text-parser.cc"
+#line 3318 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr169;
                 goto st0;
             tr6 :
 #line 24 "ragel/./text-grammar.rl"
             {
                 strb = p;
+                cp_size = 0;
             }
 #line 11 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 7; }
                 goto st59;
             tr12 :
-#line 11 "ragel/././utf8-grammar.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                cp = (*p) & 7;
+                cp_size++;
             }
+#line 11 "ragel/././utf8-grammar.rl"
+                { cp = (*p) & 7; }
                 goto st59;
             tr167 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
 #line 11 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 7; }
                 goto st59;
             st59:
                 if (++p == pe) goto _test_eof59;
             case 59:
-#line 3237 "ron/text-parser.cc"
+#line 3350 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr170;
                 goto st0;
             st60:
@@ -4131,7 +4216,7 @@ Status TextFrame::Cursor::Next() {
             st62:
                 if (++p == pe) goto _test_eof62;
             case 62:
-#line 3288 "ron/text-parser.cc"
+#line 3401 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr174;
@@ -4180,7 +4265,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr176;
                 goto st0;
             tr185 :
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -4197,7 +4282,7 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 9 "ragel/./text-grammar.rl"
                 { op_[0] = Uuid{variety, value, version, origin}; }
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -4214,7 +4299,7 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 9 "ragel/./text-grammar.rl"
                 { op_[0] = Uuid{variety, value, version, origin}; }
-#line 54 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -4225,7 +4310,7 @@ Status TextFrame::Cursor::Next() {
             st63:
                 if (++p == pe) goto _test_eof63;
             case 63:
-#line 3375 "ron/text-parser.cc"
+#line 3488 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr185;
@@ -4294,7 +4379,7 @@ Status TextFrame::Cursor::Next() {
             st64:
                 if (++p == pe) goto _test_eof64;
             case 64:
-#line 3438 "ron/text-parser.cc"
+#line 3551 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr188;
@@ -4325,7 +4410,7 @@ Status TextFrame::Cursor::Next() {
             st65:
                 if (++p == pe) goto _test_eof65;
             case 65:
-#line 3470 "ron/text-parser.cc"
+#line 3583 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr189;
@@ -4382,7 +4467,7 @@ Status TextFrame::Cursor::Next() {
             st66:
                 if (++p == pe) goto _test_eof66;
             case 66:
-#line 3515 "ron/text-parser.cc"
+#line 3628 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr199;
@@ -4405,7 +4490,7 @@ Status TextFrame::Cursor::Next() {
             st67:
                 if (++p == pe) goto _test_eof67;
             case 67:
-#line 3537 "ron/text-parser.cc"
+#line 3650 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr200;
@@ -4453,7 +4538,7 @@ Status TextFrame::Cursor::Next() {
             st68:
                 if (++p == pe) goto _test_eof68;
             case 68:
-#line 3573 "ron/text-parser.cc"
+#line 3686 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr208;
@@ -4487,7 +4572,7 @@ Status TextFrame::Cursor::Next() {
             st69:
                 if (++p == pe) goto _test_eof69;
             case 69:
-#line 3606 "ron/text-parser.cc"
+#line 3719 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr189;
@@ -4542,7 +4627,7 @@ Status TextFrame::Cursor::Next() {
             st70:
                 if (++p == pe) goto _test_eof70;
             case 70:
-#line 3650 "ron/text-parser.cc"
+#line 3763 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr209;
@@ -4565,7 +4650,7 @@ Status TextFrame::Cursor::Next() {
             st71:
                 if (++p == pe) goto _test_eof71;
             case 71:
-#line 3672 "ron/text-parser.cc"
+#line 3785 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr210;
@@ -4615,7 +4700,7 @@ Status TextFrame::Cursor::Next() {
             st72:
                 if (++p == pe) goto _test_eof72;
             case 72:
-#line 3709 "ron/text-parser.cc"
+#line 3822 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr219;
@@ -4649,7 +4734,7 @@ Status TextFrame::Cursor::Next() {
             st73:
                 if (++p == pe) goto _test_eof73;
             case 73:
-#line 3742 "ron/text-parser.cc"
+#line 3855 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr174;
@@ -4926,7 +5011,7 @@ Status TextFrame::Cursor::Next() {
     _out : {}
     }
 
-#line 64 "ragel/text-parser.rl"
+#line 65 "ragel/text-parser.rl"
 
     at_ = off_;
     off_ = p - pb;
@@ -4939,6 +5024,9 @@ Status TextFrame::Cursor::Next() {
 
     if (term && cs != RON_error) {
         term_ = chr2term(term);  // FIXME gen a fn
+        if ((options_ & PARSE_ON_DEMAND) == 0) {
+            ParseValues();
+        }
         return Status::OK;
     } else if (cs >= RON_first_final) {
         cs = RON_error;

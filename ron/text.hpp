@@ -1,11 +1,12 @@
-#include <utility>
-
 #ifndef ron_open_text_hpp
 #define ron_open_text_hpp
+#include <iostream>
+#include <utility>
+
+#include "encdec.hpp"
 #include "slice.hpp"
 #include "status.hpp"
 #include "uuid.hpp"
-#include "encdec.hpp"
 
 namespace ron {
 
@@ -21,56 +22,6 @@ class TextFrame {
     void operator=(const TextFrame& orig) { data_ = orig.data_; }
 
     const String& data() const { return data_; }
-    inline Slice atom_data(Atom a) const {
-        return Slice{data_.data(), a.safe_origin().as_range};
-    }
-
-    //  A T O M  P A R S E R S  (part of the interface)
-
-    /** Parses a codepoint (escaped UTF8), saves to atom.value.cp,
-     *  consumes the origin range, decreases atom.value.cp_size.
-     *  (inline shortcut) */
-    inline Result ParseCodepoint(Atom& atom) const {
-        return ParseEscapedUtf8Codepoint(atom);
-    }
-
-    /** Parses a codepoint (escaped UTF8), saves to atom.value.cp,
-     *  consumes the origin range, decreases atom.value.cp_size
-     *  (full parser). */
-    Result ParseEscapedUtf8Codepoint(Atom& atom) const {
-        return NOT_IMPLEMENTED;
-    }
-
-    /** Primary value parser: UUIDs */
-    inline Result ParseUuid(Atom& atom) { return OK; }
-
-    /** Primary value parser: FLOATs;
-     *  puts the value to atom.value().as_float */
-    Result ParseFloat(Atom& atom);
-
-    /** Primary value parser: INTs */
-    Result ParseInteger(Atom& atom);
-
-    Result ParseCodepoints(Codepoints& ret, Atom cp_string_atom) {
-        Result code;
-        do {
-            ret.push_back(cp_string_atom.value.cp);
-        } while (OK == (code = ParseCodepoint(cp_string_atom)));
-        return code;
-    }
-
-    inline Result ParseAtom(Atom& a) {
-        switch (a.type()) {
-            case INT:
-                return ParseInteger(a);
-            case FLOAT:
-                return ParseFloat(a);
-            case STRING:
-                return ParseCodepoint(a);
-            case UUID:
-                return ParseUuid(a);
-        }
-    }
 
     //    KILLL THIS!!!
     static String unescape(const Slice& data);
@@ -94,12 +45,19 @@ class TextFrame {
         int cs;
         Uuid prev_id_;
         fsize_t line_;
+        uint32_t options_;
 
         static constexpr int RON_FULL_STOP = 255;
         static constexpr int SPEC_SIZE = 2;  // open RON
 
        public:
-        explicit Cursor(const Slice data, bool advance = true)
+        enum : uint32_t {
+            DEFAULT = 0,
+            START_AT_BTB = 1,
+            PARSE_ON_DEMAND = 2,
+        };
+
+        explicit Cursor(const Slice data, uint32_t options = DEFAULT)
             : data_{data},
               op_{TERM::RAW},
               pos_{-1},
@@ -107,19 +65,25 @@ class TextFrame {
               off_{0},
               cs{0},
               prev_id_{},
-              line_{1} {
-            if (advance) {
+              line_{1},
+              options_{options} {
+            if ((options & START_AT_BTB) == 0) {
                 Next();
             }
         }
         explicit Cursor(const String& str) : Cursor{Slice{str}} {}
-        explicit Cursor(const TextFrame& host, bool advance = true)
-            : Cursor{host.data_, advance} {}
+        explicit Cursor(const TextFrame& host, uint32_t options = DEFAULT)
+            : Cursor{host.data_, options} {}
         Cursor(const Cursor& b) = default;
         const Atoms& op() const { return op_; }
         Status Next();
-        Result NextCodepoint(Atom& c) const {
-            return NOT_IMPLEMENTED;
+        /** Parses a codepoint (escaped UTF8), saves to atom.value.cp,
+         *  consumes the origin range, decreases atom.value.cp_size
+         *  (full parser). */
+        Result NextCodepoint(Atom& c) const;
+        inline Slice atom_data(Atom a) const {
+            assert(a.safe_origin().as_range.valid());
+            return Slice{data_.data(), a.safe_origin().as_range};
         }
 
         void Trim(const Cursor& b) { data_.Resize(b.at_); }
@@ -161,8 +125,12 @@ class TextFrame {
         inline TERM term() const { return term_; }
         String string(fsize_t idx) const {
             assert(type(idx) == STRING);
-            // FIXME check metrics
-            return TextFrame::string(data_, atom(idx));
+            Atom a = op_[idx];
+            String ret{};
+            while (NextCodepoint(a) == OK) {
+                utf8append(ret, a.value.cp);
+            }
+            return ret;
         }
         inline Slice string_slice(fsize_t idx) const {
             return data_.slice(atom(idx).origin.range());
@@ -187,7 +155,47 @@ class TextFrame {
         static inline bool word_too_big(const Slice data) {
             return data.size() > Word::MAX_BASE64_SIZE;
         }
-        Result ParseAtoms() { return OK; }
+
+        //  A T O M  P A R S E R S  (part of the interface)
+
+        /** Primary value parser: UUIDs */
+        inline Result ParseUuid(Atom& atom) { return OK; }
+
+        /** Primary value parser: FLOATs;
+         *  puts the value to atom.value().as_float */
+        Result ParseFloat(Atom& atom);
+
+        /** Primary value parser: INTs */
+        Result ParseInteger(Atom& atom);
+
+        Result ParseCodepoints(Codepoints& ret, Atom cp_string_atom) {
+            Result code;
+            while (OK == (code = NextCodepoint(cp_string_atom))) {
+                ret.push_back(cp_string_atom.value.cp);
+            };
+            return code;
+        }
+
+        inline Result ParseAtom(Atom& a) {
+            switch (a.type()) {
+                case INT:
+                    return ParseInteger(a);
+                case FLOAT:
+                    return ParseFloat(a);
+                case STRING:
+                    return OK;  // NextCodepoint(a);
+                case UUID:
+                    return ParseUuid(a);
+            }
+        }
+
+        Result ParseValues() {
+            Result re{OK};
+            for (fsize_t i = 2; re == OK && i < op_.size(); ++i) {
+                re = ParseAtom(op_[i]);
+            }
+            return re;
+        }
 
         using Comparator = bool (*)(const Cursor& a, const Cursor& b);
     };
@@ -202,9 +210,7 @@ class TextFrame {
         String data_;
 
         inline void Write(char c) { data_.push_back(c); }
-        inline void WriteCodepoint(Codepoint cp) {
-            utf8append(data_, cp);
-        }
+        inline void WriteCodepoint(Codepoint cp) { utf8esc_append(data_, cp); }
         inline void Write(Slice data) {
             data_.append((String::value_type*)data.begin(), data.size());
         }
@@ -241,6 +247,7 @@ class TextFrame {
 
         Result WriteValues(const Cursor& cur);
 
+        /** The op must be *parsed*. */
         template <typename Cursor2>
         Result WriteValues(const Cursor2& cur) {
             const Atoms& op = cur.op();
@@ -257,7 +264,7 @@ class TextFrame {
                         break;
                     case STRING:
                         Write(ATOM_PUNCT[STRING]);
-                        while (a.value.cp_size) {
+                        while (a.value.cp) {
                             WriteCodepoint(a.value.cp);
                             cur.NextCodepoint(a);
                         }
@@ -344,6 +351,15 @@ class TextFrame {
             auto cur = frame.cursor();
             AppendAll(cur);
         }
+
+        void AppendFrame(const TextFrame& frame) {
+            Cursor cur{frame, Cursor::PARSE_ON_DEMAND};
+            while (cur.valid()) {
+                AppendOp(cur);
+                WriteTerm(cur.term());
+                cur.Next();
+            }
+        }
     };
 
     Cursor cursor() const { return Cursor{*this}; }
@@ -375,7 +391,7 @@ class TextFrame {
        public:
         StringIterator(Slice str) : data_{str}, cp_{0} { Next(); }
         inline Codepoint operator*() const { return cp_; }
-        bool Next();
+        bool Next() { return false; }
         inline void operator++() { Next(); }
         inline bool valid() const { return cp_ != 0; }
         inline operator bool() const { return valid(); }

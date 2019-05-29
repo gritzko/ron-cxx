@@ -3,9 +3,9 @@
 
 #include <cstring>
 #include <vector>
+#include "op.hpp"
 #include "status.hpp"
 #include "uuid.hpp"
-#include "op.hpp"
 
 namespace ron {
 
@@ -59,8 +59,12 @@ Status CompareWithCursors(Cursor a, Cursor b) {
         a.Next();
         b.Next();
     }
-    while (a.valid() && a.id() == Uuid::COMMENT) { a.Next(); }
-    while (b.valid() && b.id() == Uuid::COMMENT) { b.Next(); }
+    while (a.valid() && a.id() == Uuid::COMMENT) {
+        a.Next();
+    }
+    while (b.valid() && b.id() == Uuid::COMMENT) {
+        b.Next();
+    }
     if (a.valid() || b.valid())
         return Status::BADFRAME.comment("one frame is longer");
     return Status::OK;

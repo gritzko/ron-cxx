@@ -47,6 +47,7 @@ Status TextFrame::Cursor::Next () {
     CharRef uuidb{p};
     CharRef wordb{p};
     Codepoint cp{0};
+    fsize_t cp_size{0};
     char term{0};
     Slice value, origin;
     char variety{0}, version{0};
@@ -72,6 +73,9 @@ Status TextFrame::Cursor::Next () {
 
     if (term && cs!=RON_error) {
         term_ = chr2term(term); // FIXME gen a fn
+        if ((options_&PARSE_ON_DEMAND)==0) {
+            ParseValues();
+        }
         return Status::OK;
     } else if (cs>=RON_first_final) {
         cs = RON_error;

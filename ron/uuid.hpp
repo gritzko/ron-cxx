@@ -138,6 +138,27 @@ const Word ZERO{uint64_t{0}};
 
 enum half_t { VALUE = 0, ORIGIN = 1 };
 
+/**
+ A 128-bit representation of a RON atom. Bit layouts:
+ 1. UUID - all 128 bits are UUID in the RON layout; origin m.s.bits are 00.
+    Empty state: NIL UUID.
+ 2. INT - value is an int64_t, origin is the buffer range for the serialized
+ value. Origin msb are 01. In the empty state, the value is 0 (there is no other
+ indication, so the user must know from the context whether the cursor is
+ empty).
+ 3. STRING - a codepoint cursor,
+    * value's m.s.half is the offset for the *remaining* string,
+    * value's l.s.half is the codepoint,
+    * origin is the *remaining* buffer range,
+    * origin msb are 10.
+    A STRING atom has two empty states: before the beginning (BTB) and after the
+ end (ATE). To have the entire original byte range, one needs a BTB cursor. The
+ codepoint value is 0 in either of the empty states. Otherwise, 0 is a forbidden
+ value. In the ATE state, cp offset is 0, cp is 0, so value is 0, and the range
+ is empty (begin==end). For an empty string, BTB==ATE.
+ 4. FLOAT - value is a 64-bit ISO float, origin is a range, origin m.s.bits
+ are 11.
+ */
 struct Atom {
     Word origin, value;
 
@@ -145,13 +166,14 @@ struct Atom {
     Atom() : Atom{ZERO, ZERO} {}
     Atom(uint64_t value, uint64_t origin) : Atom{Word{value}, Word{origin}} {}
 
-    static inline Atom String(Codepoint cp, Range range={}, fsize_t cp_size=0) {
+    static inline Atom String(Codepoint cp, Range range = {},
+                              fsize_t cp_size = 0) {
         return Atom{Word{cp_size, cp}, Word{range} | STRING_FLAGS};
     }
-    static inline Atom Integer(Integer i, Range range={}) {
+    static inline Atom Integer(Integer i, Range range = {}) {
         return Atom{Word{i}, Word{range} | INT_FLAGS};
     }
-    static inline Atom Float(Float value, Range range=Range{}) {
+    static inline Atom Float(Float value, Range range = Range{}) {
         return Atom{Word{value}, Word{range} | FLOAT_FLAGS};
     }
 
@@ -254,6 +276,7 @@ constexpr int OP_REF_IDX{1};
 /** Status(above) is a bit too heavy; use Result for inner loops */
 using Result = Word;
 const Result OK{"0"};
+const Result ENDOFINPUT{"ENDOFINPUT"};
 const Result NOT_IMPLEMENTED{"NOTIMPLTED"};
 const Result BADSYNTAX{"BADSYNTAX"};
 const Result OUTOFRANGE{"OUTOFRANGE"};

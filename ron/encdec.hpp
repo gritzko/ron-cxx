@@ -93,6 +93,62 @@ inline void utf8append(String& to, Codepoint cp) {
     }
 }
 
+inline void utf8esc_append(String& to, Codepoint cp) {
+    if (cp < 128) {
+        Char i = static_cast<Char>(cp);
+        constexpr Char ESC = '\\';
+        switch (i) {
+            case '\"':
+                to.push_back(ESC);
+                to.push_back('"');
+                break;
+            case '\'':
+                to.push_back(ESC);
+                to.push_back('\'');
+                break;
+            case '\\':
+                to.push_back(ESC);
+                to.push_back('\\');
+                break;
+            case '\b':
+                to.push_back(ESC);
+                to.push_back('b');
+                break;
+            case '\f':
+                to.push_back(ESC);
+                to.push_back('f');
+                break;
+            case '\n':
+                to.push_back(ESC);
+                to.push_back('n');
+                break;
+            case '\r':
+                to.push_back(ESC);
+                to.push_back('r');
+                break;
+            case '\t':
+                to.push_back(ESC);
+                to.push_back('t');
+                break;
+            default:
+                to.push_back(i);
+                break;
+        }
+    } else if (cp < 2048) {
+        to.push_back((cp >> 6) | (128 + 64));
+        to.push_back((cp & 63) | 128);
+    } else if (cp < 65536) {
+        to.push_back((cp >> 12) | (128 + 64 + 32));
+        to.push_back(((cp >> 6) & 63) | 128);
+        to.push_back((cp & 63) | 128);
+    } else {
+        to.push_back(((cp >> 18) & 7) | (128 + 64 + 32 + 16));
+        to.push_back(((cp >> 12) & 63) | 128);
+        to.push_back(((cp >> 6) & 63) | 128);
+        to.push_back((cp & 63) | 128);
+    }
+}
+
 inline void utf16append(std::u16string& to, Codepoint cp) {
     if (cp < 0xd7ff || (cp < 0x10000 && cp >= 0xe000)) {
         to.push_back(static_cast<char16_t>(cp));

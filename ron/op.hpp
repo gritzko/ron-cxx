@@ -2,9 +2,9 @@
 #define ron_op_hpp
 #include <cassert>
 #include <vector>
+#include "encdec.hpp"
 #include "status.hpp"
 #include "uuid.hpp"
-#include "encdec.hpp"
 
 namespace ron {
 
@@ -19,7 +19,10 @@ struct Op {
     inline Uuid ref() const { return A2U(atoms_[1]); }
 
     Result NextCodepoint(Atom& a) const {
-        if (!a.value.cp_size) { return OUTOFRANGE; }
+        if (!a.value.cp_size) {
+            a.value.cp = 0;
+            return OUTOFRANGE;
+        }
         a.value.cp = strings_[a.origin.as_range.begin()];
         --a.value.cp_size;
         ++a.origin.as_range;
@@ -52,8 +55,12 @@ struct Op {
         fsize_t b = strings_.size();
         Result re = ParseUtf8(strings_, value);
         fsize_t cp_size = strings_.size() - b;
-        Range range{b, FSIZE(strings_.size())};
-        atoms_.push_back(Atom::String(strings_[b], range,cp_size));
+        if (cp_size) {
+            Range range{b + 1, FSIZE(strings_.size())};
+            atoms_.push_back(Atom::String(strings_[b], range, cp_size - 1));
+        } else {
+            atoms_.push_back(Atom::String(0, Range{b, b}, cp_size));
+        }
         WriteAtoms(args...);
     }
 
@@ -70,18 +77,18 @@ struct Op {
     Op(const String& id, const String& ref, Ts... args)
         : Op{Uuid{id}, Uuid{ref}, args...} {}
 
-    template<class Cursor>
+    template <class Cursor>
     Result WriteValues(const Cursor& cur) {
         const Atoms& op = cur.op();
-        for(fsize_t i=2; i<op.size(); ++i) {
+        for (fsize_t i = 2; i < op.size(); ++i) {
             Atom a = op[i];
-            if (a.type()!=STRING) {
+            if (a.type() != STRING) {
                 atoms_.push_back(a);
                 continue;
             }
             fsize_t b = strings_.size();
             fsize_t cp_size{0};
-            while (a.value.cp_size) { // Oopsie!!! FIXME
+            while (a.value.cp_size) {  // Oopsie!!! FIXME
                 strings_.push_back(a.value.cp);
                 cur.NextCodepoint(a);
                 ++cp_size;
@@ -92,7 +99,7 @@ struct Op {
         return OK;
     }
 
-    template<class Cursor>
+    template <class Cursor>
     static Op Amend(Uuid id, Uuid ref, const Cursor& cur) {
         Op ret{id, ref};
         ret.WriteValues(cur);

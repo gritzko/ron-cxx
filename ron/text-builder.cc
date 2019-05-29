@@ -1,4 +1,5 @@
 #include <cinttypes>
+#include <iostream>
 #include "text.hpp"
 
 namespace ron {
@@ -18,7 +19,7 @@ Result TextFrame::Builder::WriteValues(const Cursor& cur) {
                 break;
             case STRING:
                 Write(ATOM_PUNCT[STRING]);
-                Write(cur.data(atom));
+                Write(cur.atom_data(atom));
                 Write(ATOM_PUNCT[STRING]);
                 break;
             case FLOAT:
@@ -41,8 +42,13 @@ void TextFrame::Builder::WriteUuid(const Uuid value) {
 }
 
 void TextFrame::Builder::WriteFloat(double value) {
-    char tmp[20];
-    int len = sprintf((char*)tmp, "%le", value);
+    char tmp[32];
+    // floats are a pain; esp converting binary<->text
+    // our only interest here is to preserve the hashes,
+    // so binary->text->binary must not change the value;
+    // text->binary->text we don't care about (see test/text.cc)
+    // 17 is DBL_DECIMAL_DIG, enough to express 64 bit ISO floats
+    int len = sprintf((char*)tmp, "%.17G", value);
     data_.append(tmp, static_cast<size_t>(len));
 }
 

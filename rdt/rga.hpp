@@ -11,8 +11,7 @@ namespace ron {
 using namespace std;
 
 /** Implements Causal Tree CRDT, which is mostly the same thing as Replicated
- * Growable Array CRDT. Except, RGA is stored as a tree, while CT is stored
- * as an array. We store everything as a RON frame.
+ * Growable Array CRDT. We store everything as a RON frame.
  * We call it use "RGA" cause every RDT here is a CT (in the broad sense). */
 template <class Frame>
 class RGArrayRDT {

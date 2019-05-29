@@ -21,18 +21,20 @@
         op_.push_back(Atom{INT, body.range_of(the_int)});
         uuidb = nullptr; // sabotage uuid
     }
-    action begin_string { strb = p; }
+    action begin_string { strb = p; cp_size = 0; }
     action end_string { 
         Slice the_str{strb,p};
         //op_.push_back(Atom::String(body.range_of(the_str))); 
-        op_.push_back(Atom{STRING, body.range_of(the_str)});
+        Atom a = Atom{STRING, body.range_of(the_str)};
+        a.value.cp_size = cp_size;
+        op_.push_back(a);
     }
     action begin_float { floatb = p; }
     action end_float { 
         Slice the_float{floatb,p};
         if (the_float.size() > 24) { cs = 0; fbreak; }
         //op_.push_back(Atom::Float(parse_float(the_float), body.range_of(the_float))); 
-        op_.push_back(Atom{STRING, body.range_of(the_float)});
+        op_.push_back(Atom{FLOAT, body.range_of(the_float)});
     }
     action end_quoted_uuid {
         if (word_too_big(value) || word_too_big(origin)) { cs = 0; fbreak; }
@@ -43,6 +45,9 @@
             if (word_too_big(value) || word_too_big(origin)) { cs = 0; fbreak; }
             op_.push_back(Uuid{variety, value, version, origin}); 
         }
+    }
+    action end_cp {
+        cp_size++;
     }
     action begin_span {}
     action end_span {}
@@ -79,7 +84,7 @@
     UNIESC = "\\u" [0-9a-fA-F]{4} %string_uesc;
     ESC = "\\" [nrt\\b'/"] @string_esc;
     CHAR = CODEPOINT - ['\n\r\\];
-    CP = UNIESC|ESC|CHAR;
+    CP = (UNIESC|ESC|CHAR) %end_cp;
     STRING = ( CP* ) >begin_string %end_string;
 
     # op term (header op, raw/reduced op, query op)

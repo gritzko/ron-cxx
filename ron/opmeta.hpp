@@ -3,9 +3,9 @@
 
 #include "form.hpp"
 #include "hash.hpp"
+#include "op.hpp"
 #include "slice.hpp"
 #include "status.hpp"
-#include "op.hpp"
 
 namespace ron {
 

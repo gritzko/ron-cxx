@@ -16,12 +16,12 @@
     action end_esc   { push_back_esc(ret, esc, p); }
 
     action begin_cp { cp = p; }
-    action end_cp   { push_back_cp(ret, cp, p); }
+    action end_cp_2   { push_back_cp(ret, cp, p); }
 
     UTF8ESC = (
           UNIESC >begin_uniesc %end_uniesc
         | ESC    >begin_esc %end_esc
-        | CHAR   >begin_cp %end_cp
+        | CHAR   >begin_cp %end_cp_2
         )*;
 }%%
 

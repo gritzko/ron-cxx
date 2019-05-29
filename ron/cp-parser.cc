@@ -19,23 +19,26 @@ static const int CP_en_main = 9;
 
 #line 11 "ragel/cp-parser.rl"
 
-bool TextFrame::StringIterator::Next() {
-    CharRef p = data_.begin();
-    CharRef pe = data_.end();
-    /*if (p==pe) {
-        cp_ = 0;
-        return false;
-    }*/
+Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
+    if (!a.value.cp_size) {
+        a.value.cp = 0;
+        return ENDOFINPUT;
+    }
+    Slice data = atom_data(a);
+    CharRef p = data.begin();
+    CharRef pe = data.end();
+    CharRef pb = p;
     CharRef eof = 0;
     Codepoint cp = 0;
+    fsize_t cp_size{0};
     int cs = 0;
 
-#line 36 "ron/cp-parser.cc"
+#line 39 "ron/cp-parser.cc"
     { cs = CP_start; }
 
-#line 23 "ragel/cp-parser.rl"
+#line 26 "ragel/cp-parser.rl"
 
-#line 43 "ron/cp-parser.cc"
+#line 46 "ron/cp-parser.cc"
     {
         if (p == pe) goto _test_eof;
         switch (cs) {
@@ -64,7 +67,7 @@ bool TextFrame::StringIterator::Next() {
                     goto tr13;
                 goto tr10;
             tr0 :
-#line 60 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_esc((*p));
             }
@@ -82,24 +85,30 @@ bool TextFrame::StringIterator::Next() {
             }
                 goto st10;
             tr15 :
-#line 25 "ragel/cp-parser.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                --p;
-                {
-                    p++;
-                    cs = 10;
-                    goto _out;
-                }
+                cp_size++;
             }
+#line 28 "ragel/cp-parser.rl"
+                {
+                    --p;
+                    {
+                        p++;
+                        cs = 10;
+                        goto _out;
+                    }
+                }
 #line 8 "ragel/././utf8-grammar.rl"
                 { cp = (*p); }
                 goto st10;
             tr20 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 25 "ragel/cp-parser.rl"
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
+#line 28 "ragel/cp-parser.rl"
                 {
                     --p;
                     {
@@ -114,7 +123,7 @@ bool TextFrame::StringIterator::Next() {
             st10:
                 if (++p == pe) goto _test_eof10;
             case 10:
-#line 101 "ron/cp-parser.cc"
+#line 112 "ron/cp-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -142,22 +151,28 @@ bool TextFrame::StringIterator::Next() {
                 cs = 0;
                 goto _out;
             tr16 :
-#line 25 "ragel/cp-parser.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                --p;
-                {
-                    p++;
-                    cs = 1;
-                    goto _out;
-                }
+                cp_size++;
             }
+#line 28 "ragel/cp-parser.rl"
+                {
+                    --p;
+                    {
+                        p++;
+                        cs = 1;
+                        goto _out;
+                    }
+                }
                 goto st1;
             tr21 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 25 "ragel/cp-parser.rl"
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
+#line 28 "ragel/cp-parser.rl"
                 {
                     --p;
                     {
@@ -170,7 +185,7 @@ bool TextFrame::StringIterator::Next() {
             st1:
                 if (++p == pe) goto _test_eof1;
             case 1:
-#line 140 "ron/cp-parser.cc"
+#line 159 "ron/cp-parser.cc"
                 switch ((*p)) {
                     case 34u:
                         goto tr0;
@@ -271,24 +286,30 @@ bool TextFrame::StringIterator::Next() {
             }
                 goto st6;
             tr17 :
-#line 25 "ragel/cp-parser.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                --p;
-                {
-                    p++;
-                    cs = 6;
-                    goto _out;
-                }
+                cp_size++;
             }
+#line 28 "ragel/cp-parser.rl"
+                {
+                    --p;
+                    {
+                        p++;
+                        cs = 6;
+                        goto _out;
+                    }
+                }
 #line 9 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 0x1f; }
                 goto st6;
             tr22 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 25 "ragel/cp-parser.rl"
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
+#line 28 "ragel/cp-parser.rl"
                 {
                     --p;
                     {
@@ -303,7 +324,7 @@ bool TextFrame::StringIterator::Next() {
             st6:
                 if (++p == pe) goto _test_eof6;
             case 6:
-#line 256 "ron/cp-parser.cc"
+#line 283 "ron/cp-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr7;
                 goto st0;
             tr9 :
@@ -319,24 +340,30 @@ bool TextFrame::StringIterator::Next() {
             }
                 goto st7;
             tr18 :
-#line 25 "ragel/cp-parser.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                --p;
-                {
-                    p++;
-                    cs = 7;
-                    goto _out;
-                }
+                cp_size++;
             }
+#line 28 "ragel/cp-parser.rl"
+                {
+                    --p;
+                    {
+                        p++;
+                        cs = 7;
+                        goto _out;
+                    }
+                }
 #line 10 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 0xf; }
                 goto st7;
             tr23 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 25 "ragel/cp-parser.rl"
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
+#line 28 "ragel/cp-parser.rl"
                 {
                     --p;
                     {
@@ -351,7 +378,7 @@ bool TextFrame::StringIterator::Next() {
             st7:
                 if (++p == pe) goto _test_eof7;
             case 7:
-#line 286 "ron/cp-parser.cc"
+#line 321 "ron/cp-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr8;
                 goto st0;
             tr14 :
@@ -361,24 +388,30 @@ bool TextFrame::StringIterator::Next() {
             }
                 goto st8;
             tr19 :
-#line 25 "ragel/cp-parser.rl"
+#line 49 "ragel/./text-grammar.rl"
             {
-                --p;
-                {
-                    p++;
-                    cs = 8;
-                    goto _out;
-                }
+                cp_size++;
             }
+#line 28 "ragel/cp-parser.rl"
+                {
+                    --p;
+                    {
+                        p++;
+                        cs = 8;
+                        goto _out;
+                    }
+                }
 #line 11 "ragel/././utf8-grammar.rl"
                 { cp = (*p) & 7; }
                 goto st8;
             tr24 :
-#line 61 "ragel/./text-grammar.rl"
+#line 66 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 25 "ragel/cp-parser.rl"
+#line 49 "ragel/./text-grammar.rl"
+                { cp_size++; }
+#line 28 "ragel/cp-parser.rl"
                 {
                     --p;
                     {
@@ -393,7 +426,7 @@ bool TextFrame::StringIterator::Next() {
             st8:
                 if (++p == pe) goto _test_eof8;
             case 8:
-#line 312 "ron/cp-parser.cc"
+#line 355 "ron/cp-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr9;
                 goto st0;
         }
@@ -432,21 +465,11 @@ bool TextFrame::StringIterator::Next() {
         if (p == eof) {
             switch (cs) {
                 case 10:
-#line 25 "ragel/cp-parser.rl"
+#line 49 "ragel/./text-grammar.rl"
                 {
-                    --p;
-                    {
-                        p++;
-                        cs = 0;
-                        goto _out;
-                    }
-                } break;
-                case 11:
-#line 61 "ragel/./text-grammar.rl"
-                {
-                    cp = decode_hex_cp(Slice{p - 4, 4});
+                    cp_size++;
                 }
-#line 25 "ragel/cp-parser.rl"
+#line 28 "ragel/cp-parser.rl"
                     {
                         --p;
                         {
@@ -456,22 +479,41 @@ bool TextFrame::StringIterator::Next() {
                         }
                     }
                     break;
-#line 342 "ron/cp-parser.cc"
+                case 11:
+#line 66 "ragel/./text-grammar.rl"
+                {
+                    cp = decode_hex_cp(Slice{p - 4, 4});
+                }
+#line 49 "ragel/./text-grammar.rl"
+                    { cp_size++; }
+#line 28 "ragel/cp-parser.rl"
+                    {
+                        --p;
+                        {
+                            p++;
+                            cs = 0;
+                            goto _out;
+                        }
+                    }
+                    break;
+#line 393 "ron/cp-parser.cc"
             }
         }
 
     _out : {}
     }
 
-#line 29 "ragel/cp-parser.rl"
+#line 32 "ragel/cp-parser.rl"
 
     if (cs != CP_error) {
-        cp_ = cp;
-        data_.consume(p - data_.begin());
-        return true;
+        a.value.cp = cp;
+        --a.value.cp_size;
+        a.origin.as_range.consume(p - pb);
+        assert(a.origin.as_range.valid());
+        return OK;
     } else {
-        cp_ = 0;
-        return false;
+        a.value.cp = 0;
+        return BADSYNTAX;
     }
 }
 

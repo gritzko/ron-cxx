@@ -53,7 +53,6 @@
     action end_span {}
     action op_term { 
         term = fc; 
-        pos_++; 
         if (p<pe-1) fbreak;
     }
     action newline {

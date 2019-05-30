@@ -111,11 +111,10 @@ TEST(TextFrame, optional_chars) {
 
     Cursor unparsed{TANGLED, Cursor::PARSE_ON_DEMAND};
     ASSERT_EQ(unparsed.size(), 4);
-    ASSERT_EQ(unparsed.atom(2).value.as_integer, 0);
-    ASSERT_TRUE(OK==unparsed.ParseValues());
+    ASSERT_EQ(unparsed.op()[2].value.as_integer, 0);
     ASSERT_EQ(unparsed.atom(2).value.as_integer, 234);
     unparsed.Next();
-    ASSERT_EQ(unparsed.atom(3).value.cp, 0);
+    ASSERT_EQ(unparsed.op()[3].value.cp, 0);
 
     Atom abc_atom = unparsed.atom(3);
     ASSERT_EQ(abc_atom.value.cp, 0);

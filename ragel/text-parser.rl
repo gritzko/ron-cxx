@@ -10,9 +10,9 @@ namespace ron {
 Status TextFrame::Cursor::Next () {
 
     Atoms& atoms = op_;
-
     int line=line_;
-
+    uint8_t &cs = ragel_state_;
+    static_assert(RON_first_final<UINT8_MAX, "this grammar should not change much");
 
     switch (cs) {
         case RON_error:
@@ -52,11 +52,11 @@ Status TextFrame::Cursor::Next () {
     Slice value, origin;
     char variety{0}, version{0};
 
+    Uuid prev = atoms.empty() ? Uuid::NIL : A2U(atoms[0]);
     atoms.clear();
-    op_.push_back(prev_id_.inc());
-    op_.push_back(prev_id_);
+    op_.push_back(prev.inc());
+    op_.push_back(prev);
 
-    //std::cerr<<"starting with "<<cs<<" ["<<p<<"]\n";
 
     %%{
     include TEXT_FRAME "./text-grammar.rl";
@@ -66,8 +66,6 @@ Status TextFrame::Cursor::Next () {
     at_ = off_;
     off_ = p-pb;
     line_ = line;
-
-    if (op_.size()) prev_id_ = id();
 
     //std::cerr << "ending with [" <<p<<"] state "<<cs<<" "<<op_.size()<<" atoms "<<(pe-p)<<" bytes left, prev_id_ "<<prev_id_.str()<<'\n';
 

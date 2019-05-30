@@ -16,8 +16,7 @@ class TextFrame {
    public:
     TextFrame() : data_{} {}
     explicit TextFrame(String data) : data_{std::move(data)} {}
-    explicit TextFrame(Slice data)
-        : TextFrame{data.str()} {}
+    explicit TextFrame(Slice data) : TextFrame{data.str()} {}
 
     void operator=(const TextFrame& orig) { data_ = orig.data_; }
 
@@ -36,16 +35,15 @@ class TextFrame {
 
     class Cursor {
         /** Frame data; the cursor does not own the memory */
-        Slice data_;
-        Atoms op_;
-        TERM term_;
-        int pos_;
-        fsize_t at_;
-        fsize_t off_;
-        int cs;
-        Uuid prev_id_;
-        fsize_t line_;
-        uint32_t options_;
+        Slice data_;           // 16 remaining data, base for ranges
+        Atoms op_;             // 24
+        TERM term_;            // 1
+        fsize_t at_;           // -4 Trim -> ???
+        fsize_t off_;          // -4 NOW use data_
+        uint8_t ragel_state_;  // 1
+        fsize_t line_;         // 4
+        uint32_t options_;  // -4 kill: start BTB, parse in .atom(i); .op()[i]
+                            // unparsed
 
         static constexpr int RON_FULL_STOP = 255;
         static constexpr int SPEC_SIZE = 2;  // open RON
@@ -60,11 +58,9 @@ class TextFrame {
         explicit Cursor(const Slice data, uint32_t options = DEFAULT)
             : data_{data},
               op_{TERM::RAW},
-              pos_{-1},
               at_{0},
               off_{0},
-              cs{0},
-              prev_id_{},
+              ragel_state_{0},
               line_{1},
               options_{options} {
             if ((options & START_AT_BTB) == 0) {
@@ -87,6 +83,7 @@ class TextFrame {
         }
 
         void Trim(const Cursor& b) { data_.Resize(b.at_); }
+        // KILL
         Status SkipChain() {
             Uuid i;
             Status ok;
@@ -96,10 +93,12 @@ class TextFrame {
             } while (ok && ref() == i);
             return ok;
         }
-        inline bool valid() const { return cs != 0; }
+        inline bool valid() const { return ragel_state_ != 0; }
+        // KILL
         inline bool has(fsize_t idx, ATOM atype) const {
             return size() > idx && type(idx) == atype;
         }
+        // KILL
         inline bool is(fsize_t idx, const Uuid& id) const {
             return has(idx, UUID) && uuid(idx) == id;
         }
@@ -107,9 +106,11 @@ class TextFrame {
         inline Slice data(Atom a) const {
             return Slice{data_.data(), a.safe_origin().as_range};
         }
+        // KILL
         const Slice at_data() const {
             return data_.slice(Range::FroTo(at_, off_));
         }
+        // KILL
         inline Slice slice(Range range) const { return data().slice(range); }
         inline const Uuid id() const {
             return static_cast<Uuid>(atom(OP_ID_IDX));
@@ -118,11 +119,13 @@ class TextFrame {
             return static_cast<Uuid>(atom(OP_REF_IDX));
         }
         inline fsize_t size() const { return op_.size(); }
+        // KILL
         inline ATOM type(fsize_t idx) const {
             assert(size() > idx);
             return op_[idx].type();
         }
         inline TERM term() const { return term_; }
+        // KILL ReadString(cps, atom, cursor)
         String string(fsize_t idx) const {
             assert(type(idx) == STRING);
             Atom a = op_[idx];
@@ -132,42 +135,51 @@ class TextFrame {
             }
             return ret;
         }
+        // KILL  data(atom)
         inline Slice string_slice(fsize_t idx) const {
             return data_.slice(atom(idx).origin.range());
         }
+        // KILL  atom(i).value.as_integer
         inline int64_t integer(fsize_t idx) const {
             assert(type(idx) == INT);
             return op_[idx].value.as_integer;
         }
+        // KILL
         inline double number(fsize_t idx) const {
             assert(type(idx) == FLOAT);
             return op_[idx].value.as_float;
         }
+        // KILL
         inline Uuid uuid(fsize_t idx) const {
             assert(type(idx) == UUID);
             return static_cast<Uuid>(op_[idx]);
         }
         inline Atom atom(fsize_t idx) const {
             assert(size() > idx);
-            return op_[idx];
+            Atom ret = op_[idx];
+            ParseAtom(ret);
+            return ret;
         }
+        // PRIVATE
         static bool int_too_big(const Slice& data);
+        // PRIVATE
         static inline bool word_too_big(const Slice data) {
             return data.size() > Word::MAX_BASE64_SIZE;
         }
 
-        //  A T O M  P A R S E R S  (part of the interface)
+        //  A T O M  P A R S E R S  (not part of the interface)
+        // PRIVATE
 
         /** Primary value parser: UUIDs */
-        inline Result ParseUuid(Atom& atom) { return OK; }
+        inline Result ParseUuid(Atom& atom) const { return OK; }
 
         /** Primary value parser: FLOATs;
          *  puts the value to atom.value().as_float */
-        Result ParseFloat(Atom& atom);
+        Result ParseFloat(Atom& atom) const;
 
         /** Primary value parser: INTs */
-        Result ParseInteger(Atom& atom);
-
+        Result ParseInteger(Atom& atom) const;
+        // KILL NextCodepoint(),  ReadCodepointString, ReadUtf8String
         Result ParseCodepoints(Codepoints& ret, Atom cp_string_atom) {
             Result code;
             while (OK == (code = NextCodepoint(cp_string_atom))) {
@@ -175,8 +187,8 @@ class TextFrame {
             };
             return code;
         }
-
-        inline Result ParseAtom(Atom& a) {
+        // PRIVATE
+        inline Result ParseAtom(Atom& a) const {
             switch (a.type()) {
                 case INT:
                     return ParseInteger(a);
@@ -188,7 +200,7 @@ class TextFrame {
                     return ParseUuid(a);
             }
         }
-
+        // PRIVATE
         Result ParseValues() {
             Result re{OK};
             for (fsize_t i = 2; re == OK && i < op_.size(); ++i) {

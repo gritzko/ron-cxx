@@ -18,8 +18,10 @@ static const int RON_en_main = 74;
 
 Status TextFrame::Cursor::Next() {
     Atoms& atoms = op_;
-
     int line = line_;
+    uint8_t& cs = ragel_state_;
+    static_assert(RON_first_final < UINT8_MAX,
+                  "this grammar should not change much");
 
     switch (cs) {
         case RON_error:
@@ -63,18 +65,17 @@ Status TextFrame::Cursor::Next() {
     Slice value, origin;
     char variety{0}, version{0};
 
+    Uuid prev = atoms.empty() ? Uuid::NIL : A2U(atoms[0]);
     atoms.clear();
-    op_.push_back(prev_id_.inc());
-    op_.push_back(prev_id_);
-
-    // std::cerr<<"starting with "<<cs<<" ["<<p<<"]\n";
+    op_.push_back(prev.inc());
+    op_.push_back(prev);
 
 #line 81 "ron/text-parser.cc"
     {
         if (p == pe) goto _test_eof;
         switch (cs) {
         tr220 :
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
         {
             if ((*p) == '\n') {
                 line++;
@@ -86,7 +87,6 @@ Status TextFrame::Cursor::Next() {
 #line 54 "ragel/./text-grammar.rl"
         {
             term = (*p);
-            pos_++;
             if (p < pe - 1) {
                 p++;
                 cs = 74;
@@ -115,7 +115,6 @@ Status TextFrame::Cursor::Next() {
 #line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
-                pos_++;
                 if (p < pe - 1) {
                     p++;
                     cs = 74;
@@ -142,7 +141,6 @@ Status TextFrame::Cursor::Next() {
 #line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
-                pos_++;
                 if (p < pe - 1) {
                     p++;
                     cs = 74;
@@ -172,7 +170,6 @@ Status TextFrame::Cursor::Next() {
 #line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
-                pos_++;
                 if (p < pe - 1) {
                     p++;
                     cs = 74;
@@ -202,7 +199,6 @@ Status TextFrame::Cursor::Next() {
 #line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
-                pos_++;
                 if (p < pe - 1) {
                     p++;
                     cs = 74;
@@ -249,7 +245,6 @@ Status TextFrame::Cursor::Next() {
 #line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
-                pos_++;
                 if (p < pe - 1) {
                     p++;
                     cs = 74;
@@ -281,7 +276,6 @@ Status TextFrame::Cursor::Next() {
 #line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
-                pos_++;
                 if (p < pe - 1) {
                     p++;
                     cs = 74;
@@ -313,7 +307,6 @@ Status TextFrame::Cursor::Next() {
 #line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
-                pos_++;
                 if (p < pe - 1) {
                     p++;
                     cs = 74;
@@ -358,7 +351,6 @@ Status TextFrame::Cursor::Next() {
 #line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
-                pos_++;
                 if (p < pe - 1) {
                     p++;
                     cs = 74;
@@ -403,7 +395,6 @@ Status TextFrame::Cursor::Next() {
 #line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
-                pos_++;
                 if (p < pe - 1) {
                     p++;
                     cs = 74;
@@ -423,7 +414,6 @@ Status TextFrame::Cursor::Next() {
 #line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
-                pos_++;
                 if (p < pe - 1) {
                     p++;
                     cs = 74;
@@ -443,7 +433,6 @@ Status TextFrame::Cursor::Next() {
 #line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
-                pos_++;
                 if (p < pe - 1) {
                     p++;
                     cs = 74;
@@ -463,7 +452,6 @@ Status TextFrame::Cursor::Next() {
 #line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
-                pos_++;
                 if (p < pe - 1) {
                     p++;
                     cs = 74;
@@ -483,7 +471,6 @@ Status TextFrame::Cursor::Next() {
 #line 54 "ragel/./text-grammar.rl"
             {
                 term = (*p);
-                pos_++;
                 if (p < pe - 1) {
                     p++;
                     cs = 74;
@@ -494,7 +481,7 @@ Status TextFrame::Cursor::Next() {
         st74:
             if (++p == pe) goto _test_eof74;
             case 74:
-#line 378 "ron/text-parser.cc"
+#line 364 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr220;
@@ -815,7 +802,7 @@ Status TextFrame::Cursor::Next() {
             st1:
                 if (++p == pe) goto _test_eof1;
             case 1:
-#line 613 "ron/text-parser.cc"
+#line 599 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -857,13 +844,13 @@ Status TextFrame::Cursor::Next() {
                 { cp = (*p); }
                 goto st2;
             tr156 :
-#line 65 "ragel/./text-grammar.rl"
+#line 64 "ragel/./text-grammar.rl"
             {
                 cp = decode_esc((*p));
             }
                 goto st2;
             tr162 :
-#line 66 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -881,7 +868,7 @@ Status TextFrame::Cursor::Next() {
             st2:
                 if (++p == pe) goto _test_eof2;
             case 2:
-#line 671 "ron/text-parser.cc"
+#line 657 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -935,7 +922,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st3;
             tr163 :
-#line 66 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -953,7 +940,7 @@ Status TextFrame::Cursor::Next() {
             st3:
                 if (++p == pe) goto _test_eof3;
             case 3:
-#line 739 "ron/text-parser.cc"
+#line 725 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr13;
@@ -981,7 +968,7 @@ Status TextFrame::Cursor::Next() {
                 if (9u <= (*p) && (*p) <= 10u) goto tr13;
                 goto st0;
             tr13 :
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -1007,7 +994,7 @@ Status TextFrame::Cursor::Next() {
                 op_.push_back(Atom{INT, body.range_of(the_int)});
                 uuidb = nullptr;  // sabotage uuid
             }
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1031,7 +1018,7 @@ Status TextFrame::Cursor::Next() {
                 // body.range_of(the_float)));
                 op_.push_back(Atom{FLOAT, body.range_of(the_float)});
             }
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1058,7 +1045,7 @@ Status TextFrame::Cursor::Next() {
                     }
                     op_.push_back(Uuid{variety, value, version, origin});
                 }
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1085,7 +1072,7 @@ Status TextFrame::Cursor::Next() {
                     }
                     op_.push_back(Uuid{variety, value, version, origin});
                 }
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1129,7 +1116,7 @@ Status TextFrame::Cursor::Next() {
                         op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1158,7 +1145,7 @@ Status TextFrame::Cursor::Next() {
                         op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1187,7 +1174,7 @@ Status TextFrame::Cursor::Next() {
                         op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1229,7 +1216,7 @@ Status TextFrame::Cursor::Next() {
                         op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1271,7 +1258,7 @@ Status TextFrame::Cursor::Next() {
                         op_.push_back(Uuid{variety, value, version, origin});
                     }
                 }
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1288,7 +1275,7 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 12 "ragel/./text-grammar.rl"
                 { op_[1] = Uuid{variety, value, version, origin}; }
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1305,7 +1292,7 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 12 "ragel/./text-grammar.rl"
                 { op_[1] = Uuid{variety, value, version, origin}; }
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -1316,7 +1303,7 @@ Status TextFrame::Cursor::Next() {
             st4:
                 if (++p == pe) goto _test_eof4;
             case 4:
-#line 1014 "ron/text-parser.cc"
+#line 1000 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr13;
@@ -1361,7 +1348,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr21;
                 goto st0;
             tr24 :
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -1639,7 +1626,7 @@ Status TextFrame::Cursor::Next() {
             st5:
                 if (++p == pe) goto _test_eof5;
             case 5:
-#line 1253 "ron/text-parser.cc"
+#line 1239 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr24;
@@ -1697,13 +1684,13 @@ Status TextFrame::Cursor::Next() {
                 { cp = (*p); }
                 goto st7;
             tr43 :
-#line 65 "ragel/./text-grammar.rl"
+#line 64 "ragel/./text-grammar.rl"
             {
                 cp = decode_esc((*p));
             }
                 goto st7;
             tr49 :
-#line 66 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -1721,7 +1708,7 @@ Status TextFrame::Cursor::Next() {
             st7:
                 if (++p == pe) goto _test_eof7;
             case 7:
-#line 1326 "ron/text-parser.cc"
+#line 1312 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 10u:
                         goto st0;
@@ -1775,7 +1762,7 @@ Status TextFrame::Cursor::Next() {
                 }
                 goto st8;
             tr39 :
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -1784,7 +1771,7 @@ Status TextFrame::Cursor::Next() {
             }
                 goto st8;
             tr50 :
-#line 66 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -1802,7 +1789,7 @@ Status TextFrame::Cursor::Next() {
             st8:
                 if (++p == pe) goto _test_eof8;
             case 8:
-#line 1403 "ron/text-parser.cc"
+#line 1389 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr39;
@@ -1831,7 +1818,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr40;
                 goto st0;
             tr40 :
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -1842,7 +1829,7 @@ Status TextFrame::Cursor::Next() {
             st10:
                 if (++p == pe) goto _test_eof10;
             case 10:
-#line 1442 "ron/text-parser.cc"
+#line 1428 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr40;
@@ -1854,7 +1841,7 @@ Status TextFrame::Cursor::Next() {
                 if (9u <= (*p) && (*p) <= 10u) goto tr40;
                 goto st0;
             tr42 :
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -1865,7 +1852,7 @@ Status TextFrame::Cursor::Next() {
             st11:
                 if (++p == pe) goto _test_eof11;
             case 11:
-#line 1464 "ron/text-parser.cc"
+#line 1450 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr42;
@@ -1896,7 +1883,7 @@ Status TextFrame::Cursor::Next() {
             }
                 goto st12;
             tr51 :
-#line 66 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -1906,7 +1893,7 @@ Status TextFrame::Cursor::Next() {
             st12:
                 if (++p == pe) goto _test_eof12;
             case 12:
-#line 1498 "ron/text-parser.cc"
+#line 1484 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 34u:
                         goto tr43;
@@ -2012,7 +1999,7 @@ Status TextFrame::Cursor::Next() {
                 { cp = (*p) & 0x1f; }
                 goto st18;
             tr52 :
-#line 66 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -2030,7 +2017,7 @@ Status TextFrame::Cursor::Next() {
             st18:
                 if (++p == pe) goto _test_eof18;
             case 18:
-#line 1620 "ron/text-parser.cc"
+#line 1606 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr55;
                 goto st0;
             tr31 :
@@ -2051,7 +2038,7 @@ Status TextFrame::Cursor::Next() {
                 { cp = (*p) & 0xf; }
                 goto st19;
             tr53 :
-#line 66 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -2069,7 +2056,7 @@ Status TextFrame::Cursor::Next() {
             st19:
                 if (++p == pe) goto _test_eof19;
             case 19:
-#line 1656 "ron/text-parser.cc"
+#line 1642 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr56;
                 goto st0;
             tr32 :
@@ -2090,7 +2077,7 @@ Status TextFrame::Cursor::Next() {
                 { cp = (*p) & 7; }
                 goto st20;
             tr54 :
-#line 66 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -2102,7 +2089,7 @@ Status TextFrame::Cursor::Next() {
             st20:
                 if (++p == pe) goto _test_eof20;
             case 20:
-#line 1688 "ron/text-parser.cc"
+#line 1674 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr57;
                 goto st0;
             tr20 :
@@ -2116,7 +2103,7 @@ Status TextFrame::Cursor::Next() {
             st21:
                 if (++p == pe) goto _test_eof21;
             case 21:
-#line 1702 "ron/text-parser.cc"
+#line 1688 "ron/text-parser.cc"
                 if (48u <= (*p) && (*p) <= 57u) goto st22;
                 goto st0;
             st22:
@@ -2199,7 +2186,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr69;
                 goto st0;
             tr76 :
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -2477,7 +2464,7 @@ Status TextFrame::Cursor::Next() {
             st25:
                 if (++p == pe) goto _test_eof25;
             case 25:
-#line 1969 "ron/text-parser.cc"
+#line 1955 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr76;
@@ -2502,7 +2489,7 @@ Status TextFrame::Cursor::Next() {
             st26:
                 if (++p == pe) goto _test_eof26;
             case 26:
-#line 1990 "ron/text-parser.cc"
+#line 1976 "ron/text-parser.cc"
                 if (48u <= (*p) && (*p) <= 57u) goto st27;
                 goto st0;
             tr78 :
@@ -2514,7 +2501,7 @@ Status TextFrame::Cursor::Next() {
             st27:
                 if (++p == pe) goto _test_eof27;
             case 27:
-#line 2002 "ron/text-parser.cc"
+#line 1988 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr59;
@@ -2545,7 +2532,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr59;
                 goto st0;
             tr80 :
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -2823,7 +2810,7 @@ Status TextFrame::Cursor::Next() {
             st28:
                 if (++p == pe) goto _test_eof28;
             case 28:
-#line 2227 "ron/text-parser.cc"
+#line 2213 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr80;
@@ -2861,7 +2848,7 @@ Status TextFrame::Cursor::Next() {
             st29:
                 if (++p == pe) goto _test_eof29;
             case 29:
-#line 2264 "ron/text-parser.cc"
+#line 2250 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr83;
@@ -2918,7 +2905,7 @@ Status TextFrame::Cursor::Next() {
             st30:
                 if (++p == pe) goto _test_eof30;
             case 30:
-#line 2309 "ron/text-parser.cc"
+#line 2295 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr93;
@@ -2941,7 +2928,7 @@ Status TextFrame::Cursor::Next() {
             st31:
                 if (++p == pe) goto _test_eof31;
             case 31:
-#line 2331 "ron/text-parser.cc"
+#line 2317 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr94;
@@ -2981,7 +2968,7 @@ Status TextFrame::Cursor::Next() {
                     goto st31;
                 goto st0;
             tr102 :
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -3259,7 +3246,7 @@ Status TextFrame::Cursor::Next() {
             st32:
                 if (++p == pe) goto _test_eof32;
             case 32:
-#line 2564 "ron/text-parser.cc"
+#line 2550 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr102;
@@ -3284,7 +3271,7 @@ Status TextFrame::Cursor::Next() {
             st33:
                 if (++p == pe) goto _test_eof33;
             case 33:
-#line 2585 "ron/text-parser.cc"
+#line 2571 "ron/text-parser.cc"
                 if (48u <= (*p) && (*p) <= 57u) goto st34;
                 goto st0;
             tr104 :
@@ -3296,7 +3283,7 @@ Status TextFrame::Cursor::Next() {
             st34:
                 if (++p == pe) goto _test_eof34;
             case 34:
-#line 2597 "ron/text-parser.cc"
+#line 2583 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 46u:
                         goto st23;
@@ -3364,7 +3351,7 @@ Status TextFrame::Cursor::Next() {
             st38:
                 if (++p == pe) goto _test_eof38;
             case 38:
-#line 2655 "ron/text-parser.cc"
+#line 2641 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr108;
@@ -3398,7 +3385,7 @@ Status TextFrame::Cursor::Next() {
             st39:
                 if (++p == pe) goto _test_eof39;
             case 39:
-#line 2688 "ron/text-parser.cc"
+#line 2674 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr83;
@@ -3462,7 +3449,7 @@ Status TextFrame::Cursor::Next() {
             st40:
                 if (++p == pe) goto _test_eof40;
             case 40:
-#line 2741 "ron/text-parser.cc"
+#line 2727 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr109;
@@ -3525,7 +3512,7 @@ Status TextFrame::Cursor::Next() {
             st41:
                 if (++p == pe) goto _test_eof41;
             case 41:
-#line 2789 "ron/text-parser.cc"
+#line 2775 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr121;
@@ -3548,7 +3535,7 @@ Status TextFrame::Cursor::Next() {
             st42:
                 if (++p == pe) goto _test_eof42;
             case 42:
-#line 2811 "ron/text-parser.cc"
+#line 2797 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr122;
@@ -3596,7 +3583,7 @@ Status TextFrame::Cursor::Next() {
             st43:
                 if (++p == pe) goto _test_eof43;
             case 43:
-#line 2847 "ron/text-parser.cc"
+#line 2833 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr130;
@@ -3630,7 +3617,7 @@ Status TextFrame::Cursor::Next() {
             st44:
                 if (++p == pe) goto _test_eof44;
             case 44:
-#line 2880 "ron/text-parser.cc"
+#line 2866 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr131;
@@ -3783,7 +3770,7 @@ Status TextFrame::Cursor::Next() {
             st47:
                 if (++p == pe) goto _test_eof47;
             case 47:
-#line 3001 "ron/text-parser.cc"
+#line 2987 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr121;
@@ -3806,7 +3793,7 @@ Status TextFrame::Cursor::Next() {
             st48:
                 if (++p == pe) goto _test_eof48;
             case 48:
-#line 3023 "ron/text-parser.cc"
+#line 3009 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr141;
@@ -3905,7 +3892,7 @@ Status TextFrame::Cursor::Next() {
             st50:
                 if (++p == pe) goto _test_eof50;
             case 50:
-#line 3103 "ron/text-parser.cc"
+#line 3089 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr131;
@@ -3965,7 +3952,7 @@ Status TextFrame::Cursor::Next() {
             }
                 goto st51;
             tr164 :
-#line 66 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -3975,7 +3962,7 @@ Status TextFrame::Cursor::Next() {
             st51:
                 if (++p == pe) goto _test_eof51;
             case 51:
-#line 3160 "ron/text-parser.cc"
+#line 3146 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 34u:
                         goto tr156;
@@ -4081,7 +4068,7 @@ Status TextFrame::Cursor::Next() {
                 { cp = (*p) & 0x1f; }
                 goto st57;
             tr165 :
-#line 66 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -4099,7 +4086,7 @@ Status TextFrame::Cursor::Next() {
             st57:
                 if (++p == pe) goto _test_eof57;
             case 57:
-#line 3282 "ron/text-parser.cc"
+#line 3268 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr168;
                 goto st0;
             tr5 :
@@ -4120,7 +4107,7 @@ Status TextFrame::Cursor::Next() {
                 { cp = (*p) & 0xf; }
                 goto st58;
             tr166 :
-#line 66 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -4138,7 +4125,7 @@ Status TextFrame::Cursor::Next() {
             st58:
                 if (++p == pe) goto _test_eof58;
             case 58:
-#line 3318 "ron/text-parser.cc"
+#line 3304 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr169;
                 goto st0;
             tr6 :
@@ -4159,7 +4146,7 @@ Status TextFrame::Cursor::Next() {
                 { cp = (*p) & 7; }
                 goto st59;
             tr167 :
-#line 66 "ragel/./text-grammar.rl"
+#line 65 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
@@ -4171,7 +4158,7 @@ Status TextFrame::Cursor::Next() {
             st59:
                 if (++p == pe) goto _test_eof59;
             case 59:
-#line 3350 "ron/text-parser.cc"
+#line 3336 "ron/text-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr170;
                 goto st0;
             st60:
@@ -4216,7 +4203,7 @@ Status TextFrame::Cursor::Next() {
             st62:
                 if (++p == pe) goto _test_eof62;
             case 62:
-#line 3401 "ron/text-parser.cc"
+#line 3387 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr174;
@@ -4265,7 +4252,7 @@ Status TextFrame::Cursor::Next() {
                     goto tr176;
                 goto st0;
             tr185 :
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
             {
                 if ((*p) == '\n') {
                     line++;
@@ -4282,7 +4269,7 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 9 "ragel/./text-grammar.rl"
                 { op_[0] = Uuid{variety, value, version, origin}; }
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -4299,7 +4286,7 @@ Status TextFrame::Cursor::Next() {
                 {}
 #line 9 "ragel/./text-grammar.rl"
                 { op_[0] = Uuid{variety, value, version, origin}; }
-#line 59 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
                 {
                     if ((*p) == '\n') {
                         line++;
@@ -4310,7 +4297,7 @@ Status TextFrame::Cursor::Next() {
             st63:
                 if (++p == pe) goto _test_eof63;
             case 63:
-#line 3488 "ron/text-parser.cc"
+#line 3474 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr185;
@@ -4379,7 +4366,7 @@ Status TextFrame::Cursor::Next() {
             st64:
                 if (++p == pe) goto _test_eof64;
             case 64:
-#line 3551 "ron/text-parser.cc"
+#line 3537 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr188;
@@ -4410,7 +4397,7 @@ Status TextFrame::Cursor::Next() {
             st65:
                 if (++p == pe) goto _test_eof65;
             case 65:
-#line 3583 "ron/text-parser.cc"
+#line 3569 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr189;
@@ -4467,7 +4454,7 @@ Status TextFrame::Cursor::Next() {
             st66:
                 if (++p == pe) goto _test_eof66;
             case 66:
-#line 3628 "ron/text-parser.cc"
+#line 3614 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr199;
@@ -4490,7 +4477,7 @@ Status TextFrame::Cursor::Next() {
             st67:
                 if (++p == pe) goto _test_eof67;
             case 67:
-#line 3650 "ron/text-parser.cc"
+#line 3636 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr200;
@@ -4538,7 +4525,7 @@ Status TextFrame::Cursor::Next() {
             st68:
                 if (++p == pe) goto _test_eof68;
             case 68:
-#line 3686 "ron/text-parser.cc"
+#line 3672 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr208;
@@ -4572,7 +4559,7 @@ Status TextFrame::Cursor::Next() {
             st69:
                 if (++p == pe) goto _test_eof69;
             case 69:
-#line 3719 "ron/text-parser.cc"
+#line 3705 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr189;
@@ -4627,7 +4614,7 @@ Status TextFrame::Cursor::Next() {
             st70:
                 if (++p == pe) goto _test_eof70;
             case 70:
-#line 3763 "ron/text-parser.cc"
+#line 3749 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr209;
@@ -4650,7 +4637,7 @@ Status TextFrame::Cursor::Next() {
             st71:
                 if (++p == pe) goto _test_eof71;
             case 71:
-#line 3785 "ron/text-parser.cc"
+#line 3771 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr210;
@@ -4700,7 +4687,7 @@ Status TextFrame::Cursor::Next() {
             st72:
                 if (++p == pe) goto _test_eof72;
             case 72:
-#line 3822 "ron/text-parser.cc"
+#line 3808 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 95u:
                         goto tr219;
@@ -4734,7 +4721,7 @@ Status TextFrame::Cursor::Next() {
             st73:
                 if (++p == pe) goto _test_eof73;
             case 73:
-#line 3855 "ron/text-parser.cc"
+#line 3841 "ron/text-parser.cc"
                 switch ((*p)) {
                     case 13u:
                         goto tr174;
@@ -5016,8 +5003,6 @@ Status TextFrame::Cursor::Next() {
     at_ = off_;
     off_ = p - pb;
     line_ = line;
-
-    if (op_.size()) prev_id_ = id();
 
     // std::cerr << "ending with [" <<p<<"] state "<<cs<<" "<<op_.size()<<"
     // atoms "<<(pe-p)<<" bytes left, prev_id_ "<<prev_id_.str()<<'\n';

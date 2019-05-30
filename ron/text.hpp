@@ -17,7 +17,7 @@ class TextFrame {
     TextFrame() : data_{} {}
     explicit TextFrame(String data) : data_{std::move(data)} {}
     explicit TextFrame(Slice data)
-        : data_{(const char*)data.begin(), data.size()} {}
+        : TextFrame{data.str()} {}
 
     void operator=(const TextFrame& orig) { data_ = orig.data_; }
 

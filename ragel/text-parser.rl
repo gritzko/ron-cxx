@@ -63,7 +63,7 @@ Status TextFrame::Cursor::Next () {
     main := TEXT_FRAME ;
     write exec;
     }%%
-    data().consume(p-pb);
+    data().Consume(p-pb);
 
     //std::cerr << "ending with [" <<p<<"] state "<<cs<<" "<<op_.size()<<" atoms "<<(pe-p)<<" bytes left, prev_id_ "<<prev_id_.str()<<'\n';
 

@@ -101,11 +101,11 @@ class Range {
     inline fsize_t length() const { return size(); }
     inline bool empty() const { return begin() == end(); }
     inline bool valid() const { return end() >= begin(); }
-    inline void consume(fsize_t length) {
+    inline void Consume(fsize_t length) {
         limits_[LEAST_SIGNIFICANT] += length;
         assert(valid());
     }
-    inline void shorten(fsize_t by_length) {
+    inline void Shorten(fsize_t by_length) {
         limits_[MOST_SIGNIFICANT] -= by_length;
         assert(valid());
     }
@@ -113,10 +113,10 @@ class Range {
         limits_[MOST_SIGNIFICANT] = offset;
         assert(valid());
     }
-    inline void resize(fsize_t new_size) {
+    inline void Resize(fsize_t new_size) {
         limits_[MOST_SIGNIFICANT] = limits_[LEAST_SIGNIFICANT] + new_size;
     }
-    inline void operator++() { consume(1); }
+    inline void operator++() { Consume(1); }
     inline bool operator==(const Range& b) const {
         return *(uint64_t*)limits_ == *(uint64_t*)(b.limits_);
     }
@@ -164,7 +164,6 @@ class Slice {
     inline Char at(fsize_t idx) const { return buf_[range_.offset(idx)]; }
     inline Char operator[](fsize_t idx) const { return at(idx); }
     inline void operator++() { ++range_; }
-    inline void consume(fsize_t sz) { range_.consume(sz); }
     inline Char operator*() const { return *begin(); }
     inline fsize_t size() const { return range_.size(); }
     inline bool empty() const { return range_.empty(); }
@@ -174,6 +173,8 @@ class Slice {
     inline Slice consumed() const {
         return Slice{buf_, Range{0, range_.begin()}};
     }
+
+    inline void Consume(fsize_t sz) { range_.Consume(sz); }
     inline void EndAt(fsize_t offset) { range_.EndAt(offset); }
 
     bool operator==(const Slice b) const {
@@ -224,7 +225,7 @@ class Slice {
         return Slice{buf_, Range::FroTo(range_.begin(), b.range_.begin())};
     }
 
-    inline void Resize(fsize_t new_size) { range_.resize(new_size); }
+    inline void Resize(fsize_t new_size) { range_.Resize(new_size); }
 };
 
 }  // namespace ron

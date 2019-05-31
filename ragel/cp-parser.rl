@@ -33,7 +33,7 @@ Result TextFrame::Cursor::NextCodepoint (Atom& a) const {
     if (cs!=CP_error) {
         a.value.cp = cp;
         --a.value.cp_size;
-        a.origin.as_range.consume(p-pb);
+        a.origin.as_range.Consume(p-pb);
         assert(a.origin.as_range.valid());
         return OK;
     } else {

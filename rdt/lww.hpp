@@ -32,7 +32,7 @@ class LastWriteWinsRDT {
         std::unordered_map<Slice, Uuid> last;
         auto scan = input.cursor();
         do {
-            if (scan.size() < 3) continue;
+            if (scan.op().size() < 3) continue;
             Slice key{input.data(), scan.atom(2).origin.as_range};
             last[key] = scan.id();
         } while (scan.Next());
@@ -42,7 +42,7 @@ class LastWriteWinsRDT {
             output.AppendOp(filter);
         }
         do {  // TODO maybe check op pattern here
-            if (filter.size() < 3) continue;
+            if (filter.op().size() < 3) continue;
             Slice key{input.data(), filter.atom(2).origin.as_range};
             if (last[key] == filter.id()) {
                 output.AppendOp(filter);

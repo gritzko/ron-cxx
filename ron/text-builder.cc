@@ -19,7 +19,7 @@ Result TextFrame::Builder::WriteValues(const Cursor& cur) {
                 break;
             case STRING:
                 Write(ATOM_PUNCT[STRING]);
-                Write(cur.atom_data(atom));
+                Write(cur.data(atom));
                 Write(ATOM_PUNCT[STRING]);
                 break;
             case FLOAT:

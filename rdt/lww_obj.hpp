@@ -10,13 +10,13 @@ template <class Frame>
 class LWWObject {
     using Cursor = typename Frame::Cursor;
 
-    Frame data_;
+    Cursor cur_;
     std::unordered_map<Uuid, Atom> vals_;
     Uuid last_;
 
    public:
     void Update(const Cursor& c) {
-        if (c.size() < 4 || !c.has(2, UUID)) {
+        if (c.op().size() < 4 || !HasValue(c, UUID)) {
             return;
         }
         vals_[Uuid{c.atom(2)}] = c.atom(3);
@@ -24,17 +24,18 @@ class LWWObject {
     }
 
     void Update(Frame frame) {
-        Cursor c{frame, false};
+        Cursor c{frame, Frame::Cursor::START_AT_BTB};
         while (c.Next()) {
             Update(c);
         }
     }
 
-    LWWObject(Frame state) : data_{std::move(state)}, vals_{}, last_{} {
-        Cursor c{data_};
+    /** Note that LWWObject does not own the memory. It serves like an index to
+     * a LWW frame. */
+    LWWObject(const Frame& state) : cur_{state}, vals_{}, last_{} {
         do {
-            Update(c);
-        } while (c.Next());
+            Update(cur_);
+        } while (cur_.Next());
     }
 
     template <typename... Ts>
@@ -60,12 +61,14 @@ class LWWObject {
 
     inline double number(Uuid key) {
         Atom a = atom(key, FLOAT);
-        return Uuid::NIL == Uuid{a} ? std::nan("") : data_.number(a);
+        return Uuid::NIL == Uuid{a} ? std::nan("") : a.value.as_integer;
     }
 
     inline String string(Uuid key) {
         Atom a = atom(key, STRING);
-        return Uuid::NIL == Uuid{a} ? "" : data_.string(a);
+        String ret;
+        ReadString(ret, cur_, a);  // TODO error checking, tests :)
+        return ret;
     }
 };
 

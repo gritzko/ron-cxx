@@ -112,7 +112,7 @@ const Uuid EQ_UUID{"eq"};
 
 template <typename Cursor>
 inline RGA_ENTRY entry_type(const Cursor &cur) {
-    if (cur.size() == 3 && cur.atom(2).type() == UUID) {
+    if (cur.op().size() == 3 && cur.atom(2).type() == UUID) {
         Uuid v{cur.atom(2)};
         if (v == RM_UUID) {
             return REMOVE;

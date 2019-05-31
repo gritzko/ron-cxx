@@ -18,8 +18,8 @@ string scan (const TextFrame& frame) {
     do {
         if (!ret.empty())
             ret.append(",");
-        if (cur.size()>2 && cur.atom(2).type()==ATOM::STRING) {
-            ret.append(cur.string(2));
+        if (cur.op().size()>2 && cur.atom(2).type()==ATOM::STRING) {
+            ret.append(GetString(cur, 2));
         } else {
             ret.append("_");
         }

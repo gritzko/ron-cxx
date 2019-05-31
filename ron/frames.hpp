@@ -20,8 +20,8 @@ template <typename Cursor>
 Status CompareOps(const Cursor& a, const Cursor& b) {
     if (a.id() != b.id()) return Status::BADID;
     if (a.ref() != b.ref()) return Status::BADREF;
-    if (a.size() != b.size()) return Status::BADVALUE;
-    for (int i = 2; i < a.size(); i++) {
+    if (a.op().size() != b.op().size()) return Status::BADVALUE;
+    for (int i = 2; i < a.op().size(); i++) {
         Atom ai = a.atom(i), bi = b.atom(i);
         if (ai.type() != bi.type())
             return Status::BADVALUE.comment("value type mismatch");
@@ -38,7 +38,10 @@ Status CompareOps(const Cursor& a, const Cursor& b) {
                 if (ai != bi) return Status::BADVALUE.comment("different UUID");
                 break;
             case STRING:
-                if (a.string(i) != b.string(i))
+                String as, bs;
+                ReadString(as, a, i);
+                ReadString(bs, b, i);
+                if (as != bs)
                     return Status::BADVALUE.comment("different string");
                 break;
         }
@@ -111,6 +114,46 @@ Status Reserialize(std::vector<Frame>& into,
         into.emplace_back(b.Release());
     }
     return Status::OK;
+}
+
+template <class Cursor>
+Result ReadString(String& to, const Cursor& c, Atom a) {
+    assert(a.type() == STRING);
+    Result ret{OK};
+    while (OK == (ret = c.NextCodepoint(a))) {
+        utf8append(to, a.value.cp);
+    }
+    return ret == ENDOFINPUT ? OK : ret;
+}
+
+template <class Cursor>
+inline Result ReadString(String& to, const Cursor& c, fsize_t idx) {
+    return ReadString(to, c, c.atom(idx));
+}
+
+/** A happy-path shortcut for ReadString() */
+template <class Cursor>
+inline String GetString(const Cursor& c, fsize_t idx = 2) {
+    String ret;
+    ReadString(ret, c, c.atom(idx));
+    return ret;
+}
+
+template <class Cursor>
+inline bool HasValue(const Cursor& cur, ATOM atype, fsize_t idx = 2) {
+    const Atoms& op = cur.op();
+    return op.size() > idx && op[idx].type() == atype;
+}
+
+template <class Cursor>
+Status SkipChain(Cursor& cur) {
+    Uuid i;
+    Status ok;
+    do {
+        i = cur.id();
+        ok = cur.Next();
+    } while (ok && cur.ref() == i);
+    return ok;
 }
 
 }  // namespace ron

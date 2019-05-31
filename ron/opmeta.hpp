@@ -118,11 +118,11 @@ struct OpMeta {
         if (load.ref() != META_FORM_UUID) {
             return Status::BADARGS.comment("not a meta record");
         }
-        if (!load.has(2, UUID)) {
+        if (!HasValue(load, UUID)) {
             return Status::BADSYNTAX.comment("no object id");
         }
         object = Uuid{load.atom(2)};
-        if (!load.has(3, UUID)) {
+        if (!HasValue(load, UUID, 3)) {
             return Status::BADSYNTAX.comment("no rdt id");
         }
         rdt = Uuid{load.atom(3)};

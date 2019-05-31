@@ -156,10 +156,10 @@ Status Replica<Store>::Commit::ReadNames(Names& names) {
     IFOK(GetObject(zeroobj, Uuid::NIL, LWW_FORM_UUID));
     Cursor c{zeroobj, false};
     while (c.Next()) {
-        if (c.size() != 4) {
+        if (c.op().size() != 4) {
             continue;
         }
-        if (!c.has(2, UUID) || !c.has(3, UUID)) {
+        if (!HasValue(c, UUID, 2) || !HasValue(c, UUID, 3)) {
             continue;
         }
         names[Uuid{c.atom(2)}] = Uuid{c.atom(3)};

@@ -14,11 +14,11 @@ class MaxRDT {
     using Cursors = typename Frame::Cursors;
 
     static bool Less(const Cursor &a, const Cursor &b) {
-        if (a.size() == 2) {
-            if (b.size() > 2) return true;
+        if (a.op().size() == 2) {
+            if (b.op().size() > 2) return true;
             return b.id() > a.id();
         }
-        if (b.size() == 2) return false;
+        if (b.op().size() == 2) return false;
         return static_cast<Uuid>(a.atom(2)) < static_cast<Uuid>(b.atom(2));
     }
 

@@ -163,13 +163,13 @@ const Uuid HILI_COMMAND{"hili"};
 
 template <typename Commit>
 Status TxtMapper<Commit>::Write(Builder& response, Cursor& query, Commit& branch) {
-    if (query.size()<3) {
+    if (query.op().size()<3) {
         return Status::BADARGS.comment("no arguments in a txt write");
     }
-    if (query.has(2, STRING)) {
+    if (HasValue(query, STRING)) {
         return WriteState(response, query, branch);
     }
-    if (!query.has(2, UUID)) {
+    if (!HasValue(query, UUID)) {
         return Status::BADARGS.comment("unknown txt write op pattern");
     }
     Uuid command{query.atom(2)};

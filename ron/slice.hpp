@@ -154,6 +154,7 @@ class Slice {
     inline fsize_t size() const { return range_.size(); }
     inline bool empty() const { return range_.empty(); }
     inline CharRef data() const { return buf_; }
+    inline Slice reset() const { return Slice{buf_, Range{0, range_.end()}}; }
 
     bool operator==(const Slice b) const {
         return size() == b.size() && memcmp(begin(), b.begin(), size()) == 0;

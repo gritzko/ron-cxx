@@ -24,9 +24,9 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
         a.value.cp = 0;
         return ENDOFINPUT;
     }
-    Slice data = atom_data(a);
-    CharRef p = data.begin();
-    CharRef pe = data.end();
+    Slice str_data = data(a);
+    CharRef p = str_data.begin();
+    CharRef pe = str_data.end();
     CharRef pb = p;
     CharRef eof = 0;
     Codepoint cp = 0;

@@ -17,9 +17,9 @@ string pattern (const Frame& frame) {
     string ret;
     auto c = frame.cursor();
     do {
-        if (c.size()) ret.push_back('@');
-        if (c.size()>1) ret.push_back(':');
-        for(int i=2; i<c.size(); i++) {
+        if (c.op().size()) ret.push_back('@');
+        if (c.op().size()>1) ret.push_back(':');
+        for(int i=2; i<c.op().size(); i++) {
             ret.push_back(ATOM_PUNCT[c.atom(i).type()]);
         }
         ret.push_back(TERM_PUNCT[c.term()]);
@@ -60,7 +60,7 @@ TEST(TextFrame, basic_cycle ) {
     ASSERT_TRUE(data.find(VALUE)!=string::npos);
 
     TextFrame::Cursor cursor = frame.cursor();
-    ASSERT_EQ(cursor.size(), 2);
+    ASSERT_EQ(cursor.op().size(), 2);
     ASSERT_TRUE(cursor.ref()==Uuid{LWW});
     ASSERT_TRUE(cursor.id().str()==TIME1);
     ASSERT_TRUE(cursor.term()==REDUCED);
@@ -72,8 +72,8 @@ TEST(TextFrame, basic_cycle ) {
     ASSERT_TRUE(cursor.term()==RAW);
     ASSERT_TRUE(cursor.ref()==TIME1);
     ASSERT_TRUE(cursor.id()==TIME2);
-    ASSERT_EQ(cursor.string(2), KEY);
-    ASSERT_EQ(cursor.string(3), VALUE);
+    ASSERT_EQ(GetString(cursor, 2), KEY);
+    ASSERT_EQ(GetString(cursor, 3), VALUE);
     ASSERT_TRUE(!cursor.Next());
 }
 
@@ -83,7 +83,7 @@ TEST(TextFrame, optional_chars) {
     Frame opt{TANGLED};
     Cursor copt = opt.cursor();
     ASSERT_TRUE(copt.valid());
-    ASSERT_TRUE(copt.size()==4);
+    ASSERT_EQ(copt.op().size(), 4);
     ASSERT_EQ(copt.atom(0), Uuid{"1A"});
     ASSERT_EQ(copt.id(), Uuid{"1A"});
     ASSERT_TRUE(copt.atom(2).type()==ATOM::INT);
@@ -97,10 +97,10 @@ TEST(TextFrame, optional_chars) {
     ASSERT_TRUE(ok); // start state: space :)
     ASSERT_TRUE(copt.id()=="1A00000001");
     ASSERT_TRUE(copt.ref()=="1A");
-    ASSERT_TRUE(copt.has(2, INT));
+    ASSERT_TRUE(HasValue(copt, INT));
     
     ASSERT_EQ(copt.atom(2).value.as_integer, 9223372036854775807L);
-    ASSERT_EQ(copt.string(3), ABC);
+    ASSERT_EQ(GetString(copt, 3), ABC);
     ASSERT_EQ(copt.atom(4).value.as_integer, 3);
 
     ASSERT_TRUE(copt.Next());
@@ -110,7 +110,7 @@ TEST(TextFrame, optional_chars) {
     ASSERT_TRUE(!copt.valid());
 
     Cursor unparsed{TANGLED};
-    ASSERT_EQ(unparsed.size(), 4);
+    ASSERT_EQ(unparsed.op().size(), 4);
     ASSERT_EQ(unparsed.op()[2].value.as_integer, 0);
     ASSERT_EQ(unparsed.atom(2).value.as_integer, 234);
     unparsed.Next();
@@ -165,8 +165,8 @@ TEST(TextFrame, string_escapes) {
     cerr<<cycle.data();
     Cursor cc = cycle.cursor();
     ASSERT_TRUE(cc.valid());
-    ASSERT_TRUE(cc.string(2)==STR1);
-    ASSERT_TRUE(cc.string(3)==STR2);
+    ASSERT_TRUE(GetString(cc, 2)==STR1);
+    ASSERT_TRUE(GetString(cc, 3)==STR2);
 
     // FIXME \u
     //Frame good{" 'esc \\'', '\\u0020', '\\r\\n\\t\\\\', "};
@@ -222,7 +222,7 @@ TEST(TextFrame, UTF16) {
     Frame frame{PIKACHU};
     Cursor cur = frame.cursor();
     ASSERT_TRUE(cur.valid());
-    ASSERT_TRUE(cur.has(2, STRING));
+    ASSERT_TRUE(HasValue(cur, STRING));
     Atom str = cur.atom(2);
     //auto parsed = frame.utf16string(str);
     //ASSERT_TRUE(parsed==u"пикачу ピカチュウ");
@@ -243,7 +243,7 @@ TEST(TextFrame, Spans) {
     Cursor c{frame};
     Builder b;
     ASSERT_TRUE(c.valid());
-    ASSERT_EQ(c.type(2), ATOM::UUID);
+    ASSERT_TRUE(HasValue(c, ATOM::UUID));
     ASSERT_EQ(Uuid{c.atom(2)}, "rm");
     b.AppendOp(c);
     /*ASSERT_TRUE(c.Next());    OOPSIE NOT IMPLEMENTED YET FIXME FIXME

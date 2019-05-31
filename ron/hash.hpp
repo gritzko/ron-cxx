@@ -136,7 +136,7 @@ void WriteOpHashable(const Cursor& cursor, SomeStream& stream,
     stream.WriteHash(prev_hash);
     stream.WriteUuid(cursor.ref());
     stream.WriteHash(ref_hash);
-    for (fsize_t i = 2; i < cursor.size(); i++) {
+    for (fsize_t i = 2; i < cursor.op().size(); i++) {
         const Atom& atom = cursor.atom(i);
         switch (atom.type()) {
             case UUID:
@@ -149,7 +149,9 @@ void WriteOpHashable(const Cursor& cursor, SomeStream& stream,
             case STRING:
                 stream.WriteAtomRangeless(atom);
                 // TODO: slice_t, no alloc
-                stream.Write(cursor.string(i));
+                String str;
+                ReadString(str, cursor, atom);
+                stream.Write(str);
                 break;
         }
     }

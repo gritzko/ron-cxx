@@ -274,8 +274,10 @@ Status CommandTest(RonReplica& replica, Args& args) {
                                             c.id().str());
         }
         TERM term = c.term();
-        string comment;
-        if (c.size() > 2 && c.has(2, STRING)) comment = c.string(2);
+        String comment;
+        if (c.op().size() > 2 && HasValue(c, STRING)) {
+            ReadString(comment, c, 2);
+        }
         c.Next();
         if (term == QUERY) {
             Frame re = b.Release();
@@ -394,8 +396,8 @@ Status CommandGetFrame(RonReplica& replica, Args& args) {
         cout << result.data() << '\n';
     } else {
         Cursor c{result.data()};
-        if (c.valid() && c.has(2, STRING)) {
-            cout << c.string(2);
+        if (c.valid() && HasValue(c, STRING)) {
+            cout << GetString(c, 2);
         } else {
             return Status::BADVALUE.comment("no string in the first value pos");
         }
@@ -516,9 +518,9 @@ Status CommandHashFrame(const string& filename) {
             tips[id.origin] = id.value;  // TODO causality checks
             hashes[id] = sha2;
             report.AppendOp(Op{SHA2::FORM_ID, id, sha2.base64()});
-        } else if (id == SHA2::FORM_ID && cur.size() > 2 &&
-                   cur.type(2) == STRING) {
-            string base64 = cur.string(2);
+        } else if (id == SHA2::FORM_ID && cur.op().size() > 2 &&
+                   HasValue(cur, STRING)) {
+            string base64 = GetString(cur, 2);
             SHA2 hash = SHA2::ParseBase64(base64);
             auto hi = hashes.find(id);
             if (hi == hashes.end()) {

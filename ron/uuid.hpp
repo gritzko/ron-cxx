@@ -162,7 +162,7 @@ enum half_t { VALUE = 0, ORIGIN = 1 };
 struct Atom {
     Word origin, value;
 
-    Atom(Word val, Word orig) : value{val}, origin{orig} {}
+    Atom(Word val, Word orig) : origin{orig}, value{val} {}
     Atom() : Atom{ZERO, ZERO} {}
     Atom(uint64_t value, uint64_t origin) : Atom{Word{value}, Word{origin}} {}
 

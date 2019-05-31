@@ -28,7 +28,6 @@ class TextFrame {
         Slice esc = data.slice(a.origin.range());
         return unescape(esc);
     }
-    inline String string(const Atom& a) { return string(data_, a); }
     //    END OF KILL
 
     //  P A R S I N G
@@ -48,6 +47,24 @@ class TextFrame {
         static constexpr int RON_FULL_STOP = 255;
         static constexpr int SPEC_SIZE = 2;  // open RON
 
+        Result ParseFloat(Atom& atom) const;
+        Result ParseInteger(Atom& atom) const;
+        inline Result ParseAtom(Atom& a) const {
+            switch (a.type()) {
+                case INT:
+                    return ParseInteger(a);
+                case FLOAT:
+                    return ParseFloat(a);
+                case STRING:
+                case UUID:
+                    return OK;
+            }
+        }
+        static bool int_too_big(const Slice& data);
+        static inline bool word_too_big(const Slice data) {
+            return data.size() > Word::MAX_BASE64_SIZE;
+        }
+
        public:
         enum : uint32_t {
             DEFAULT = 0,
@@ -66,127 +83,59 @@ class TextFrame {
                 Next();
             }
         }
+
         explicit Cursor(const String& str) : Cursor{Slice{str}} {}
         explicit Cursor(const TextFrame& host, uint32_t options = DEFAULT)
             : Cursor{host.data_, options} {}
         Cursor(const Cursor& b) = default;
+
+        /** Returns the raw atom vector (values likely unparsed, use atom(i) for
+         * parsed). */
         const Atoms& op() const { return op_; }
+
+        /** Parses the next op. Populates the atom vector (see op(), atom(i)).
+         */
         Status Next();
+
         /** Parses a codepoint (escaped UTF8), saves to atom.value.cp,
          *  consumes the origin range, decreases atom.value.cp_size
          *  (full parser). */
         Result NextCodepoint(Atom& c) const;
-        inline Slice atom_data(Atom a) const {
+
+        void Trim(const Cursor& b) { data_.Resize(b.at_); }
+
+        /** Returns whether the last op was parsed successfully.  */
+        inline bool valid() const { return ragel_state_ != 0; }
+
+        /** The full buffer we iterate over. */
+        const Slice data() const { return data_.reset(); }
+
+        inline Slice data(Atom a) const {
             assert(a.safe_origin().as_range.valid());
             return Slice{data_.data(), a.safe_origin().as_range};
         }
 
-        void Trim(const Cursor& b) { data_.Resize(b.at_); }
-        // KILL
-        Status SkipChain() {
-            Uuid i;
-            Status ok;
-            do {
-                i = id();
-                ok = Next();
-            } while (ok && ref() == i);
-            return ok;
-        }
-        inline bool valid() const { return ragel_state_ != 0; }
-        // KILL
-        inline bool has(fsize_t idx, ATOM atype) const {
-            return size() > idx && type(idx) == atype;
-        }
-        const Slice data() const { return data_; }
-        inline Slice data(Atom a) const {
-            return Slice{data_.data(), a.safe_origin().as_range};
-        }
-        // KILL
-        const Slice at_data() const {
-            return data_.slice(Range::FroTo(at_, off_));
-        }
-        // KILL
-        inline Slice slice(Range range) const { return data().slice(range); }
+        /** The current op's id. */
         inline const Uuid id() const {
             return static_cast<Uuid>(atom(OP_ID_IDX));
         }
+
+        /** The current op's reference id. */
         inline const Uuid ref() const {
             return static_cast<Uuid>(atom(OP_REF_IDX));
         }
-        inline fsize_t size() const { return op_.size(); }
-        // KILL
-        inline ATOM type(fsize_t idx) const {
-            assert(size() > idx);
-            return op_[idx].type();
-        }
+
+        /** The op's term is basically a form of punctuation in a frame.
+            See enum TERM. */
         inline TERM term() const { return term_; }
-        // KILL ReadString(cps, atom, cursor)
-        String string(fsize_t idx) const {
-            assert(type(idx) == STRING);
-            Atom a = op_[idx];
-            String ret{};
-            while (NextCodepoint(a) == OK) {
-                utf8append(ret, a.value.cp);
-            }
-            return ret;
-        }
-        // KILL  data(atom)
-        inline Slice string_slice(fsize_t idx) const {
-            return data_.slice(atom(idx).origin.range());
-        }
+
+        /** Returns an atom (0 id, 1 ref, 2... are values). Values are parsed.
+         */
         inline Atom atom(fsize_t idx) const {
-            assert(size() > idx);
+            assert(op().size() > idx);
             Atom ret = op_[idx];
             ParseAtom(ret);
             return ret;
-        }
-        // PRIVATE
-        static bool int_too_big(const Slice& data);
-        // PRIVATE
-        static inline bool word_too_big(const Slice data) {
-            return data.size() > Word::MAX_BASE64_SIZE;
-        }
-
-        //  A T O M  P A R S E R S  (not part of the interface)
-        // PRIVATE
-
-        /** Primary value parser: UUIDs */
-        inline Result ParseUuid(Atom& atom) const { return OK; }
-
-        /** Primary value parser: FLOATs;
-         *  puts the value to atom.value().as_float */
-        Result ParseFloat(Atom& atom) const;
-
-        /** Primary value parser: INTs */
-        Result ParseInteger(Atom& atom) const;
-        // KILL NextCodepoint(),  ReadCodepointString, ReadUtf8String
-        Result ParseCodepoints(Codepoints& ret, Atom cp_string_atom) {
-            Result code;
-            while (OK == (code = NextCodepoint(cp_string_atom))) {
-                ret.push_back(cp_string_atom.value.cp);
-            };
-            return code;
-        }
-        // PRIVATE
-        inline Result ParseAtom(Atom& a) const {
-            switch (a.type()) {
-                case INT:
-                    return ParseInteger(a);
-                case FLOAT:
-                    return ParseFloat(a);
-                case STRING:
-                    return OK;  // NextCodepoint(a);
-                case UUID:
-                    return ParseUuid(a);
-            }
-        }
-        // PRIVATE
-        Result ParseValues() {
-            Result re{OK};
-            for (fsize_t i = 2; re == OK && i < op_.size(); ++i) {
-                re = ParseAtom(op_[i]);
-            }
-            return re;
         }
 
         using Comparator = bool (*)(const Cursor& a, const Cursor& b);

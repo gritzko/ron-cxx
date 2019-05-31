@@ -22,20 +22,20 @@ Status CompareOps(const Cursor& a, const Cursor& b) {
     if (a.ref() != b.ref()) return Status::BADREF;
     if (a.size() != b.size()) return Status::BADVALUE;
     for (int i = 2; i < a.size(); i++) {
-        if (a.type(i) != b.type(i))
+        Atom ai = a.atom(i), bi = b.atom(i);
+        if (ai.type() != bi.type())
             return Status::BADVALUE.comment("value type mismatch");
-        switch (a.type(i)) {
+        switch (ai.type()) {
             case INT:
-                if (a.integer(i) != b.integer(i))
+                if (ai.value.as_integer != bi.value.as_integer)
                     return Status::BADVALUE.comment("different int");
                 break;
             case FLOAT:
-                if (a.number(i) != b.number(i))
+                if (ai.value.as_float != bi.value.as_float)
                     return Status::BADVALUE.comment("different float");
                 break;
             case UUID:
-                if (a.uuid(i) != b.uuid(i))
-                    return Status::BADVALUE.comment("different UUID");
+                if (ai != bi) return Status::BADVALUE.comment("different UUID");
                 break;
             case STRING:
                 if (a.string(i) != b.string(i))

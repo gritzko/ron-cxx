@@ -89,7 +89,7 @@ TEST(TextFrame, optional_chars) {
     ASSERT_TRUE(copt.atom(2).type()==ATOM::INT);
     ASSERT_EQ(copt.atom(2).value.as_integer, 234);
     ASSERT_TRUE(copt.atom(3).type()==ATOM::UUID);
-    ASSERT_TRUE(copt.uuid(3)=="56K");
+    ASSERT_EQ(A2U(copt.atom(3)), "56K");
     ASSERT_TRUE(!copt.id().zero());
     ASSERT_TRUE(copt.ref().zero());
 
@@ -99,17 +99,17 @@ TEST(TextFrame, optional_chars) {
     ASSERT_TRUE(copt.ref()=="1A");
     ASSERT_TRUE(copt.has(2, INT));
     
-    ASSERT_TRUE(copt.integer(2)==9223372036854775807L);
+    ASSERT_EQ(copt.atom(2).value.as_integer, 9223372036854775807L);
     ASSERT_EQ(copt.string(3), ABC);
-    ASSERT_EQ(copt.integer(4), 3);
+    ASSERT_EQ(copt.atom(4).value.as_integer, 3);
 
     ASSERT_TRUE(copt.Next());
-    ASSERT_EQ(copt.number(2), 3.1415); // :)
+    ASSERT_EQ(copt.atom(2).value.as_float, 3.1415); // :)
 
     ASSERT_TRUE(!copt.Next());
     ASSERT_TRUE(!copt.valid());
 
-    Cursor unparsed{TANGLED, Cursor::PARSE_ON_DEMAND};
+    Cursor unparsed{TANGLED};
     ASSERT_EQ(unparsed.size(), 4);
     ASSERT_EQ(unparsed.op()[2].value.as_integer, 0);
     ASSERT_EQ(unparsed.atom(2).value.as_integer, 234);
@@ -136,16 +136,15 @@ TEST(TextFrame, signs ) {
     String SIGNS{"@2:1 -1 ,-1.2, +1.23,-1e+2, -2.0e+1,"};
     Frame signs{SIGNS};
     Cursor cur = signs.cursor();
-    ASSERT_EQ(cur.integer(2), -1);
+    ASSERT_EQ(cur.atom(2).value.as_integer, -1);
     ASSERT_TRUE(cur.Next());
-    cerr << cur.atom(2).value.as_u64 << '\t' << cur.atom(2).origin.as_u64 << '\n';
-    ASSERT_EQ(cur.number(2), -1.2);
+    ASSERT_EQ(cur.atom(2).value.as_float, -1.2);
     ASSERT_TRUE(cur.Next());
-    ASSERT_EQ(cur.number(2), 1.23);
+    ASSERT_EQ(cur.atom(2).value.as_float, 1.23);
     ASSERT_TRUE(cur.Next());
-    ASSERT_EQ(cur.number(2), -100.0);
+    ASSERT_EQ(cur.atom(2).value.as_float, -100.0);
     ASSERT_TRUE(cur.Next());
-    ASSERT_EQ(cur.number(2), -20);
+    ASSERT_EQ(cur.atom(2).value.as_float, -20);
     ASSERT_TRUE(!cur.Next());
 }
 
@@ -245,7 +244,7 @@ TEST(TextFrame, Spans) {
     Builder b;
     ASSERT_TRUE(c.valid());
     ASSERT_EQ(c.type(2), ATOM::UUID);
-    ASSERT_EQ(c.uuid(2), Uuid{"rm"});
+    ASSERT_EQ(Uuid{c.atom(2)}, "rm");
     b.AppendOp(c);
     /*ASSERT_TRUE(c.Next());    OOPSIE NOT IMPLEMENTED YET FIXME FIXME
     ASSERT_EQ(c.type(2), ATOM::UUID);

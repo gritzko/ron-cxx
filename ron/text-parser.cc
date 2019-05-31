@@ -5009,9 +5009,6 @@ Status TextFrame::Cursor::Next() {
 
     if (term && cs != RON_error) {
         term_ = chr2term(term);  // FIXME gen a fn
-        if ((options_ & PARSE_ON_DEMAND) == 0) {
-            ParseValues();
-        }
         return Status::OK;
     } else if (cs >= RON_first_final) {
         cs = RON_error;

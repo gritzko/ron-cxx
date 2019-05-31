@@ -121,11 +121,11 @@ struct OpMeta {
         if (!load.has(2, UUID)) {
             return Status::BADSYNTAX.comment("no object id");
         }
-        object = load.uuid(2);
+        object = Uuid{load.atom(2)};
         if (!load.has(3, UUID)) {
             return Status::BADSYNTAX.comment("no rdt id");
         }
-        rdt = load.uuid(3);
+        rdt = Uuid{load.atom(3)};
         // hash;
         return Status::OK;
     }

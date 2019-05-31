@@ -19,7 +19,7 @@ class LWWObject {
         if (c.size() < 4 || !c.has(2, UUID)) {
             return;
         }
-        vals_[c.uuid(2)] = c.atom(3);
+        vals_[Uuid{c.atom(2)}] = c.atom(3);
         last_ = c.id();
     }
 

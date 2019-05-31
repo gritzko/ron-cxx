@@ -52,7 +52,6 @@ class TextFrame {
         enum : uint32_t {
             DEFAULT = 0,
             START_AT_BTB = 1,
-            PARSE_ON_DEMAND = 2,
         };
 
         explicit Cursor(const Slice data, uint32_t options = DEFAULT)
@@ -98,10 +97,6 @@ class TextFrame {
         inline bool has(fsize_t idx, ATOM atype) const {
             return size() > idx && type(idx) == atype;
         }
-        // KILL
-        inline bool is(fsize_t idx, const Uuid& id) const {
-            return has(idx, UUID) && uuid(idx) == id;
-        }
         const Slice data() const { return data_; }
         inline Slice data(Atom a) const {
             return Slice{data_.data(), a.safe_origin().as_range};
@@ -138,21 +133,6 @@ class TextFrame {
         // KILL  data(atom)
         inline Slice string_slice(fsize_t idx) const {
             return data_.slice(atom(idx).origin.range());
-        }
-        // KILL  atom(i).value.as_integer
-        inline int64_t integer(fsize_t idx) const {
-            assert(type(idx) == INT);
-            return op_[idx].value.as_integer;
-        }
-        // KILL
-        inline double number(fsize_t idx) const {
-            assert(type(idx) == FLOAT);
-            return op_[idx].value.as_float;
-        }
-        // KILL
-        inline Uuid uuid(fsize_t idx) const {
-            assert(type(idx) == UUID);
-            return static_cast<Uuid>(op_[idx]);
         }
         inline Atom atom(fsize_t idx) const {
             assert(size() > idx);
@@ -365,7 +345,7 @@ class TextFrame {
         }
 
         void AppendFrame(const TextFrame& frame) {
-            Cursor cur{frame, Cursor::PARSE_ON_DEMAND};
+            Cursor cur{frame};
             while (cur.valid()) {
                 AppendOp(cur);
                 WriteTerm(cur.term());
@@ -395,19 +375,6 @@ class TextFrame {
     static Codepoint decode_hex_cp(Slice data);
 
     inline static char decode_esc(char esc);
-
-    struct StringIterator {
-        Slice data_;
-        Codepoint cp_;
-
-       public:
-        StringIterator(Slice str) : data_{str}, cp_{0} { Next(); }
-        inline Codepoint operator*() const { return cp_; }
-        bool Next() { return false; }
-        inline void operator++() { Next(); }
-        inline bool valid() const { return cp_ != 0; }
-        inline operator bool() const { return valid(); }
-    };
 };
 
 inline char TextFrame::decode_esc(char esc) {

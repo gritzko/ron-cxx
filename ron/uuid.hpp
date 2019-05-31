@@ -187,6 +187,7 @@ struct Atom {
     inline bool operator==(const Atom& b) const {
         return value == b.value && origin == b.origin;
     }
+    inline bool operator!=(const Atom& b) const { return !(*this == b); }
 };
 
 struct Uuid : public Atom {

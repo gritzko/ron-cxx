@@ -162,7 +162,7 @@ Status Replica<Store>::Commit::ReadNames(Names& names) {
         if (!c.has(2, UUID) || !c.has(3, UUID)) {
             continue;
         }
-        names[c.uuid(2)] = c.uuid(3);
+        names[Uuid{c.atom(2)}] = Uuid{c.atom(3)};
     }
     return Status::OK;
 }

@@ -32,7 +32,6 @@ class TxtMapper {
     using Cursor = typename Frame::Cursor;
     using Builder = typename Frame::Builder;
     using Records = typename Commit::Records;
-    using StringIterator = typename Frame::StringIterator;
     using DMP = MyersDiff<Codepoints>;
     using Ids = inc_stack<Uuid>;
     using Diff = typename DMP::Diff;

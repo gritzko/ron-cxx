@@ -113,8 +113,6 @@ Status TxtMapper<Commit>::RGA2Codepoints (Codepoints& text, Ids& ids, const Fram
         if (!*i) {
             // FIXME if any
             // FIXME perf?
-            StringIterator s{c.string_slice(2)};
-            text.push_back(*s);
         }
         ++i;
         c.Next();
@@ -126,8 +124,8 @@ template <typename Commit>
 Status TxtMapper<Commit>::WriteState(Builder& response, Cursor& query, Commit& branch) {
     Codepoints new_state;
     Codepoints old_text, new_text;
-    for(StringIterator cpi{query.string_slice(2)}; cpi; ++cpi)
-        new_text.push_back(*cpi);
+    //for(StringIterator cpi{query.string_slice(2)}; cpi; ++cpi)
+    //    new_text.push_back(*cpi);
     Booleans tombs;
     Frame old;
     Ids ids;
@@ -174,7 +172,7 @@ Status TxtMapper<Commit>::Write(Builder& response, Cursor& query, Commit& branch
     if (!query.has(2, UUID)) {
         return Status::BADARGS.comment("unknown txt write op pattern");
     }
-    Uuid command = query.uuid(2);
+    Uuid command{query.atom(2)};
     if (command==SINCE_COMMAND) {
         return Status::NOT_IMPLEMENTED;
     } else if (command==HILI_COMMAND) {

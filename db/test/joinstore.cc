@@ -14,10 +14,10 @@ using Iterator = typename TwoMemStore::Iterator;
 TEST(JoinStore, Ends) {
     TmpDir tmp;
     tmp.cd("Ends");
-    Uuid id{Uuid::Now(), Word::random()};
+    Uuid id = Uuid::Time(Uuid::Now(), Word::random());
     MemStore mem1, mem2;
-    mem1.Open(Uuid{Uuid::Now(), Word::random()});
-    mem2.Open(Uuid{Uuid::Now(), Word::random()});
+    mem1.Open(Uuid::Time(Uuid::Now(), Word::random()));
+    mem2.Open(Uuid::Time(Uuid::Now(), Word::random()));
     Store store{mem1, mem2};
     Frame frame;
     ASSERT_TRUE(IsOK(store.Read(Key{}, frame)));
@@ -28,27 +28,27 @@ TEST(JoinStore, Ends) {
     ASSERT_TRUE(frame.empty());
     Iterator i{store};
     ASSERT_EQ(i.key(), Key::END);
-    ASSERT_FALSE(i.value().valid());
+    ASSERT_FALSE(i.value().Next());
     
     ASSERT_TRUE(IsOK(i.SeekTo(Key::END, false)));
     ASSERT_EQ(i.key(), Key::END);
-    ASSERT_FALSE(i.value().valid());
+    ASSERT_FALSE(i.value().Next());
     ASSERT_TRUE(IsOK(i.SeekTo(Key::END, true)));
     ASSERT_EQ(i.key(), Key::END);
-    ASSERT_FALSE(i.value().valid());
+    ASSERT_FALSE(i.value().Next());
     
     ASSERT_TRUE(IsOK(i.SeekTo(Key{}, true)));
     ASSERT_EQ(i.key(), Key{});
-    ASSERT_TRUE(i.value().valid());
+    ASSERT_TRUE(i.value().Next());
     ASSERT_TRUE(IsOK(i.SeekTo(Key{}, false)));
     ASSERT_EQ(i.key(), Key{});
-    ASSERT_TRUE(i.value().valid());
+    ASSERT_TRUE(i.value().Next());
     
     // empty store, 2 records: zero and end
     ASSERT_TRUE(IsOK(i.Next()));
     ASSERT_TRUE(IsOK(i.SeekTo(Key::END, true)));
     ASSERT_EQ(i.key(), Key::END);
-    ASSERT_FALSE(i.value().valid());
+    ASSERT_FALSE(i.value().Next());
     
     // Next() at the end => end, returns ENDOFINPUT
     ASSERT_FALSE(i.Next()==Status::ENDOFINPUT);
@@ -92,6 +92,9 @@ TEST (JoinStore, Iterator) {
 }
 
 int main (int argc, char** args) {
+    if (getenv("TRACE")) {
+        Key::trace_by_key = true;
+    }
     ::testing::InitGoogleTest(&argc, args);
     return RUN_ALL_TESTS();
 }

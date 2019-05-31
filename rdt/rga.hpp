@@ -134,6 +134,9 @@ Status ScanRGA(Booleans &tombstones, const Frame &frame) {
     tombstones.clear();
     RGA_ENTRY state{META_ENTRY};
     Cursor cur = frame.cursor();
+    if (!cur.Next()) {
+        return Status::OK;
+    }
     const Uuid root = cur.id();
     if (cur.ref() != RGA_FORM_UUID || root.version() != TIME)
         return Status::BADARGS.comment("not an RGA/CT frame");

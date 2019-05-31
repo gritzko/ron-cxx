@@ -47,7 +47,9 @@ TEST(Merge, Multitree) {
     TextFrame::Builder b;
     TextFrame::Cursors c{};
     c.push_back(Cursor{childA});
+    ASSERT_TRUE(c.back().Next());
     c.push_back(Cursor{childB});
+    ASSERT_TRUE(c.back().Next());
     ASSERT_EQ(reducer.Merge(b, c), Status::CAUSEBREAK);
 }
 

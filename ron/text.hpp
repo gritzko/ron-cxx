@@ -39,8 +39,6 @@ class TextFrame {
         TERM term_;            // 1
         uint8_t ragel_state_;  // 1
         fsize_t line_;         // 4
-        uint32_t options_;  // -4 kill: start BTB, parse in .atom(i); .op()[i]
-                            // unparsed
 
         static constexpr int RON_FULL_STOP = 255;
         static constexpr int SPEC_SIZE = 2;  // open RON
@@ -64,25 +62,11 @@ class TextFrame {
         }
 
        public:
-        enum : uint32_t {
-            DEFAULT = 0,
-            START_AT_BTB = 1,
-        };
-
-        explicit Cursor(const Slice data, uint32_t options = DEFAULT)
-            : data_{data},
-              op_{TERM::RAW},
-              ragel_state_{0},
-              line_{1},
-              options_{options} {
-            if ((options & START_AT_BTB) == 0) {
-                Next();
-            }
-        }
+        explicit Cursor(const Slice data)
+            : data_{data}, op_{TERM::RAW}, ragel_state_{0}, line_{1} {}
 
         explicit Cursor(const String& str) : Cursor{Slice{str}} {}
-        explicit Cursor(const TextFrame& host, uint32_t options = DEFAULT)
-            : Cursor{host.data_, options} {}
+        explicit Cursor(const TextFrame& host) : Cursor{host.data_} {}
         Cursor(const Cursor& b) = default;
 
         /** Returns the raw atom vector (values likely unparsed, use atom(i) for
@@ -266,36 +250,6 @@ class TextFrame {
         const String& data() const { return data_; }
 
         bool empty() const { return data_.empty(); }
-
-        //  E N D   O F   A P I
-
-        /** A convenience method to add all ops from the cursor. */
-        template <typename Cur>
-        void AppendAll(Cur& cur) {
-            if (!cur.valid()) {
-                return;
-            }
-            do {
-                AppendOp(cur);
-                WriteTerm(cur.term());
-            } while (cur.Next());
-        }
-
-        /** A convenience method to add all ops from the frame. */
-        template <typename Frame2>
-        void AppendFrame(const Frame2& frame) {
-            auto cur = frame.cursor();
-            AppendAll(cur);
-        }
-
-        void AppendFrame(const TextFrame& frame) {
-            Cursor cur{frame};
-            while (cur.valid()) {
-                AppendOp(cur);
-                WriteTerm(cur.term());
-                cur.Next();
-            }
-        }
     };
 
     Cursor cursor() const { return Cursor{*this}; }

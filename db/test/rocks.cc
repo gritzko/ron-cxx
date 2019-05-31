@@ -29,27 +29,27 @@ TEST(Store, Ends) {
 
     Iterator i{store};
     ASSERT_EQ(i.key(), Key::END);
-    ASSERT_FALSE(i.value().valid());
+    ASSERT_FALSE(i.value().Next());
 
     ASSERT_TRUE(IsOK(i.SeekTo(Key::END, false)));
     ASSERT_EQ(i.key(), Key::END);
-    ASSERT_FALSE(i.value().valid());
+    ASSERT_FALSE(i.value().Next());
     ASSERT_TRUE(IsOK(i.SeekTo(Key::END, true)));
     //ASSERT_EQ(i.key(), Key::END);
-    ASSERT_TRUE(i.value().valid()); // there must be something
+    ASSERT_TRUE(i.value().Next()); // there must be something
 
     ASSERT_TRUE(IsOK(i.SeekTo(Key{}, true)));
     ASSERT_EQ(i.key(), Key{});
-    ASSERT_TRUE(i.value().valid());
+    ASSERT_TRUE(i.value().Next());
 
     ASSERT_TRUE(IsOK(i.SeekTo(Key{}, false)));
     ASSERT_EQ(i.key(), Key{});
-    ASSERT_TRUE(i.value().valid());
+    ASSERT_TRUE(i.value().Next());
 
     ASSERT_TRUE(IsOK(i.Next()));
     ASSERT_TRUE(IsOK(i.SeekTo(Key::END, true)));
     ASSERT_NE(i.key(), Key::END);
-    ASSERT_TRUE(i.value().valid());
+    ASSERT_TRUE(i.value().Next());
 
     // Next() at the end => end, returns ENDOFINPUT
     ASSERT_TRUE(i.Next()==Status::ENDOFINPUT); // FIXME  other stores
@@ -181,6 +181,9 @@ void test_db_chain_merge () {
  */
 
 int main (int argc, char** args) {
+    if (getenv("TRACE")) {
+        Key::trace_by_key = true;
+    }
     ::testing::InitGoogleTest(&argc, args);
     return RUN_ALL_TESTS();
 }

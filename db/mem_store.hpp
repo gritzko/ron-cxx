@@ -32,7 +32,10 @@ class InMemoryStore {
         Cursors inputs;
         while (from != till) {
             assert(from->first == key);
-            inputs.push_back(from->second.cursor());
+            inputs.emplace_back(from->second);
+            if (!inputs.back().Next()) {
+                inputs.pop_back();
+            }
             ++from;
         }
         return MergeCursors(merged, key.form(), inputs);
@@ -47,7 +50,7 @@ class InMemoryStore {
     Status Open(Uuid id) {
         Frame meta = OneOp<Frame>(id, YARN_FORM_UUID);
         Key zero{};
-        state_.insert(Record{zero, meta});
+        Write(zero, meta);
         state_.insert(Record{Key::END, Frame{}});  // FIXME WTF?!
         return Status::OK;
     }
@@ -82,7 +85,12 @@ class InMemoryStore {
                 return Cursor{b_->second};
             }
             Cursors ins;
-            for (auto i = b_; i != e_; ++i) ins.push_back(Cursor{i->second});
+            for (auto i = b_; i != e_; ++i) {
+                ins.emplace_back(i->second);
+                if (!ins.back().Next()) {
+                    ins.pop_back();
+                }
+            }
             Status ok = MergeCursors(merged_, key().form(), ins);
             return Cursor{merged_};
         }
@@ -151,11 +159,11 @@ class InMemoryStore {
         if (key == Key::END)
             return Status::BADARGS.comment("can't write at Key::END");
         state_.insert(Record{key, change});
+        LOG('m', key, change.data());
         return Status::OK;
     }
 
     Status Read(Key key, Frame& result) {
-        Cursors inputs{};
         auto range = state_.equal_range(key);
         if (range.first == range.second) {
             result = Frame{};
@@ -170,6 +178,7 @@ class InMemoryStore {
         Status ok = Merge(result, range.first, range.second);
         state_.erase(range.first, range.second);
         state_.insert(Record{key, result});
+        LOG('e', key, result.data());
         return ok;
     }
 

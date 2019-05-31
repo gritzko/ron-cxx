@@ -395,6 +395,9 @@ class Replica {
     inline Status ReceiveFrame(Builder &response, Frame frame,
                                Word branch = ZERO) {
         Cursor c{frame};
+        if (!c.Next()) {
+            return Status::OK;
+        }
         return Receive(response, c, branch);
     }
 

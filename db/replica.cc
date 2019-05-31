@@ -25,6 +25,7 @@ Status Replica<Store>::CreateReplica() {
     Commit commit{re};
     Frame yarn_init = OneOp<Frame>(now0, YARN_FORM_UUID);
     Cursor c{yarn_init};
+    c.Next();
     Builder b;
     commit.SaveChain(b, c);
 
@@ -45,7 +46,7 @@ Status Replica<Store>::Open() {
         Frame meta_rec;
         IFOK(store.Read(Key{}, meta_rec));
         Cursor mc{meta_rec};
-        if (!mc.valid()) {
+        if (!mc.Next()) {
             return Status::BADFRAME.comment("tip record is corrupted");
         }
         Uuid tip = mc.id();
@@ -95,6 +96,7 @@ Status Replica<Store>::CreateBranch(Word yarn_id, bool transcendent) {
     Commit commit{*this, branch_id};
     Frame yarn_init = OneOp<Frame>(event_id, YARN_FORM_UUID);
     Cursor c{yarn_init};
+    c.Next();
     Builder b;
     commit.SaveChain(b, c);
 
@@ -154,7 +156,7 @@ template <typename Store>
 Status Replica<Store>::Commit::ReadNames(Names& names) {
     Frame zeroobj;
     IFOK(GetObject(zeroobj, Uuid::NIL, LWW_FORM_UUID));
-    Cursor c{zeroobj, false};
+    Cursor c{zeroobj};
     while (c.Next()) {
         if (c.op().size() != 4) {
             continue;
@@ -215,6 +217,7 @@ Status Replica<Store>::Commit::FindOpMeta(OpMeta& meta, Uuid op_id) {
     IFOK(FindObjectLog(object_log, meta.object));
     // seek to the head
     Cursor cur{object_log};
+    cur.Next();
     while (cur.valid() && cur.id() != meta.id) {
         cur.Next();
     }
@@ -252,7 +255,7 @@ Status Replica<Store>::Commit::FindChainHeadMeta(OpMeta& meta, Uuid op_id) {
         return ok;
     }
     Cursor metac{i.value()};
-    if (!metac.valid()) {
+    if (!metac.Next()) {
         return Status::BAD_STATE.comment("unparseable meta record?!");
     }
     if (metac.id().origin != op_id.origin || metac.ref() != META_FORM_UUID) {
@@ -471,8 +474,7 @@ Status Replica<Store>::Commit::QueryObject(Builder& response, Cursor& query) {
     if (host_.mode_ & KEEP_STATES) {
         Frame f;
         IFOK(join_.Read(key, f));
-        Cursor c{f};
-        response.AppendAll(c);
+        AppendFrame<Frame>(response, f);
         query.Next();
         return Status::OK;
     } else if (host_.mode_ & KEEP_OBJECT_LOGS) {
@@ -508,17 +510,16 @@ Status Replica<Store>::Commit::QueryObjectLog(Builder& response,
     if (id == meta.object) {
         Frame obj;
         IFOK(join_.Read(logkey, obj));
-        Cursor objc{obj};
-        response.AppendAll(objc);
+        AppendFrame<Frame>(response, obj);
         return Status::OK;
     }
     Frame log;
     IFOK(join_.Read(logkey, log));
     // version | since | segment
     Cursor c{log};
-    do {
+    while (c.Next() && c.id() != id) {
         response.AppendOp(c);
-    } while (c.id() != id && c.Next());
+    }
     return c.id() == id ? Status::OK
                         : Status::NOT_FOUND.comment("no such op in the log");
 }

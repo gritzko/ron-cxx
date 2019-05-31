@@ -1,6 +1,7 @@
 #ifndef RON_RDT_LOG_HPP
 #define RON_RDT_LOG_HPP
 
+#include "../ron/frames.hpp"
 #include "../ron/status.hpp"
 #include "../ron/uuid.hpp"
 #include "merge.hpp"
@@ -15,7 +16,9 @@ class OpLog {
 
    public:
     Status Merge(typename Frame::Builder &output, Cursors &inputs) const {
-        for (int i = 0; i < inputs.size(); ++i) output.AppendAll(inputs[i]);
+        for (int i = 0; i < inputs.size(); ++i) {
+            AppendAll<Frame>(output, inputs[i]);
+        }
         return Status::OK;
     }
 

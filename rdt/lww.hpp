@@ -21,7 +21,6 @@ class LastWriteWinsRDT {
     Status Merge(typename Frame::Builder &output, Cursors &inputs) const {
         MCursor m{inputs};
         m.Merge(output);
-        // std::cerr<<"MRG\t"<<output.data();
         return Status::OK;
     }
 

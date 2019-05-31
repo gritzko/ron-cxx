@@ -15,7 +15,7 @@ using Cursors = TextFrame::Cursors;
 string scan (const TextFrame& frame) {
     string ret;
     TextFrame::Cursor cur = frame.cursor();
-    do {
+    while (cur.Next()) {
         if (!ret.empty())
             ret.append(",");
         if (cur.op().size()>2 && cur.atom(2).type()==ATOM::STRING) {
@@ -23,7 +23,7 @@ string scan (const TextFrame& frame) {
         } else {
             ret.append("_");
         }
-    } while (cur.Next());
+    }
     return ret;
 }
 

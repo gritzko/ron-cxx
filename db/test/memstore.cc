@@ -55,10 +55,10 @@ TEST(MemStore, Ends) {
     
     ASSERT_TRUE(IsOK(i.SeekTo(Key{}, true)));
     ASSERT_EQ(i.key(), Key{});
-    ASSERT_TRUE(i.value().valid());
+    ASSERT_TRUE(i.value().Next());
     ASSERT_TRUE(IsOK(i.SeekTo(Key{}, false)));
     ASSERT_EQ(i.key(), Key{});
-    ASSERT_TRUE(i.value().valid());
+    ASSERT_TRUE(i.value().Next());
     
     // empty store, 2 records: zero and end
     ASSERT_TRUE(IsOK(i.Next()));
@@ -86,6 +86,8 @@ TEST(MemStore, Range) {
     assert(store.Write(key, b));
     Frame _m;
     assert(store.Read(key, _m));
+    std::cerr<<m.data();
+    std::cerr<<_m.data();
     assert(CompareFrames(m, _m));
     assert(store.Read(key, _m));
     assert(CompareFrames(m, _m));

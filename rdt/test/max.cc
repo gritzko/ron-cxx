@@ -19,6 +19,8 @@ TEST (Max, Ints) {
     Frame A{"@1kGIU+0046cGqZgm :max, =1;"};
     Frame B{"@1kGIu+0046cGqZgm :1kGIU+0046cGqZgm =2;"};
     Cursors ab{A.cursor(), B.cursor()};
+    ASSERT_TRUE(ab[0].Next());
+    ASSERT_TRUE(ab[1].Next());
     Status ok = rdt.Merge(res, ab);
     Frame AB = res.Release();
     ASSERT_EQ(AB.data(), "@1kGIU+0046cGqZgm :max,\n@1kGIu+0046cGqZgm 2;\n");

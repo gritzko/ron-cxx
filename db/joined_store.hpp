@@ -101,8 +101,14 @@ class JoinedStore {
             }
             // have to merge then
             Cursors inputs;
-            inputs.push_back(ai_.value());
-            inputs.push_back(bi_.value());
+            inputs.emplace_back(ai_.value());
+            if (!inputs.back().Next()) {
+                inputs.pop_back();
+            }
+            inputs.emplace_back(bi_.value());
+            if (!inputs.back().Next()) {
+                inputs.pop_back();
+            }
             Status ok = MergeCursors<Frame>(merged_, inputs);
             LOG('_', at_, merged_.data());
             return ok ? Cursor{merged_}

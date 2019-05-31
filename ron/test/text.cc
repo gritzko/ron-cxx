@@ -16,14 +16,14 @@ using Builder = typename Frame::Builder;
 string pattern (const Frame& frame) {
     string ret;
     auto c = frame.cursor();
-    do {
+    while (c.Next()) {
         if (c.op().size()) ret.push_back('@');
         if (c.op().size()>1) ret.push_back(':');
         for(int i=2; i<c.op().size(); i++) {
             ret.push_back(ATOM_PUNCT[c.atom(i).type()]);
         }
         ret.push_back(TERM_PUNCT[c.term()]);
-    } while (c.Next());
+    }
     return ret;
 }
 
@@ -60,15 +60,13 @@ TEST(TextFrame, basic_cycle ) {
     ASSERT_TRUE(data.find(VALUE)!=string::npos);
 
     TextFrame::Cursor cursor = frame.cursor();
+    ASSERT_TRUE(cursor.Next());
     ASSERT_EQ(cursor.op().size(), 2);
     ASSERT_TRUE(cursor.ref()==Uuid{LWW});
     ASSERT_TRUE(cursor.id().str()==TIME1);
     ASSERT_TRUE(cursor.term()==REDUCED);
     ASSERT_TRUE(cursor.Next());
     Atom a = cursor.op()[2];
-    std::cerr<<"FRESH\n";
-    std::cerr<<a.safe_origin().as_range.begin()<<"...";
-    std::cerr<<a.safe_origin().as_range.end()<<"\n";
     ASSERT_TRUE(cursor.term()==RAW);
     ASSERT_TRUE(cursor.ref()==TIME1);
     ASSERT_TRUE(cursor.id()==TIME2);
@@ -82,6 +80,7 @@ TEST(TextFrame, optional_chars) {
     String ABC{"abc"};
     Frame opt{TANGLED};
     Cursor copt = opt.cursor();
+    ASSERT_TRUE(copt.Next());
     ASSERT_TRUE(copt.valid());
     ASSERT_EQ(copt.op().size(), 4);
     ASSERT_EQ(copt.atom(0), Uuid{"1A"});
@@ -110,10 +109,11 @@ TEST(TextFrame, optional_chars) {
     ASSERT_TRUE(!copt.valid());
 
     Cursor unparsed{TANGLED};
+    ASSERT_TRUE(unparsed.Next());
     ASSERT_EQ(unparsed.op().size(), 4);
     ASSERT_EQ(unparsed.op()[2].value.as_integer, 0);
     ASSERT_EQ(unparsed.atom(2).value.as_integer, 234);
-    unparsed.Next();
+    ASSERT_TRUE(unparsed.Next());
     ASSERT_EQ(unparsed.op()[3].value.cp, 0);
 
     Atom abc_atom = unparsed.atom(3);
@@ -136,6 +136,7 @@ TEST(TextFrame, signs ) {
     String SIGNS{"@2:1 -1 ,-1.2, +1.23,-1e+2, -2.0e+1,"};
     Frame signs{SIGNS};
     Cursor cur = signs.cursor();
+    ASSERT_TRUE(cur.Next());
     ASSERT_EQ(cur.atom(2).value.as_integer, -1);
     ASSERT_TRUE(cur.Next());
     ASSERT_EQ(cur.atom(2).value.as_float, -1.2);
@@ -152,7 +153,7 @@ TEST(TextFrame, size_limits ) {
     String OVERLIMIT{"=1,=1000000000000000000001,"};
     Frame toolong{OVERLIMIT};
     Cursor cur = toolong.cursor();
-    ASSERT_TRUE(cur.valid());
+    ASSERT_TRUE(cur.Next());
     ASSERT_TRUE(!cur.Next());
 }
 
@@ -162,12 +163,10 @@ TEST(TextFrame, string_escapes) {
     String STR2{"=\r\n\t\\="};
     builder.AppendOp(Op{"1+a", "2+b", STR1, STR2});
     Frame cycle = builder.Release();
-    cerr<<cycle.data();
     Cursor cc = cycle.cursor();
-    ASSERT_TRUE(cc.valid());
+    ASSERT_TRUE(cc.Next());
     ASSERT_TRUE(GetString(cc, 2)==STR1);
     ASSERT_TRUE(GetString(cc, 3)==STR2);
-
     // FIXME \u
     //Frame good{" 'esc \\'', '\\u0020', '\\r\\n\\t\\\\', "};
     //Cursor cur = good.cursor();
@@ -182,22 +181,23 @@ TEST(TextFrame, string_metrics ) {
 TEST(TextFrame, terms) {
     String COMMAS{"@1+A:2+B 1,2 ,\n,\t4   ,,"};
     Cursor c{COMMAS};
-    int i = 1;
-    while (c.Next()) i++;
+    int i = 0;
+    while (c.Next()) { i++; }
     ASSERT_TRUE(i==5);
 }
 
 TEST(TextFrame, defaults ) {
     Frame::Builder b;
     String RAW{"@12345+test :lww; @1234500001+test :12345+test 'key' 'value';"};
-    b.AppendFrame(Frame{RAW});
+    AppendFrame(b, Frame{RAW});
     Frame nice = b.Release();
     String CORRECT{"@12345+test :lww;\n 'key' 'value';\n"};
     ASSERT_EQ(nice.data(), CORRECT);
     Cursor nc = nice.cursor();
+    ASSERT_TRUE(nc.Next());
     ASSERT_TRUE(nc.id()==Uuid{"12345+test"});
     ASSERT_TRUE(nc.ref()==Uuid{"lww"});
-    nc.Next();
+    ASSERT_TRUE(nc.Next());
     ASSERT_TRUE(nc.id()==Uuid{"1234500001+test"});
     ASSERT_TRUE(nc.ref()==Uuid{"12345+test"});
 }
@@ -205,12 +205,12 @@ TEST(TextFrame, defaults ) {
 TEST(TextFrame, span_spread ) {
     String RAW{"@1iDEKK+gYpLcnUnF6 :1iDEKA+gYpLcnUnF6 ('abcd' 4);"};
     Cursor c{RAW};
-    ASSERT_TRUE(c.valid());
+    ASSERT_TRUE(c.Next());
 }
 
 TEST(TextFrame, syntax_errors) {
     String INVALID{"@line+ok\n:bad/"};
-    Cursor cur{Slice{INVALID}, Cursor::START_AT_BTB};
+    Cursor cur{Slice{INVALID}};
     Status ok = cur.Next();
     String MSG{"syntax error at line 2 col 5 (offset 13)"};
     ASSERT_EQ(ok.comment(), MSG);
@@ -221,7 +221,7 @@ TEST(TextFrame, UTF16) {
     ASSERT_TRUE(PIKACHU.size()==36);
     Frame frame{PIKACHU};
     Cursor cur = frame.cursor();
-    ASSERT_TRUE(cur.valid());
+    ASSERT_TRUE(cur.Next());
     ASSERT_TRUE(HasValue(cur, STRING));
     Atom str = cur.atom(2);
     //auto parsed = frame.utf16string(str);
@@ -233,7 +233,7 @@ TEST(TextFrame, UTF16) {
 TEST(TextFrame, END) {
     String frame{"@1kK7vk+0 :lww ;\n"};
     Cursor c{frame};
-    ASSERT_TRUE(c.valid());
+    ASSERT_TRUE(c.Next());
     ASSERT_EQ(c.Next(), Status::ENDOFFRAME);
 }
 
@@ -242,7 +242,7 @@ TEST(TextFrame, Spans) {
     String frame{str};
     Cursor c{frame};
     Builder b;
-    ASSERT_TRUE(c.valid());
+    ASSERT_TRUE(c.Next());
     ASSERT_TRUE(HasValue(c, ATOM::UUID));
     ASSERT_EQ(Uuid{c.atom(2)}, "rm");
     b.AppendOp(c);
@@ -266,7 +266,7 @@ TEST(TextFrame, Spreads) {
     String frame{str};
     Builder b;
     Cursor c{frame};
-    ASSERT_TRUE(c.valid());
+    ASSERT_TRUE(c.Next());
     /*ASSERT_EQ(c.string(2), "a");   FIXME FIXME NOT IMPLEMENTED YET
     b.AppendOp(c);
     ASSERT_TRUE(c.Next());

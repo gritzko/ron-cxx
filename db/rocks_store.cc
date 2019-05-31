@@ -63,10 +63,16 @@ class RDTMerge : public rocksdb::MergeOperator {
         Key key = slice2key(merge_in.key);
 
         if (merge_in.existing_value) {
-            inputs.push_back(Cursor{slice(*merge_in.existing_value)});
+            inputs.emplace_back(slice(*merge_in.existing_value));
+            if (!inputs.back().Next()) {
+                inputs.pop_back();
+            }
         }
         for (auto s : merge_in.operand_list) {
-            inputs.push_back(Cursor{slice(s)});
+            inputs.emplace_back(slice(s));
+            if (!inputs.back().Next()) {
+                inputs.pop_back();
+            }
         }
 
         Status ok = reducer_.Merge(out, key.form(), inputs);
@@ -85,7 +91,10 @@ class RDTMerge : public rocksdb::MergeOperator {
         Cursors inputs{};
         inputs.reserve(operand_list.size() + 1);
         for (auto s : operand_list) {
-            inputs.push_back(Cursor{slice(s)});
+            inputs.emplace_back(slice(s));
+            if (!inputs.back().Next()) {
+                inputs.pop_back();
+            }
         }
 
         Status ok = reducer_.Merge(out, key.form(), inputs);

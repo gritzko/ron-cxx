@@ -35,7 +35,9 @@ class MasterRDT {
             case LOG_RAW_FORM:
                 return log_.Merge(output, inputs);
             case ZERO_RAW_FORM:
-                if (!inputs.empty()) output.AppendAll(inputs.back());
+                if (!inputs.empty()) {
+                    AppendAll<Frame>(output, inputs.back());
+                }
                 return Status::OK;
             case META_META_FORM:
                 return meta_.Merge(output, inputs);
@@ -50,7 +52,7 @@ class MasterRDT {
                 return max_.Merge(output, inputs);
             case ERROR_NO_FORM:
                 if (!inputs.empty()) {
-                    output.AppendAll(inputs.back());
+                    AppendAll<Frame>(output, inputs.back());
                 }
                 return Status::OK;
             default:
@@ -110,6 +112,9 @@ Status MergeStrings(String &ret, FORM rdt, Strings inputs) {
     Cursors cursors;
     for (auto &i : inputs) {
         cursors.emplace_back(i);
+        if (!cursors.back().Next()) {
+            cursors.pop_back();
+        }
     }
     Status ok = MergeCursors(frame, rdt, cursors);
     if (!ok) {
@@ -120,10 +125,15 @@ Status MergeStrings(String &ret, FORM rdt, Strings inputs) {
 }
 
 template <typename Frame>
-Status MergeFrames(Frame &ret, std::vector<Frame> inputs) {
+Status MergeFrames(Frame &ret, const std::vector<Frame> &inputs) {
     using Cursors = typename Frame::Cursors;
     Cursors cursors;
-    for (int i = 0; i < inputs.size(); ++i) cursors.emplace_back(inputs[i]);
+    for (int i = 0; i < inputs.size(); ++i) {
+        cursors.emplace_back(inputs[i]);
+        if (!cursors.back().Next()) {
+            cursors.pop_back();
+        }
+    }
     FORM rdt;
     Status ok = GetForm<Frame>(rdt, cursors);
     if (!ok) {
@@ -160,6 +170,9 @@ Status SplitLogIntoChains(typename Frame::Cursors &chains, const Frame &input,
                           Uuid cutoff = Uuid::FATAL) {
     using Cursor = typename Frame::Cursor;
     Cursor cur = input.cursor();
+    if (!cur.Next()) {
+        return Status::OK;
+    }
     Cursor nxt = cur;
     Status ok;
     Uuid prev{};

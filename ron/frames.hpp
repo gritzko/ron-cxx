@@ -78,6 +78,9 @@ Status CompareFrames(const Frame& frame_a, const Frame& frame_b) {
     using Cursor = typename Frame::Cursor;
     Cursor a = frame_a.cursor();
     Cursor b = frame_b.cursor();
+    if (a.Next() != b.Next()) {
+        return Status::BADVALUE;
+    }
     return CompareWithCursors(a, b);
 }
 
@@ -154,6 +157,29 @@ Status SkipChain(Cursor& cur) {
         ok = cur.Next();
     } while (ok && cur.ref() == i);
     return ok;
+}
+
+/** A convenience method to add all ops from the cursor.
+    When passed as a parameter, a cursor must be positioned on the first
+    relevant entry (not BTB). */
+template <class Frame>
+void AppendAll(typename Frame::Builder& to, typename Frame::Cursor& cur) {
+    while (cur.valid()) {
+        to.AppendOp(cur);
+        if (cur.term() != REDUCED) {
+            to.EndChunk(cur.term());
+        }
+        cur.Next();
+    }
+}
+
+/** A convenience method to add all ops from the frame. */
+template <typename Frame>
+void AppendFrame(typename Frame::Builder& to, const Frame& frame) {
+    auto cur = frame.cursor();
+    if (cur.Next()) {
+        AppendAll<Frame>(to, cur);
+    }
 }
 
 }  // namespace ron

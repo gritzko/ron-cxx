@@ -24,7 +24,7 @@ class LWWObject {
     }
 
     void Update(Frame frame) {
-        Cursor c{frame, Frame::Cursor::START_AT_BTB};
+        Cursor c{frame};
         while (c.Next()) {
             Update(c);
         }

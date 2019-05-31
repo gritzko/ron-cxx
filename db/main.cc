@@ -234,13 +234,17 @@ Status CommandDrop(RonReplica& replica, Args& args) {
 Status SplitTests(Frames& tests, const Frame& orig) {
     Cursor c{orig};
     Builder b;
-    while (c.valid()) {
+    while (c.Next()) {
+        if (c.id() == Uuid::COMMENT) {
+            if ((c.term() == HEADER || c.term() == QUERY) && !b.empty()) {
+                tests.emplace_back(b.Release());
+            }
+        }
         b.AppendOp(c);
         if (c.term() != REDUCED) b.EndChunk(c.term());
-        if (c.Next() && c.id() == Uuid::COMMENT &&
-            (c.term() == HEADER || c.term() == QUERY)) {
-            tests.emplace_back(b.Release());
-        }
+    }
+    if (!b.empty()) {
+        tests.emplace_back(b.Release());
     }
     return Status::OK;
 }
@@ -268,7 +272,8 @@ Status CommandTest(RonReplica& replica, Args& args) {
     static const string OK{"\033[0;32mOK\033[0m\t"};
     static const string FAIL{"\033[1;31mFAIL\033[0m\t"};
     for (int i = 0; ok && i < io.size(); i++) {
-        Cursor c = io[i].cursor();
+        Cursor c{io[i]};
+        c.Next();
         if (c.id() != Uuid::COMMENT) {
             return Status::BADFRAME.comment("not a test header: " +
                                             c.id().str());
@@ -492,7 +497,7 @@ Status CommandHashFrame(const string& filename) {
     unordered_map<Word, Word> tips;
 
     Frame::Cursor cur = frame.cursor();
-    while (cur.valid()) {
+    while (cur.Next()) {
         const Uuid& id = cur.id();
         const Uuid& ref = cur.ref();
         if (id.version() == TIME) {
@@ -530,7 +535,6 @@ Status CommandHashFrame(const string& filename) {
                 return Status::HASHBREAK;
             }
         }
-        cur.Next();
     }
     cout << report.data() << endl;
     return Status::OK;

@@ -37,8 +37,6 @@ class TextFrame {
         Slice data_;           // 16 remaining data, base for ranges
         Atoms op_;             // 24
         TERM term_;            // 1
-        fsize_t at_;           // -4 Trim -> ???
-        fsize_t off_;          // -4 NOW use data_
         uint8_t ragel_state_;  // 1
         fsize_t line_;         // 4
         uint32_t options_;  // -4 kill: start BTB, parse in .atom(i); .op()[i]
@@ -74,8 +72,6 @@ class TextFrame {
         explicit Cursor(const Slice data, uint32_t options = DEFAULT)
             : data_{data},
               op_{TERM::RAW},
-              at_{0},
-              off_{0},
               ragel_state_{0},
               line_{1},
               options_{options} {
@@ -102,13 +98,12 @@ class TextFrame {
          *  (full parser). */
         Result NextCodepoint(Atom& c) const;
 
-        void Trim(const Cursor& b) { data_.Resize(b.at_); }
-
         /** Returns whether the last op was parsed successfully.  */
         inline bool valid() const { return ragel_state_ != 0; }
 
-        /** The full buffer we iterate over. */
-        const Slice data() const { return data_.reset(); }
+        /** The remaining unparsd data. Use data().reset() for the full buffer.
+         */
+        Slice& data() { return data_; }
 
         inline Slice data(Atom a) const {
             assert(a.safe_origin().as_range.valid());

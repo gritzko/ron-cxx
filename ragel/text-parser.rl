@@ -10,13 +10,13 @@ namespace ron {
 Status TextFrame::Cursor::Next () {
 
     Atoms& atoms = op_;
-    int line=line_;
+    fsize_t &line=line_;
     uint8_t &cs = ragel_state_;
     static_assert(RON_first_final<UINT8_MAX, "this grammar should not change much");
 
     switch (cs) {
         case RON_error:
-            if (off_!=0) {
+            if (data().range().begin()!=0) {
                 return Status::BAD_STATE;
             }
             %% write init;
@@ -30,15 +30,15 @@ Status TextFrame::Cursor::Next () {
             break;
     }
 
-    if (data().size()<=off_) {
+    if (data().empty()) {
         cs = RON_error;
         return Status::ENDOFFRAME;
     }
 
-    Slice body{data_};
-    CharRef pb = body.begin();
-    CharRef p = pb + off_;
-    CharRef pe = body.end();
+    CharRef buffer = data().buffer();
+    CharRef pb = data().begin();
+    CharRef p = pb;
+    CharRef pe = data().end();
     CharRef eof = pe;
     CharRef lineb = pb;
     CharRef intb{p};
@@ -63,9 +63,7 @@ Status TextFrame::Cursor::Next () {
     main := TEXT_FRAME ;
     write exec;
     }%%
-    at_ = off_;
-    off_ = p-pb;
-    line_ = line;
+    data().consume(p-pb);
 
     //std::cerr << "ending with [" <<p<<"] state "<<cs<<" "<<op_.size()<<" atoms "<<(pe-p)<<" bytes left, prev_id_ "<<prev_id_.str()<<'\n';
 

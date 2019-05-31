@@ -143,7 +143,7 @@ Status SplitFrame(const Frame &input, typename Frame::Cursors &chains) {
     Cursor cur = input.cursor();
     Cursor nxt = cur;
     Status ok;
-    while ((ok = cur.SkipChain())) {
+    while ((ok = SkipChain(cur))) {
         nxt.Trim(cur);
         chains.push_back(nxt);
         nxt = cur;
@@ -164,12 +164,14 @@ Status SplitLogIntoChains(typename Frame::Cursors &chains, const Frame &input,
     Status ok;
     Uuid prev{};
     while (cur.valid() && prev != cutoff) {
+        fsize_t at{0};
         do {
             prev = cur.id();
+            at = cur.data().range().begin();
             ok = cur.Next();
         } while (ok && cur.ref() == prev && prev != cutoff);
         if (ok) {
-            nxt.Trim(cur);
+            nxt.data().EndAt(at);
             chains.push_back(nxt);
             nxt = cur;
         } else {

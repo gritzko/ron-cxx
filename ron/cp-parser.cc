@@ -67,7 +67,7 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
                     goto tr13;
                 goto tr10;
             tr0 :
-#line 64 "ragel/./text-grammar.rl"
+#line 58 "ragel/./text-grammar.rl"
             {
                 cp = decode_esc((*p));
             }
@@ -85,7 +85,7 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
             }
                 goto st10;
             tr15 :
-#line 49 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 cp_size++;
             }
@@ -102,11 +102,11 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
                 { cp = (*p); }
                 goto st10;
             tr20 :
-#line 65 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 49 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 { cp_size++; }
 #line 28 "ragel/cp-parser.rl"
                 {
@@ -151,7 +151,7 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
                 cs = 0;
                 goto _out;
             tr16 :
-#line 49 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 cp_size++;
             }
@@ -166,11 +166,11 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
                 }
                 goto st1;
             tr21 :
-#line 65 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 49 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 { cp_size++; }
 #line 28 "ragel/cp-parser.rl"
                 {
@@ -286,7 +286,7 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
             }
                 goto st6;
             tr17 :
-#line 49 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 cp_size++;
             }
@@ -303,11 +303,11 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
                 { cp = (*p) & 0x1f; }
                 goto st6;
             tr22 :
-#line 65 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 49 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 { cp_size++; }
 #line 28 "ragel/cp-parser.rl"
                 {
@@ -340,7 +340,7 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
             }
                 goto st7;
             tr18 :
-#line 49 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 cp_size++;
             }
@@ -357,11 +357,11 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
                 { cp = (*p) & 0xf; }
                 goto st7;
             tr23 :
-#line 65 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 49 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 { cp_size++; }
 #line 28 "ragel/cp-parser.rl"
                 {
@@ -388,7 +388,7 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
             }
                 goto st8;
             tr19 :
-#line 49 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
             {
                 cp_size++;
             }
@@ -405,11 +405,11 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
                 { cp = (*p) & 7; }
                 goto st8;
             tr24 :
-#line 65 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
             {
                 cp = decode_hex_cp(Slice{p - 4, 4});
             }
-#line 49 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 { cp_size++; }
 #line 28 "ragel/cp-parser.rl"
                 {
@@ -465,7 +465,7 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
         if (p == eof) {
             switch (cs) {
                 case 10:
-#line 49 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                 {
                     cp_size++;
                 }
@@ -480,11 +480,11 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
                     }
                     break;
                 case 11:
-#line 65 "ragel/./text-grammar.rl"
+#line 59 "ragel/./text-grammar.rl"
                 {
                     cp = decode_hex_cp(Slice{p - 4, 4});
                 }
-#line 49 "ragel/./text-grammar.rl"
+#line 43 "ragel/./text-grammar.rl"
                     { cp_size++; }
 #line 28 "ragel/cp-parser.rl"
                     {

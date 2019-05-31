@@ -61,8 +61,17 @@ class Range {
 #endif
     {}
 
+    Range(CharRef base, CharRef begin, CharRef end)
+        : Range{fsize_t(begin - base), fsize_t(end - base)} {
+        assert(valid());
+    }
+
     static inline Range FroTo(fsize_t from_offset, fsize_t till_offset) {
         return Range{from_offset, till_offset};
+    }
+    static inline Range FroToL(long from_offset, long till_offset) {
+        return Range{static_cast<fsize_t>(from_offset),
+                     static_cast<fsize_t>(till_offset)};
     }
     static inline Range AtFor(fsize_t at_offset, fsize_t for_length) {
         return Range{at_offset, at_offset + for_length};
@@ -100,6 +109,10 @@ class Range {
         limits_[MOST_SIGNIFICANT] -= by_length;
         assert(valid());
     }
+    inline void EndAt(fsize_t offset) {
+        limits_[MOST_SIGNIFICANT] = offset;
+        assert(valid());
+    }
     inline void resize(fsize_t new_size) {
         limits_[MOST_SIGNIFICANT] = limits_[LEAST_SIGNIFICANT] + new_size;
     }
@@ -129,7 +142,7 @@ class Slice {
         assert(size <= FSIZE_MAX);
     }
 
-    Slice(const Char* from, const Char* till)
+    Slice(CharRef from, CharRef till)
         : Slice{from, static_cast<fsize_t>(till - from)} {
         assert(till >= from);
         assert(till - from <= FSIZE_MAX);
@@ -144,6 +157,8 @@ class Slice {
         assert(str.size() >= range.end());
     }
 
+    inline CharRef buffer() const { return buf_; }
+    inline Range range() const { return range_; }
     inline const CharRef begin() const { return buf_ + range_.begin(); }
     inline const CharRef end() const { return buf_ + range_.end(); }
     inline Char at(fsize_t idx) const { return buf_[range_.offset(idx)]; }
@@ -154,7 +169,12 @@ class Slice {
     inline fsize_t size() const { return range_.size(); }
     inline bool empty() const { return range_.empty(); }
     inline CharRef data() const { return buf_; }
+
     inline Slice reset() const { return Slice{buf_, Range{0, range_.end()}}; }
+    inline Slice consumed() const {
+        return Slice{buf_, Range{0, range_.begin()}};
+    }
+    inline void EndAt(fsize_t offset) { range_.EndAt(offset); }
 
     bool operator==(const Slice b) const {
         return size() == b.size() && memcmp(begin(), b.begin(), size()) == 0;

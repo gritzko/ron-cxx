@@ -14,27 +14,21 @@
     }
     action begin_int { intb = p; }
     action end_int {
-        Slice the_int(intb, p);
-        if (the_int.size()>=19 && int_too_big(the_int)) { cs = 0; fbreak; }
-        //op_.push_back(Atom::Integer(parse_int(the_int), body.range_of(the_int))); 
-        // TODO atoms.emplace();
-        op_.push_back(Atom{INT, body.range_of(the_int)});
+        Range range{buffer, intb, p};
+        if (range.size()>=19 && int_too_big(Slice{intb,p})) { cs = 0; fbreak; }
+        op_.emplace_back(INT, range);
         uuidb = nullptr; // sabotage uuid
     }
     action begin_string { strb = p; cp_size = 0; }
     action end_string { 
-        Slice the_str{strb,p};
-        //op_.push_back(Atom::String(body.range_of(the_str))); 
-        Atom a = Atom{STRING, body.range_of(the_str)};
-        a.value.cp_size = cp_size;
-        op_.push_back(a);
+        op_.emplace_back(STRING, Range{buffer, strb, p});
+        op_.back().value.cp_size = cp_size;
     }
     action begin_float { floatb = p; }
     action end_float { 
-        Slice the_float{floatb,p};
-        if (the_float.size() > 24) { cs = 0; fbreak; }
-        //op_.push_back(Atom::Float(parse_float(the_float), body.range_of(the_float))); 
-        op_.push_back(Atom{FLOAT, body.range_of(the_float)});
+        Range range{buffer, floatb, p};
+        if (range.size() > 24) { cs = 0; fbreak; }
+        op_.emplace_back(FLOAT, range);
     }
     action end_quoted_uuid {
         if (word_too_big(value) || word_too_big(origin)) { cs = 0; fbreak; }

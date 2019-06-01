@@ -130,6 +130,16 @@ Result ReadString(String& to, const Cursor& c, Atom a) {
 }
 
 template <class Cursor>
+Result ReadString16(String16& to, const Cursor& c, Atom a) {
+    assert(a.type() == STRING);
+    Result ret{OK};
+    while (OK == (ret = c.NextCodepoint(a))) {
+        utf16append(to, a.value.cp);
+    }
+    return ret == ENDOFINPUT ? OK : ret;
+}
+
+template <class Cursor>
 inline Result ReadString(String& to, const Cursor& c, fsize_t idx) {
     return ReadString(to, c, c.atom(idx));
 }

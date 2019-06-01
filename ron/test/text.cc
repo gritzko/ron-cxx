@@ -224,10 +224,10 @@ TEST(TextFrame, UTF16) {
     ASSERT_TRUE(cur.Next());
     ASSERT_TRUE(HasValue(cur, STRING));
     Atom str = cur.atom(2);
-    //auto parsed = frame.utf16string(str);
-    //ASSERT_TRUE(parsed==u"пикачу ピカチュウ");
-    //ASSERT_TRUE(parsed.size()==12);
-    // FIXME recover UTF-16
+    String16 parsed;
+    ReadString16(parsed, cur, str);
+    ASSERT_TRUE(parsed==u"пикачу ピカチュウ");
+    ASSERT_TRUE(parsed.size()==12);
 }
 
 TEST(TextFrame, END) {

@@ -14,6 +14,16 @@ Status TextFrame::Cursor::Next () {
     uint8_t &cs = ragel_state_;
     static_assert(RON_first_final<UINT8_MAX, "this grammar should not change much");
 
+    if (span_size_) {
+        --span_size_;
+        atoms[1] = atoms[0];
+        ++atoms[0];
+        if (atoms.back().type()==STRING && atoms.back().value.cp) {
+            NextCodepoint(atoms.back());
+        }
+        return Status::OK;
+    }
+
     switch (cs) {
         case RON_error:
             if (data().range().begin()!=0) {
@@ -48,6 +58,7 @@ Status TextFrame::Cursor::Next () {
     CharRef wordb{p};
     Codepoint cp{0};
     fsize_t cp_size{0};
+    span_size_ = 0;
     char term{0};
     Slice value, origin;
     char variety{0}, version{0};

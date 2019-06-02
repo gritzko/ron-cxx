@@ -58,6 +58,18 @@
     action string_esc { cp = decode_esc(fc); }
     action string_uesc { cp = decode_hex_cp(Slice{p-4,4}); }
 
+    action span_size_digit {
+        span_size_ *= 10;
+        span_size_ += fc - '0';
+    }
+    action end_span_size {
+        --span_size_;
+    }
+    action end_spread {
+        if (op_.back().value.cp_size) { NextCodepoint(op_.back()); }
+        span_size_ = cp_size-1;
+    }
+
     WS = [ \r\n\t] @newline;
 
     # int64_t 
@@ -76,7 +88,7 @@
     # JSON-ey string
     UNIESC = "\\u" [0-9a-fA-F]{4} %string_uesc;
     ESC = "\\" [nrt\\b'/"] @string_esc;
-    CHAR = CODEPOINT - ['\n\r\\];
+    CHAR = CODEPOINT - ['\n\r\\\0];
     CP = (UNIESC|ESC|CHAR) %end_cp;
     STRING = ( CP* ) >begin_string %end_string;
 
@@ -97,7 +109,9 @@
     ATOMS = ATOM (WS* ATOM)* ;
 
     # op spans
-    SPAN = ( [(] WS* ([']STRING['])? WS* digit+ WS* [)] );
+    SPAN_SIZE = ( digit @span_size_digit )+ %end_span_size;
+    SPAN_SPREAD = ['] STRING ['] %end_spread;
+    SPAN = [(] WS* ( SPAN_SIZE | SPAN_SPREAD ) WS* [)] ;
 
     # RON op: an immutable unit of change
     OP = (SPEC|BARE_ATOM)? WS* ATOMS? WS* SPAN? WS* OPTERM ;

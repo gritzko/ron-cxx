@@ -39,6 +39,8 @@ class TextFrame {
         TERM term_;            // 1
         uint8_t ragel_state_;  // 1
         fsize_t line_;         // 4
+        fsize_t span_size_;    // 4
+                               // 50 bytes total
 
         static constexpr int RON_FULL_STOP = 255;
         static constexpr int SPEC_SIZE = 2;  // open RON
@@ -63,7 +65,11 @@ class TextFrame {
 
        public:
         explicit Cursor(const Slice data)
-            : data_{data}, op_{TERM::RAW}, ragel_state_{0}, line_{1} {}
+            : data_{data},
+              op_{TERM::RAW},
+              ragel_state_{0},
+              line_{1},
+              span_size_{0} {}
 
         explicit Cursor(const String& str) : Cursor{Slice{str}} {}
         explicit Cursor(const TextFrame& host) : Cursor{host.data_} {}
@@ -110,7 +116,7 @@ class TextFrame {
 
         /** Returns an atom (0 id, 1 ref, 2... are values). Values are parsed.
          */
-        inline Atom atom(fsize_t idx) const {
+        inline Atom atom(fsize_t idx = 2) const {
             assert(op().size() > idx);
             Atom ret = op_[idx];
             ParseAtom(ret);
@@ -123,9 +129,10 @@ class TextFrame {
     //  S E R I A L I Z A T I O N
 
     class Builder {
-        // Atoms op_;
-        Uuid prev_;
-        bool unterm_;
+        Uuid prev_id_;
+        Atom prev_2_;
+        fsize_t span_size_;
+
         /** Frame data (builder owns the memory) */
         String data_;
 
@@ -142,27 +149,32 @@ class TextFrame {
         void escape(String& escaped, const Slice& unescaped);
 
         inline void WriteTerm(TERM term = REDUCED) {
-            if (unterm_) {
+            if (span_size_) {
+                if (span_size_ > 1) {
+                    Write('(');
+                    WriteInt(span_size_);
+                    Write(')');
+                }
                 Write(TERM_PUNCT[term]);
                 Write(NL);
-                unterm_ = false;
+                span_size_ = 0;
             }
         }
 
         void WriteSpec(Uuid id, Uuid ref) {
             WriteTerm();
-            unterm_ = true;
-            bool seq_id = id == prev_.inc();
+            span_size_ = 1;
+            bool seq_id = id == prev_id_.inc();
             if (!seq_id) {
                 Write(SPEC_PUNCT[EVENT]);
                 WriteUuid(id);
             }
-            if (ref != prev_) {
+            if (ref != prev_id_) {
                 if (!seq_id) Write(' ');
                 Write(SPEC_PUNCT[REF]);
                 WriteUuid(ref);
             }
-            prev_ = id;
+            prev_id_ = id;
         }
 
         Result WriteValues(const Cursor& cur);
@@ -195,32 +207,63 @@ class TextFrame {
                         break;
                 }
             }
+            if (op.size() == 3 && op[2].type() != STRING) {
+                prev_2_ = op[2];
+            } else {
+                prev_2_ = Uuid::FATAL;
+            }  // FIXME 2
+            return OK;
+        }
+
+        template <class Cursor2>
+        inline bool same_span(const Cursor2& cur) {
+            const Atoms& op = cur.op();
+            return span_size_ > 0 && op.size() == 3 && op[2] == prev_2_;
+        }
+
+        template <class Cursor2>
+        inline Result ExtendSpan(const Cursor2& cur) {
+            ++span_size_;
+            // maybe append a char
             return OK;
         }
 
        public:
-        Builder() : prev_{Uuid::NIL}, unterm_{false}, data_{} {}
+        Builder()
+            : prev_id_{Uuid::NIL},
+              prev_2_{Uuid::FATAL},
+              span_size_{0},
+              data_{} {}
 
         //  A P I   M E T H O D S
 
         template <class Cursor2>
         Result AppendOp(const Cursor2& cur) {
-            WriteSpec(cur.id(), cur.ref());
-            WriteValues(cur);
-            return OK;
+            if (same_span(cur)) {
+                return ExtendSpan(cur);
+            } else {
+                WriteTerm();
+                WriteSpec(cur.id(), cur.ref());
+                return WriteValues(cur);
+            }
         }
 
         /** A shortcut method, avoids re-serialization of atoms. */
         Result AppendOp(const Cursor& cur) {
-            const Atoms& op = cur.op();
-            WriteSpec(A2U(op[OP_ID_IDX]), A2U(op[OP_REF_IDX]));
-            return WriteValues(cur);
+            if (same_span(cur)) {
+                return ExtendSpan(cur);
+            } else {
+                WriteTerm();
+                const Atoms& op = cur.op();
+                WriteSpec(A2U(op[OP_ID_IDX]), A2U(op[OP_REF_IDX]));
+                return WriteValues(cur);
+            }
         }
 
         /**  */
         inline Result EndChunk(TERM term = RAW) {
             assert(term != REDUCED);
-            unterm_ = true;  // empty chunks are OK
+            // empty chunks?
             WriteTerm(term);
             return OK;
         }
@@ -231,7 +274,7 @@ class TextFrame {
         }
 
         Result Release(String& to) {
-            if (unterm_) {
+            if (span_size_) {
                 EndChunk();
             }
             std::swap(data_, to);

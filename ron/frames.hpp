@@ -119,9 +119,16 @@ Status Reserialize(std::vector<Frame>& into,
     return Status::OK;
 }
 
+/** Reads a String from an op using the Atom as a cursor.
+ * By a convention, the atom cursor for a String must be in the BTB state.
+ * For a char (a single codepoint), the atom cursor must point at the char. */
 template <class Cursor>
 Result ReadString(String& to, const Cursor& c, Atom a) {
     assert(a.type() == STRING);
+    if (a.value.cp != 0) {
+        utf8append(to, a.value.cp);
+        return OK;
+    }
     Result ret{OK};
     while (OK == (ret = c.NextCodepoint(a))) {
         utf8append(to, a.value.cp);
@@ -150,6 +157,11 @@ inline String GetString(const Cursor& c, fsize_t idx = 2) {
     String ret;
     ReadString(ret, c, c.atom(idx));
     return ret;
+}
+
+template <class Cursor>
+inline Codepoint GetChar(const Cursor& c, fsize_t idx = 2) {
+    return c.atom(idx).value.cp;
 }
 
 template <class Cursor>

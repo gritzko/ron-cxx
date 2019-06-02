@@ -123,6 +123,8 @@ u16string TextFrame::utf16string(Atom str_atom) const {
         switch (cs) {
             case 9:
                 switch ((*p)) {
+                    case 0u:
+                        goto st0;
                     case 10u:
                         goto st0;
                     case 13u:
@@ -145,6 +147,9 @@ u16string TextFrame::utf16string(Atom str_atom) const {
                 } else
                     goto tr13;
                 goto tr10;
+            st0:
+                cs = 0;
+                goto _out;
             tr3 :
 #line 7 "ragel/././utf8-grammar.rl"
             {
@@ -194,8 +199,10 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             st10:
                 if (++p == pe) goto _test_eof10;
             case 10:
-#line 188 "ron/string-parser.cc"
+#line 192 "ron/string-parser.cc"
                 switch ((*p)) {
+                    case 0u:
+                        goto st0;
                     case 10u:
                         goto st0;
                     case 13u:
@@ -218,9 +225,6 @@ u16string TextFrame::utf16string(Atom str_atom) const {
                 } else
                     goto tr18;
                 goto tr15;
-            st0:
-                cs = 0;
-                goto _out;
             tr11 :
 #line 12 "ragel/string-parser.rl"
             {
@@ -264,7 +268,7 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             st1:
                 if (++p == pe) goto _test_eof1;
             case 1:
-#line 249 "ron/string-parser.cc"
+#line 251 "ron/string-parser.cc"
                 switch ((*p)) {
                     case 34u:
                         goto tr0;
@@ -295,8 +299,10 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             st11:
                 if (++p == pe) goto _test_eof11;
             case 11:
-#line 270 "ron/string-parser.cc"
+#line 272 "ron/string-parser.cc"
                 switch ((*p)) {
+                    case 0u:
+                        goto st0;
                     case 10u:
                         goto st0;
                     case 13u:
@@ -368,7 +374,7 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             st2:
                 if (++p == pe) goto _test_eof2;
             case 2:
-#line 332 "ron/string-parser.cc"
+#line 335 "ron/string-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr3;
                 goto st0;
             tr5 :
@@ -420,7 +426,7 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             st3:
                 if (++p == pe) goto _test_eof3;
             case 3:
-#line 376 "ron/string-parser.cc"
+#line 379 "ron/string-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr4;
                 goto st0;
             tr14 :
@@ -466,7 +472,7 @@ u16string TextFrame::utf16string(Atom str_atom) const {
             st4:
                 if (++p == pe) goto _test_eof4;
             case 4:
-#line 416 "ron/string-parser.cc"
+#line 419 "ron/string-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr5;
                 goto st0;
             st5:
@@ -513,6 +519,8 @@ u16string TextFrame::utf16string(Atom str_atom) const {
                 if (++p == pe) goto _test_eof12;
             case 12:
                 switch ((*p)) {
+                    case 0u:
+                        goto st0;
                     case 10u:
                         goto st0;
                     case 13u:
@@ -591,7 +599,7 @@ u16string TextFrame::utf16string(Atom str_atom) const {
 #line 13 "ragel/string-parser.rl"
                     { push_back_uniesc(ret, uniesc, p); }
                     break;
-#line 528 "ron/string-parser.cc"
+#line 532 "ron/string-parser.cc"
             }
         }
 

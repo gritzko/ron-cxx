@@ -44,6 +44,8 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
         switch (cs) {
             case 9:
                 switch ((*p)) {
+                    case 0u:
+                        goto st0;
                     case 10u:
                         goto st0;
                     case 13u:
@@ -66,6 +68,9 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
                 } else
                     goto tr13;
                 goto tr10;
+            st0:
+                cs = 0;
+                goto _out;
             tr0 :
 #line 58 "ragel/./text-grammar.rl"
             {
@@ -123,8 +128,10 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
             st10:
                 if (++p == pe) goto _test_eof10;
             case 10:
-#line 112 "ron/cp-parser.cc"
+#line 116 "ron/cp-parser.cc"
                 switch ((*p)) {
+                    case 0u:
+                        goto st0;
                     case 10u:
                         goto st0;
                     case 13u:
@@ -147,9 +154,6 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
                 } else
                     goto tr18;
                 goto tr15;
-            st0:
-                cs = 0;
-                goto _out;
             tr16 :
 #line 43 "ragel/./text-grammar.rl"
             {
@@ -185,7 +189,7 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
             st1:
                 if (++p == pe) goto _test_eof1;
             case 1:
-#line 159 "ron/cp-parser.cc"
+#line 161 "ron/cp-parser.cc"
                 switch ((*p)) {
                     case 34u:
                         goto tr0;
@@ -251,6 +255,8 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
                 if (++p == pe) goto _test_eof11;
             case 11:
                 switch ((*p)) {
+                    case 0u:
+                        goto st0;
                     case 10u:
                         goto st0;
                     case 13u:
@@ -324,7 +330,7 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
             st6:
                 if (++p == pe) goto _test_eof6;
             case 6:
-#line 283 "ron/cp-parser.cc"
+#line 286 "ron/cp-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr7;
                 goto st0;
             tr9 :
@@ -378,7 +384,7 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
             st7:
                 if (++p == pe) goto _test_eof7;
             case 7:
-#line 321 "ron/cp-parser.cc"
+#line 324 "ron/cp-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr8;
                 goto st0;
             tr14 :
@@ -426,7 +432,7 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
             st8:
                 if (++p == pe) goto _test_eof8;
             case 8:
-#line 355 "ron/cp-parser.cc"
+#line 358 "ron/cp-parser.cc"
                 if (128u <= (*p) && (*p) <= 191u) goto tr9;
                 goto st0;
         }
@@ -496,7 +502,7 @@ Result TextFrame::Cursor::NextCodepoint(Atom& a) const {
                         }
                     }
                     break;
-#line 393 "ron/cp-parser.cc"
+#line 396 "ron/cp-parser.cc"
             }
         }
 

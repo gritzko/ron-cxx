@@ -188,6 +188,15 @@ struct Atom {
         return value == b.value && origin == b.origin;
     }
     inline bool operator!=(const Atom& b) const { return !(*this == b); }
+    inline void operator++() { ++value; }
+
+    static inline bool is_char(Atom a) {
+        return a.origin.as_u64 == STRING_FLAGS && a.value != 0 &&
+               a.value.cp_size == 0;
+    }
+    static inline bool is_empty_string(Atom a) {
+        return a.origin.as_u64 == STRING_FLAGS && a.value == 0;
+    }
 };
 
 struct Uuid : public Atom {
@@ -244,7 +253,6 @@ struct Uuid : public Atom {
     inline bool operator==(const ron::String& str) const {
         return *this == Uuid{str};
     }
-    inline void operator++() { ++value; }
 
     /** Nil UUID as per RFC4122 */
     static const Uuid NIL;

@@ -14,12 +14,18 @@ Result TextFrame::Builder::WriteValues(const Cursor& cur) {
                 Write(cur.data(atom));
                 break;
             case UUID:
-                if (A2U(op[i]).is_ambiguous()) Write(ATOM_PUNCT[UUID]);
-                WriteUuid(A2U(op[i]));
+                if (A2U(atom).is_ambiguous()) {
+                    Write(ATOM_PUNCT[UUID]);
+                }
+                WriteUuid(A2U(atom));
                 break;
             case STRING:
                 Write(ATOM_PUNCT[STRING]);
-                Write(cur.data(atom));
+                if (atom.value.cp) {  // a char
+                    WriteCodepoint(atom.value.cp);
+                } else {  // a string
+                    Write(cur.data(atom));
+                }
                 Write(ATOM_PUNCT[STRING]);
                 break;
             case FLOAT:
@@ -27,6 +33,11 @@ Result TextFrame::Builder::WriteValues(const Cursor& cur) {
                 break;
         }
     }
+    if (op.size() == 3 && op[2].type() != STRING) {
+        prev_2_ = op[2];
+    } else {
+        prev_2_ = Uuid::FATAL;
+    }  // FIXME 2
     return OK;
 }
 

@@ -203,7 +203,7 @@ TEST(TextFrame, defaults ) {
 }
 
 TEST(TextFrame, span_spread ) {
-    String RAW{"@1iDEKK+gYpLcnUnF6 :1iDEKA+gYpLcnUnF6 ('abcd' 4);"};
+    String RAW{"@1iDEKK+gYpLcnUnF6 :1iDEKA+gYpLcnUnF6 ('abcd');"};
     Cursor c{RAW};
     ASSERT_TRUE(c.Next());
 }
@@ -238,7 +238,7 @@ TEST(TextFrame, END) {
 }
 
 TEST(TextFrame, Spans) {
-    String str{"@1lNBfg+0 :1lNBf+0 rm(3);"};
+    String str{"@1lNBfg+0 :1lNBf+0 rm(3);\n"};
     String frame{str};
     Cursor c{frame};
     Builder b;
@@ -246,40 +246,44 @@ TEST(TextFrame, Spans) {
     ASSERT_TRUE(HasValue(c, ATOM::UUID));
     ASSERT_EQ(Uuid{c.atom(2)}, "rm");
     b.AppendOp(c);
-    /*ASSERT_TRUE(c.Next());    OOPSIE NOT IMPLEMENTED YET FIXME FIXME
-    ASSERT_EQ(c.type(2), ATOM::UUID);
-    ASSERT_EQ(c.uuid(2), Uuid{"rm"});
+    ASSERT_TRUE(c.Next());
+    ASSERT_EQ(c.atom(2).type(), ATOM::UUID);
+    ASSERT_EQ(A2U(c.atom(2)), Uuid{"rm"});
     b.AppendOp(c);
     ASSERT_TRUE(c.Next());
-    ASSERT_EQ(c.type(2), ATOM::UUID);
-    ASSERT_EQ(c.uuid(2), Uuid{"rm"});
+    ASSERT_EQ(c.atom(2).type(), ATOM::UUID);
+    ASSERT_EQ(A2U(c.atom(2)), Uuid{"rm"});
     b.AppendOp(c);
     ASSERT_FALSE(c.Next());
 
     String str2;
     b.Release(str2);
-    ASSERT_EQ(str, str2);*/
+    ASSERT_EQ(str, str2);
 }
 
 TEST(TextFrame, Spreads) {
-    String str{"@1lNBvg+0 :1lNBf+0 ('aㅂц' 3);\n"};
+    String str{"@1lNBvg+0 :1lNBf+0 ('aㅂц');\n"};
     String frame{str};
     Builder b;
     Cursor c{frame};
+    const Atoms& op = c.op();
     ASSERT_TRUE(c.Next());
-    /*ASSERT_EQ(c.string(2), "a");   FIXME FIXME NOT IMPLEMENTED YET
+    ASSERT_EQ(op[2].value.cp, 'a');
+    ASSERT_EQ(GetChar(c), 'a');
     b.AppendOp(c);
     ASSERT_TRUE(c.Next());
-    ASSERT_EQ(c.string(2), "ㅂ");
+    ASSERT_EQ(op[2].value.cp, 0x3142);
+    ASSERT_EQ(GetString(c), "ㅂ");
     b.AppendOp(c);
     ASSERT_TRUE(c.Next());
-    ASSERT_EQ(c.string(2), "ц");
+    ASSERT_EQ(GetString(c), "ц");
+    ASSERT_EQ(op[2].value.cp, 0x0446);
     b.AppendOp(c);
     ASSERT_FALSE(c.Next());
 
     String str2;
     b.Release(str2);
-    ASSERT_EQ(str, str2);*/
+    // NOT YET ASSERT_EQ(str, str2);
 }
 
 int main (int argn, char** args) {

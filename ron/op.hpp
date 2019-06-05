@@ -17,6 +17,7 @@ struct Op {
     const Atoms& op() const { return atoms_; }
     inline Uuid id() const { return A2U(atoms_[0]); }
     inline Uuid ref() const { return A2U(atoms_[1]); }
+    inline Atom atom(fsize_t i = 2) const { return atoms_[i]; }
 
     Result NextCodepoint(Atom& a) const {
         if (!a.value.cp_size) {

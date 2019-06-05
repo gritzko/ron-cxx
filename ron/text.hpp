@@ -54,6 +54,10 @@ class TextFrame {
                 case FLOAT:
                     return ParseFloat(a);
                 case STRING:
+                    if (a.value.cp) {
+                        a = Atom{a.value.cp, STRING_FLAGS};
+                    }
+                    return OK;
                 case UUID:
                     return OK;
             }
@@ -139,7 +143,8 @@ class TextFrame {
         inline void Write(char c) { data_.push_back(c); }
         inline void WriteCodepoint(Codepoint cp) { utf8esc_append(data_, cp); }
         inline void Write(Slice data) {
-            data_.append((String::value_type*)data.begin(), data.size());
+            data_.append(reinterpret_cast<StringCharRef>(data.begin()),
+                         data.size());
         }
         void WriteInt(int64_t value);
         void WriteFloat(double value);
@@ -149,16 +154,21 @@ class TextFrame {
         void escape(String& escaped, const Slice& unescaped);
 
         inline void WriteTerm(TERM term = REDUCED) {
-            if (span_size_) {
-                if (span_size_ > 1) {
+            if (!span_size_) {
+                return;
+            }
+            if (span_size_ > 1) {
+                if (prev_2_.type() != STRING) {
                     Write('(');
                     WriteInt(span_size_);
-                    Write(')');
+                } else {
+                    Write(ATOM_PUNCT[STRING]);
                 }
-                Write(TERM_PUNCT[term]);
-                Write(NL);
-                span_size_ = 0;
+                Write(')');
             }
+            Write(TERM_PUNCT[term]);
+            Write(NL);
+            span_size_ = 0;
         }
 
         void WriteSpec(Uuid id, Uuid ref) {
@@ -207,24 +217,67 @@ class TextFrame {
                         break;
                 }
             }
-            if (op.size() == 3 && op[2].type() != STRING) {
-                prev_2_ = op[2];
-            } else {
-                prev_2_ = Uuid::FATAL;
-            }  // FIXME 2
+            prev_2_ = span_signature(cur);
             return OK;
         }
 
-        template <class Cursor2>
-        inline bool same_span(const Cursor2& cur) {
+        template <typename Cursor2>
+        static inline Atom span_signature(const Cursor2& cur) {
             const Atoms& op = cur.op();
-            return span_size_ > 0 && op.size() == 3 && op[2] == prev_2_;
+            if (op.size() != 3) {
+                return Uuid::NIL;
+            }
+            Atom atom = cur.atom(2);
+            switch (atom.type()) {
+                case INT:
+                    return Atom{atom.value, INT_FLAGS};
+                case FLOAT:
+                    return Atom{atom.value, FLOAT_FLAGS};
+                case UUID:
+                    return atom;
+                case STRING:
+                    return StringSize(atom) == 1 ? Atom{0, STRING_FLAGS}
+                                                 : static_cast<Atom>(Uuid::NIL);
+            }
+        }
+
+        template <class Cursor2>
+        inline bool is_same_span(const Cursor2& cur) const {
+            if (cur.ref() != prev_id_) {
+                return false;
+            }
+            if (cur.id() != prev_id_.inc()) {
+                return false;
+            }
+            return prev_2_ != Uuid::NIL && span_signature(cur) == prev_2_;
         }
 
         template <class Cursor2>
         inline Result ExtendSpan(const Cursor2& cur) {
+            if (prev_2_.type() == STRING) {
+                Atom a = cur.op()[2];
+                if (span_size_ == 1) {
+                    char ret[8];
+                    fsize_t retc{0};
+                    data_.pop_back();
+                    while (data_.back() != ATOM_PUNCT[STRING]) {
+                        ret[retc++] = data_.back();
+                        data_.pop_back();
+                    }
+                    data_.pop_back();
+                    Write('(');
+                    Write(ATOM_PUNCT[STRING]);
+                    for (fsize_t i = 0; i < retc; ++i) {
+                        data_.push_back(ret[i]);
+                    }
+                }
+                if (!a.value.cp) {
+                    cur.NextCodepoint(a);
+                }
+                WriteCodepoint(a.value.cp);
+            }
             ++span_size_;
-            // maybe append a char
+            ++prev_id_;
             return OK;
         }
 
@@ -239,7 +292,7 @@ class TextFrame {
 
         template <class Cursor2>
         Result AppendOp(const Cursor2& cur) {
-            if (same_span(cur)) {
+            if (is_same_span(cur)) {
                 return ExtendSpan(cur);
             } else {
                 WriteTerm();
@@ -250,7 +303,7 @@ class TextFrame {
 
         /** A shortcut method, avoids re-serialization of atoms. */
         Result AppendOp(const Cursor& cur) {
-            if (same_span(cur)) {
+            if (is_same_span(cur)) {
                 return ExtendSpan(cur);
             } else {
                 WriteTerm();

@@ -190,13 +190,6 @@ struct Atom {
     inline bool operator!=(const Atom& b) const { return !(*this == b); }
     inline void operator++() { ++value; }
 
-    static inline bool is_char(Atom a) {
-        return a.origin.as_u64 == STRING_FLAGS && a.value != 0 &&
-               a.value.cp_size == 0;
-    }
-    static inline bool is_empty_string(Atom a) {
-        return a.origin.as_u64 == STRING_FLAGS && a.value == 0;
-    }
 };
 
 struct Uuid : public Atom {
@@ -289,6 +282,15 @@ const Result ENDOFINPUT{"ENDOFINPUT"};
 const Result NOT_IMPLEMENTED{"NOTIMPLTED"};
 const Result BADSYNTAX{"BADSYNTAX"};
 const Result OUTOFRANGE{"OUTOFRANGE"};
+
+inline bool IsStringBtB(Atom a) {
+    assert(a.type() == STRING);
+    return a.value.cp == 0;
+}
+
+inline fsize_t StringSize(Atom a) {
+    return IsStringBtB(a) ? a.value.cp_size : a.value.cp_size + 1;
+}
 
 }  // namespace ron
 

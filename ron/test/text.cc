@@ -259,6 +259,13 @@ TEST(TextFrame, Spans) {
     String str2;
     b.Release(str2);
     ASSERT_EQ(str, str2);
+
+    String nospan{"@1lNBku+0 :max 1,\n 2,\n 3;\n"};
+    Builder nob;
+    AppendFrame<Frame>(nob, Frame{nospan});
+    String no2;
+    nob.Release(no2);
+    ASSERT_EQ(nospan, no2);
 }
 
 TEST(TextFrame, Spreads) {
@@ -283,7 +290,18 @@ TEST(TextFrame, Spreads) {
 
     String str2;
     b.Release(str2);
-    // NOT YET ASSERT_EQ(str, str2);
+
+    ASSERT_EQ(str, str2);
+}
+
+TEST(TextFrame, MakeSpread) {
+    Frame separate{"@1lNBvg+0 :1lNBf+0 'a','ㅂ','ц';\n"};
+    String spread{"@1lNBvg+0 :1lNBf+0 ('aㅂц');\n"};
+    Builder b;
+    AppendFrame<Frame>(b, separate);
+    String condensed;
+    b.Release(condensed);
+    ASSERT_EQ(condensed, spread);
 }
 
 int main (int argn, char** args) {

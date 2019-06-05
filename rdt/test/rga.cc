@@ -26,7 +26,7 @@ TEST(Merge, Chain) {
     string def = "@1000000004+B :1000000003+A 'D', 'E', 'F'; ";
     string abcdef;
     ASSERT_TRUE(IsOK(MergeStrings<TextFrame>(abcdef, RGA_RDT_FORM, Strings{abc, def})));
-    string correct = "@1+A :rga, 'a', 'b', 'c', @1000000004+B 'D', 'E', 'F'; ";
+    string correct = "@1+A :rga, ('abc'), @1000000004+B ('DEF'); ";
     ASSERT_EQ(despace(abcdef), despace(correct));
 }
 

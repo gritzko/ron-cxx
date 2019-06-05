@@ -33,22 +33,17 @@ Result TextFrame::Builder::WriteValues(const Cursor& cur) {
                 break;
         }
     }
-    if (op.size() == 3 && op[2].type() != STRING) {
-        prev_2_ = op[2];
-    } else {
-        prev_2_ = Uuid::FATAL;
-    }  // FIXME 2
+    prev_2_ = span_signature(cur);
     return OK;
 }
 
 void TextFrame::Builder::WriteInt(int64_t value) {
     char tmp[20];
-    int len = sprintf((char*)tmp, "%" PRId64, value);
+    int len = sprintf(tmp, "%" PRId64, value);
     data_.append(tmp, static_cast<size_t>(len));
 }
 
 void TextFrame::Builder::WriteUuid(const Uuid value) {
-    // FIXME escaping
     data_.append(value.str());
 }
 
@@ -59,7 +54,7 @@ void TextFrame::Builder::WriteFloat(double value) {
     // so binary->text->binary must not change the value;
     // text->binary->text we don't care about (see test/text.cc)
     // 17 is DBL_DECIMAL_DIG, enough to express 64 bit ISO floats
-    int len = sprintf((char*)tmp, "%.17G", value);
+    int len = sprintf(tmp, "%.17G", value);
     data_.append(tmp, static_cast<size_t>(len));
 }
 

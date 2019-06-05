@@ -24,6 +24,8 @@ constexpr Codepoint CP_ERROR{0};
 /** A byte string .ON strings are valid canonic UTF-8, but we treat them
     as byte buffers most of the time. For symbol-level work, use String16. */
 using String = std::string;
+using StringChar = typename String::value_type;
+using StringCharRef = StringChar const*;
 using Strings = std::vector<String>;
 
 /** It would be nice to use unsigned chars everywhere. It is quite a footgun

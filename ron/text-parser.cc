@@ -1,6 +1,5 @@
 
 #line 1 "ragel/text-parser.rl"
-#include <iostream>
 #include "text.hpp"
 
 namespace ron {

@@ -1,8 +1,6 @@
 #ifndef ron_open_text_hpp
 #define ron_open_text_hpp
-#include <iostream>
 #include <utility>
-
 #include "encdec.hpp"
 #include "slice.hpp"
 #include "status.hpp"
@@ -54,7 +52,7 @@ class TextFrame {
                 case FLOAT:
                     return ParseFloat(a);
                 case STRING:
-                    if (a.value.cp!=0) {
+                    if (a.value.cp != 0) {
                         a = Atom{a.value.cp, STRING_FLAGS};
                     }
                     return OK;
@@ -235,9 +233,9 @@ class TextFrame {
                 case UUID:
                     return atom;
                 case STRING:
-                    Atom a = cur.atom(2); // parsed
+                    Atom a = cur.atom(2);  // parsed
                     return StringSize(a) == 1 ? Atom{0, STRING_FLAGS}
-                                                 : static_cast<Atom>(Uuid::NIL);
+                                              : static_cast<Atom>(Uuid::NIL);
             }
         }
 

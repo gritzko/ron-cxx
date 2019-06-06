@@ -189,7 +189,6 @@ struct Atom {
     }
     inline bool operator!=(const Atom& b) const { return !(*this == b); }
     inline void operator++() { ++value; }
-
 };
 
 struct Uuid : public Atom {

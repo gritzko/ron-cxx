@@ -8,6 +8,9 @@
 #include <utility>
 #include <vector>
 #include "portable_endian.hpp"
+#ifndef NDEBUG
+#include <iostream>
+#endif
 
 namespace ron {
 

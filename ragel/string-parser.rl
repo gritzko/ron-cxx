@@ -1,7 +1,7 @@
 #include "stdlib.h"
 #include <string>
-#include <iostream>
 #include "text.hpp"
+
 
 %%{
     machine UTF8ESC;

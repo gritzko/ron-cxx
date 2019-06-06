@@ -1,5 +1,4 @@
 #include <cinttypes>
-#include <iostream>
 #include "text.hpp"
 
 namespace ron {

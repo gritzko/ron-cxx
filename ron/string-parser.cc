@@ -1,6 +1,5 @@
 
 #line 1 "ragel/string-parser.rl"
-#include <iostream>
 #include <string>
 #include "stdlib.h"
 #include "text.hpp"

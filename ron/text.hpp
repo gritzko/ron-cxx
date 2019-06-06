@@ -54,7 +54,7 @@ class TextFrame {
                 case FLOAT:
                     return ParseFloat(a);
                 case STRING:
-                    if (a.value.cp) {
+                    if (a.value.cp!=0) {
                         a = Atom{a.value.cp, STRING_FLAGS};
                     }
                     return OK;
@@ -227,16 +227,16 @@ class TextFrame {
             if (op.size() != 3) {
                 return Uuid::NIL;
             }
-            Atom atom = cur.atom(2);
+            Atom atom = op[2];
             switch (atom.type()) {
                 case INT:
-                    return Atom{atom.value, INT_FLAGS};
                 case FLOAT:
-                    return Atom{atom.value, FLOAT_FLAGS};
+                    return static_cast<Atom>(Uuid::NIL);
                 case UUID:
                     return atom;
                 case STRING:
-                    return StringSize(atom) == 1 ? Atom{0, STRING_FLAGS}
+                    Atom a = cur.atom(2); // parsed
+                    return StringSize(a) == 1 ? Atom{0, STRING_FLAGS}
                                                  : static_cast<Atom>(Uuid::NIL);
             }
         }

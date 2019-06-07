@@ -8,6 +8,7 @@ using namespace std;
 template <typename Store>
 const Uuid Replica<Store>::NOW_UUID{915334634030497792UL, 0};
 const Uuid ACTIVE_STORE_UUID{"0000active+0"};
+const Uuid NAME_UUID{"name"};
 
 //  L I F E C Y C L E
 
@@ -640,6 +641,24 @@ Status Replica<Store>::Commit::ReceiveQuery(Builder& response, Cursor& c) {
 }
 
 template <typename Store>
+Status Replica<Store>::Commit::WriteName(Cursor& cmd) {
+    auto& op = cmd.op();
+    if (op.size() < 3) {
+        return Status::BADARGS.comment("no name supplied");
+    }
+    if (op[2].type() != UUID) {
+        return Status::BADARGS.comment("a name must be an UUID");
+    }
+    Uuid tag = A2U(op[2]);
+    if (tag.version() != NAME) {
+        return Status::BADARGS.comment("a name must be a NAME UUID");
+    }
+    // TODO global/scoped names
+    cmd.Next();
+    return WriteName(tag, tip_);
+}
+
+template <typename Store>
 Status Replica<Store>::Commit::Save() {
     if (tip_ == base_) {
         return Status::OK;
@@ -708,8 +727,10 @@ Status Replica<Store>::Receive(Builder& resp, Cursor& c, Word yarn_id) {
             case NAME:
                 if (c.id() == Uuid::COMMENT) {
                     ok = c.Next();
+                } else if (c.id() == NAME_UUID) {
+                    ok = commit.WriteName(c);
                 } else {
-                    ok = Status::BADVALUE.comment("not an event id " +
+                    ok = Status::BADVALUE.comment("not an event id @" +
                                                   c.id().str() +
                                                   " (a runaway annotation?)");
                 }

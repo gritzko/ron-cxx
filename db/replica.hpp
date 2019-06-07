@@ -357,6 +357,8 @@ class Replica {
             return Status::NOT_IMPLEMENTED.comment("MapWrite");
         }
 
+        Status WriteName(Cursor &cmd);
+
         Status ReadNames(Names &names);
 
         Status ReadName(Uuid &id, Uuid name);

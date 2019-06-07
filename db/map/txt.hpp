@@ -1,6 +1,7 @@
 #include "../../rdt/rga.hpp"
 #include "../map.hpp"
 #include "dmp_diff.hpp"
+#include "../../ron/encdec.hpp"
 
 using namespace std;
 
@@ -16,16 +17,14 @@ Status TxtMapper<Commit>::Read(Builder& response, Cursor& query, Commit& branch)
     Codepoints weave;
     // now, walk em both
     String text;
-    Cursor c = state.cursor();
+    Cursor c{state};
     fsize_t pos = 0;
-    while (c.valid()) {
+    while (c.Next()) {
         if (!tombs[pos]) {
             // FIXME may send directly to the Builder?
-            //push_utf8(text, c.atom(2).cp); // NO NO NO NO NO
-            // check STRING, cp_size()==1, add as a Slice !!!!
+            utf8append(text, c.atom(2).value.cp);
         }
-        c.Next();
-        pos++;
+        ++pos;
     }
     response.AppendOp(Op{id.derived(), TXT_MAP_ID, text});
     query.Next(); // consume the query
@@ -133,6 +132,7 @@ Status TxtMapper<Commit>::WriteState(Builder& response, Cursor& query, Commit& b
     IFOK(ScanRGA(tombs, old));
     IFOK(RGA2Codepoints(new_text, ids, old, tombs));
     DMP dmp{old_text, new_text};
+    query.Next();
     return WriteDiffs(ids, dmp.diffs(), branch);
 }
 

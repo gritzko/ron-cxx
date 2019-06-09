@@ -253,10 +253,7 @@ constexpr const char* TEST_USAGE{
     "test test_file.ron\n"
     "   runs a RON test script\n"};
 
-Status CommandTest(RonReplica& replica, Args& args) {
-    CHECKARG(args.empty(), TEST_USAGE);
-    String file = args.back();
-    args.pop_back();
+Status CommandTest(RonReplica& replica, Frame tests) {
 
     Word test_yarn_id{"test"};
     Uuid test_branch_id = Uuid::Time(NEVER, test_yarn_id);
@@ -264,8 +261,6 @@ Status CommandTest(RonReplica& replica, Args& args) {
     IFOK(replica.SetActiveStore(test_branch_id));
 
     Status ok;
-    Frame tests;
-    IFOK(LoadFrame(tests, file));
     Frames io;
     IFOK(SplitTests(io, tests));
     Builder b;
@@ -710,7 +705,7 @@ Status RunCommands(Args& args) {
     RonReplica replica{};
     Status ok;
 
-    if (args.empty()) return Status::OK;
+    if (args.empty()) { return Status::OK; }
     String verb{args.back()};
     args.pop_back();
 
@@ -722,11 +717,16 @@ Status RunCommands(Args& args) {
     } else if (verb == "repair") {
         return CommandRepair(replica, args);
     } else if (verb == "test") {
+        Frame tests;
+        CHECKARG(args.empty(), TEST_USAGE);
+        String file = args.back();
+        args.pop_back();
+        IFOK(LoadFrame(tests, file));
+
         IFOK(tmp.cd("swarmdb_test"));
         IFOK(replica.CreateReplica());
         IFOK(OpenReplica(replica));
-        tmp.back();
-        return CommandTest(replica, args);
+        return CommandTest(replica, tests);
     } else if (verb == "init") {
         return CommandInit(replica, args);
     }
